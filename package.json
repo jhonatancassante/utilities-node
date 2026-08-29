@@ -1,0 +1,24 @@
+{
+  "name": "utilities-node",
+  "version": "1.0.0",
+  "description": "Nova implementação dos meus utilitários de trabalho, originalmente desenvolvidos com HTML, CSS e JavaScript, agora utilizando Node.js, autenticação e práticas modernas de desenvolvimento.",
+  "homepage": "https://github.com/jhonatancassante/utilities-node#readme",
+  "bugs": {
+    "url": "https://github.com/jhonatancassante/utilities-node/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhonatancassante/utilities-node.git"
+  },
+  "license": "MIT",
+  "author": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev"
+  },
+  "dependencies": {
+    "next": "^13.1.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
