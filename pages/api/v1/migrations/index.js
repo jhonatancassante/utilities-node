@@ -7,10 +7,11 @@ export default async function migrations(request, response) {
 
   if (methods.includes(request.method)) {
     const dbClient = await database.getNewClient();
+    const isDryRun = request.method === "GET";
 
     const migrations = await migrationRunner({
       dbClient,
-      dryRun: request.method === "GET",
+      dryRun: isDryRun,
       dir: join("infra", "migrations"),
       direction: "up",
       verbose: true,
