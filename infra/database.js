@@ -3,9 +3,9 @@ import { Client } from "pg";
 function getConfig() {
   //Vercel (produção e preview)
   if (process.env.DATABASE_URL) {
-    return {
-      connectionString: process.env.DATABASE_URL,
-    };
+    const url = new URL(process.env.DATABASE_URL);
+    url.searchParams.set("sslmode", "verify-full");
+    return { connectionString: url.toString() };
   }
 
   if (process.env.NODE_ENV === "production") {
@@ -31,6 +31,7 @@ const query = async (queryObject) => {
     return result;
   } catch (error) {
     console.error(error);
+    throw error;
   } finally {
     await client.end();
   }
