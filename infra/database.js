@@ -1,8 +1,11 @@
 import { Client } from "pg";
 
 function getConfig() {
+  const isDevelopment = process.env.NODE_ENV === "development"
+    || process.env.NODE_ENV === "test";
+
   //local (desenvolvimento)
-  if (process.env.NODE_ENV === "development") {
+  if (isDevelopment) {
     return {
       host: process.env.POSTGRES_HOST,
       port: process.env.POSTGRES_PORT,
@@ -13,26 +16,37 @@ function getConfig() {
   }
 
   //Vercel (produção e preview)
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL não definida (ambiente: " + process.env.NODE_ENV + ").");
+  }
+
   const url = new URL(process.env.DATABASE_URL);
   url.searchParams.set("sslmode", "verify-full");
   return { connectionString: url.toString() };
 }
 
 const query = async (queryObject) => {
-  const client = new Client(getConfig());
-
+  let client;
+  let connected = false;
   try {
-    await client.connect();
-    const result = await client.query(queryObject);
-    return result;
+    client = await getNewClient();
+    connected = true;
+    return await client.query(queryObject);
   } catch (error) {
     console.error(error);
     throw error;
   } finally {
-    await client.end();
+    if (connected) await client.end();
   }
 };
 
+async function getNewClient() {
+  const client = new Client(getConfig());
+  await client.connect();
+  return client;
+}
+
 export default {
   query,
+  getNewClient,
 };
