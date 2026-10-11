@@ -8,6 +8,10 @@ function getConfig() {
     };
   }
 
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("DATABASE_URL não definida em produção.");
+  }
+
   //Local (desenvolvimento)
   return {
     host: process.env.POSTGRES_HOST,
