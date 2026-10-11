@@ -3,31 +3,38 @@ import { join } from 'node:path';
 import database from '@/infra/database.js';
 
 export default async function migrations(request, response) {
-  const methods = ["GET", "POST"];
+  const allowedMethods = ["GET", "POST"];
 
-  if (!methods.includes(request.method)) {
-    return response.status(405).end();
+  if (!allowedMethods.includes(request.method)) {
+    return response.status(405).json({ error: `Método "${request.method}" não permitido.` });
   }
 
-  const dbClient = await database.getNewClient();
-  const isDryRun = request.method === "GET";
+  let dbClient;
 
-  const migrations = await migrationRunner({
-    dbClient,
-    dryRun: isDryRun,
-    dir: join("infra", "migrations"),
-    direction: "up",
-    verbose: true,
-    migrationsTable: "pgmigrations",
-  });
+  try {
+    dbClient = await database.getNewClient();
+    const isDryRun = request.method === "GET";
 
-  await dbClient.end();
+    const migrations = await migrationRunner({
+      dbClient,
+      dryRun: isDryRun,
+      dir: join("infra", "migrations"),
+      direction: "up",
+      verbose: true,
+      migrationsTable: "pgmigrations",
+    });
 
-  const statusCode =
-    request.method === "POST"
-      && migrations.length > 0
-      ? 201
-      : 200;
+    const statusCode =
+      request.method === "POST"
+        && migrations.length > 0
+        ? 201
+        : 200;
 
-  return response.status(statusCode).json(migrations);
+    return response.status(statusCode).json(migrations);
+  } catch (error) {
+    cosole.error(error);
+    throw error;
+  } finally {
+    await dbClient.end();
+  }
 }
