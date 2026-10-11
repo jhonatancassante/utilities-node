@@ -1,2 +1,1 @@
 ggshield secret scan pre-commit
-npm run lint:fix
