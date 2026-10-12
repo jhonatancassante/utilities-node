@@ -30,6 +30,8 @@
     "lint:prettier:check": "prettier --check .",
     "lint:prettier:fix": "prettier --write .",
     "lint:eslint:check": "eslint --max-warnings=0 . --ignore-pattern package.json --ignore-pattern package-lock.json",
+    "secrets:scan": "ggshield secret scan path -r .",
+    "secrets:history": "ggshield secret scan repo .",
     "prepare": "husky",
     "commit": "cz"
   },
