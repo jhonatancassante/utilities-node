@@ -2,7 +2,7 @@ secret:
   ignored_paths:
     - node_modules/**/*
     - .next/**/*
-  ignored_matches:
-    - name: senha-postgres-docker-local
-      match: <hash SHA256 exibido pelo ggshield>
+  # ignored_matches:
+  #   - name: senha-postgres-docker-local
+  #     match: <hash SHA256 exibido pelo ggshield>
 version: 2
