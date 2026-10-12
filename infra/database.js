@@ -1,8 +1,8 @@
 import { Client } from "pg";
 
 function getConfig() {
-  const isDevelopment = process.env.NODE_ENV === "development"
-    || process.env.NODE_ENV === "test";
+  const isDevelopment =
+    process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test";
 
   //local (desenvolvimento)
   if (isDevelopment) {
@@ -17,7 +17,9 @@ function getConfig() {
 
   //Vercel (produção e preview)
   if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL não definida (ambiente: " + process.env.NODE_ENV + ").");
+    throw new Error(
+      "DATABASE_URL não definida (ambiente: " + process.env.NODE_ENV + ").",
+    );
   }
 
   const url = new URL(process.env.DATABASE_URL);

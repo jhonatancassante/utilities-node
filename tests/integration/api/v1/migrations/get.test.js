@@ -4,7 +4,7 @@ import orchestrator from "tests/orchestrator.js";
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
   await database.query(
-    "drop schema if exists public cascade; create schema public;"
+    "drop schema if exists public cascade; create schema public;",
   );
 });
 
@@ -16,5 +16,4 @@ test("GET /api/v1/migrations deve retornar status 200", async () => {
 
   expect(Array.isArray(responseBody)).toBe(true);
   expect(responseBody.length).toBeGreaterThan(0);
-
 });
