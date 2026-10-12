@@ -1,2 +1,21 @@
 ggshield secret scan pre-commit
 npx lint-staged
+
+echo "🔍 Verificando segredos com Gitleaks..."
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "❌ Gitleaks não encontrado."
+  echo "Instale-o antes de realizar o commit."
+  exit 1
+fi
+
+gitleaks protect --staged --config=.gitleaks.toml --redact
+
+status=$?
+
+if [ "$status" -ne 0 ]; then
+  echo "❌ Commit bloqueado: possível segredo detectado pelo Gitleaks."
+  exit "$status"
+fi
+
+echo "✅ Nenhum segredo detectado."

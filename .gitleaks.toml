@@ -1,0 +1,31 @@
+title = "Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Project-wide allowlist"
+
+paths = [
+    '''(^|/)\.git/''',
+    '''(^|/)vendor/''',
+    '''(^|/)node_modules/''',
+    '''(^|/)dist/''',
+    '''(^|/)build/''',
+    '''(^|/)coverage/''',
+    '''(^|/)tmp/''',
+    '''(^|/)cache/''',
+    '''(^|/)\.cache/''',
+]
+
+regexes = [
+    '''(?i)example[_-]?password''',
+    '''(?i)example[_-]?secret''',
+    '''(?i)your[_-]?api[_-]?key''',
+    '''(?i)your[_-]?secret''',
+    '''(?i)changeme''',
+    '''(?i)replace[_-]?me''',
+    '''(?i)dummy[_-]?secret''',
+    '''(?i)test[_-]?secret''',
+    '''(?i)placeholder'''
+]
