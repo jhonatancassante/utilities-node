@@ -16,6 +16,7 @@ paths = [
     '''(^|/)tmp/''',
     '''(^|/)cache/''',
     '''(^|/)\.cache/''',
+    '''(^|/)\.env\.development$''',
 ]
 
 regexes = [
