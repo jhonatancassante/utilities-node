@@ -176,7 +176,8 @@
 
 .tagInfo,
 .tagSuccess,
-.tagWarning {
+.tagWarning,
+.tagError {
   display: inline-block;
   font-size: 10px;
   font-weight: bold;
@@ -201,6 +202,11 @@
   color: #b06000;
 }
 
+.tagError {
+  background: #fce8e6;
+  color: #c5221f;
+}
+
 .valueBadge {
   background: #ffffff;
   border: 1px solid #e6dcff;
@@ -223,6 +229,15 @@
 .valueBadgeWarning {
   background: #fef7e0;
   color: #b06000;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.valueBadgeError {
+  background: #fce8e6;
+  color: #c5221f;
   padding: 4px 10px;
   border-radius: 6px;
   font-weight: bold;
