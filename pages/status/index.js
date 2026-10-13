@@ -1,5 +1,6 @@
-import Head from "next/head";
 import useSWR from "swr";
+import AppHead from "@/components/AppHead";
+import siteConfigs from "@/configs/site.js";
 import styles from "./index.module.css";
 
 async function fetchAPI(key) {
@@ -29,13 +30,10 @@ function StatusPage() {
 
   return (
     <>
-      <Head>
-        <title>Utilities | Status do Sistema</title>
-        <meta
-          name="description"
-          content="Painel de monitoramento do sistema e banco de dados em tempo real."
-        />
-      </Head>
+      <AppHead
+        title="Status do Sistema"
+        description="Painel de monitoramento do sistema e banco de dados em tempo real."
+      />
 
       <main className={styles.container}>
         <section className={styles.card}>
@@ -58,7 +56,9 @@ function StatusPage() {
             data={data?.dependencies?.database}
           />
 
-          <small>Utilities Node.js · Atualização automática a cada 5s</small>
+          <small>
+            {siteConfigs.appName} · Atualização automática a cada 5s
+          </small>
         </section>
       </main>
     </>

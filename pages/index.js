@@ -1,16 +1,14 @@
-import Head from "next/head";
+import AppHead from "@/components/AppHead";
+import siteConfigs from "@/configs/site.js";
 import styles from "./index.module.css";
 
 function Home() {
   return (
     <>
-      <Head>
-        <title>Utilities | Em construção</title>
-        <meta
-          name="description"
-          content="Uma nova versão dos meus utilitários de trabalho está sendo construída."
-        />
-      </Head>
+      <AppHead
+        title="Em construção"
+        description="Uma nova versão dos meus utilitários de trabalho está sendo construída."
+      />
 
       <main className={styles.container}>
         <section className={styles.card}>
@@ -39,7 +37,7 @@ function Home() {
             <div className={styles.progressBar}></div>
           </div>
 
-          <small>Utilities Node.js · Em desenvolvimento</small>
+          <small>{siteConfigs.appName} · Em desenvolvimento</small>
         </section>
       </main>
     </>
