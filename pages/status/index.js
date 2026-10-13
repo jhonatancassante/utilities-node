@@ -91,7 +91,51 @@ function UpdatedAt({ isLoading, error, data }) {
   );
 }
 
+const STATUS = {
+  success: {
+    tag: styles.tagSuccess,
+    badge: styles.valueBadgeSuccess,
+    label: "OK",
+  },
+  warning: {
+    tag: styles.tagWarning,
+    badge: styles.valueBadgeWarning,
+    label: "CARGA ALTA",
+  },
+  error: {
+    tag: styles.tagError,
+    badge: styles.valueBadgeError,
+    label: "ERROR",
+  },
+};
+
+const hasValue = (value) => value !== null && value !== undefined;
+
+function MetricRow({ title, value, isWarning = false }) {
+  const status = !hasValue(value) ? "error" : isWarning ? "warning" : "success";
+  const { tag, badge, label } = STATUS[status];
+
+  return (
+    <div className={styles.metricRow}>
+      <span>
+        <span className={tag}>{label}</span>
+        <strong>{title}</strong>
+      </span>
+      <span className={`${styles.valueBadge} ${badge}`}>
+        {hasValue(value) ? value : "N/A"}
+      </span>
+    </div>
+  );
+}
+
 function DatabaseStatus({ isLoading, error, data }) {
+  const {
+    version,
+    max_connections: max,
+    opened_connections: opened,
+  } = data ?? {};
+  const isHighLoad = hasValue(opened) && hasValue(max) && opened / max > 0.8;
+
   if (error) {
     return (
       <div className={styles.metricsBoxError}>
@@ -113,48 +157,19 @@ function DatabaseStatus({ isLoading, error, data }) {
     );
   }
 
-  const opened = data?.opened_connections ?? 0;
-  const max = data?.max_connections ?? 1;
-  const usagePercentage = (opened / max) * 100;
-  const isHighLoad = usagePercentage > 80;
-
   return (
     <div className={styles.metricsBox}>
       <div className={styles.metricsBoxTitle}>
         <strong>Database</strong>
       </div>
 
-      <div className={styles.metricRow}>
-        <span>
-          <span className={styles.tagSuccess}>{"OK"}</span>
-          <strong>Versão:</strong>
-        </span>
-        <span className={styles.valueBadge}>{data?.version ?? "N/A"}</span>
-      </div>
-
-      <div className={styles.metricRow}>
-        <span>
-          <span className={styles.tagSuccess}>{"OK"}</span>
-          <strong>Máx. Conexões:</strong>
-        </span>
-        <span className={styles.valueBadge}>{max}</span>
-      </div>
-
-      <div className={styles.metricRow}>
-        <span>
-          <span className={isHighLoad ? styles.tagWarning : styles.tagSuccess}>
-            {isHighLoad ? "CARGA ALTA" : "OK"}
-          </span>
-          <strong>Conexões Abertas:</strong>
-        </span>
-        <span
-          className={
-            isHighLoad ? styles.valueBadgeWarning : styles.valueBadgeSuccess
-          }
-        >
-          {opened}
-        </span>
-      </div>
+      <MetricRow title="Versão" value={version} />
+      <MetricRow title="Máximo de Conexões" value={max} />
+      <MetricRow
+        title="Conexões Abertas"
+        value={opened}
+        isWarning={isHighLoad}
+      />
     </div>
   );
 }
