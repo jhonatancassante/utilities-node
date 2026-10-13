@@ -16,7 +16,6 @@ function StatusPage() {
   });
   const isWarning = isLoading;
 
-  const statusIcon = error ? "🔴" : isWarning ? "🟡" : "🟢";
   const statusBadgeText = error
     ? "ERRO NO SISTEMA"
     : isWarning
@@ -40,18 +39,11 @@ function StatusPage() {
 
       <main className={styles.container}>
         <section className={styles.card}>
-          <div
-            className={`${styles.icon} ${error ? styles.iconError : isWarning ? styles.iconWarning : styles.iconSuccess}`}
-            aria-hidden="true"
-          >
-            {statusIcon}
-          </div>
-
           <div style={{ textAlign: "center" }}>
+            <h1>Status do Sistema</h1>
             <span className={`${styles.badge} ${statusBadgeClass}`}>
               {statusBadgeText}
             </span>
-            <h1>Status do Sistema</h1>
           </div>
 
           <UpdatedAt
