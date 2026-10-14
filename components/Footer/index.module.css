@@ -36,3 +36,14 @@
   font-weight: 500;
   color: var(--text-secondary);
 }
+
+.attribution {
+  font-size: 11px;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.attribution:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}

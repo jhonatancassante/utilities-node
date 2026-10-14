@@ -22,6 +22,12 @@ export default function Document() {
     <Html lang="pt-BR">
       <Head>
         <meta name="theme-color" content="#16305a" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/apple-touch-icon.png"
+        />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
