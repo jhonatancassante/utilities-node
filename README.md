@@ -4,7 +4,7 @@ Nova implementação dos meus utilitários de trabalho, originalmente desenvolvi
 
 **Aplicação publicada:** <https://utilities-node.vercel.app>
 
-> **Status do projeto: em construção.** Hoje a aplicação tem uma página inicial provisória e dois endpoints de infraestrutura (`/api/v1/status` e `/api/v1/migrations`). Os utilitários serão migrados aos poucos.
+> **Status do projeto: em construção.** Hoje a aplicação tem uma página inicial provisória, uma página de status do sistema e dois endpoints de infraestrutura (`/api/v1/status` e `/api/v1/migrations`). Os utilitários serão migrados aos poucos.
 
 ## Sumário
 
@@ -29,25 +29,27 @@ Nova implementação dos meus utilitários de trabalho, originalmente desenvolvi
 O que existe hoje:
 
 - Página inicial provisória ("Em construção"), em `pages/index.js`.
+- Página de status (`/status`): painel de monitoramento do sistema e do banco de dados, atualizado automaticamente a cada 5 segundos.
 - `GET /api/v1/status`: verifica a saúde da aplicação e do banco de dados.
 - `GET` e `POST /api/v1/migrations`: consulta e aplica as migrations do banco.
-- Ambiente de desenvolvimento com PostgreSQL em Docker, testes de integração, lint, hooks de commit e CI.
+- Ambiente de desenvolvimento com PostgreSQL em Docker, testes de integração, lint, hooks de commit, verificação de segredos e CI.
 
 O que está previsto: login de usuários e outras funcionalidades que utilizam o banco de dados. O endpoint de migrations será uma rota protegida.
 
 ## Tecnologias
 
-| Área           | Ferramenta                                                      |
-| -------------- | --------------------------------------------------------------- |
-| Framework      | [Next.js](https://nextjs.org/) 16 (Pages Router) e React 19     |
-| Runtime        | Node.js 24                                                      |
-| Banco de dados | PostgreSQL 16 (Docker no desenvolvimento), cliente `pg`         |
-| Migrations     | [node-pg-migrate](https://github.com/salsita/node-pg-migrate)   |
-| Testes         | [Jest](https://jestjs.io/) (testes de integração)               |
-| Qualidade      | ESLint, Prettier, EditorConfig                                  |
-| Commits        | Conventional Commits (Commitizen e Commitlint), Husky           |
-| Segredos       | [GitGuardian ggshield](https://github.com/GitGuardian/ggshield) |
-| CI/CD          | GitHub Actions e Vercel                                         |
+| Área           | Ferramenta                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Framework      | [Next.js](https://nextjs.org/) 16 (Pages Router) e React 19                                                        |
+| Runtime        | Node.js 24                                                                                                         |
+| Interface      | React com CSS Modules e CSS global; [SWR](https://swr.vercel.app/) para buscar dados da API                        |
+| Banco de dados | PostgreSQL 16 (Docker no desenvolvimento), cliente `pg`                                                            |
+| Migrations     | [node-pg-migrate](https://github.com/salsita/node-pg-migrate)                                                      |
+| Testes         | [Jest](https://jestjs.io/) (testes de integração)                                                                  |
+| Qualidade      | ESLint, Prettier, EditorConfig                                                                                     |
+| Commits        | Conventional Commits (Commitizen e Commitlint), Husky                                                              |
+| Segredos       | [GitGuardian ggshield](https://github.com/GitGuardian/ggshield) e [Gitleaks](https://github.com/gitleaks/gitleaks) |
+| CI/CD          | GitHub Actions e Vercel                                                                                            |
 
 ## Pré-requisitos
 
@@ -55,6 +57,7 @@ O que está previsto: login de usuários e outras funcionalidades que utilizam o
 - **Docker** com o Docker Compose, para subir o PostgreSQL local.
 - **Git.**
 - **ggshield** instalado e autenticado (`ggshield auth login`). O hook de pre-commit executa `ggshield secret scan pre-commit` e falha se o programa não estiver disponível. Veja a [instalação do ggshield](https://github.com/GitGuardian/ggshield#installation).
+- **Gitleaks** instalado e disponível no `PATH`. O hook de pre-commit executa `gitleaks protect --staged` e bloqueia o commit se o programa não for encontrado. Veja a [instalação do Gitleaks](https://github.com/gitleaks/gitleaks#installing).
 
 ## Primeiros passos
 
@@ -97,6 +100,8 @@ Para conferir que está tudo certo, acesse <http://localhost:3000/api/v1/status>
 }
 ```
 
+Os mesmos dados aparecem, em formato de painel, em <http://localhost:3000/status>.
+
 > Os valores de acesso ao banco local ficam em `.env.development`, que é versionado de propósito: são credenciais descartáveis, usadas só no container de desenvolvimento. Nunca coloque credenciais reais nesse arquivo.
 
 ## Testes
@@ -132,27 +137,40 @@ Pontos de atenção:
 | `npm run lint:prettier:check`         | Verifica a formatação com o Prettier                                                                    |
 | `npm run lint:prettier:fix`           | Corrige a formatação com o Prettier                                                                     |
 | `npm run lint:eslint:check`           | Roda o ESLint sem aceitar avisos                                                                        |
+| `npm run secrets:scan`                | Procura segredos nos arquivos do projeto com o ggshield                                                 |
+| `npm run secrets:history`             | Procura segredos em todo o histórico do repositório com o ggshield                                      |
 | `npm run commit`                      | Assistente do Commitizen para escrever a mensagem de commit                                             |
 
 ## Estrutura de pastas
 
 ```text
 .
-├── .github/workflows/   # CI: lint (linting.yaml) e testes (tests.yaml)
-├── .husky/              # Hooks do Git: pre-commit e commit-msg
-├── docs/                # Documentação do projeto
+├── .github/workflows/    # CI: lint (linting.yaml), testes (tests.yaml) e segredos (gitleaks.yaml)
+├── .husky/               # Hooks do Git: pre-commit e commit-msg
+├── components/
+│   └── AppHead/          # Título e descrição (<head>) das páginas
+├── configs/
+│   └── site.js           # Nome do site e textos padrão
+├── docs/                 # Documentação do projeto
 ├── infra/
-│   ├── compose.yaml     # PostgreSQL local (Docker Compose)
-│   ├── database.js      # Conexão e consultas ao banco
-│   ├── migrations/      # Migrations do banco (node-pg-migrate)
-│   └── scripts/         # Scripts auxiliares dos comandos npm
+│   ├── compose.yaml      # PostgreSQL local (Docker Compose)
+│   ├── database.js       # Conexão e consultas ao banco
+│   ├── errors.js         # Classes de erro da aplicação
+│   ├── migrations/       # Migrations do banco (node-pg-migrate)
+│   └── scripts/          # Scripts auxiliares dos comandos npm
 ├── pages/
-│   ├── api/v1/          # Endpoints da API (status e migrations)
-│   └── index.js         # Página inicial
+│   ├── api/v1/           # Endpoints da API (status e migrations)
+│   ├── status/           # Página de status do sistema (/status)
+│   ├── _app.js           # Carrega os estilos globais
+│   └── index.js          # Página inicial
+├── styles/
+│   ├── globals.css       # Variáveis de cor, fonte e reset
+│   └── shared.module.css # Estilos compartilhados entre as páginas
 ├── tests/
-│   ├── integration/     # Testes de integração da API
-│   └── orchestrator.js  # Utilitários dos testes (espera o servidor subir)
-├── .env.development     # Variáveis do ambiente local (valores descartáveis)
+│   ├── integration/      # Testes de integração da API
+│   └── orchestrator.js   # Utilitários dos testes (espera o servidor e limpa o banco)
+├── .env.development      # Variáveis do ambiente local (valores descartáveis)
+├── .gitleaks.toml        # Configuração do Gitleaks
 └── package.json
 ```
 
@@ -177,6 +195,8 @@ Em desenvolvimento e testes (`NODE_ENV` igual a `development` ou `test`), a apli
 | `GET`  | `/api/v1/migrations` | Lista as migrations pendentes, sem aplicá-las (dry-run) |
 | `POST` | `/api/v1/migrations` | Aplica as migrations pendentes                          |
 
+A página `/status` consome o `GET /api/v1/status`.
+
 > **Atenção:** o endpoint de migrations hoje **não tem proteção**. Ele será uma rota protegida no futuro.
 
 A especificação completa está em [docs/api/openapi.yaml](docs/api/openapi.yaml) e o guia de leitura em [docs/api/README.md](docs/api/README.md).
@@ -190,10 +210,10 @@ A especificação completa está em [docs/api/openapi.yaml](docs/api/openapi.yam
 
 Hooks do Git (instalados pelo Husky):
 
-- **pre-commit:** `ggshield` procura segredos no que será commitado e o `lint-staged` formata e valida os arquivos alterados.
+- **pre-commit:** o `ggshield` e o `gitleaks` procuram segredos no que será commitado e o `lint-staged` formata e valida os arquivos alterados.
 - **commit-msg:** o Commitlint rejeita mensagens fora do padrão.
 
-No Pull Request, o GitHub Actions executa Prettier, ESLint, Commitlint e os testes do Jest. Detalhes em [docs/desenvolvimento.md](docs/desenvolvimento.md).
+No Pull Request, o GitHub Actions executa Prettier, ESLint, Commitlint, os testes do Jest e o Gitleaks. Detalhes em [docs/desenvolvimento.md](docs/desenvolvimento.md).
 
 ## Deploy
 

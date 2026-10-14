@@ -8,12 +8,13 @@ Este guia complementa o [README](../README.md) com os detalhes do dia a dia de d
 
 - **Node.js:** 24.14.1, definido em `.nvmrc`. O `package.json` exige Node 24 (`engines`).
 - **PostgreSQL:** 16.0 (`postgres:16.0-alpine3.18`), definido em `infra/compose.yaml`. Roda em um container chamado `postgres-dev`, na porta `5432`.
+- **npm:** o arquivo `.npmrc` ativa `legacy-peer-deps=true`, então a instalação ignora conflitos de _peer dependencies_.
 
 ### Variáveis de ambiente
 
 O arquivo `.env.development` é versionado e contém apenas credenciais do banco local, descartáveis. Ele é lido pelo Docker Compose (que cria o banco com esses dados), pelos scripts de migration e pelo Jest.
 
-O `.gitguardian.yaml` define quais caminhos o ggshield ignora (`node_modules` e `.next`). Se o ggshield acusar as credenciais locais como segredo, o próprio arquivo traz, comentado, o formato para ignorar essa ocorrência específica.
+Os verificadores de segredos já levam isso em conta: o Gitleaks ignora o `.env.development` (veja `.gitleaks.toml`) e o `.gitguardian.yaml` define os caminhos que o ggshield ignora (`node_modules` e `.next`). Se o ggshield acusar as credenciais locais como segredo, o `.gitguardian.yaml` traz, comentado, o formato para ignorar essa ocorrência específica.
 
 ## Fluxo de trabalho
 
@@ -31,6 +32,8 @@ Por trás, o `npm run dev` executa `infra/scripts/dev.js`, que roda o `dev:raw` 
 | 2     | `npm run services:wait:database` | Consulta o `pg_isready` no container até o banco responder |
 | 3     | `npm run migrations:up`          | Aplica as migrations pendentes                             |
 | 4     | `next dev`                       | Inicia o servidor em `http://localhost:3000`               |
+
+Com o servidor no ar, a página inicial fica em `http://localhost:3000` e o painel de status em `http://localhost:3000/status`.
 
 Ao pressionar `Ctrl+C`, o script executa `npm run services:stop` e exibe a mensagem "Pressione 'Enter' para voltar ao console...".
 
@@ -69,12 +72,18 @@ Os testes ficam em `tests/integration/api/v1/` e seguem a estrutura dos endpoint
 | `migrations/get.test.js`  | `GET` devolve 200 e a lista de migrations pendentes                                 |
 | `migrations/post.test.js` | Primeiro `POST` devolve 201 e a lista aplicada; o segundo devolve 200 e lista vazia |
 
-O arquivo `tests/orchestrator.js` espera o servidor responder em `/api/v1/status` (até 100 tentativas) antes de os testes começarem.
+Padrão de escrita: cada arquivo tem um `describe` com o método e o caminho (por exemplo, `"GET /api/v1/status"`), dentro dele um `describe` por tipo de usuário (hoje só `"Usuário anônimo"`) e, por fim, os `test`. Quando existir login, os novos cenários entram como outro tipo de usuário.
+
+O arquivo `tests/orchestrator.js` reúne os utilitários dos testes:
+
+- **`waitForAllServices()`:** espera o servidor responder em `/api/v1/status` (até 100 tentativas) antes de os testes começarem.
+- **`clearDatabase()`:** apaga e recria o schema `public`, deixando o banco vazio.
 
 Cuidados:
 
-- Os testes de migrations executam `drop schema if exists public cascade; create schema public;`. Rodam contra o banco do `.env.development`, então esse arquivo nunca deve apontar para um banco com dados reais.
+- Os testes de migrations chamam `orchestrator.clearDatabase()`, que executa `drop schema if exists public cascade; create schema public;`. Rodam contra o banco do `.env.development`, então esse arquivo nunca deve apontar para um banco com dados reais.
 - O teste de status verifica a versão `16.0` e `max_connections` igual a `100`. Esses valores vêm da imagem do Docker.
+- Ainda não há testes para a página `/status` nem para a resposta `500` do endpoint.
 
 ## Padrão de commits
 
@@ -87,25 +96,53 @@ npm run commit
 
 Os tipos mais comuns são `feat` (nova funcionalidade), `fix` (correção), `docs` (documentação), `refactor`, `test` e `chore`. Exemplo: `docs: adiciona documentação da API`.
 
+## Proteção contra vazamento de segredos
+
+Duas ferramentas se complementam, e as duas rodam a cada commit:
+
+| Ferramenta             | Onde roda                                      | Configuração        |
+| ---------------------- | ---------------------------------------------- | ------------------- |
+| ggshield (GitGuardian) | Hook de pre-commit e scripts `npm run secrets` | `.gitguardian.yaml` |
+| Gitleaks               | Hook de pre-commit e CI de Pull Requests       | `.gitleaks.toml`    |
+
+Varreduras sob demanda com o ggshield:
+
+```bash
+# Procura segredos nos arquivos do projeto
+npm run secrets:scan
+
+# Procura segredos em todo o histórico do repositório
+npm run secrets:history
+```
+
+O `.gitleaks.toml` usa as regras padrão do Gitleaks e define uma lista de exceções (_allowlist_):
+
+- pastas que não são código do projeto (`node_modules`, `dist`, `build`, `coverage`, `tmp`, `cache`, `vendor` e `.git`);
+- o arquivo `.env.development`;
+- valores que contêm termos de exemplo, como `changeme`, `placeholder`, `example_password` ou `your_api_key`.
+
+Se o Gitleaks bloquear um commit, confira primeiro se é um segredo de verdade. Sendo, tire-o do commit e troque a credencial, porque ela deve ser considerada exposta. Sendo um falso positivo, ajuste a lista de exceções em `.gitleaks.toml` em vez de pular os hooks.
+
 ## Hooks do Git
 
 Instalados pelo Husky no `npm install` (script `prepare`):
 
-| Hook         | O que executa                                                  |
-| ------------ | -------------------------------------------------------------- |
-| `pre-commit` | `ggshield secret scan pre-commit` e, depois, `npx lint-staged` |
-| `commit-msg` | `npx commitlint --edit` (valida a mensagem)                    |
+| Hook         | O que executa                                                                                                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pre-commit` | 1. `ggshield secret scan pre-commit`; 2. `npx lint-staged`; 3. `gitleaks protect --staged --config=.gitleaks.toml --redact` (bloqueia o commit se o `gitleaks` não estiver instalado) |
+| `commit-msg` | `npx commitlint --edit` (valida a mensagem)                                                                                                                                           |
 
 O `lint-staged` roda o Prettier (`--write`) e o ESLint (sem avisos permitidos) nos arquivos `js`, `jsx`, `ts`, `tsx`, `css` e `md` do commit, e o Prettier nos demais `json`.
 
 ## Integração contínua
 
-Dois workflows do GitHub Actions rodam em todo Pull Request:
+Três workflows do GitHub Actions rodam em todo Pull Request:
 
-| Workflow        | Arquivo                          | Jobs                                                |
-| --------------- | -------------------------------- | --------------------------------------------------- |
-| Linting         | `.github/workflows/linting.yaml` | Prettier, ESLint e Commitlint (das mensagens do PR) |
-| Automated Tests | `.github/workflows/tests.yaml`   | Jest, com `npm test` no Node 24.14.1                |
+| Workflow        | Arquivo                           | Jobs                                                                                        |
+| --------------- | --------------------------------- | ------------------------------------------------------------------------------------------- |
+| Linting         | `.github/workflows/linting.yaml`  | Prettier, ESLint e Commitlint (das mensagens do PR)                                         |
+| Automated Tests | `.github/workflows/tests.yaml`    | Jest, com `npm test` no Node 24.14.1                                                        |
+| Gitleaks        | `.github/workflows/gitleaks.yaml` | `Scan for secrets`: varre o histórico do repositório com a configuração de `.gitleaks.toml` |
 
 Para reproduzir os checks localmente antes de abrir o PR:
 
@@ -123,5 +160,7 @@ npm test
 | `npm test` falha logo no início               | A porta `3000` está livre? Um `npm run dev` aberto em outro terminal ocupa essa porta            |
 | Teste de status falha em `opened_connections` | Há outra conexão aberta no banco local (um cliente de banco, por exemplo)                        |
 | O commit falha em `ggshield`                  | O ggshield está instalado e autenticado (`ggshield auth login`)?                                 |
+| O commit falha com "Gitleaks não encontrado"  | O `gitleaks` está instalado e no `PATH`? Teste com `gitleaks version`                            |
+| O commit falha por segredo detectado          | Veja a seção "Proteção contra vazamento de segredos" acima                                       |
 | O commit falha em `commitlint`                | A mensagem segue o padrão `tipo: descrição`? Use `npm run commit`                                |
 | Avisos de versão do Node ao instalar          | Rode `nvm use` para usar a versão do `.nvmrc`                                                    |

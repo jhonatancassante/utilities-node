@@ -55,6 +55,8 @@ paths:
         A resposta agrupa as informações por dependência em `dependencies`.
         Hoje existe apenas `database`.
 
+        A página `/status` do site consome este endpoint a cada 5 segundos.
+
         O valor de `opened_connections` considera o banco indicado na variável
         de ambiente `POSTGRES_DB` e, se ela não estiver definida, o banco
         `postgres`.
@@ -106,7 +108,7 @@ paths:
                   name: 1791773509988_teste
                   timestamp: 1791773509988
         "500":
-          $ref: "#/components/responses/InternalServerError"
+          $ref: "#/components/responses/UnhandledServerError"
     post:
       tags:
         - Migrations
@@ -143,7 +145,7 @@ paths:
                   $ref: "#/components/schemas/Migration"
               example: []
         "500":
-          $ref: "#/components/responses/InternalServerError"
+          $ref: "#/components/responses/UnhandledServerError"
 
 components:
   schemas:
@@ -221,8 +223,52 @@ components:
           examples:
             - 1791773509988
 
+    InternalServerErrorBody:
+      type: object
+      description: >-
+        Erro interno da aplicação. O erro original é registrado no console do
+        servidor e não é exposto na resposta.
+      required:
+        - name
+        - message
+        - action
+        - statusCode
+      properties:
+        name:
+          type: string
+          const: InternalServerError
+          description: Tipo do erro.
+        message:
+          type: string
+          description: O que aconteceu.
+          examples:
+            - Um erro interno não esperado aconteceu.
+        action:
+          type: string
+          description: O que fazer a respeito.
+          examples:
+            - Entre em contato com o suporte.
+        statusCode:
+          type: integer
+          const: 500
+          description: Código HTTP da resposta.
+
   responses:
     InternalServerError:
+      description: >-
+        Falha ao consultar o banco de dados (por exemplo, banco inacessível).
+        O corpo é um JSON padronizado.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/InternalServerErrorBody"
+          example:
+            name: InternalServerError
+            message: Um erro interno não esperado aconteceu.
+            action: Entre em contato com o suporte.
+            statusCode: 500
+
+    UnhandledServerError:
       description: >-
         Falha inesperada, por exemplo banco de dados inacessível. O erro é
         registrado no console do servidor e o corpo da resposta é definido
