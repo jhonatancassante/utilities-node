@@ -1,0 +1,91 @@
+@import url("https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+:root {
+  --color-bg: #f7f3ff;
+  --color-surface: #ffffff;
+  --color-primary: #6600ff;
+  --color-primary-soft: #eee5ff;
+  --color-border: #e6dcff;
+
+  --color-text-strong: #2d1557;
+  --color-text: #5f5373;
+  --color-text-muted: #766b88;
+  --color-text-faint: #968ba6;
+
+  --color-box-bg: #fbf9ff;
+  --color-box-border: #f0ebff;
+
+  --color-success-bg: #e6f4ea;
+  --color-success-fg: #137333;
+  --color-warning-bg: #fef7e0;
+  --color-warning-fg: #b06000;
+  --color-error-bg: #fce8e6;
+  --color-error-fg: #c5221f;
+  --color-error-box-bg: #fff5f5;
+  --color-error-box-border: #fed7d7;
+}
+
+/* 1. Reset universal: padroniza a forma como as dimensões são calculadas */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f7f3ff;
+  font-family: "Fira Sans", sans-serif;
+  /* Melhora a renderização do texto na tela */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Define uma altura de linha padrão mais legível */
+  line-height: 1.5;
+}
+
+/* 2. Remove margens indesejadas de elementos de texto e listas */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+/* 3. Remove o estilo padrão de listas (bolinhas e números) */
+ul,
+ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 4. Torna imagens e mídias fluidas, evitando que transbordem */
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* 5. Herda fontes e estilos automaticamente para inputs e botões */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* 6. Remove sublinhado padrão de links e herda a cor */
+a {
+  text-decoration: none;
+  color: inherit;
+}

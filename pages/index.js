@@ -1,24 +1,23 @@
-import Head from "next/head";
+import AppHead from "@/components/AppHead";
+import siteConfigs from "@/configs/site.js";
+import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 function Home() {
   return (
     <>
-      <Head>
-        <title>Utilities | Em construção</title>
-        <meta
-          name="description"
-          content="Uma nova versão dos meus utilitários de trabalho está sendo construída."
-        />
-      </Head>
+      <AppHead
+        title="Em construção"
+        description="Uma nova versão dos meus utilitários de trabalho está sendo construída."
+      />
 
-      <main className={styles.container}>
-        <section className={styles.card}>
-          <div className={styles.icon} aria-hidden="true">
+      <main className={shared.container}>
+        <section className={`${shared.card} ${styles.card}`}>
+          <div className={shared.icon} aria-hidden="true">
             🛠️
           </div>
 
-          <span className={styles.badge}>EM CONSTRUÇÃO</span>
+          <span className={shared.badge}>EM CONSTRUÇÃO</span>
 
           <h1>
             Estamos preparando
@@ -39,7 +38,7 @@ function Home() {
             <div className={styles.progressBar}></div>
           </div>
 
-          <small>Utilities Node.js · Em desenvolvimento</small>
+          <small>{siteConfigs.appName} · Em desenvolvimento</small>
         </section>
       </main>
     </>

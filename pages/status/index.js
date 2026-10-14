@@ -1,5 +1,7 @@
-import Head from "next/head";
 import useSWR from "swr";
+import AppHead from "@/components/AppHead";
+import siteConfigs from "@/configs/site.js";
+import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 async function fetchAPI(key) {
@@ -16,7 +18,6 @@ function StatusPage() {
   });
   const isWarning = isLoading;
 
-  const statusIcon = error ? "🔴" : isWarning ? "🟡" : "🟢";
   const statusBadgeText = error
     ? "ERRO NO SISTEMA"
     : isWarning
@@ -30,28 +31,18 @@ function StatusPage() {
 
   return (
     <>
-      <Head>
-        <title>Utilities | Status do Sistema</title>
-        <meta
-          name="description"
-          content="Painel de monitoramento do sistema e banco de dados em tempo real."
-        />
-      </Head>
+      <AppHead
+        title="Status do Sistema"
+        description="Painel de monitoramento do sistema e banco de dados em tempo real."
+      />
 
-      <main className={styles.container}>
-        <section className={styles.card}>
-          <div
-            className={`${styles.icon} ${error ? styles.iconError : isWarning ? styles.iconWarning : styles.iconSuccess}`}
-            aria-hidden="true"
-          >
-            {statusIcon}
-          </div>
-
+      <main className={shared.container}>
+        <section className={`${shared.card} ${styles.card}`}>
           <div style={{ textAlign: "center" }}>
-            <span className={`${styles.badge} ${statusBadgeClass}`}>
+            <h1>Status do Sistema</h1>
+            <span className={`${shared.badge} ${statusBadgeClass}`}>
               {statusBadgeText}
             </span>
-            <h1>Status do Sistema</h1>
           </div>
 
           <UpdatedAt
@@ -66,7 +57,9 @@ function StatusPage() {
             data={data?.dependencies?.database}
           />
 
-          <small>Utilities Node.js · Atualização automática a cada 5s</small>
+          <small>
+            {siteConfigs.appName} · Atualização automática a cada 5s
+          </small>
         </section>
       </main>
     </>
