@@ -1,0 +1,234 @@
+openapi: 3.1.0
+
+info:
+  title: Utilities Node API
+  version: 1.0.0
+  summary: API do projeto utilities-node.
+  description: |
+    API do **utilities-node**, a nova implementação dos utilitários de trabalho
+    em Node.js.
+
+    Hoje a API tem dois endpoints de infraestrutura:
+
+    - `GET /api/v1/status`: verifica a saúde da aplicação e do banco de dados.
+      Serve apenas para esse fim; a aplicação ainda ganhará login e outras
+      funcionalidades que utilizam o banco de dados.
+    - `/api/v1/migrations`: consulta (`GET`) e aplica (`POST`) as migrations
+      do banco.
+
+    **Autenticação:** ainda não existe. O endpoint de migrations está, por
+    enquanto, **sem proteção** e será transformado em uma rota protegida.
+  license:
+    name: MIT
+    identifier: MIT
+
+servers:
+  - url: https://utilities-node.vercel.app
+    description: Produção (Vercel)
+  - url: http://localhost:3000
+    description: Desenvolvimento local
+
+# Nenhum endpoint exige autenticação por enquanto (lista vazia = sem proteção).
+# Quando /api/v1/migrations passar a ser protegida, declare o esquema em
+# components.securitySchemes e aplique-o somente a essa rota.
+security: []
+
+tags:
+  - name: Status
+    description: Verificação de saúde da aplicação.
+  - name: Migrations
+    description: >-
+      Manutenção do esquema do banco de dados. Endpoint atualmente sem
+      proteção, que será uma rota protegida no futuro.
+
+paths:
+  /api/v1/status:
+    get:
+      tags:
+        - Status
+      operationId: getStatus
+      summary: Verifica a saúde da aplicação
+      description: |
+        Verifica se a aplicação está no ar e consegue consultar o banco de
+        dados. Não altera nenhum dado.
+
+        A resposta agrupa as informações por dependência em `dependencies`.
+        Hoje existe apenas `database`.
+
+        O valor de `opened_connections` considera o banco indicado na variável
+        de ambiente `POSTGRES_DB` e, se ela não estiver definida, o banco
+        `postgres`.
+      responses:
+        "200":
+          description: Aplicação saudável.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+              example:
+                updated_at: "2026-10-13T13:06:00.000Z"
+                dependencies:
+                  database:
+                    version: "16.0"
+                    max_connections: 100
+                    opened_connections: 1
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/migrations:
+    description: |
+      Aceita apenas `GET` e `POST`. Qualquer outro método recebe `405` com o
+      corpo `{ "error": "Método \"<MÉTODO>\" não permitido." }`.
+
+      **Atenção:** este endpoint não exige autenticação. A intenção é
+      transformá-lo em uma rota protegida no futuro.
+    get:
+      tags:
+        - Migrations
+      operationId: listPendingMigrations
+      summary: Lista as migrations pendentes
+      description: |
+        Executa as migrations em modo de simulação (_dry-run_): informa quais
+        seriam aplicadas, sem alterar o banco de dados.
+      responses:
+        "200":
+          description: >-
+            Lista das migrations pendentes. Lista vazia indica que o banco
+            está em dia.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Migration"
+              example:
+                - path: /app/infra/migrations/1791773509988_teste.js
+                  name: 1791773509988_teste
+                  timestamp: 1791773509988
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - Migrations
+      operationId: runMigrations
+      summary: Aplica as migrations pendentes
+      description: |
+        Aplica ao banco todas as migrations pendentes, em ordem de
+        `timestamp`. O histórico fica na tabela `pgmigrations`.
+
+        A operação é repetível: sem migrations novas, devolve `200` e uma
+        lista vazia.
+      responses:
+        "201":
+          description: Havia migrations pendentes e elas foram aplicadas.
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 1
+                items:
+                  $ref: "#/components/schemas/Migration"
+              example:
+                - path: /app/infra/migrations/1791773509988_teste.js
+                  name: 1791773509988_teste
+                  timestamp: 1791773509988
+        "200":
+          description: Nenhuma migration pendente. Nada foi alterado.
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 0
+                items:
+                  $ref: "#/components/schemas/Migration"
+              example: []
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  schemas:
+    StatusResponse:
+      type: object
+      description: Situação da aplicação e de suas dependências.
+      required:
+        - updated_at
+        - dependencies
+      properties:
+        updated_at:
+          type: string
+          format: date-time
+          description: Momento em que a resposta foi gerada (ISO 8601, UTC).
+          examples:
+            - "2026-10-13T13:06:00.000Z"
+        dependencies:
+          type: object
+          description: Situação de cada dependência da aplicação.
+          required:
+            - database
+          properties:
+            database:
+              $ref: "#/components/schemas/DatabaseStatus"
+
+    DatabaseStatus:
+      type: object
+      description: Situação do banco de dados PostgreSQL.
+      required:
+        - version
+        - max_connections
+        - opened_connections
+      properties:
+        version:
+          type: string
+          description: Versão do PostgreSQL (`SHOW server_version`).
+          examples:
+            - "16.0"
+        max_connections:
+          type: integer
+          minimum: 1
+          description: Limite de conexões simultâneas (`SHOW max_connections`).
+          examples:
+            - 100
+        opened_connections:
+          type: integer
+          minimum: 0
+          description: >-
+            Conexões abertas no banco da aplicação, contadas em
+            `pg_stat_activity`. Inclui a conexão da própria consulta.
+          examples:
+            - 1
+
+    Migration:
+      type: object
+      description: Uma migration do banco de dados.
+      required:
+        - path
+        - name
+        - timestamp
+      properties:
+        path:
+          type: string
+          description: Caminho do arquivo da migration no servidor.
+        name:
+          type: string
+          description: Nome da migration, sem a extensão do arquivo.
+          examples:
+            - 1791773509988_teste
+        timestamp:
+          type: integer
+          format: int64
+          description: >-
+            Número que inicia o nome do arquivo. Define a ordem de execução.
+          examples:
+            - 1791773509988
+
+  responses:
+    InternalServerError:
+      description: >-
+        Falha inesperada, por exemplo banco de dados inacessível. O erro é
+        registrado no console do servidor e o corpo da resposta é definido
+        pelo Next.js (não é JSON).
+      content:
+        text/plain:
+          schema:
+            type: string
+          example: Internal Server Error
