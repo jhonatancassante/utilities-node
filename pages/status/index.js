@@ -1,6 +1,7 @@
 import useSWR from "swr";
 import AppHead from "@/components/AppHead";
 import siteConfigs from "@/configs/site.js";
+import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 async function fetchAPI(key) {
@@ -35,11 +36,11 @@ function StatusPage() {
         description="Painel de monitoramento do sistema e banco de dados em tempo real."
       />
 
-      <main className={styles.container}>
-        <section className={styles.card}>
+      <main className={shared.container}>
+        <section className={`${shared.card} ${styles.card}`}>
           <div style={{ textAlign: "center" }}>
             <h1>Status do Sistema</h1>
-            <span className={`${styles.badge} ${statusBadgeClass}`}>
+            <span className={`${shared.badge} ${statusBadgeClass}`}>
               {statusBadgeText}
             </span>
           </div>
