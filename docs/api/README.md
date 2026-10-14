@@ -25,6 +25,8 @@ Verifica a saúde da aplicação. É o endpoint para saber se o sistema está no
 
 Hoje a aplicação depende só do banco. Conforme ela ganhar login e outras funcionalidades que usam o banco de dados, esse endpoint continua sendo a referência de saúde do sistema.
 
+A página [`/status`](https://utilities-node.vercel.app/status) do site consome este endpoint a cada 5 segundos para montar o painel de monitoramento.
+
 **Resposta `200`**
 
 ```json
@@ -49,7 +51,23 @@ Hoje a aplicação depende só do banco. Conforme ela ganhar login e outras func
 
 A contagem de conexões considera o banco indicado em `POSTGRES_DB` e, se a variável não existir, o banco `postgres`.
 
-**Resposta `500`:** se o banco estiver inacessível, o Next.js devolve um erro `500` e o motivo é registrado no console do servidor. Esse corpo não segue o formato JSON dos demais.
+**Resposta `500`:** qualquer falha ao consultar o banco (por exemplo, banco inacessível) resulta em um JSON padronizado. O erro original é registrado no console do servidor e não é exposto na resposta.
+
+```json
+{
+  "name": "InternalServerError",
+  "message": "Um erro interno não esperado aconteceu.",
+  "action": "Entre em contato com o suporte.",
+  "statusCode": 500
+}
+```
+
+| Campo        | Tipo    | Descrição                            |
+| ------------ | ------- | ------------------------------------ |
+| `name`       | texto   | Tipo do erro (`InternalServerError`) |
+| `message`    | texto   | O que aconteceu                      |
+| `action`     | texto   | O que fazer a respeito               |
+| `statusCode` | inteiro | Código HTTP da resposta (`500`)      |
 
 **Exemplo**
 
@@ -87,11 +105,11 @@ curl http://localhost:3000/api/v1/migrations
 
 **Aplica** as migrations pendentes ao banco.
 
-| Código | Quando                                                       | Corpo                          |
-| ------ | ------------------------------------------------------------ | ------------------------------ |
-| `201`  | Havia migrations pendentes e foram aplicadas                 | Lista das migrations aplicadas |
-| `200`  | Nenhuma migration pendente                                   | Lista vazia (`[]`)             |
-| `500`  | Falha ao executar (banco inacessível, erro em uma migration) | Definido pelo Next.js          |
+| Código | Quando                                                       | Corpo                                                               |
+| ------ | ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `201`  | Havia migrations pendentes e foram aplicadas                 | Lista das migrations aplicadas                                      |
+| `200`  | Nenhuma migration pendente                                   | Lista vazia (`[]`)                                                  |
+| `500`  | Falha ao executar (banco inacessível, erro em uma migration) | Definido pelo Next.js (não é JSON, ao contrário do `500` do status) |
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/migrations
