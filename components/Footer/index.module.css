@@ -1,0 +1,38 @@
+/* components/Footer/index.module.css */
+.footer {
+  width: 100%;
+  margin-top: auto;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  background-color: var(--footer-bg);
+  transition: background-color 0.3s ease;
+}
+
+.social {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.social a {
+  color: var(--text-primary);
+  font-size: 1.6em;
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.social a:hover {
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.copyright {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}

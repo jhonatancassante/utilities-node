@@ -1,5 +1,7 @@
+// pages/status/index.js
 import useSWR from "swr";
 import AppHead from "@/components/AppHead";
+import Layout from "@/components/Layout";
 import siteConfigs from "@/configs/site.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
@@ -36,32 +38,34 @@ function StatusPage() {
         description="Painel de monitoramento do sistema e banco de dados em tempo real."
       />
 
-      <main className={shared.container}>
-        <section className={`${shared.card} ${styles.card}`}>
-          <div style={{ textAlign: "center" }}>
-            <h1>Status do Sistema</h1>
-            <span className={`${shared.badge} ${statusBadgeClass}`}>
-              {statusBadgeText}
-            </span>
-          </div>
+      <Layout title="Status" icon="fa-heartbeat" backHref="/">
+        <main className={shared.container}>
+          <section className={`${shared.card} ${styles.card}`}>
+            <div style={{ textAlign: "center" }}>
+              <h1>Status do Sistema</h1>
+              <span className={`${shared.badge} ${statusBadgeClass}`}>
+                {statusBadgeText}
+              </span>
+            </div>
 
-          <UpdatedAt
-            isLoading={isLoading}
-            error={error}
-            data={data?.updated_at}
-          />
+            <UpdatedAt
+              isLoading={isLoading}
+              error={error}
+              data={data?.updated_at}
+            />
 
-          <DatabaseStatus
-            isLoading={isLoading}
-            error={error}
-            data={data?.dependencies?.database}
-          />
+            <DatabaseStatus
+              isLoading={isLoading}
+              error={error}
+              data={data?.dependencies?.database}
+            />
 
-          <small>
-            {siteConfigs.appName} · Atualização automática a cada 5s
-          </small>
-        </section>
-      </main>
+            <small>
+              {siteConfigs.appName} · Atualização automática a cada 5s
+            </small>
+          </section>
+        </main>
+      </Layout>
     </>
   );
 }
