@@ -27,20 +27,18 @@ function getConfig() {
   return { connectionString: url.toString() };
 }
 
-const query = async (queryObject) => {
+async function query(queryObject) {
   let client;
-  let connected = false;
   try {
     client = await getNewClient();
-    connected = true;
     return await client.query(queryObject);
   } catch (error) {
     console.error(error);
     throw error;
   } finally {
-    if (connected) await client.end();
+    await client?.end();
   }
-};
+}
 
 async function getNewClient() {
   const client = new Client(getConfig());
