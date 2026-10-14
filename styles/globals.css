@@ -1,28 +1,102 @@
-@import url("https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+/* eslint-disable css/no-important */
+/* styles/globals.css */
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
 
 :root {
-  --color-bg: #f7f3ff;
-  --color-surface: #ffffff;
-  --color-primary: #6600ff;
-  --color-primary-soft: #eee5ff;
-  --color-border: #e6dcff;
+  /* Superfícies */
+  --bg-primary: #eef2f8;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
 
-  --color-text-strong: #2d1557;
-  --color-text: #5f5373;
-  --color-text-muted: #766b88;
-  --color-text-faint: #968ba6;
+  /* Texto */
+  --text-primary: #10233d;
+  --text-secondary: #52627a;
+  --text-faint: #6b7a91;
 
-  --color-box-bg: #fbf9ff;
-  --color-box-border: #f0ebff;
+  /* Marca / Ação */
+  --accent: #2554c7;
+  --accent-hover: #1c3f9e;
+  --accent-soft: #dde8fb;
+  --header-grad-start: #16305a;
+  --header-grad-end: #2554c7;
+  --header-text: #ffffff;
 
-  --color-success-bg: #e6f4ea;
-  --color-success-fg: #137333;
-  --color-warning-bg: #fef7e0;
-  --color-warning-fg: #b06000;
-  --color-error-bg: #fce8e6;
-  --color-error-fg: #c5221f;
-  --color-error-box-bg: #fff5f5;
-  --color-error-box-border: #fed7d7;
+  /* Estados semânticos */
+  --success: #1f9d6b;
+  --success-bg: #e3f5ec;
+  --success-fg: #137a52;
+  --warning-bg: #fef3d6;
+  --warning-fg: #9a5b00;
+  --danger: #d93b3f;
+  --danger-bg: #fce8e6;
+  --danger-fg: #c5221f;
+  --danger-box-bg: #fff5f5;
+  --danger-box-border: #fed7d7;
+
+  /* Estrutura */
+  --border-color: #d7e1ef;
+  --box-bg: #f6f9fe;
+  --box-border: #e1e9f5;
+  --info-bg: #e4edfc;
+  --footer-bg: #e3ebf6;
+  --grid-line: rgba(37, 84, 199, 0.07);
+  --focus-ring: #6f9bf0;
+
+  /* Tipografia */
+  --font-display: "Space Grotesk", "Segoe UI", Tahoma, sans-serif;
+  --font-body: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  --font-mono: "JetBrains Mono", "Courier New", monospace;
+
+  /* Forma e profundidade */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(16, 35, 61, 0.07);
+  --shadow-md: 0 10px 25px rgba(16, 35, 61, 0.12);
+  --transition-fast: 0.18s ease;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0b1526;
+  --bg-card: #12213b;
+  --bg-elevated: #17284a;
+
+  --text-primary: #e8edf7;
+  --text-secondary: #9aacc5;
+  --text-faint: #7f91ab;
+
+  --accent: #6d9bf5;
+  --accent-hover: #8ab0f7;
+  --accent-soft: #1c2f52;
+  --header-grad-start: #08101f;
+  --header-grad-end: #1c3868;
+  --header-text: #f2f6fd;
+
+  --success: #35c98d;
+  --success-bg: rgba(53, 201, 141, 0.14);
+  --success-fg: #4fd9a0;
+  --warning-bg: rgba(245, 183, 64, 0.14);
+  --warning-fg: #f5c04d;
+  --danger: #f0787b;
+  --danger-bg: rgba(240, 120, 123, 0.14);
+  --danger-fg: #f48f92;
+  --danger-box-bg: rgba(240, 120, 123, 0.08);
+  --danger-box-border: rgba(240, 120, 123, 0.3);
+
+  --border-color: #26385a;
+  --box-bg: #0f1c33;
+  --box-border: #22345a;
+  --info-bg: #17284a;
+  --footer-bg: #0d1728;
+  --grid-line: rgba(109, 155, 245, 0.08);
+  --focus-ring: #8ab0f7;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.45);
+
+  color-scheme: dark;
 }
 
 /* 1. Reset universal: padroniza a forma como as dimensões são calculadas */
@@ -32,18 +106,30 @@
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  background: #f7f3ff;
-  font-family: "Fira Sans", sans-serif;
-  /* Melhora a renderização do texto na tela */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* Define uma altura de linha padrão mais legível */
-  line-height: 1.5;
+html {
+  scroll-behavior: smooth;
 }
 
-/* 2. Remove margens indesejadas de elementos de texto e listas */
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  /* Grade técnica sutil ao fundo */
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 2. Remove margens indesejadas de elementos de texto */
 h1,
 h2,
 h3,
@@ -58,7 +144,14 @@ dd {
   margin: 0;
 }
 
-/* 3. Remove o estilo padrão de listas (bolinhas e números) */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* 3. Remove o estilo padrão de listas */
 ul,
 ol {
   list-style: none;
@@ -66,7 +159,7 @@ ol {
   padding: 0;
 }
 
-/* 4. Torna imagens e mídias fluidas, evitando que transbordem */
+/* 4. Torna imagens e mídias fluidas */
 img,
 picture,
 video,
@@ -76,7 +169,7 @@ svg {
   max-width: 100%;
 }
 
-/* 5. Herda fontes e estilos automaticamente para inputs e botões */
+/* 5. Herda fontes em campos de formulário */
 input,
 button,
 textarea,
@@ -84,8 +177,26 @@ select {
   font: inherit;
 }
 
-/* 6. Remove sublinhado padrão de links e herda a cor */
+/* 6. Links sem sublinhado, herdando a cor */
 a {
   text-decoration: none;
   color: inherit;
+}
+
+/* Acessibilidade: foco visível consistente em toda a aplicação */
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respeita a preferência do sistema por menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

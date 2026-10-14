@@ -1,10 +1,11 @@
+/* pages/index.module.css */
 .card {
   text-align: center;
 }
 
 .card h1 {
   margin: 0 0 20px;
-  color: var(--color-text-strong);
+  color: var(--text-primary);
   font-size: 38px;
   line-height: 1.2;
 }
@@ -12,14 +13,18 @@
 .card p {
   max-width: 500px;
   margin: 0 auto 14px;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 17px;
   line-height: 1.7;
 }
 
 .secondaryText {
   font-size: 15px;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
+}
+
+.card p.secondaryText {
+  font-size: 15px;
 }
 
 .progress {
@@ -28,18 +33,19 @@
   margin: 32px 0 16px;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--color-border);
+  background: var(--border-color);
 }
 
 .progressBar {
   width: 19.5%;
   height: 100%;
   border-radius: 999px;
-  background: var(--color-primary);
+  background: linear-gradient(90deg, var(--accent), var(--accent-hover));
 }
 
 .card small {
-  color: var(--color-text-faint);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
   font-size: 12px;
 }
 

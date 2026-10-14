@@ -1,10 +1,11 @@
+/* pages/status/index.module.css */
 .card {
   text-align: left;
 }
 
 .card h1 {
   margin: 0 0 20px;
-  color: var(--color-text-strong);
+  color: var(--text-primary);
   font-size: 32px;
   line-height: 1.2;
   text-align: center;
@@ -12,20 +13,21 @@
 
 .card p {
   margin: 0 0 12px;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 16px;
   line-height: 1.6;
 }
 
 .secondaryText {
   font-size: 15px;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   margin-bottom: 24px;
   text-align: center;
 }
 
 .card small {
-  color: var(--color-text-faint);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
   font-size: 12px;
   display: block;
   text-align: center;
@@ -52,7 +54,7 @@
   margin: 24px 0;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--color-border);
+  background: var(--border-color);
   position: relative;
 }
 
@@ -60,33 +62,33 @@
   width: 100%;
   height: 100%;
   border-radius: 999px;
-  background: var(--color-primary);
+  background: var(--accent);
   animation: loadingSlide 1.5s infinite ease-in-out;
 }
 
 /* Variantes do badge principal (base em shared.module.css) */
 
 .badgeSuccess {
-  background: var(--color-success-bg);
-  color: var(--color-success-fg);
+  background: var(--success-bg);
+  color: var(--success-fg);
 }
 
 .badgeWarning {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-fg);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
 }
 
 .badgeError {
-  background: var(--color-error-bg);
-  color: var(--color-error-fg);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
 }
 
 /* Caixa de métricas */
 
 .metricsBox {
-  background: var(--color-box-bg);
-  border: 1px solid var(--color-box-border);
-  border-radius: 12px;
+  background: var(--box-bg);
+  border: 1px solid var(--box-border);
+  border-radius: var(--radius-md);
   padding: 20px;
   margin: 24px 0;
   display: flex;
@@ -98,17 +100,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--font-display);
   font-size: 18px;
 }
 
 .metricsBoxError {
-  background: var(--color-error-box-bg);
-  border: 1px solid var(--color-error-box-border);
-  color: var(--color-error-fg);
-  border-radius: 12px;
+  background: var(--danger-box-bg);
+  border: 1px solid var(--danger-box-border);
+  color: var(--danger-fg);
+  border-radius: var(--radius-md);
   padding: 20px;
   margin: 24px 0;
   text-align: center;
+}
+
+.metricsBoxError p {
+  margin: 0;
+  color: var(--danger-fg);
 }
 
 .metricRow {
@@ -129,8 +137,9 @@
 .tagWarning,
 .tagError {
   display: inline-block;
+  font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: bold;
+  font-weight: 500;
   padding: 2px 6px;
   border-radius: 4px;
   margin-right: 8px;
@@ -138,42 +147,43 @@
 }
 
 .tagSuccess {
-  background: var(--color-success-bg);
-  color: var(--color-success-fg);
+  background: var(--success-bg);
+  color: var(--success-fg);
 }
 
 .tagWarning {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-fg);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
 }
 
 .tagError {
-  background: var(--color-error-bg);
-  color: var(--color-error-fg);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
 }
 
 /* Badges de valor: base + variantes só com cor */
 
 .valueBadge {
   padding: 4px 10px;
-  border-radius: 6px;
-  font-weight: bold;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-weight: 500;
   font-size: 14px;
 }
 
 .valueBadgeSuccess {
-  background: var(--color-success-bg);
-  color: var(--color-success-fg);
+  background: var(--success-bg);
+  color: var(--success-fg);
 }
 
 .valueBadgeWarning {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-fg);
+  background: var(--warning-bg);
+  color: var(--warning-fg);
 }
 
 .valueBadgeError {
-  background: var(--color-error-bg);
-  color: var(--color-error-fg);
+  background: var(--danger-bg);
+  color: var(--danger-fg);
 }
 
 @media (max-width: 600px) {
