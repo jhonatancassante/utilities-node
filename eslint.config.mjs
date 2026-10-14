@@ -50,6 +50,13 @@ export default defineConfig([
     plugins: { css },
     language: "css/css",
     extends: ["css/recommended"],
+    rules: {
+      ...css.configs.recommended.rules,
+      "css/no-invalid-properties": [
+        "error",
+        { allowUnknownVariables: true },
+      ],
+    },
   },
   prettier,
 ]);
