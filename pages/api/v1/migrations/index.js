@@ -1,39 +1,42 @@
 import { runner as migrationRunner } from "node-pg-migrate";
 import { resolve } from "node:path";
+
 import database from "@/infra/database.js";
+import controller from "@/infra/controller.js";
 
-export default async function migrations(request, response) {
-  const allowedMethods = ["GET", "POST"];
+export default controller.createController({
+  GET: getHandler,
+  POST: postHandler,
+});
 
-  if (!allowedMethods.includes(request.method)) {
-    return response
-      .status(405)
-      .json({ error: `Método "${request.method}" não permitido.` });
-  }
+async function getHandler(request, response) {
+  const pendingMigrations = await runMigrations({ dryRun: true });
 
+  return response.status(200).json(pendingMigrations);
+}
+
+async function postHandler(request, response) {
+  const appliedMigrations = await runMigrations({ dryRun: false });
+  const statusCode = appliedMigrations.length > 0 ? 201 : 200;
+
+  return response.status(statusCode).json(appliedMigrations);
+}
+
+async function runMigrations({ dryRun }) {
   let dbClient;
 
   try {
     dbClient = await database.getNewClient();
-    const isDryRun = request.method === "GET";
 
-    const migrations = await migrationRunner({
+    return await migrationRunner({
       dbClient,
-      dryRun: isDryRun,
+      dryRun,
       dir: resolve("infra", "migrations"),
       direction: "up",
       verbose: true,
       migrationsTable: "pgmigrations",
     });
-
-    const statusCode =
-      request.method === "POST" && migrations.length > 0 ? 201 : 200;
-
-    return response.status(statusCode).json(migrations);
-  } catch (error) {
-    console.error(error);
-    throw error;
   } finally {
-    await dbClient.end();
+    await dbClient?.end();
   }
 }
