@@ -1,7 +1,7 @@
-const { runScript } = require("./spawn.js");
+import spawnRunner from "./spawn.js";
 
 (async function main() {
-  runScript("dev:raw", {
+  spawnRunner.runScript("dev:raw", {
     cleanup: true,
     afterExit: () =>
       console.log(

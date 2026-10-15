@@ -1,4 +1,4 @@
-const { spawn } = require("node:child_process");
+import { spawn } from "node:child_process";
 
 function npmBin() {
   return process.platform === "win32" ? "npm.cmd" : "npm";
@@ -92,4 +92,6 @@ function runScript(script, options = {}) {
   return proc;
 }
 
-module.exports = { runScript };
+const spawnRunner = { runScript };
+
+export default spawnRunner;
