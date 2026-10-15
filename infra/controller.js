@@ -1,6 +1,10 @@
 import { createRouter } from "next-connect";
 
-import { InternalServerError, MethodNotAllowedError } from "@/infra/errors.js";
+import {
+  InternalServerError,
+  MethodNotAllowedError,
+  ValidationError,
+} from "@/infra/errors.js";
 
 function createController(handlers) {
   const router = createRouter();
@@ -20,7 +24,12 @@ function createController(handlers) {
         .status(publicErrorObject.statusCode)
         .json(publicErrorObject);
     },
+
     onError: (error, request, response) => {
+      if (error instanceof ValidationError) {
+        return response.status(error.statusCode).json(error);
+      }
+
       const publicErrorObject = new InternalServerError({
         statusCode: error.statusCode,
         cause: error,
