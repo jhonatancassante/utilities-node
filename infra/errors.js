@@ -97,3 +97,25 @@ export class NotFoundError extends Error {
     };
   }
 }
+
+export class ConfigurationError extends Error {
+  constructor({ cause, message, action }) {
+    super(message || "Configuração da aplicação ausente ou inválida.", {
+      cause,
+    });
+    this.name = "ConfigurationError";
+    this.action =
+      action ||
+      "Verifique as configurações internas ou as variáveis de ambiente do servidor.";
+    this.statusCode = 500;
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    };
+  }
+}
