@@ -3,12 +3,28 @@ import password from "@/models/password.js";
 import { ValidationError, NotFoundError } from "@/infra/errors.js";
 
 async function create(userInputValues) {
+  await validateEmailFormat(userInputValues.email);
   await validateUniqueEmail(userInputValues.email);
   await validateUniqueUsername(userInputValues.username);
   await hashPasswordInObject(userInputValues);
 
   const newUser = await runInsertQuery(userInputValues);
   return newUser;
+
+  function validateEmailFormat(email) {
+    const cleanEmail = email.trim();
+
+    // Regex padrão para validação estrutural de e-mail
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(cleanEmail)) {
+      throw new ValidationError({
+        message: "O e-mail informado não possui um formato válido.",
+        action:
+          "Verifique se digitou o e-mail corretamente (ex: nome@dominio.com).",
+      });
+    }
+  }
 
   async function validateUniqueEmail(email) {
     const results = await database.query({

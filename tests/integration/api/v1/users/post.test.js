@@ -56,6 +56,31 @@ describe("POST /api/v1/users", () => {
       expect(incorrectPasswordMatch).toBe(false);
     });
 
+    test("Com email inválido", async () => {
+      const response = await fetch("http://localhost:3000/api/v1/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: "emailInvalido",
+          email: "emailInvalido",
+          password: "senha123",
+        }),
+      });
+      expect(response.status).toBe(400);
+
+      const responseBody = await response.json();
+
+      expect(responseBody).toEqual({
+        name: "ValidationError",
+        message: "O e-mail informado não possui um formato válido.",
+        action:
+          "Verifique se digitou o e-mail corretamente (ex: nome@dominio.com).",
+        status_code: 400,
+      });
+    });
+
     test("Com email duplicado", async () => {
       const response1 = await fetch("http://localhost:3000/api/v1/users", {
         method: "POST",
