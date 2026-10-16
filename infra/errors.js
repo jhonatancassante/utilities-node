@@ -100,11 +100,13 @@ export class NotFoundError extends Error {
 
 export class ConfigurationError extends Error {
   constructor({ cause, message, action }) {
-    super(message || "Uma configuração interna está inválida.", {
+    super(message || "Configuração da aplicação ausente ou inválida.", {
       cause,
     });
     this.name = "ConfigurationError";
-    this.action = action || "Verifique a configuração interna da aplicação.";
+    this.action =
+      action ||
+      "Verifique as configurações internas ou as variáveis de ambiente do servidor.";
     this.statusCode = 500;
   }
 

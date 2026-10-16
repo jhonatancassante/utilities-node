@@ -1,8 +1,9 @@
 import bcryptjs from "bcryptjs";
+import { createHmac } from "node:crypto";
 import { ConfigurationError } from "@/infra/errors";
 
 function getNumberOfRounds() {
-  return process.env.NODE_ENV === "production" ? 14 : 1;
+  return process.env.NODE_ENV === "production" ? 14 : 4;
 }
 
 function injectPepper(password) {
@@ -10,12 +11,12 @@ function injectPepper(password) {
 
   if (!pepper) {
     throw new ConfigurationError({
-      message: "PASSWORD_PEPPER não configurado.",
+      message: "A variável de ambiente PASSWORD_PEPPER não está configurada.",
       action: "Verifique as variáveis de ambiente.",
     });
   }
 
-  return `${password}${pepper}`;
+  return createHmac("sha256", pepper).update(password).digest("base64");
 }
 
 async function hash(password) {
