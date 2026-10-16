@@ -37,7 +37,7 @@
 }
 
 .progressBar {
-  width: 21.5%;
+  width: 22%;
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--accent), var(--accent-hover));
