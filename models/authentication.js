@@ -1,10 +1,15 @@
+import crypto from "node:crypto";
 import user from "@/models/user.js";
 import password from "@/models/password.js";
 import { NotFoundError, UnauthorizedError } from "@/infra/errors.js";
 
+const dummyHashPromise = password
+  .hash(crypto.randomBytes(16).toString("hex"))
+  .catch(() => null);
+
 async function getAuthenticatedUser(providedEmail, providedPassword) {
   try {
-    const storedUser = await findUserByEmail(providedEmail);
+    const storedUser = await findUserByEmail(providedEmail, providedPassword);
 
     await validatePassword(providedPassword, storedUser.password);
 
@@ -27,6 +32,10 @@ async function getAuthenticatedUser(providedEmail, providedPassword) {
       return await user.findOneByEmail(providedEmail);
     } catch (error) {
       if (error instanceof NotFoundError) {
+        const dummyHash = await dummyHashPromise;
+        if (dummyHash) {
+          await password.compare(providedPassword, dummyHash);
+        }
         throw new UnauthorizedError({
           message: "Email não confere.",
           action:
