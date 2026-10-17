@@ -4,7 +4,7 @@ Nova implementação dos meus utilitários de trabalho, originalmente desenvolvi
 
 **Aplicação publicada:** <https://utilities-node.vercel.app>
 
-> **Status do projeto: em construção.** Hoje a aplicação tem uma página inicial provisória, uma página de status do sistema e dois endpoints de infraestrutura (`/api/v1/status` e `/api/v1/migrations`). Os utilitários serão migrados aos poucos.
+> **Status do projeto: em construção.** Hoje a aplicação tem uma página inicial provisória, uma página de status do sistema e uma API com endpoints de infraestrutura (`status` e `migrations`), de usuários (`users`) e de login (`sessions`). Os utilitários serão migrados aos poucos.
 
 ## Sumário
 
@@ -28,13 +28,15 @@ Nova implementação dos meus utilitários de trabalho, originalmente desenvolvi
 
 O que existe hoje:
 
-- Página inicial provisória ("Em construção"), em `pages/index.js`.
+- Página inicial provisória ("Em construção"), em `pages/index.js`, com tema claro e escuro.
 - Página de status (`/status`): painel de monitoramento do sistema e do banco de dados, atualizado automaticamente a cada 5 segundos.
 - `GET /api/v1/status`: verifica a saúde da aplicação e do banco de dados.
 - `GET` e `POST /api/v1/migrations`: consulta e aplica as migrations do banco.
+- `POST /api/v1/users`, `GET` e `PATCH /api/v1/users/{username}`: cadastro, consulta e atualização de usuários. As senhas são guardadas com HMAC (pepper) e bcrypt.
+- `POST /api/v1/sessions`: login por email e senha. Cria uma sessão no banco e devolve o token no cookie `session_id`.
 - Ambiente de desenvolvimento com PostgreSQL em Docker, testes de integração, lint, hooks de commit, verificação de segredos e CI.
 
-O que está previsto: login de usuários e outras funcionalidades que utilizam o banco de dados. O endpoint de migrations será uma rota protegida.
+O que está previsto: proteger as rotas com autenticação (a de migrations será uma rota protegida) e acrescentar as demais funcionalidades que utilizam o banco de dados. Hoje **nenhum endpoint exige autenticação**; veja a seção [API](#api).
 
 ## Tecnologias
 
@@ -43,9 +45,11 @@ O que está previsto: login de usuários e outras funcionalidades que utilizam o
 | Framework      | [Next.js](https://nextjs.org/) 16 (Pages Router) e React 19                                                        |
 | Runtime        | Node.js 24                                                                                                         |
 | Interface      | React com CSS Modules e CSS global; [SWR](https://swr.vercel.app/) para buscar dados da API                        |
-| Banco de dados | PostgreSQL 16 (Docker no desenvolvimento), cliente `pg`                                                            |
+| Banco de dados | PostgreSQL 16 (Docker no desenvolvimento), cliente `pg`, sem ORM                                                   |
 | Migrations     | [node-pg-migrate](https://github.com/salsita/node-pg-migrate)                                                      |
-| Testes         | [Jest](https://jestjs.io/) (testes de integração)                                                                  |
+| Senhas         | [bcryptjs](https://github.com/dcodeIO/bcrypt.js) com HMAC-SHA256 e pepper                                          |
+| Rotas da API   | [next-connect](https://github.com/hoangvvo/next-connect) e [cookie](https://github.com/jshttp/cookie)              |
+| Testes         | [Jest](https://jestjs.io/) (testes de integração) e [Faker](https://fakerjs.dev/)                                  |
 | Qualidade      | ESLint, Prettier, EditorConfig                                                                                     |
 | Commits        | Conventional Commits (Commitizen e Commitlint), Husky                                                              |
 | Segredos       | [GitGuardian ggshield](https://github.com/GitGuardian/ggshield) e [Gitleaks](https://github.com/gitleaks/gitleaks) |
@@ -89,10 +93,10 @@ Para conferir que está tudo certo, acesse <http://localhost:3000/api/v1/status>
 
 ```json
 {
-  "updated_at": "2026-10-13T13:06:00.000Z",
+  "updated_at": "2026-10-17T13:06:00.000Z",
   "dependencies": {
     "database": {
-      "version": "16.0",
+      "status": "Online",
       "max_connections": 100,
       "opened_connections": 1
     }
@@ -102,7 +106,7 @@ Para conferir que está tudo certo, acesse <http://localhost:3000/api/v1/status>
 
 Os mesmos dados aparecem, em formato de painel, em <http://localhost:3000/status>.
 
-> Os valores de acesso ao banco local ficam em `.env.development`, que é versionado de propósito: são credenciais descartáveis, usadas só no container de desenvolvimento. Nunca coloque credenciais reais nesse arquivo.
+> Os valores do ambiente local ficam em `.env.development`, que é versionado de propósito: são credenciais do banco e um _pepper_ de senhas descartáveis, usados só no desenvolvimento e nos testes. Nunca coloque valores reais nesse arquivo.
 
 ## Testes
 
@@ -115,8 +119,8 @@ O comando sobe o banco, inicia o servidor do Next.js, roda o Jest e, ao final, p
 Pontos de atenção:
 
 - Os testes de integração fazem requisições reais para `http://localhost:3000`. Feche qualquer outro servidor que esteja usando a porta 3000 antes de rodar `npm test`.
-- Os testes de migrations **apagam e recriam o schema `public`** do banco configurado em `.env.development`. Nunca aponte essas variáveis para um banco com dados que você queira manter.
-- O teste de status espera PostgreSQL `16.0`, `max_connections` igual a `100` e uma única conexão aberta. Se mudar a imagem do Docker em `infra/compose.yaml`, ajuste o teste.
+- Os testes **apagam e recriam o schema `public`** do banco configurado em `.env.development` (alguns também aplicam as migrations em seguida). Nunca aponte essas variáveis para um banco com dados que você queira manter.
+- O teste de status espera `max_connections` igual a `100` (valor da imagem do Docker) e uma única conexão aberta. Se mudar a imagem em `infra/compose.yaml`, ajuste o teste.
 
 ## Scripts disponíveis
 
@@ -147,59 +151,69 @@ Pontos de atenção:
 .
 ├── .github/workflows/    # CI: lint (linting.yaml), testes (tests.yaml) e segredos (gitleaks.yaml)
 ├── .husky/               # Hooks do Git: pre-commit e commit-msg
-├── components/
-│   └── AppHead/          # Título e descrição (<head>) das páginas
+├── components/           # AppHead, Header, Footer, Layout e ThemeToggle
 ├── configs/
 │   └── site.js           # Nome do site e textos padrão
 ├── docs/                 # Documentação do projeto
 ├── infra/
 │   ├── compose.yaml      # PostgreSQL local (Docker Compose)
+│   ├── controller.js     # Roteamento e tratamento de erros dos endpoints
 │   ├── database.js       # Conexão e consultas ao banco
 │   ├── errors.js         # Classes de erro da aplicação
 │   ├── migrations/       # Migrations do banco (node-pg-migrate)
 │   └── scripts/          # Scripts auxiliares dos comandos npm
+├── models/               # Regras de negócio: authentication, migrator, password, session e user
 ├── pages/
-│   ├── api/v1/           # Endpoints da API (status e migrations)
+│   ├── api/v1/           # Endpoints da API: status, migrations, users e sessions
 │   ├── status/           # Página de status do sistema (/status)
 │   ├── _app.js           # Carrega os estilos globais
+│   ├── _document.js      # HTML base: idioma, ícones e aplicação do tema salvo
 │   └── index.js          # Página inicial
 ├── styles/
-│   ├── globals.css       # Variáveis de cor, fonte e reset
+│   ├── globals.css       # Variáveis de cor (tema claro e escuro), fonte e reset
 │   └── shared.module.css # Estilos compartilhados entre as páginas
 ├── tests/
 │   ├── integration/      # Testes de integração da API
-│   └── orchestrator.js   # Utilitários dos testes (espera o servidor e limpa o banco)
+│   └── orchestrator.js   # Utilitários dos testes (espera o servidor, limpa o banco, cria usuários)
 ├── .env.development      # Variáveis do ambiente local (valores descartáveis)
 ├── .gitleaks.toml        # Configuração do Gitleaks
+├── next.config.js        # Configuração do Next.js (inclui as migrations no build da Vercel)
 └── package.json
 ```
 
 ## Variáveis de ambiente
 
-| Variável            | Onde é usada                | Descrição                                               |
-| ------------------- | --------------------------- | ------------------------------------------------------- |
-| `POSTGRES_HOST`     | Desenvolvimento e testes    | Host do banco (`localhost`)                             |
-| `POSTGRES_PORT`     | Desenvolvimento e testes    | Porta do banco (`5432`)                                 |
-| `POSTGRES_USER`     | Desenvolvimento e testes    | Usuário do banco                                        |
-| `POSTGRES_DB`       | Desenvolvimento e testes    | Nome do banco                                           |
-| `POSTGRES_PASSWORD` | Desenvolvimento e testes    | Senha do banco                                          |
-| `DATABASE_URL`      | Produção e preview (Vercel) | URL de conexão completa. É obrigatória nesses ambientes |
+| Variável            | Onde é usada                | Descrição                                                                   |
+| ------------------- | --------------------------- | --------------------------------------------------------------------------- |
+| `POSTGRES_HOST`     | Desenvolvimento e testes    | Host do banco (`localhost`)                                                 |
+| `POSTGRES_PORT`     | Desenvolvimento e testes    | Porta do banco (`5432`)                                                     |
+| `POSTGRES_USER`     | Desenvolvimento e testes    | Usuário do banco                                                            |
+| `POSTGRES_DB`       | Desenvolvimento e testes    | Nome do banco                                                               |
+| `POSTGRES_PASSWORD` | Desenvolvimento e testes    | Senha do banco                                                              |
+| `DATABASE_URL`      | Produção e preview (Vercel) | URL de conexão completa. É obrigatória nesses ambientes                     |
+| `PASSWORD_PEPPER`   | Todos os ambientes          | Segredo usado antes do bcrypt. Sem ele, cadastro e login respondem erro 500 |
 
 Em desenvolvimento e testes (`NODE_ENV` igual a `development` ou `test`), a aplicação usa as variáveis `POSTGRES_*`. Em qualquer outro ambiente, usa `DATABASE_URL` com `sslmode=verify-full` e lança erro se ela não estiver definida. Mais detalhes em [docs/arquitetura.md](docs/arquitetura.md).
 
+O `PASSWORD_PEPPER` do `.env.development` é um valor de exemplo. Em produção, gere um valor próprio e cadastre-o na Vercel; como gerar e os cuidados estão em [docs/autenticacao.md](docs/autenticacao.md).
+
 ## API
 
-| Método | Caminho              | Descrição                                               |
-| ------ | -------------------- | ------------------------------------------------------- |
-| `GET`  | `/api/v1/status`     | Verificação de saúde da aplicação e do banco de dados   |
-| `GET`  | `/api/v1/migrations` | Lista as migrations pendentes, sem aplicá-las (dry-run) |
-| `POST` | `/api/v1/migrations` | Aplica as migrations pendentes                          |
+| Método  | Caminho                    | Descrição                                               |
+| ------- | -------------------------- | ------------------------------------------------------- |
+| `GET`   | `/api/v1/status`           | Verificação de saúde da aplicação e do banco de dados   |
+| `GET`   | `/api/v1/migrations`       | Lista as migrations pendentes, sem aplicá-las (dry-run) |
+| `POST`  | `/api/v1/migrations`       | Aplica as migrations pendentes                          |
+| `POST`  | `/api/v1/users`            | Cadastra um usuário                                     |
+| `GET`   | `/api/v1/users/{username}` | Consulta um usuário pelo nome de usuário                |
+| `PATCH` | `/api/v1/users/{username}` | Atualiza nome de usuário, email e/ou senha              |
+| `POST`  | `/api/v1/sessions`         | Autentica por email e senha e cria uma sessão           |
 
 A página `/status` consome o `GET /api/v1/status`.
 
-> **Atenção:** o endpoint de migrations hoje **não tem proteção**. Ele será uma rota protegida no futuro.
+> **Atenção:** hoje **nenhum endpoint exige autenticação**. O de migrations será uma rota protegida, e as rotas de usuários também precisarão de proteção, já que as respostas atuais incluem o hash da senha. Veja os detalhes e as limitações conhecidas no [guia da API](docs/api/README.md).
 
-A especificação completa está em [docs/api/openapi.yaml](docs/api/openapi.yaml) e o guia de leitura em [docs/api/README.md](docs/api/README.md).
+A especificação completa está em [docs/api/openapi.yaml](docs/api/openapi.yaml).
 
 ## Como contribuir
 
@@ -217,13 +231,16 @@ No Pull Request, o GitHub Actions executa Prettier, ESLint, Commitlint, os teste
 
 ## Deploy
 
-A aplicação é publicada na Vercel em <https://utilities-node.vercel.app>. Em produção e nos previews, a conexão com o banco usa a variável `DATABASE_URL`, configurada nas variáveis de ambiente do projeto na Vercel.
+A aplicação é publicada na Vercel em <https://utilities-node.vercel.app>. Nas variáveis de ambiente do projeto na Vercel ficam a `DATABASE_URL` (conexão com o banco, no Neon) e o `PASSWORD_PEPPER`.
+
+Quando um Pull Request cria uma migration, ela **não é aplicada sozinha em produção**: depois do deploy, aplique-a com `POST /api/v1/migrations`. O `next.config.js` inclui a pasta `infra/migrations` no pacote da função serverless; sem isso, a rota de migrations falha em produção com `ENOENT`.
 
 ## Documentação completa
 
 - [Índice da documentação](docs/README.md)
 - [Guia de desenvolvimento](docs/desenvolvimento.md)
 - [Arquitetura](docs/arquitetura.md)
+- [Autenticação e senhas](docs/autenticacao.md)
 - [API](docs/api/README.md) e [especificação OpenAPI](docs/api/openapi.yaml)
 
 ## Licença

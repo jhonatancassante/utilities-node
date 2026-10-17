@@ -8,16 +8,23 @@ info:
     API do **utilities-node**, a nova implementação dos utilitários de trabalho
     em Node.js.
 
-    Hoje a API tem dois endpoints de infraestrutura:
+    Grupos de endpoints:
 
     - `GET /api/v1/status`: verifica a saúde da aplicação e do banco de dados.
-      Serve apenas para esse fim; a aplicação ainda ganhará login e outras
-      funcionalidades que utilizam o banco de dados.
+      Serve apenas para esse fim.
     - `/api/v1/migrations`: consulta (`GET`) e aplica (`POST`) as migrations
       do banco.
+    - `/api/v1/users`: cadastro, consulta e atualização de usuários.
+    - `POST /api/v1/sessions`: login por email e senha.
 
-    **Autenticação:** ainda não existe. O endpoint de migrations está, por
-    enquanto, **sem proteção** e será transformado em uma rota protegida.
+    **Autenticação:** nenhum endpoint exige autenticação por enquanto. O login
+    cria a sessão e envia o cookie `session_id`, mas nenhuma rota o verifica
+    ainda. O endpoint de migrations será transformado em uma rota protegida, e
+    as rotas de usuários também precisarão de proteção.
+
+    **Erros:** todos seguem o mesmo formato (`name`, `message`, `action` e
+    `status_code`). O erro `500` sempre traz a mesma mensagem fixa; o erro
+    original é registrado só no servidor.
   license:
     name: MIT
     identifier: MIT
@@ -29,8 +36,9 @@ servers:
     description: Desenvolvimento local
 
 # Nenhum endpoint exige autenticação por enquanto (lista vazia = sem proteção).
-# Quando /api/v1/migrations passar a ser protegida, declare o esquema em
-# components.securitySchemes e aplique-o somente a essa rota.
+# Quando as rotas passarem a ser protegidas, declare o esquema em
+# components.securitySchemes (cookie `session_id`) e aplique-o às rotas
+# protegidas.
 security: []
 
 tags:
@@ -40,6 +48,10 @@ tags:
     description: >-
       Manutenção do esquema do banco de dados. Endpoint atualmente sem
       proteção, que será uma rota protegida no futuro.
+  - name: Users
+    description: Cadastro, consulta e atualização de usuários. Atualmente sem proteção.
+  - name: Sessions
+    description: Login e criação de sessões.
 
 paths:
   /api/v1/status:
@@ -53,13 +65,13 @@ paths:
         dados. Não altera nenhum dado.
 
         A resposta agrupa as informações por dependência em `dependencies`.
-        Hoje existe apenas `database`.
+        Hoje existe apenas `database`. A versão do banco não é informada, para
+        não expor a versão em uso.
 
         A página `/status` do site consome este endpoint a cada 5 segundos.
 
-        O valor de `opened_connections` considera o banco indicado na variável
-        de ambiente `POSTGRES_DB` e, se ela não estiver definida, o banco
-        `postgres`.
+        O valor de `opened_connections` considera o banco da conexão atual
+        (`current_database()`).
       responses:
         "200":
           description: Aplicação saudável.
@@ -68,19 +80,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/StatusResponse"
               example:
-                updated_at: "2026-10-13T13:06:00.000Z"
+                updated_at: "2026-10-17T13:06:00.000Z"
                 dependencies:
                   database:
-                    version: "16.0"
+                    status: Online
                     max_connections: 100
                     opened_connections: 1
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
   /api/v1/migrations:
     description: |
-      Aceita apenas `GET` e `POST`. Qualquer outro método recebe `405` com o
-      corpo `{ "error": "Método \"<MÉTODO>\" não permitido." }`.
+      Aceita apenas `GET` e `POST`. Qualquer outro método recebe `405`, com o
+      cabeçalho `Allow: GET, POST`.
 
       **Atenção:** este endpoint não exige autenticação. A intenção é
       transformá-lo em uma rota protegida no futuro.
@@ -104,11 +118,13 @@ paths:
                 items:
                   $ref: "#/components/schemas/Migration"
               example:
-                - path: /app/infra/migrations/1791773509988_teste.js
-                  name: 1791773509988_teste
-                  timestamp: 1791773509988
+                - path: /app/infra/migrations/1792247067512_create-sessions.js
+                  name: 1792247067512_create-sessions
+                  timestamp: 1792247067512
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
         "500":
-          $ref: "#/components/responses/UnhandledServerError"
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - Migrations
@@ -120,6 +136,9 @@ paths:
 
         A operação é repetível: sem migrations novas, devolve `200` e uma
         lista vazia.
+
+        Em produção, as migrations não rodam sozinhas no deploy: use este
+        endpoint depois de publicar uma migration nova.
       responses:
         "201":
           description: Havia migrations pendentes e elas foram aplicadas.
@@ -131,9 +150,9 @@ paths:
                 items:
                   $ref: "#/components/schemas/Migration"
               example:
-                - path: /app/infra/migrations/1791773509988_teste.js
-                  name: 1791773509988_teste
-                  timestamp: 1791773509988
+                - path: /app/infra/migrations/1792247067512_create-sessions.js
+                  name: 1792247067512_create-sessions
+                  timestamp: 1792247067512
         "200":
           description: Nenhuma migration pendente. Nada foi alterado.
           content:
@@ -144,10 +163,252 @@ paths:
                 items:
                   $ref: "#/components/schemas/Migration"
               example: []
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
         "500":
-          $ref: "#/components/responses/UnhandledServerError"
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/users:
+    description: "Aceita apenas `POST`. Qualquer outro método recebe `405`, com o cabeçalho `Allow: POST`."
+    post:
+      tags:
+        - Users
+      operationId: createUser
+      summary: Cadastra um usuário
+      description: |
+        Cria um usuário. O nome de usuário e o email precisam ser únicos (sem
+        diferenciar maiúsculas de minúsculas) e o email precisa ter formato
+        válido. A senha é guardada com hash (HMAC com pepper e bcrypt).
+
+        **Atenção:** a resposta devolve o hash da senha no campo `password`.
+        Campos ausentes ainda não são validados e resultam em `500`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreate"
+            example:
+              username: jhonatan
+              email: jhonatan@exemplo.com.br
+              password: uma-senha-forte
+      responses:
+        "201":
+          description: Usuário criado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: 5c5b0c0e-2f6e-4a39-9a4a-0d0d9d0a6f10
+                username: jhonatan
+                email: jhonatan@exemplo.com.br
+                password: $2b$14$Zl0hashDeExemploDeSessentaCaracteresQuePareceUmHashBcrypt
+                created_at: "2026-10-17T13:06:00.000Z"
+                updated_at: "2026-10-17T13:06:00.000Z"
+        "400":
+          description: >-
+            Nome de usuário já em uso, email com formato inválido ou email já
+            em uso.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorBody"
+              examples:
+                nomeDeUsuarioDuplicado:
+                  summary: Nome de usuário já em uso
+                  value:
+                    name: ValidationError
+                    message: O nome de usuário informado já está sendo utilizado.
+                    action: Utilize outro nome de usuário para realizar esta operação.
+                    status_code: 400
+                emailInvalido:
+                  summary: Email com formato inválido
+                  value:
+                    name: ValidationError
+                    message: O e-mail informado não possui um formato válido.
+                    action: "Verifique se digitou o e-mail corretamente (ex: nome@dominio.com)."
+                    status_code: 400
+                emailDuplicado:
+                  summary: Email já em uso
+                  value:
+                    name: ValidationError
+                    message: O email informado já está sendo utilizado.
+                    action: Utilize outro email para realizar esta operação.
+                    status_code: 400
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/users/{username}:
+    description: "Aceita apenas `GET` e `PATCH`. Qualquer outro método recebe `405`, com o cabeçalho `Allow: GET, PATCH`."
+    parameters:
+      - $ref: "#/components/parameters/Username"
+    get:
+      tags:
+        - Users
+      operationId: getUser
+      summary: Consulta um usuário
+      description: |
+        Busca o usuário pelo nome de usuário, sem diferenciar maiúsculas de
+        minúsculas.
+
+        **Atenção:** a resposta devolve o hash da senha no campo `password`.
+      responses:
+        "200":
+          description: Usuário encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: 5c5b0c0e-2f6e-4a39-9a4a-0d0d9d0a6f10
+                username: jhonatan
+                email: jhonatan@exemplo.com.br
+                password: $2b$14$Zl0hashDeExemploDeSessentaCaracteresQuePareceUmHashBcrypt
+                created_at: "2026-10-17T13:06:00.000Z"
+                updated_at: "2026-10-17T13:06:00.000Z"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags:
+        - Users
+      operationId: updateUser
+      summary: Atualiza um usuário
+      description: |
+        Atualiza os campos enviados e mantém os demais. O `updated_at` é
+        atualizado. Se enviada, a nova senha também é guardada com hash.
+
+        Reenviar o próprio email (ou o próprio nome de usuário, mudando só as
+        maiúsculas) resulta em `400`, porque a checagem de unicidade encontra o
+        próprio registro.
+
+        **Atenção:** a resposta devolve o hash da senha no campo `password`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+            example:
+              email: novo@exemplo.com.br
+      responses:
+        "200":
+          description: Usuário atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: 5c5b0c0e-2f6e-4a39-9a4a-0d0d9d0a6f10
+                username: jhonatan
+                email: novo@exemplo.com.br
+                password: $2b$14$Zl0hashDeExemploDeSessentaCaracteresQuePareceUmHashBcrypt
+                created_at: "2026-10-17T13:06:00.000Z"
+                updated_at: "2026-10-17T14:20:00.000Z"
+        "400":
+          description: >-
+            Novo nome de usuário ou email já em uso, ou email com formato
+            inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorBody"
+              example:
+                name: ValidationError
+                message: O email informado já está sendo utilizado.
+                action: Utilize outro email para realizar esta operação.
+                status_code: 400
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/sessions:
+    description: "Aceita apenas `POST`. Qualquer outro método recebe `405`, com o cabeçalho `Allow: POST`."
+    post:
+      tags:
+        - Sessions
+      operationId: createSession
+      summary: Faz o login e cria uma sessão
+      description: |
+        Confere o email (sem diferenciar maiúsculas de minúsculas) e a senha.
+        Com credenciais corretas, grava uma sessão válida por 30 dias e envia o
+        token no cookie `session_id` (`HttpOnly`, `SameSite=Lax`, `Path=/` e,
+        em produção, `Secure`).
+
+        Qualquer falha de credencial devolve `401` com a mesma mensagem, não
+        importa se o email não existe ou se a senha está errada, e com tempo de
+        resposta parecido.
+
+        Nenhuma outra rota verifica o cookie ainda. Campos ausentes resultam em
+        `500`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionCreate"
+            example:
+              email: jhonatan@exemplo.com.br
+              password: uma-senha-forte
+      responses:
+        "201":
+          description: Credenciais corretas. Sessão criada.
+          headers:
+            Set-Cookie:
+              description: >-
+                Cookie de sessão. Exemplo:
+                `session_id=<token>; Max-Age=2592000; Path=/; HttpOnly;
+                SameSite=Lax`. Em produção inclui também `Secure`.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+              example:
+                id: 0c7f0f3e-8e3b-4a58-93a7-3f1d4f3f5c21
+                token: token-placeholder-de-exemplo
+                user_id: 5c5b0c0e-2f6e-4a39-9a4a-0d0d9d0a6f10
+                expires_at: "2026-11-16T13:06:00.000Z"
+                created_at: "2026-10-17T13:06:00.000Z"
+                updated_at: "2026-10-17T13:06:00.000Z"
+        "401":
+          description: Email ou senha não conferem.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedErrorBody"
+              example:
+                name: UnauthorizedError
+                message: Não foi possível autenticar seu usuário no sistema.
+                action: Verifique se digitou o e-mail e a senha corretamente e tente novamente.
+                status_code: 401
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
 components:
+  parameters:
+    Username:
+      name: username
+      in: path
+      required: true
+      description: Nome de usuário. A busca não diferencia maiúsculas de minúsculas.
+      schema:
+        type: string
+        maxLength: 30
+      example: jhonatan
+
   schemas:
     StatusResponse:
       type: object
@@ -161,7 +422,7 @@ components:
           format: date-time
           description: Momento em que a resposta foi gerada (ISO 8601, UTC).
           examples:
-            - "2026-10-13T13:06:00.000Z"
+            - "2026-10-17T13:06:00.000Z"
         dependencies:
           type: object
           description: Situação de cada dependência da aplicação.
@@ -175,19 +436,20 @@ components:
       type: object
       description: Situação do banco de dados PostgreSQL.
       required:
-        - version
+        - status
         - max_connections
         - opened_connections
       properties:
-        version:
+        status:
           type: string
-          description: Versão do PostgreSQL (`SHOW server_version`).
-          examples:
-            - "16.0"
+          const: Online
+          description: >-
+            Vale `Online` quando a consulta ao banco funcionou. Se o banco não
+            responder, o endpoint devolve `500`.
         max_connections:
           type: integer
           minimum: 1
-          description: Limite de conexões simultâneas (`SHOW max_connections`).
+          description: Limite de conexões simultâneas (`current_setting('max_connections')`).
           examples:
             - 100
         opened_connections:
@@ -214,50 +476,250 @@ components:
           type: string
           description: Nome da migration, sem a extensão do arquivo.
           examples:
-            - 1791773509988_teste
+            - 1792247067512_create-sessions
         timestamp:
           type: integer
           format: int64
           description: >-
             Número que inicia o nome do arquivo. Define a ordem de execução.
           examples:
-            - 1791773509988
+            - 1792247067512
 
-    InternalServerErrorBody:
+    UserCreate:
       type: object
-      description: >-
-        Erro interno da aplicação. O erro original é registrado no console do
-        servidor e não é exposto na resposta.
+      description: Dados para cadastrar um usuário.
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          maxLength: 30
+          description: Único, sem diferenciar maiúsculas de minúsculas.
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Formato `nome@dominio.com`. Único, sem diferenciar maiúsculas de minúsculas.
+        password:
+          type: string
+          description: Senha em texto. É guardada com hash.
+
+    UserUpdate:
+      type: object
+      description: Campos a alterar. Envie apenas os que mudam.
+      minProperties: 1
+      properties:
+        username:
+          type: string
+          maxLength: 30
+          description: Novo nome de usuário. Precisa ser único.
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Novo email. Precisa ser único e ter formato válido.
+        password:
+          type: string
+          description: Nova senha, em texto. É guardada com hash.
+
+    User:
+      type: object
+      description: Um usuário.
+      required:
+        - id
+        - username
+        - email
+        - password
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          description: >-
+            Hash bcrypt da senha (60 caracteres). Hoje é devolvido na resposta;
+            deve deixar de sair quando as rotas forem protegidas.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SessionCreate:
+      type: object
+      description: Credenciais de login.
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email do usuário, sem diferenciar maiúsculas de minúsculas.
+        password:
+          type: string
+          description: Senha em texto.
+
+    Session:
+      type: object
+      description: Uma sessão de usuário.
+      required:
+        - id
+        - token
+        - user_id
+        - expires_at
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        token:
+          type: string
+          minLength: 96
+          maxLength: 96
+          description: Token aleatório de 96 caracteres hexadecimais. É o valor do cookie `session_id`.
+        user_id:
+          type: string
+          format: uuid
+          description: Usuário dono da sessão.
+        expires_at:
+          type: string
+          format: date-time
+          description: Fim da validade da sessão (30 dias após a criação).
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      description: Formato comum a todos os erros.
       required:
         - name
         - message
         - action
-        - statusCode
+        - status_code
       properties:
         name:
           type: string
-          const: InternalServerError
           description: Tipo do erro.
         message:
           type: string
           description: O que aconteceu.
-          examples:
-            - Um erro interno não esperado aconteceu.
         action:
           type: string
           description: O que fazer a respeito.
-          examples:
-            - Entre em contato com o suporte.
-        statusCode:
+        status_code:
           type: integer
-          const: 500
           description: Código HTTP da resposta.
 
+    ValidationErrorBody:
+      description: Dados inválidos ou já em uso.
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: ValidationError
+            status_code:
+              const: 400
+
+    UnauthorizedErrorBody:
+      description: Credenciais que não conferem.
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: UnauthorizedError
+            status_code:
+              const: 401
+
+    NotFoundErrorBody:
+      description: Recurso não encontrado.
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: NotFoundError
+            status_code:
+              const: 404
+
+    MethodNotAllowedErrorBody:
+      description: Método HTTP não aceito pelo endpoint.
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: MethodNotAllowedError
+            status_code:
+              const: 405
+
+    InternalServerErrorBody:
+      description: >-
+        Erro interno da aplicação. O erro original é registrado no console do
+        servidor e não é exposto na resposta.
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: InternalServerError
+            status_code:
+              const: 500
+
   responses:
+    MethodNotAllowed:
+      description: >-
+        Método HTTP não aceito pelo endpoint. O cabeçalho `Allow` lista os
+        métodos aceitos.
+      headers:
+        Allow:
+          description: Métodos aceitos pelo endpoint, separados por vírgula.
+          schema:
+            type: string
+          example: GET, POST
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MethodNotAllowedErrorBody"
+          example:
+            name: MethodNotAllowedError
+            message: Método não permitido para esse endpoint.
+            action: Verifique se o método HTTP é válido para este endpoint.
+            status_code: 405
+
+    UserNotFound:
+      description: Nenhum usuário com o nome de usuário informado.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotFoundErrorBody"
+          example:
+            name: NotFoundError
+            message: O nome de usuário informado não foi encontrado no sistema.
+            action: Verifique se digitou o nome de usuário corretamente e tente novamente.
+            status_code: 404
+
     InternalServerError:
       description: >-
-        Falha ao consultar o banco de dados (por exemplo, banco inacessível).
-        O corpo é um JSON padronizado.
+        Falha inesperada (por exemplo, banco inacessível, configuração ausente
+        ou campos obrigatórios ausentes). A mensagem é sempre a mesma.
       content:
         application/json:
           schema:
@@ -266,15 +728,4 @@ components:
             name: InternalServerError
             message: Um erro interno não esperado aconteceu.
             action: Entre em contato com o suporte.
-            statusCode: 500
-
-    UnhandledServerError:
-      description: >-
-        Falha inesperada, por exemplo banco de dados inacessível. O erro é
-        registrado no console do servidor e o corpo da resposta é definido
-        pelo Next.js (não é JSON).
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: Internal Server Error
+            status_code: 500
