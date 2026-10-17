@@ -97,7 +97,7 @@ const STATUS = {
   warning: {
     tag: styles.tagWarning,
     badge: styles.valueBadgeWarning,
-    label: "CARGA ALTA",
+    label: "WARNING",
   },
   error: {
     tag: styles.tagError,
@@ -127,7 +127,7 @@ function MetricRow({ title, value, isWarning = false }) {
 
 function DatabaseStatus({ isLoading, error, data }) {
   const {
-    version,
+    status,
     max_connections: max,
     opened_connections: opened,
   } = data ?? {};
@@ -136,7 +136,7 @@ function DatabaseStatus({ isLoading, error, data }) {
   if (error) {
     return (
       <div className={styles.metricsBoxError}>
-        <p>⚠️ Não foi possível conectar ao banco de dados.</p>
+        <p>🔴 Não foi possível conectar ao banco de dados.</p>
       </div>
     );
   }
@@ -148,7 +148,7 @@ function DatabaseStatus({ isLoading, error, data }) {
           <div className={styles.progressBar}></div>
         </div>
         <p style={{ textAlign: "center", margin: 0 }}>
-          Carregando métricas do banco de dados...
+          🟡 Carregando métricas do banco de dados...
         </p>
       </div>
     );
@@ -156,11 +156,17 @@ function DatabaseStatus({ isLoading, error, data }) {
 
   return (
     <div className={styles.metricsBox}>
-      <div className={styles.metricsBoxTitle}>
-        <strong>Database</strong>
-      </div>
+      {error ? (
+        <div className={styles.metricsBoxError}>
+          <p>🔴 Não foi possível conectar ao banco de dados.</p>
+        </div>
+      ) : (
+        <div className={styles.metricsBoxTitle}>
+          <strong>🟢 Database</strong>
+        </div>
+      )}
 
-      <MetricRow title="Versão" value={version} />
+      <MetricRow title="Situação" value={status} />
       <MetricRow title="Máximo de Conexões" value={max} />
       <MetricRow
         title="Conexões Abertas"
