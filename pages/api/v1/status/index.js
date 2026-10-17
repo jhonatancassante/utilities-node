@@ -8,7 +8,6 @@ async function getHandler(request, response) {
 
   const result = await database.query(`
     SELECT
-      current_setting('server_version') AS version,
       current_setting('max_connections')::int AS max_connections,
       (
         SELECT COUNT(*)::int
@@ -17,12 +16,12 @@ async function getHandler(request, response) {
       ) AS opened_connections;
   `);
 
-  const { version, max_connections, opened_connections } = result.rows[0];
+  const { max_connections, opened_connections } = result.rows[0];
 
   return response.status(200).json({
     updated_at: updatedAt,
     dependencies: {
-      database: { version, max_connections, opened_connections },
+      database: { status: "Online", max_connections, opened_connections },
     },
   });
 }

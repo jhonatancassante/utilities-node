@@ -3,8 +3,9 @@ import { createRouter } from "next-connect";
 import {
   InternalServerError,
   MethodNotAllowedError,
-  ValidationError,
   NotFoundError,
+  UnauthorizedError,
+  ValidationError,
 } from "@/infra/errors.js";
 
 function createController(handlers) {
@@ -27,12 +28,15 @@ function createController(handlers) {
     },
 
     onError: (error, request, response) => {
-      if (error instanceof ValidationError || error instanceof NotFoundError) {
+      if (
+        error instanceof NotFoundError ||
+        error instanceof UnauthorizedError ||
+        error instanceof ValidationError
+      ) {
         return response.status(error.statusCode).json(error);
       }
 
       const publicErrorObject = new InternalServerError({
-        statusCode: error.statusCode,
         cause: error,
       });
 
