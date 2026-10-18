@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import database from "@/infra/database.js";
+import { NotFoundError } from "@/infra/errors";
 
 const EXPIRATION_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000; // 30 DIAS
 
@@ -28,8 +29,41 @@ async function create(userId) {
   }
 }
 
+async function findOneValidByToken(sessionToken) {
+  const sessionFound = await runSelectQuery(sessionToken);
+
+  return sessionFound;
+
+  async function runSelectQuery(sessionToken) {
+    const results = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          sessions
+        WHERE
+          token = $1
+          AND expires_at > NOW()
+        LIMIT 1
+      ;`,
+      values: [sessionToken],
+    });
+
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O Token informado não foi encontrado no sistema.",
+        action:
+          "Verifique se o Token informado está válido e não está expirado.",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
 const session = {
   create,
+  findOneValidByToken,
   EXPIRATION_IN_MILLISECONDS,
 };
 
