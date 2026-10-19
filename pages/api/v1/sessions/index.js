@@ -16,7 +16,7 @@ async function postHandler(request, response) {
 
   const newSession = await session.create(authenticatedUser.id);
 
-  await controller.setSessionCookie(response, newSession.token);
+  controller.setSessionCookie(response, newSession.token);
 
   return response.status(201).json(newSession);
 }

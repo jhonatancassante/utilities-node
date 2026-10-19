@@ -51,7 +51,7 @@ function createController(handlers) {
   });
 }
 
-async function setSessionCookie(response, sessionToken) {
+function setSessionCookie(response, sessionToken) {
   const setCookie = cookie.stringifySetCookie({
     name: "session_id",
     value: sessionToken,

@@ -49,8 +49,8 @@ async function createSession(userId) {
   return await session.create(userId);
 }
 
-async function getCookieObject(response) {
-  const setCookies = await response.headers.getSetCookie();
+function getCookieObject(response) {
+  const setCookies = response.headers.getSetCookie();
 
   return setCookies
     .map((setCookie) => cookie.parseSetCookie(setCookie))
