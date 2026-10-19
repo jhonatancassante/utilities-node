@@ -49,7 +49,7 @@ async function createSession(userId) {
   return await session.create(userId);
 }
 
-function getCookieObject(response) {
+function getSessionCookieObject(response) {
   const setCookies = response.headers.getSetCookie();
 
   return setCookies
@@ -63,7 +63,7 @@ const orchestrator = {
   runPendingMigrations,
   createUser,
   createSession,
-  getCookieObject,
+  getSessionCookieObject,
 };
 
 export default orchestrator;

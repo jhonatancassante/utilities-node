@@ -59,7 +59,7 @@ describe("GET /api/v1/user", () => {
       ).toEqual(true);
 
       //Cookies assertions
-      const sessionCookie = orchestrator.getCookieObject(response);
+      const sessionCookie = orchestrator.getSessionCookieObject(response);
 
       expect(sessionCookie).toEqual({
         name: "session_id",
@@ -191,7 +191,7 @@ describe("GET /api/v1/user", () => {
       ).toEqual(true);
 
       //Cookies assertions
-      const sessionCookie = orchestrator.getCookieObject(response);
+      const sessionCookie = orchestrator.getSessionCookieObject(response);
 
       expect(sessionCookie).toEqual({
         name: "session_id",
