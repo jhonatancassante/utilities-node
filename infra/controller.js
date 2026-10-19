@@ -1,5 +1,7 @@
 import { createRouter } from "next-connect";
+import * as cookie from "cookie";
 
+import session from "@/models/session.js";
 import {
   InternalServerError,
   MethodNotAllowedError,
@@ -49,8 +51,23 @@ function createController(handlers) {
   });
 }
 
+async function setSessionCookie(response, sessionToken) {
+  const setCookie = cookie.stringifySetCookie({
+    name: "session_id",
+    value: sessionToken,
+    path: "/",
+    maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+
+  response.setHeader("Set-Cookie", setCookie);
+}
+
 const controller = {
   createController,
+  setSessionCookie,
 };
 
 export default controller;

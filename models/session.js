@@ -1,4 +1,3 @@
-import * as cookie from "cookie";
 import crypto from "node:crypto";
 import database from "@/infra/database.js";
 import { UnauthorizedError } from "@/infra/errors.js";
@@ -90,23 +89,10 @@ function getExpiresAt() {
   return new Date(Date.now() + EXPIRATION_IN_MILLISECONDS);
 }
 
-function getSetCookiesString(sessionToken) {
-  return cookie.stringifySetCookie({
-    name: "session_id",
-    value: sessionToken,
-    path: "/",
-    maxAge: EXPIRATION_IN_MILLISECONDS / 1000,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-  });
-}
-
 const session = {
   create,
   findOneValidByToken,
   renew,
-  getSetCookiesString,
   EXPIRATION_IN_MILLISECONDS,
 };
 
