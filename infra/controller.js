@@ -72,9 +72,28 @@ function setSessionCookie(response, sessionToken) {
   );
 }
 
+function clearSessionCookie(response) {
+  const setCookie = cookie.stringifySetCookie({
+    name: "session_id",
+    value: "invalid",
+    path: "/",
+    maxAge: -1,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+
+  response.setHeader("Set-Cookie", setCookie);
+  response.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, max-age=0, must-revalidate",
+  );
+}
+
 const controller = {
   createController,
   setSessionCookie,
+  clearSessionCookie,
 };
 
 export default controller;
