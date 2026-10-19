@@ -2,7 +2,7 @@
 import useSWR from "swr";
 import AppHead from "@/components/AppHead";
 import Layout from "@/components/Layout";
-import siteConfigs from "@/configs/site.js";
+import headConfigs from "@/configs/head.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -61,7 +61,7 @@ function StatusPage() {
             />
 
             <small>
-              {siteConfigs.appName} · Atualização automática a cada 5s
+              {headConfigs.appName} · Atualização automática a cada 5s
             </small>
           </section>
         </main>
