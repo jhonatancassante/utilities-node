@@ -49,7 +49,9 @@ async function createSession(userId) {
   return await session.create(userId);
 }
 
-function getSetCookieObject(setCookies) {
+async function getCookieObject(response) {
+  const setCookies = await response.headers.getSetCookie();
+
   return setCookies
     .map((setCookie) => cookie.parseSetCookie(setCookie))
     .find((parsed) => parsed.name === "session_id");
@@ -61,7 +63,7 @@ const orchestrator = {
   runPendingMigrations,
   createUser,
   createSession,
-  getSetCookieObject,
+  getCookieObject,
 };
 
 export default orchestrator;
