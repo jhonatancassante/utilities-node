@@ -66,6 +66,10 @@ function setSessionCookie(response, sessionToken) {
   });
 
   response.setHeader("Set-Cookie", setCookie);
+  response.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, max-age=0, must-revalidate",
+  );
 }
 
 const controller = {
