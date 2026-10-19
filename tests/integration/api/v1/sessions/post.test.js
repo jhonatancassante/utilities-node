@@ -1,5 +1,4 @@
 import { version as uuidVersion } from "uuid";
-import * as cookie from "cookie";
 import orchestrator from "tests/orchestrator.js";
 import session from "@/models/session.js";
 
@@ -139,19 +138,16 @@ describe("POST /api/v1/sessions", () => {
 
       expect(lifetimeDifferenceInMilliseconds).toBeLessThanOrEqual(100);
 
-      const setCookies = response.headers.getSetCookie();
+      const sessionCookie = orchestrator.getCookieObject(response);
 
-      const sessionCookie = setCookies
-        .map((setCookie) => cookie.parseSetCookie(setCookie))
-        .find((parsed) => parsed.name === "session_id");
-
-      expect(sessionCookie).toBeDefined();
-      expect(sessionCookie.value).toBe(responseBody.token);
-      expect(sessionCookie.path).toBe("/");
-      expect(sessionCookie.httpOnly).toBe(true);
-      expect(sessionCookie.maxAge).toBe(
-        session.EXPIRATION_IN_MILLISECONDS / 1000,
-      );
+      expect(sessionCookie).toEqual({
+        name: "session_id",
+        value: responseBody.token,
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
+      });
     });
   });
 });

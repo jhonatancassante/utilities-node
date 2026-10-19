@@ -1,8 +1,11 @@
 import retry from "async-retry";
+import { fakerPT_BR as faker } from "@faker-js/faker";
+import * as cookie from "cookie";
+
 import database from "@/infra/database.js";
 import migrator from "@/models/migrator.js";
 import user from "@/models/user.js";
-import { fakerPT_BR as faker } from "@faker-js/faker";
+import session from "@/models/session.js";
 
 async function waitForAllServices() {
   await waitForWebServer();
@@ -42,11 +45,25 @@ async function createUser(userObject = {}) {
   });
 }
 
+async function createSession(userId) {
+  return await session.create(userId);
+}
+
+function getCookieObject(response) {
+  const setCookies = response.headers.getSetCookie();
+
+  return setCookies
+    .map((setCookie) => cookie.parseSetCookie(setCookie))
+    .find((parsed) => parsed.name === "session_id");
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
   runPendingMigrations,
   createUser,
+  createSession,
+  getCookieObject,
 };
 
 export default orchestrator;
