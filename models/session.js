@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import database from "@/infra/database.js";
-import { NotFoundError } from "@/infra/errors";
+import { UnauthorizedError } from "@/infra/errors.js";
 
 const EXPIRATION_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000; // 30 DIAS
 
@@ -50,10 +50,9 @@ async function findOneValidByToken(sessionToken) {
     });
 
     if (results.rowCount === 0) {
-      throw new NotFoundError({
-        message: "O Token informado não foi encontrado no sistema.",
-        action:
-          "Verifique se o Token informado está válido e não está expirado.",
+      throw new UnauthorizedError({
+        message: "Usuário não possui sessão ativa.",
+        action: "Verifique se este usuário está logado e tente novamente.",
       });
     }
 
