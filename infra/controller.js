@@ -20,35 +20,38 @@ function createController(handlers) {
   const allowedMethods = Object.keys(handlers).join(", ");
 
   return router.handler({
-    onNoMatch: (request, response) => {
-      const publicErrorObject = new MethodNotAllowedError();
-
-      response.setHeader("Allow", allowedMethods);
-      return response
-        .status(publicErrorObject.statusCode)
-        .json(publicErrorObject);
-    },
-
-    onError: (error, request, response) => {
-      if (
-        error instanceof NotFoundError ||
-        error instanceof UnauthorizedError ||
-        error instanceof ValidationError
-      ) {
-        return response.status(error.statusCode).json(error);
-      }
-
-      const publicErrorObject = new InternalServerError({
-        cause: error,
-      });
-
-      console.error(publicErrorObject);
-
-      return response
-        .status(publicErrorObject.statusCode)
-        .json(publicErrorObject);
-    },
+    onNoMatch: createOnNoMatchHandler(allowedMethods),
+    onError: onErrorHandler,
   });
+}
+
+function createOnNoMatchHandler(allowedMethods) {
+  return function onNoMatchHandler(request, response) {
+    const publicErrorObject = new MethodNotAllowedError();
+
+    response.setHeader("Allow", allowedMethods);
+    return response
+      .status(publicErrorObject.statusCode)
+      .json(publicErrorObject);
+  };
+}
+
+function onErrorHandler(error, request, response) {
+  if (
+    error instanceof NotFoundError ||
+    error instanceof UnauthorizedError ||
+    error instanceof ValidationError
+  ) {
+    return response.status(error.statusCode).json(error);
+  }
+
+  const publicErrorObject = new InternalServerError({
+    cause: error,
+  });
+
+  console.error(publicErrorObject);
+
+  return response.status(publicErrorObject.statusCode).json(publicErrorObject);
 }
 
 function setSessionCookie(response, sessionToken) {
