@@ -13,7 +13,7 @@ describe("PATCH /api/v1/users/[username]", () => {
   describe("Usuário anônimo", () => {
     test("Com nome de usuário inexistente", async () => {
       const response = await fetch(
-        "http://localhost:3000/api/v1/users/UsuarioInexistente",
+        `${orchestrator.API_URL}/users/UsuarioInexistente`,
         {
           method: "PATCH",
         },
@@ -40,7 +40,7 @@ describe("PATCH /api/v1/users/[username]", () => {
         username: "user2",
       });
 
-      const response = await fetch("http://localhost:3000/api/v1/users/user2", {
+      const response = await fetch(`${orchestrator.API_URL}/users/user2`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

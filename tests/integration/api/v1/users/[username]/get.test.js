@@ -16,9 +16,7 @@ describe("GET /api/v1/users/[username]", () => {
         password: "senha123",
       });
 
-      const response2 = await fetch(
-        "http://localhost:3000/api/v1/users/MesmoCase",
-      );
+      const response2 = await fetch(`${orchestrator.API_URL}/users/MesmoCase`);
       expect(response2.status).toBe(200);
 
       const response2Body = await response2.json();
@@ -45,7 +43,7 @@ describe("GET /api/v1/users/[username]", () => {
       });
 
       const response2 = await fetch(
-        "http://localhost:3000/api/v1/users/casediferente",
+        `${orchestrator.API_URL}/users/casediferente`,
       );
       expect(response2.status).toBe(200);
 
@@ -67,7 +65,7 @@ describe("GET /api/v1/users/[username]", () => {
 
     test("Com usuário inexistente", async () => {
       const response = await fetch(
-        "http://localhost:3000/api/v1/users/UsuarioInexistente",
+        `${orchestrator.API_URL}/users/UsuarioInexistente`,
       );
       expect(response.status).toBe(404);
 

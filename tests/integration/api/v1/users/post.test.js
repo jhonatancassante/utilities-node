@@ -12,7 +12,7 @@ beforeAll(async () => {
 describe("POST /api/v1/users", () => {
   describe("Usuário anônimo", () => {
     test("Com dados únicos e válidos", async () => {
-      const response = await fetch("http://localhost:3000/api/v1/users", {
+      const response = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,7 +57,7 @@ describe("POST /api/v1/users", () => {
     });
 
     test("Com nome de usuário duplicado", async () => {
-      const response1 = await fetch("http://localhost:3000/api/v1/users", {
+      const response1 = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +70,7 @@ describe("POST /api/v1/users", () => {
       });
       expect(response1.status).toBe(201);
 
-      const response2 = await fetch("http://localhost:3000/api/v1/users", {
+      const response2 = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,7 +94,7 @@ describe("POST /api/v1/users", () => {
     });
 
     test("Com email inválido", async () => {
-      const response = await fetch("http://localhost:3000/api/v1/users", {
+      const response = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -119,7 +119,7 @@ describe("POST /api/v1/users", () => {
     });
 
     test("Com email duplicado", async () => {
-      const response1 = await fetch("http://localhost:3000/api/v1/users", {
+      const response1 = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -132,7 +132,7 @@ describe("POST /api/v1/users", () => {
       });
       expect(response1.status).toBe(201);
 
-      const response2 = await fetch("http://localhost:3000/api/v1/users", {
+      const response2 = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

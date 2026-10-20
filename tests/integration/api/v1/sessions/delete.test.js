@@ -15,7 +15,7 @@ describe("DELETE /api/v1/sessions", () => {
     test("Como uma sessão inexistente", async () => {
       const nonexistentToken = "EsseTokenNaoExisteEhApenasUmPlaceHolder";
 
-      const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      const response = await fetch(`${orchestrator.API_URL}/sessions`, {
         method: "DELETE",
         headers: {
           Cookie: `session_id=${nonexistentToken}`,
@@ -57,7 +57,7 @@ describe("DELETE /api/v1/sessions", () => {
 
       jest.useRealTimers();
 
-      const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      const response = await fetch(`${orchestrator.API_URL}/sessions`, {
         method: "DELETE",
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
@@ -79,7 +79,7 @@ describe("DELETE /api/v1/sessions", () => {
       const createdUser = await orchestrator.createUser();
       const sessionObject = await orchestrator.createSession(createdUser.id);
 
-      const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      const response = await fetch(`${orchestrator.API_URL}/sessions`, {
         method: "DELETE",
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
@@ -121,14 +121,11 @@ describe("DELETE /api/v1/sessions", () => {
         sameSite: "lax",
       });
 
-      const doubleCheckResponse = await fetch(
-        "http://localhost:3000/api/v1/user",
-        {
-          headers: {
-            Cookie: `session_id=${sessionObject.token}`,
-          },
+      const doubleCheckResponse = await fetch(`${orchestrator.API_URL}/user`, {
+        headers: {
+          Cookie: `session_id=${sessionObject.token}`,
         },
-      );
+      });
       expect(doubleCheckResponse.status).toBe(401);
 
       const doubleCheckResponseBody = await doubleCheckResponse.json();

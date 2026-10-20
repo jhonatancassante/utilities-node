@@ -7,7 +7,7 @@ beforeAll(async () => {
 describe("POST /api/v1/status", () => {
   describe("Usuário anônimo", () => {
     test("Obtendo o status atual do sistema", async () => {
-      const response = await fetch("http://localhost:3000/api/v1/status", {
+      const response = await fetch(`${orchestrator.API_URL}/status`, {
         method: "POST",
       });
       expect(response.status).toBe(405);
