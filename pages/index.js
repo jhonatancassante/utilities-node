@@ -1,7 +1,7 @@
 // pages/index.js
 import AppHead from "@/components/AppHead";
 import Layout from "@/components/Layout";
-import siteConfigs from "@/configs/site.js";
+import headConfigs from "@/configs/head.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -41,7 +41,7 @@ function Home() {
               <div className={styles.progressBar}></div>
             </div>
 
-            <small>{siteConfigs.appName} · Em desenvolvimento</small>
+            <small>{headConfigs.appName} · Em desenvolvimento</small>
           </section>
         </main>
       </Layout>

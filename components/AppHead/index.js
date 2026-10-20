@@ -1,14 +1,14 @@
 import Head from "next/head";
-import siteConfigs from "@/configs/site.js";
+import headConfigs from "@/configs/head.js";
 
 function AppHead({
   title,
-  description = siteConfigs.defaultDescription,
+  description = headConfigs.defaultDescription,
   children,
 }) {
   const fullTitle = title
-    ? `${siteConfigs.appName} ${siteConfigs.titleSeparator} ${title}`
-    : siteConfigs.appName;
+    ? `${headConfigs.appName} ${headConfigs.titleSeparator} ${title}`
+    : headConfigs.appName;
 
   return (
     <Head>

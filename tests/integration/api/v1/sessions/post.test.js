@@ -138,7 +138,7 @@ describe("POST /api/v1/sessions", () => {
 
       expect(lifetimeDifferenceInMilliseconds).toBeLessThanOrEqual(100);
 
-      const sessionCookie = orchestrator.getCookieObject(response);
+      const sessionCookie = orchestrator.getSessionCookieObject(response);
 
       expect(sessionCookie).toEqual({
         name: "session_id",
