@@ -9,12 +9,9 @@ describe("POST /api/v1/migrations", () => {
   describe("Usuário anônimo", () => {
     describe("Rodar as migrações pendentes", () => {
       test("Pela primeira vez", async () => {
-        const response = await fetch(
-          "http://localhost:3000/api/v1/migrations",
-          {
-            method: "POST",
-          },
-        );
+        const response = await fetch(`${orchestrator.API_URL}/migrations`, {
+          method: "POST",
+        });
         expect(response.status).toBe(201);
 
         const responseBody = await response.json();
@@ -24,12 +21,9 @@ describe("POST /api/v1/migrations", () => {
       });
 
       test("Pela segunda vez", async () => {
-        const response = await fetch(
-          "http://localhost:3000/api/v1/migrations",
-          {
-            method: "POST",
-          },
-        );
+        const response = await fetch(`${orchestrator.API_URL}/migrations`, {
+          method: "POST",
+        });
         expect(response.status).toBe(200);
 
         const responseBody = await response.json();

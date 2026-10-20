@@ -8,7 +8,7 @@ beforeAll(async () => {
 describe("DELETE /api/v1/migrations", () => {
   describe("Usuário anônimo", () => {
     test("Visualizando as migrações pendentes", async () => {
-      const response = await fetch("http://localhost:3000/api/v1/migrations", {
+      const response = await fetch(`${orchestrator.API_URL}/migrations`, {
         method: "DELETE",
       });
       expect(response.status).toBe(405);

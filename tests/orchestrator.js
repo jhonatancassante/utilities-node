@@ -7,6 +7,8 @@ import migrator from "@/models/migrator.js";
 import user from "@/models/user.js";
 import session from "@/models/session.js";
 
+const API_URL = "http://localhost:3000/api/v1";
+
 async function waitForAllServices() {
   await waitForWebServer();
 
@@ -17,7 +19,7 @@ async function waitForAllServices() {
     });
 
     async function fetchStatusPage() {
-      const response = await fetch("http://localhost:3000/api/v1/status");
+      const response = await fetch(`${API_URL}/status`);
 
       if (response.status !== 200) {
         throw new Error(`Status page returned ${response.status}`);
@@ -58,6 +60,7 @@ function getSessionCookieObject(response) {
 }
 
 const orchestrator = {
+  API_URL,
   waitForAllServices,
   clearDatabase,
   runPendingMigrations,
