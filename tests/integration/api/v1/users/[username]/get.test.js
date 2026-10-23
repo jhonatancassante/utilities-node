@@ -1,7 +1,6 @@
 import { version as uuidVersion } from "uuid";
 
 import orchestrator from "tests/orchestrator.js";
-import appPaths from "@/configs/app_paths.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -18,7 +17,7 @@ describe("GET /api/v1/users/[username]", () => {
         password: "senha123",
       });
 
-      const response2 = await fetch(`${appPaths.API_URL}/users/MesmoCase`);
+      const response2 = await fetch(`${orchestrator.API_URL}/users/MesmoCase`);
       expect(response2.status).toBe(200);
 
       const response2Body = await response2.json();
@@ -45,7 +44,9 @@ describe("GET /api/v1/users/[username]", () => {
         password: "senha123",
       });
 
-      const response2 = await fetch(`${appPaths.API_URL}/users/casediferente`);
+      const response2 = await fetch(
+        `${orchestrator.API_URL}/users/casediferente`,
+      );
       expect(response2.status).toBe(200);
 
       const response2Body = await response2.json();
@@ -67,7 +68,7 @@ describe("GET /api/v1/users/[username]", () => {
 
     test("Com usuário inexistente", async () => {
       const response = await fetch(
-        `${appPaths.API_URL}/users/UsuarioInexistente`,
+        `${orchestrator.API_URL}/users/UsuarioInexistente`,
       );
       expect(response.status).toBe(404);
 

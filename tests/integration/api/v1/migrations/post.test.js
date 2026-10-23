@@ -1,5 +1,4 @@
 import orchestrator from "tests/orchestrator.js";
-import appPaths from "@/configs/app_paths.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -10,7 +9,7 @@ describe("POST /api/v1/migrations", () => {
   describe("Usuário anônimo", () => {
     describe("Rodar as migrações pendentes", () => {
       test("Pela primeira vez", async () => {
-        const response = await fetch(`${appPaths.API_URL}/migrations`, {
+        const response = await fetch(`${orchestrator.API_URL}/migrations`, {
           method: "POST",
         });
         expect(response.status).toBe(201);
@@ -22,7 +21,7 @@ describe("POST /api/v1/migrations", () => {
       });
 
       test("Pela segunda vez", async () => {
-        const response = await fetch(`${appPaths.API_URL}/migrations`, {
+        const response = await fetch(`${orchestrator.API_URL}/migrations`, {
           method: "POST",
         });
         expect(response.status).toBe(200);

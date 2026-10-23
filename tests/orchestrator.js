@@ -6,7 +6,10 @@ import database from "@/infra/database.js";
 import migrator from "@/models/migrator.js";
 import user from "@/models/user.js";
 import session from "@/models/session.js";
-import appPaths from "@/configs/app_paths.js";
+import webserver from "@/infra/webserver.js";
+
+const API_URL = `${webserver.origin}/api/v1`;
+const EMAIL_HTTP_URL = "http://localhost:1080";
 
 async function waitForAllServices() {
   await waitForWebServer();
@@ -19,7 +22,7 @@ async function waitForAllServices() {
     });
 
     async function fetchStatusPage() {
-      const response = await fetch(`${appPaths.API_URL}/status`);
+      const response = await fetch(`${API_URL}/status`);
 
       if (response.status !== 200) {
         throw new Error(`Status page returned ${response.status}`);
@@ -34,7 +37,7 @@ async function waitForAllServices() {
     });
 
     async function fetchEmailPage() {
-      const response = await fetch(appPaths.EMAIL_HTTP_URL);
+      const response = await fetch(EMAIL_HTTP_URL);
 
       if (response.status !== 200) {
         throw new Error(`Email page returned ${response.status}`);
@@ -67,13 +70,13 @@ async function createSession(userId) {
 }
 
 async function deleteAllEmail() {
-  await fetch(`${appPaths.EMAIL_HTTP_URL}/messages`, {
+  await fetch(`${EMAIL_HTTP_URL}/messages`, {
     method: "DELETE",
   });
 }
 
 async function getLastEmail() {
-  const emailListResponse = await fetch(`${appPaths.EMAIL_HTTP_URL}/messages`);
+  const emailListResponse = await fetch(`${EMAIL_HTTP_URL}/messages`);
   const emailListBody = await emailListResponse.json();
   const lastEmailItem = emailListBody.pop();
 
@@ -82,7 +85,7 @@ async function getLastEmail() {
   }
 
   const emailTextResponse = await fetch(
-    `${appPaths.EMAIL_HTTP_URL}/messages/${lastEmailItem.id}.plain`,
+    `${EMAIL_HTTP_URL}/messages/${lastEmailItem.id}.plain`,
   );
   const emailTextBody = await emailTextResponse.text();
 
@@ -107,6 +110,7 @@ function extractUUID(emailText) {
 }
 
 const orchestrator = {
+  API_URL,
   waitForAllServices,
   clearDatabase,
   runPendingMigrations,

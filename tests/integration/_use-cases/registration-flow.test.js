@@ -1,6 +1,5 @@
 /* eslint-disable jest/expect-expect */
 /* eslint-disable jest/no-disabled-tests */
-import appPaths from "@/configs/app_paths.js";
 import webserver from "@/infra/webserver";
 import activation from "@/models/activation";
 import orchestrator from "@/tests/orchestrator.js";
@@ -16,7 +15,7 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
   let createUserRespondseBody;
 
   test("Cria um usuário", async () => {
-    const createUserRespondse = await fetch(`${appPaths.API_URL}/users`, {
+    const createUserRespondse = await fetch(`${orchestrator.API_URL}/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

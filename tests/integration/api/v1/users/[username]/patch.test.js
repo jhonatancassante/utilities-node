@@ -3,7 +3,6 @@ import { version as uuidVersion } from "uuid";
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
 import password from "@/models/password.js";
-import appPaths from "@/configs/app_paths.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -15,7 +14,7 @@ describe("PATCH /api/v1/users/[username]", () => {
   describe("Usuário anônimo", () => {
     test("Com nome de usuário inexistente", async () => {
       const response = await fetch(
-        `${appPaths.API_URL}/users/UsuarioInexistente`,
+        `${orchestrator.API_URL}/users/UsuarioInexistente`,
         {
           method: "PATCH",
         },
@@ -42,7 +41,7 @@ describe("PATCH /api/v1/users/[username]", () => {
         username: "user2",
       });
 
-      const response = await fetch(`${appPaths.API_URL}/users/user2`, {
+      const response = await fetch(`${orchestrator.API_URL}/users/user2`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

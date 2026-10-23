@@ -3,7 +3,6 @@ import { version as uuidVersion } from "uuid";
 
 import orchestrator from "tests/orchestrator.js";
 import session from "@/models/session.js";
-import appPaths from "@/configs/app_paths.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -16,7 +15,7 @@ describe("DELETE /api/v1/sessions", () => {
     test("Como uma sessão inexistente", async () => {
       const nonexistentToken = "EsseTokenNaoExisteEhApenasUmPlaceHolder";
 
-      const response = await fetch(`${appPaths.API_URL}/sessions`, {
+      const response = await fetch(`${orchestrator.API_URL}/sessions`, {
         method: "DELETE",
         headers: {
           Cookie: `session_id=${nonexistentToken}`,
@@ -58,7 +57,7 @@ describe("DELETE /api/v1/sessions", () => {
 
       jest.useRealTimers();
 
-      const response = await fetch(`${appPaths.API_URL}/sessions`, {
+      const response = await fetch(`${orchestrator.API_URL}/sessions`, {
         method: "DELETE",
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
@@ -80,7 +79,7 @@ describe("DELETE /api/v1/sessions", () => {
       const createdUser = await orchestrator.createUser();
       const sessionObject = await orchestrator.createSession(createdUser.id);
 
-      const response = await fetch(`${appPaths.API_URL}/sessions`, {
+      const response = await fetch(`${orchestrator.API_URL}/sessions`, {
         method: "DELETE",
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
@@ -122,7 +121,7 @@ describe("DELETE /api/v1/sessions", () => {
         sameSite: "lax",
       });
 
-      const doubleCheckResponse = await fetch(`${appPaths.API_URL}/user`, {
+      const doubleCheckResponse = await fetch(`${orchestrator.API_URL}/user`, {
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
         },

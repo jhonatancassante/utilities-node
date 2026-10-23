@@ -3,7 +3,6 @@ import { version as uuidVersion } from "uuid";
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
 import password from "@/models/password.js";
-import appPaths from "@/configs/app_paths.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -14,7 +13,7 @@ beforeAll(async () => {
 describe("POST /api/v1/users", () => {
   describe("Usuário anônimo", () => {
     test("Com dados únicos e válidos", async () => {
-      const response = await fetch(`${appPaths.API_URL}/users`, {
+      const response = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,7 +59,7 @@ describe("POST /api/v1/users", () => {
     });
 
     test("Com nome de usuário duplicado", async () => {
-      const response1 = await fetch(`${appPaths.API_URL}/users`, {
+      const response1 = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -73,7 +72,7 @@ describe("POST /api/v1/users", () => {
       });
       expect(response1.status).toBe(201);
 
-      const response2 = await fetch(`${appPaths.API_URL}/users`, {
+      const response2 = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +96,7 @@ describe("POST /api/v1/users", () => {
     });
 
     test("Com email inválido", async () => {
-      const response = await fetch(`${appPaths.API_URL}/users`, {
+      const response = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -122,7 +121,7 @@ describe("POST /api/v1/users", () => {
     });
 
     test("Com email duplicado", async () => {
-      const response1 = await fetch(`${appPaths.API_URL}/users`, {
+      const response1 = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -135,7 +134,7 @@ describe("POST /api/v1/users", () => {
       });
       expect(response1.status).toBe(201);
 
-      const response2 = await fetch(`${appPaths.API_URL}/users`, {
+      const response2 = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
