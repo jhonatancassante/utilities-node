@@ -1,6 +1,8 @@
 /* eslint-disable jest/expect-expect */
 /* eslint-disable jest/no-disabled-tests */
-import orchestrator from "@/tests/orchestrator";
+import appPaths from "@/configs/app_paths.js";
+import activation from "@/models/activation";
+import orchestrator from "@/tests/orchestrator.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -10,8 +12,10 @@ beforeAll(async () => {
 });
 
 describe("Caso de Uso: Fluxo de registro com sucesso", () => {
+  let createUserRespondseBody;
+
   test("Cria um usuário", async () => {
-    const createUserRespondse = await fetch(`${orchestrator.API_URL}/users`, {
+    const createUserRespondse = await fetch(`${appPaths.API_URL}/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -24,7 +28,7 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
     });
     expect(createUserRespondse.status).toBe(201);
 
-    const createUserRespondseBody = await createUserRespondse.json();
+    createUserRespondseBody = await createUserRespondse.json();
 
     expect(createUserRespondseBody).toEqual({
       id: createUserRespondseBody.id,
@@ -40,6 +44,10 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
   test("Recebe um email de ativação", async () => {
     const lastEmail = await orchestrator.getLastEmail();
 
+    const activationToken = await activation.findOneByUserId(
+      createUserRespondseBody.id,
+    );
+
     expect(lastEmail.sender).toBe("<contato@jhonatancassante.com.br>");
     expect(lastEmail.recipients[0]).toBe(
       "<registrationFlow@jhonatancassante.com.br>",
@@ -48,6 +56,7 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
       "Ative seu cadastro no site jhonatancassante.com.br",
     );
     expect(lastEmail.text).toContain("registrationFlow");
+    expect(lastEmail.text).toContain(activationToken.id);
   });
 
   test.skip("Ativa a conta", async () => {});
