@@ -37,12 +37,15 @@ function createOnNoMatchHandler(allowedMethods) {
 }
 
 function onErrorHandler(error, request, response) {
-  if (error instanceof NotFoundError || error instanceof ValidationError) {
-    return response.status(error.statusCode).json(error);
-  }
-
   if (error instanceof UnauthorizedError) {
     clearSessionCookie(response);
+  }
+
+  if (
+    error instanceof NotFoundError ||
+    error instanceof ValidationError ||
+    error instanceof UnauthorizedError
+  ) {
     return response.status(error.statusCode).json(error);
   }
 

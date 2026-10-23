@@ -2,6 +2,7 @@
 /* eslint-disable jest/no-disabled-tests */
 import webserver from "@/infra/webserver";
 import activation from "@/models/activation";
+import user from "@/models/user";
 import orchestrator from "@/tests/orchestrator.js";
 
 beforeAll(async () => {
@@ -13,6 +14,7 @@ beforeAll(async () => {
 
 describe("Caso de Uso: Fluxo de registro com sucesso", () => {
   let createUserRespondseBody;
+  let activationTokenId;
 
   test("Cria um usuário", async () => {
     const createUserRespondse = await fetch(`${orchestrator.API_URL}/users`, {
@@ -53,7 +55,7 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
     );
     expect(lastEmail.text).toContain("registrationFlow");
 
-    const activationTokenId = orchestrator.extractUUID(lastEmail.text);
+    activationTokenId = orchestrator.extractUUID(lastEmail.text);
     expect(lastEmail.text).toContain(
       `${webserver.origin}/cadastro/ativar/${activationTokenId}`,
     );
@@ -64,7 +66,23 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
     expect(activationTokenObject.used_at).toBe(null);
   });
 
-  test.skip("Ativa a conta", async () => {});
+  test("Ativa a conta", async () => {
+    const activationResponse = await fetch(
+      `${orchestrator.API_URL}/activations/${activationTokenId}`,
+      {
+        method: "PATCH",
+      },
+    );
+    expect(activationResponse.status).toBe(200);
+
+    const activationResponseBody = await activationResponse.json();
+    expect(Date.parse(activationResponseBody.used_at)).not.toBeNaN();
+
+    const activatedUser = await user.findOneByUsername(
+      createUserRespondseBody.username,
+    );
+    expect(activatedUser.features).toEqual(["create:session"]);
+  });
 
   test.skip("Faz login", async () => {});
 
