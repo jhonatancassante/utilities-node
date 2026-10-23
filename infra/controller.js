@@ -2,19 +2,37 @@ import { createRouter } from "next-connect";
 import * as cookie from "cookie";
 
 import session from "@/models/session.js";
+import user from "@/models/user.js";
 import {
   InternalServerError,
   MethodNotAllowedError,
   NotFoundError,
   UnauthorizedError,
   ValidationError,
+  ConfigurationError,
+  ForbiddenError,
 } from "@/infra/errors.js";
 
-function createController(handlers) {
+function createController(handlers, { middlewares = [] } = {}) {
   const router = createRouter();
 
+  if (middlewares.length > 0) {
+    middlewares.forEach((middleware, index) => {
+      if (typeof middleware !== "function") {
+        throw new ConfigurationError({
+          message: `O middleware na posição ${index} não é uma função.`,
+          action:
+            "Confira se o middleware está exportado corretamente e se o nome está correto.",
+        });
+      }
+    });
+
+    router.use(...middlewares);
+  }
+
   for (const [method, handler] of Object.entries(handlers)) {
-    router[method.toLowerCase()](handler);
+    const stack = Array.isArray(handler) ? handler : [handler];
+    router[method.toLowerCase()](...stack);
   }
 
   const allowedMethods = Object.keys(handlers).join(", ");
@@ -42,6 +60,7 @@ function onErrorHandler(error, request, response) {
   }
 
   if (
+    error instanceof ForbiddenError ||
     error instanceof NotFoundError ||
     error instanceof ValidationError ||
     error instanceof UnauthorizedError
@@ -94,10 +113,59 @@ function clearSessionCookie(response) {
   );
 }
 
+async function injectAnonymousOrUser(request, response, next) {
+  if (request.cookies?.session_id) {
+    await injectAutheticatedUser(request);
+  } else {
+    injectAnonymousUser(request);
+  }
+
+  return next();
+}
+
+async function injectAutheticatedUser(request) {
+  const sessionToken = request.cookies.session_id;
+  const sessionObject = await session.findOneValidByToken(sessionToken);
+  const userObject = await user.findOneById(sessionObject.user_id);
+
+  request.context = {
+    ...request.context,
+    user: userObject,
+  };
+}
+
+function injectAnonymousUser(request) {
+  const anonymousUserObject = {
+    features: ["create:session", "create:user", "read:activation_token"],
+  };
+
+  request.context = {
+    ...request.context,
+    user: anonymousUserObject,
+  };
+}
+
+function canRequest(feature) {
+  return function canRequestMiddleware(request, response, next) {
+    const userTryingToRequest = request.context.user;
+
+    if (userTryingToRequest.features.includes(feature)) {
+      return next();
+    }
+
+    throw new ForbiddenError({
+      message: "Você não possui permissão para executar esta ação.",
+      action: `Verifique se o seu usuário possui a feature "${feature}".`,
+    });
+  };
+}
+
 const controller = {
   createController,
   setSessionCookie,
   clearSessionCookie,
+  injectAnonymousOrUser,
+  canRequest,
 };
 
 export default controller;

@@ -25,7 +25,7 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
       body: JSON.stringify({
         username: "registrationFlow",
         email: "registrationFlow@jhonatancassante.com.br",
-        password: "senha123",
+        password: "RegistrationFlowPassword",
       }),
     });
     expect(createUserRespondse.status).toBe(201);
@@ -84,7 +84,25 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
     expect(activatedUser.features).toEqual(["create:session"]);
   });
 
-  test.skip("Faz login", async () => {});
+  test("Faz login", async () => {
+    const createSessionResponse = await fetch(
+      `${orchestrator.API_URL}/sessions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: createUserRespondseBody.email,
+          password: "RegistrationFlowPassword",
+        }),
+      },
+    );
+    expect(createSessionResponse.status).toBe(201);
+
+    const createSessionResponseBody = await createSessionResponse.json();
+    expect(createSessionResponseBody.user_id).toBe(createUserRespondseBody.id);
+  });
 
   test.skip("Recebe dados do usuário", async () => {});
 });

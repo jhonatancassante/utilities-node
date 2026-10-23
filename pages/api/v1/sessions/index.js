@@ -2,10 +2,13 @@ import controller from "@/infra/controller.js";
 import authentication from "@/models/authentication.js";
 import session from "@/models/session.js";
 
-export default controller.createController({
-  POST: postHandler,
-  DELETE: deleteHandler,
-});
+export default controller.createController(
+  {
+    POST: [controller.canRequest("create:session"), postHandler],
+    DELETE: deleteHandler,
+  },
+  { middlewares: [controller.injectAnonymousOrUser] },
+);
 
 async function postHandler(request, response) {
   const userInputValues = request.body;
