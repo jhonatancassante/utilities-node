@@ -37,7 +37,18 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
     });
   });
 
-  test.skip("Recebe um email de ativação", async () => {});
+  test("Recebe um email de ativação", async () => {
+    const lastEmail = await orchestrator.getLastEmail();
+
+    expect(lastEmail.sender).toBe("<contato@jhonatancassante.com.br>");
+    expect(lastEmail.recipients[0]).toBe(
+      "<registrationFlow@jhonatancassante.com.br>",
+    );
+    expect(lastEmail.subject).toBe(
+      "Ative seu cadastro no site jhonatancassante.com.br",
+    );
+    expect(lastEmail.text).toContain("registrationFlow");
+  });
 
   test.skip("Ativa a conta", async () => {});
 
