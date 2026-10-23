@@ -6,7 +6,7 @@ import database from "@/infra/database.js";
 import migrator from "@/models/migrator.js";
 import user from "@/models/user.js";
 import session from "@/models/session.js";
-import appPaths from "@/configs/app_paths";
+import appPaths from "@/configs/app_paths.js";
 
 async function waitForAllServices() {
   await waitForWebServer();
@@ -98,6 +98,14 @@ function getSessionCookieObject(response) {
     .find((parsed) => parsed.name === "session_id");
 }
 
+function extractUUID(emailText) {
+  const match = emailText.match(
+    /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/i,
+  );
+
+  return match ? match[0] : null;
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
@@ -107,6 +115,7 @@ const orchestrator = {
   deleteAllEmail,
   getLastEmail,
   getSessionCookieObject,
+  extractUUID,
 };
 
 export default orchestrator;

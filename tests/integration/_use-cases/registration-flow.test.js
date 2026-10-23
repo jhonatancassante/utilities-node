@@ -1,6 +1,7 @@
 /* eslint-disable jest/expect-expect */
 /* eslint-disable jest/no-disabled-tests */
 import appPaths from "@/configs/app_paths.js";
+import webserver from "@/infra/webserver";
 import activation from "@/models/activation";
 import orchestrator from "@/tests/orchestrator.js";
 
@@ -44,10 +45,6 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
   test("Recebe um email de ativação", async () => {
     const lastEmail = await orchestrator.getLastEmail();
 
-    const activationToken = await activation.findOneByUserId(
-      createUserRespondseBody.id,
-    );
-
     expect(lastEmail.sender).toBe("<contato@jhonatancassante.com.br>");
     expect(lastEmail.recipients[0]).toBe(
       "<registrationFlow@jhonatancassante.com.br>",
@@ -56,7 +53,16 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
       "Ative seu cadastro no site jhonatancassante.com.br",
     );
     expect(lastEmail.text).toContain("registrationFlow");
-    expect(lastEmail.text).toContain(activationToken.id);
+
+    const activationTokenId = orchestrator.extractUUID(lastEmail.text);
+    expect(lastEmail.text).toContain(
+      `${webserver.origin}/cadastro/ativar/${activationTokenId}`,
+    );
+
+    const activationTokenObject =
+      await activation.findOneValidById(activationTokenId);
+    expect(activationTokenObject.user_id).toBe(createUserRespondseBody.id);
+    expect(activationTokenObject.used_at).toBe(null);
   });
 
   test.skip("Ativa a conta", async () => {});
