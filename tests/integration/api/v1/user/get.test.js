@@ -3,6 +3,7 @@ import { version as uuidVersion } from "uuid";
 
 import orchestrator from "tests/orchestrator.js";
 import session from "@/models/session.js";
+import appPaths from "@/configs/app_paths.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -19,7 +20,7 @@ describe("GET /api/v1/user", () => {
 
       const sessionObject = await orchestrator.createSession(createdUser.id);
 
-      const response = await fetch(`${orchestrator.API_URL}/user`, {
+      const response = await fetch(`${appPaths.API_URL}/user`, {
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
         },
@@ -75,7 +76,7 @@ describe("GET /api/v1/user", () => {
     test("Com uma sessão que não existe", async () => {
       const nonexistentToken = "EsseTokenNaoExisteEhApenasUmPlaceHolder";
 
-      const response = await fetch(`${orchestrator.API_URL}/user`, {
+      const response = await fetch(`${appPaths.API_URL}/user`, {
         headers: {
           Cookie: `session_id=${nonexistentToken}`,
         },
@@ -126,7 +127,7 @@ describe("GET /api/v1/user", () => {
 
       jest.useRealTimers();
 
-      const response = await fetch(`${orchestrator.API_URL}/user`, {
+      const response = await fetch(`${appPaths.API_URL}/user`, {
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
         },
@@ -177,7 +178,7 @@ describe("GET /api/v1/user", () => {
 
       jest.useRealTimers();
 
-      const response = await fetch(`${orchestrator.API_URL}/user`, {
+      const response = await fetch(`${appPaths.API_URL}/user`, {
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
         },

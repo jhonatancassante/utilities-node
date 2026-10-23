@@ -1,6 +1,7 @@
 import { version as uuidVersion } from "uuid";
 import orchestrator from "tests/orchestrator.js";
 import session from "@/models/session.js";
+import appPaths from "@/configs/app_paths.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -15,7 +16,7 @@ describe("POST /api/v1/sessions", () => {
         password: "senha-correta",
       });
 
-      const response = await fetch(`${orchestrator.API_URL}/sessions`, {
+      const response = await fetch(`${appPaths.API_URL}/sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,7 +44,7 @@ describe("POST /api/v1/sessions", () => {
         email: "email@correto.com.br",
       });
 
-      const response = await fetch(`${orchestrator.API_URL}/sessions`, {
+      const response = await fetch(`${appPaths.API_URL}/sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,7 +70,7 @@ describe("POST /api/v1/sessions", () => {
     test("Com o email e a senha incorretos", async () => {
       await orchestrator.createUser();
 
-      const response = await fetch(`${orchestrator.API_URL}/sessions`, {
+      const response = await fetch(`${appPaths.API_URL}/sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -98,7 +99,7 @@ describe("POST /api/v1/sessions", () => {
         password: "email.e.senha@correto",
       });
 
-      const response = await fetch(`${orchestrator.API_URL}/sessions`, {
+      const response = await fetch(`${appPaths.API_URL}/sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
