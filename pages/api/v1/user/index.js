@@ -2,9 +2,12 @@ import controller from "@/infra/controller.js";
 import session from "@/models/session.js";
 import user from "@/models/user.js";
 
-export default controller.createController({
-  GET: getHandler,
-});
+export default controller.createController(
+  {
+    GET: [controller.canRequest("read:session"), getHandler],
+  },
+  { middlewares: [controller.injectAnonymousOrUser] },
+);
 
 async function getHandler(request, response) {
   const sessionToken = request.cookies.session_id;

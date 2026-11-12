@@ -1,5 +1,3 @@
-/* eslint-disable jest/expect-expect */
-/* eslint-disable jest/no-disabled-tests */
 import webserver from "@/infra/webserver";
 import activation from "@/models/activation";
 import user from "@/models/user";
@@ -15,6 +13,7 @@ beforeAll(async () => {
 describe("Caso de Uso: Fluxo de registro com sucesso", () => {
   let createUserRespondseBody;
   let activationTokenId;
+  let createSessionResponseBody;
 
   test("Cria um usuário", async () => {
     const createUserRespondse = await fetch(`${orchestrator.API_URL}/users`, {
@@ -81,7 +80,7 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
     const activatedUser = await user.findOneByUsername(
       createUserRespondseBody.username,
     );
-    expect(activatedUser.features).toEqual(["create:session"]);
+    expect(activatedUser.features).toEqual(["create:session", "read:session"]);
   });
 
   test("Faz login", async () => {
@@ -100,9 +99,19 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
     );
     expect(createSessionResponse.status).toBe(201);
 
-    const createSessionResponseBody = await createSessionResponse.json();
+    createSessionResponseBody = await createSessionResponse.json();
     expect(createSessionResponseBody.user_id).toBe(createUserRespondseBody.id);
   });
 
-  test.skip("Recebe dados do usuário", async () => {});
+  test("Recebe dados do usuário", async () => {
+    const userResponse = await fetch(`${orchestrator.API_URL}/user`, {
+      headers: {
+        Cookie: `session_id=${createSessionResponseBody.token}`,
+      },
+    });
+    expect(userResponse.status).toBe(200);
+
+    const userResponseBody = await userResponse.json();
+    expect(userResponseBody.id).toBe(createUserRespondseBody.id);
+  });
 });
