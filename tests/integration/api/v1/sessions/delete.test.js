@@ -53,7 +53,7 @@ describe("DELETE /api/v1/sessions", () => {
         ],
       });
 
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
 
       jest.useRealTimers();
 
@@ -77,7 +77,7 @@ describe("DELETE /api/v1/sessions", () => {
 
     test("Com uma sessão válida", async () => {
       const createdUser = await orchestrator.createUser();
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
 
       const response = await fetch(`${orchestrator.API_URL}/sessions`, {
         method: "DELETE",

@@ -57,7 +57,7 @@ describe("GET /api/v1/user", () => {
     });
   });
 
-  describe("Usuário padrão", () => {
+  describe("Usuário autenticado", () => {
     test("Com uma sessão válida", async () => {
       const createdUser = await orchestrator.createUser({
         username: "UsuarioComSessaoValida",
@@ -65,7 +65,7 @@ describe("GET /api/v1/user", () => {
 
       const activatedUser = await orchestrator.activateUser(createdUser);
 
-      const sessionObject = await orchestrator.createSession(activatedUser.id);
+      const sessionObject = await orchestrator.createSession(activatedUser);
 
       const response = await fetch(`${orchestrator.API_URL}/user`, {
         headers: {
@@ -140,7 +140,7 @@ describe("GET /api/v1/user", () => {
         ],
       });
 
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
 
       jest.useRealTimers();
 
@@ -193,7 +193,7 @@ describe("GET /api/v1/user", () => {
         ],
       });
 
-      const sessionObject = await orchestrator.createSession(activatedUser.id);
+      const sessionObject = await orchestrator.createSession(activatedUser);
 
       jest.useRealTimers();
 

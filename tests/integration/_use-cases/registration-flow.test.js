@@ -75,6 +75,7 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
     expect(activationResponse.status).toBe(200);
 
     const activationResponseBody = await activationResponse.json();
+
     expect(Date.parse(activationResponseBody.used_at)).not.toBeNaN();
 
     const activatedUser = await user.findOneByUsername(
