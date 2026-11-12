@@ -99,6 +99,8 @@ describe("POST /api/v1/sessions", () => {
         password: "email.e.senha@correto",
       });
 
+      await orchestrator.activateUser(newUser);
+
       const response = await fetch(`${orchestrator.API_URL}/sessions`, {
         method: "POST",
         headers: {

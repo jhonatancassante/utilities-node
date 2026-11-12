@@ -7,6 +7,7 @@ import migrator from "@/models/migrator.js";
 import user from "@/models/user.js";
 import session from "@/models/session.js";
 import webserver from "@/infra/webserver.js";
+import activation from "@/models/activation";
 
 const API_URL = `${webserver.origin}/api/v1`;
 const EMAIL_HTTP_URL = "http://localhost:1080";
@@ -65,6 +66,10 @@ async function createUser(userObject = {}) {
   });
 }
 
+async function activateUser(user) {
+  return await activation.activateUserByUserId(user.id);
+}
+
 async function createSession(userId) {
   return await session.create(userId);
 }
@@ -115,6 +120,7 @@ const orchestrator = {
   clearDatabase,
   runPendingMigrations,
   createUser,
+  activateUser,
   createSession,
   deleteAllEmail,
   getLastEmail,
