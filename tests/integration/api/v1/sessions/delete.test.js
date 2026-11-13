@@ -11,7 +11,7 @@ beforeAll(async () => {
 });
 
 describe("DELETE /api/v1/sessions", () => {
-  describe("Usuário Padrão", () => {
+  describe("Usuário autenticado", () => {
     test("Como uma sessão inexistente", async () => {
       const nonexistentToken = "EsseTokenNaoExisteEhApenasUmPlaceHolder";
 

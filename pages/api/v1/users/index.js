@@ -2,9 +2,12 @@ import controller from "@/infra/controller.js";
 import activation from "@/models/activation.js";
 import user from "@/models/user.js";
 
-export default controller.createController({
-  POST: postHandler,
-});
+export default controller.createController(
+  {
+    POST: [controller.canRequest("create:user"), postHandler],
+  },
+  { middlewares: [controller.injectAnonymousOrUser] },
+);
 
 async function postHandler(request, response) {
   const userInputValues = request.body;

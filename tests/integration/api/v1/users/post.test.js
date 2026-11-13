@@ -157,4 +157,35 @@ describe("POST /api/v1/users", () => {
       });
     });
   });
+
+  describe("Usuário autenticado", () => {
+    test("Com dados únicos e válidos", async () => {
+      const user1 = await orchestrator.createUser();
+      await orchestrator.activateUser(user1);
+      const user1SessionObject = await orchestrator.createSession(user1);
+
+      const user2Response = await fetch(`${orchestrator.API_URL}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${user1SessionObject.token}`,
+        },
+        body: JSON.stringify({
+          username: "unicoevalido",
+          email: "unicoevalido@jhonatancassante.com.br",
+          password: "senha123",
+        }),
+      });
+      expect(user2Response.status).toBe(403);
+
+      const responseBody = await user2Response.json();
+
+      expect(responseBody).toEqual({
+        name: "ForbiddenError",
+        message: "Você não possui permissão para executar esta ação.",
+        action: 'Verifique se o seu usuário possui a feature "create:user".',
+        status_code: 403,
+      });
+    });
+  });
 });
