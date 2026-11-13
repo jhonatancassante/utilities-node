@@ -34,8 +34,6 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
     expect(createUserRespondseBody).toEqual({
       id: createUserRespondseBody.id,
       username: "registrationFlow",
-      email: "registrationFlow@jhonatancassante.com.br",
-      password: createUserRespondseBody.password,
       features: ["read:activation_token"],
       created_at: createUserRespondseBody.created_at,
       updated_at: createUserRespondseBody.updated_at,
@@ -97,7 +95,7 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: createUserRespondseBody.email,
+          email: "registrationFlow@jhonatancassante.com.br",
           password: "RegistrationFlowPassword",
         }),
       },

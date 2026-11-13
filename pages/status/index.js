@@ -127,7 +127,7 @@ function MetricRow({ title, value, isWarning = false }) {
 
 function DatabaseStatus({ isLoading, error, data }) {
   const {
-    status,
+    version,
     max_connections: max,
     opened_connections: opened,
   } = data ?? {};
@@ -166,7 +166,7 @@ function DatabaseStatus({ isLoading, error, data }) {
         </div>
       )}
 
-      <MetricRow title="Situação" value={status} />
+      {version && <MetricRow title="Versão" value={version} />}
       <MetricRow title="Máximo de Conexões" value={max} />
       <MetricRow
         title="Conexões Abertas"
