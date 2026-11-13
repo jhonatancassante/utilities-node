@@ -1,7 +1,8 @@
 import { version as uuidVersion } from "uuid";
+
 import orchestrator from "tests/orchestrator.js";
-import user from "@/models/user";
-import password from "@/models/password";
+import user from "@/models/user.js";
+import password from "@/models/password.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -30,8 +31,7 @@ describe("POST /api/v1/users", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: "unicoevalido",
-        email: "unicoevalido@jhonatancassante.com.br",
-        password: responseBody.password,
+        features: ["read:activation_token"],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
@@ -152,6 +152,37 @@ describe("POST /api/v1/users", () => {
         message: "O email informado já está sendo utilizado.",
         action: "Utilize outro email para realizar esta operação.",
         status_code: 400,
+      });
+    });
+  });
+
+  describe("Usuário autenticado", () => {
+    test("Com dados únicos e válidos", async () => {
+      const user1 = await orchestrator.createUser();
+      await orchestrator.activateUser(user1);
+      const user1SessionObject = await orchestrator.createSession(user1);
+
+      const user2Response = await fetch(`${orchestrator.API_URL}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${user1SessionObject.token}`,
+        },
+        body: JSON.stringify({
+          username: "unicoevalido",
+          email: "unicoevalido@jhonatancassante.com.br",
+          password: "senha123",
+        }),
+      });
+      expect(user2Response.status).toBe(403);
+
+      const responseBody = await user2Response.json();
+
+      expect(responseBody).toEqual({
+        name: "ForbiddenError",
+        message: "Você não possui permissão para executar esta ação.",
+        action: 'Verifique se o seu usuário possui a feature "create:user".',
+        status_code: 403,
       });
     });
   });
