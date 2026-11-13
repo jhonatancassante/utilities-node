@@ -81,7 +81,11 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
     const activatedUser = await user.findOneByUsername(
       createUserRespondseBody.username,
     );
-    expect(activatedUser.features).toEqual(["create:session", "read:session"]);
+    expect(activatedUser.features).toEqual([
+      "create:session",
+      "read:session",
+      "update:user",
+    ]);
   });
 
   test("Faz login", async () => {
