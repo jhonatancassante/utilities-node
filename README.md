@@ -59,7 +59,7 @@ O sistema de autorização é baseado em *features*. O cadastro começa com perm
 
 ## Pré-requisitos
 
-- **Node.js 24.14.1.** A versão está em `.nvmrc`; com [nvm](https://github.com/nvm-sh/nvm), execute `nvm use`.
+- **Node.js 24.** A versão principal está em `.nvmrc` e o requisito `engines` do `package.json`; com [nvm](https://github.com/nvm-sh/nvm), execute `nvm use`.
 - **Docker** com Docker Compose.
 - **Git**.
 - **ggshield** instalado e autenticado (`ggshield auth login`). O hook de pre-commit executa `ggshield secret scan pre-commit`.
