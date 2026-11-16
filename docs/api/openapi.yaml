@@ -452,7 +452,6 @@ components:
           type: string
     UserUpdate:
       type: object
-      minProperties: 1
       properties:
         username:
           type: string
