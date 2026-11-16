@@ -10,7 +10,7 @@ beforeAll(async () => {
 
 describe("GET /api/v1/users/[username]", () => {
   describe("Usuário anônimo", () => {
-    test("Com exato 'case match'", async () => {
+    test("Com exato `case match`", async () => {
       await orchestrator.createUser({
         username: "MesmoCase",
         email: "MesmoCase@jhonatancassante.com.br",
@@ -35,7 +35,7 @@ describe("GET /api/v1/users/[username]", () => {
       expect(Date.parse(response2Body.updated_at)).not.toBeNaN();
     });
 
-    test("Com 'case mismatch'", async () => {
+    test("Com `case mismatch`", async () => {
       await orchestrator.createUser({
         username: "CaseDiferente",
         email: "CaseDiferente@jhonatancassante.com.br",
