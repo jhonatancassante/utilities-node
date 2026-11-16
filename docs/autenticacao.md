@@ -1,110 +1,201 @@
-# Autenticação e senhas
+# Autenticação, sessões e autorização
 
-Como o projeto guarda senhas e faz o login. Os arquivos envolvidos são `models/password.js`, `models/authentication.js`, `models/session.js` e os endpoints `pages/api/v1/users` e `pages/api/v1/sessions`.
+Este documento descreve o ciclo de vida de contas e sessões e o controle de acesso implementado em `models/`, `infra/controller.js` e nos endpoints de `pages/api/v1/`.
 
-## Resumo
+## Visão geral
 
-- A senha nunca é guardada em texto puro. Antes de ir ao banco, ela passa por um **HMAC-SHA256 com um _pepper_** e depois por **bcrypt**.
-- O login (`POST /api/v1/sessions`) confere email e senha, cria uma sessão no banco e envia o token no cookie `session_id`.
-- Falhas de login respondem sempre com a mesma mensagem e com tempo de resposta parecido, para não revelar quais emails estão cadastrados.
-- **Ainda não existe** verificação da sessão nas demais rotas, nem logout. Hoje o cookie é criado, mas nenhum endpoint o exige.
+O sistema separa três conceitos:
+
+- **Cadastro:** cria uma conta ainda não ativada e envia um link por e-mail.
+- **Autenticação:** valida e-mail e senha e cria uma sessão identificada pelo cookie `session_id`.
+- **Autorização:** verifica se o usuário possui a *feature* necessária para executar uma operação.
+
+Estar autenticado não significa ter acesso a todas as operações. As permissões são armazenadas no campo `users.features` e avaliadas por `models/authorization.js`.
 
 ## Senhas
 
-### Como a senha é guardada
+### Como a senha é armazenada
 
 ```text
-senha digitada
-    │  HMAC-SHA256, usando o PASSWORD_PEPPER como chave
+senha informada
+    │ HMAC-SHA256, com PASSWORD_PEPPER
     ▼
-resumo em base64 (44 caracteres)
-    │  bcrypt (14 rounds em produção, 4 nos demais ambientes)
+resumo em Base64
+    │ bcrypt
     ▼
-hash de 60 caracteres, gravado em users.password
+hash armazenado em users.password
 ```
 
-- O **pepper** é um segredo da aplicação, guardado fora do banco (variável de ambiente `PASSWORD_PEPPER`). Se alguém vazar só o banco, os hashes sozinhos não bastam para testar senhas.
-- O **bcrypt** já inclui um _salt_ aleatório em cada hash e é lento de propósito. Com 14 rounds, cada hash leva em torno de um segundo no servidor.
-- O HMAC antes do bcrypt também resolve o limite do bcrypt, que só considera os primeiros 72 bytes da entrada: o resumo tem sempre 44 caracteres, qualquer que seja o tamanho da senha.
-- Fora de produção (`NODE_ENV` diferente de `production`), o bcrypt usa 4 rounds, só para os testes e o ambiente local ficarem rápidos.
-- A comparação (`password.compare`) repete o HMAC com o mesmo pepper e compara com o hash guardado.
+- O `PASSWORD_PEPPER` é um segredo da aplicação, separado do banco de dados.
+- O HMAC-SHA256 é aplicado antes do bcrypt; o resumo tem tamanho fixo.
+- O bcrypt usa **14 rounds em produção** e **4 rounds nos demais ambientes**.
+- O bcrypt gera seu próprio salt aleatório.
+- A comparação repete o HMAC e verifica o resultado com bcrypt.
 
-### Gerando o `PASSWORD_PEPPER`
-
-Use um valor aleatório de pelo menos 32 bytes:
+Gere um pepper aleatório com pelo menos 32 bytes:
 
 ```bash
 openssl rand -base64 32
 ```
 
-Sem o `openssl`, o próprio Node.js gera:
+Ou com Node.js:
 
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 ```
 
-Cuidados:
+**Não altere o pepper depois que houver usuários cadastrados** sem um plano de migração dos hashes. Sem `PASSWORD_PEPPER`, as funções de hash e comparação lançam `ConfigurationError`; o cliente recebe o erro interno genérico (500), e a causa fica no log do servidor.
 
-- **Desenvolvimento:** o `.env.development` traz um valor de exemplo, versionado de propósito.
-- **Produção:** cadastre um valor próprio nas variáveis de ambiente da Vercel (Production e Preview). Não o coloque no repositório nem em logs, e guarde uma cópia em um gerenciador de senhas.
-- **Não troque o pepper depois que existirem usuários.** Todos os hashes gravados deixariam de conferir e ninguém conseguiria entrar. Uma troca exigiria um plano de migração (por exemplo, aceitar os dois peppers por um tempo e regravar o hash a cada login).
-- **Sem a variável**, `password.hash` e `password.compare` lançam `ConfigurationError`. O cliente recebe o `InternalServerError` genérico (500) e o motivo aparece só no log do servidor.
+## Cadastro e ativação
 
-## Login
+### 1. Cadastro
 
-`POST /api/v1/sessions` recebe `email` e `password`:
-
-1. `user.findOneByEmail` procura o usuário (sem diferenciar maiúsculas de minúsculas).
-2. `password.compare` confere a senha com o hash guardado.
-3. Com as credenciais corretas, `session.create` grava uma sessão e o endpoint responde `201` com o corpo da sessão e o cookie `session_id`.
-4. Com qualquer falha de credencial, responde `401` com a **mesma mensagem**, não importa se o email não existe ou se a senha está errada:
+`POST /api/v1/users` recebe:
 
 ```json
 {
-  "name": "UnauthorizedError",
-  "message": "Não foi possível autenticar seu usuário no sistema.",
-  "action": "Verifique se digitou o e-mail e a senha corretamente e tente novamente.",
-  "status_code": 401
+  "username": "jhow",
+  "email": "jhow@example.com",
+  "password": "uma-senha"
 }
 ```
 
-### Tempo de resposta
+O nome de usuário e o e-mail são verificados quanto à unicidade sem diferenciar maiúsculas de minúsculas. O e-mail também passa por validação estrutural. A senha é armazenada com HMAC e bcrypt.
 
-Se o email não existisse e o bcrypt não rodasse, essa resposta chegaria bem antes das outras e daria para descobrir quais emails estão cadastrados apenas medindo o tempo. Para evitar isso, quando o email não é encontrado o fluxo executa um `password.compare` contra um **hash descartável**.
+Uma conta recém-criada recebe somente a feature:
 
-O hash descartável é gerado uma única vez, quando o módulo `models/authentication.js` é carregado, com a mesma função `password.hash` dos usuários reais. Assim ele tem o mesmo custo (14 rounds em produção) e o caminho "email inexistente" leva o mesmo tempo do caminho "senha errada".
+```json
+["read:activation_token"]
+```
 
-Detalhe: na Vercel, o módulo é carregado na requisição que causa o _cold start_. A primeira tentativa com email inexistente de cada instância ainda é cerca de um bcrypt mais lenta.
+O endpoint cria um token de ativação e envia um e-mail com um link. A resposta de cadastro não inclui e-mail nem hash da senha; contém `id`, `username`, `features`, `created_at` e `updated_at`.
+
+### 2. Token de ativação
+
+O token é armazenado em `user_activation_tokens` e possui:
+
+- Identificador UUID.
+- `user_id` da conta relacionada.
+- `expires_at`, definido para 15 minutos após a criação.
+- `used_at`, inicialmente nulo e preenchido quando utilizado.
+
+O endpoint `PATCH /api/v1/activations/{token_id}` valida o token, ativa a conta e marca o token como utilizado. Tokens inexistentes, expirados ou já utilizados não podem ser reaproveitados.
+
+### 3. Permissões após a ativação
+
+A ativação substitui as permissões iniciais pelas features padrão de uma conta ativa:
+
+```json
+["create:session", "read:session", "update:user"]
+```
+
+Assim, a conta pode iniciar sessões, consultar a própria sessão autenticada e atualizar os próprios dados. Permissões administrativas não são concedidas automaticamente.
+
+## Login
+
+`POST /api/v1/sessions` recebe `email` e `password`.
+
+1. `models/authentication.js` procura o usuário pelo e-mail, sem diferenciar maiúsculas de minúsculas.
+2. A senha é comparada com o hash armazenado.
+3. O usuário precisa possuir `create:session`; contas ainda não ativadas não recebem essa permissão.
+4. Uma sessão é criada e o token é enviado no cookie `session_id`.
+
+Credenciais incorretas retornam `401 UnauthorizedError` com a mesma mensagem, independentemente de o e-mail não existir ou de a senha estar errada. Quando o e-mail não é encontrado, o fluxo executa uma comparação contra um hash descartável para aproximar o tempo de resposta.
 
 ## Sessões
 
-| Item          | Valor                                                                                  |
-| ------------- | -------------------------------------------------------------------------------------- |
-| Token         | 48 bytes aleatórios (`crypto.randomBytes`), em 96 caracteres hexadecimais              |
-| Validade      | 30 dias (`EXPIRATION_IN_MILLISECONDS`, em `models/session.js`)                         |
-| Armazenamento | Tabela `sessions` (`id`, `token`, `user_id`, `expires_at`, `created_at`, `updated_at`) |
+| Item | Implementação |
+| --- | --- |
+| Token | 48 bytes aleatórios, representados por 96 caracteres hexadecimais |
+| Validade | 30 dias |
+| Persistência | Tabela `sessions` |
+| Validação | Token correspondente e `expires_at > NOW()` |
+| Renovação | `GET /api/v1/user` renova a validade para mais 30 dias |
+| Encerramento | `DELETE /api/v1/sessions` antecipa a expiração da sessão |
 
 ### Cookie `session_id`
 
-| Atributo   | Valor                                                     |
-| ---------- | --------------------------------------------------------- |
-| `Path`     | `/`                                                       |
-| `Max-Age`  | `2592000` (30 dias, em segundos)                          |
-| `HttpOnly` | Sim. O JavaScript do navegador não consegue ler o cookie  |
-| `SameSite` | `Lax`                                                     |
-| `Secure`   | Só em produção. Em desenvolvimento o `localhost` usa HTTP |
+| Atributo | Valor |
+| --- | --- |
+| `Path` | `/` |
+| `Max-Age` | 2.592.000 segundos (30 dias) |
+| `HttpOnly` | `true` |
+| `SameSite` | `Lax` |
+| `Secure` | Ativado em produção |
 
-O `Max-Age` é uma duração, em segundos inteiros, e não uma data. O valor sai da constante de validade da sessão.
+As respostas que criam, renovam ou limpam o cookie também recebem:
 
-O corpo da resposta de `POST /api/v1/sessions` também traz o `token`.
+```http
+Cache-Control: no-store, no-cache, max-age=0, must-revalidate
+```
 
-## Estado atual e pendências
+### Consulta e renovação da sessão
 
-O que ainda não existe, para evitar a impressão de que o login já protege alguma coisa:
+`GET /api/v1/user` exige uma sessão válida e a feature `read:session`. O endpoint renova a expiração no banco, reenvia o cookie e retorna os dados do próprio usuário: `id`, `username`, `email`, `features`, `created_at` e `updated_at`.
 
-- Nenhum endpoint lê o cookie `session_id` nem confere a validade da sessão.
-- Não há logout nem renovação ou remoção de sessões expiradas.
-- Os endpoints de usuários e o de migrations não exigem autenticação (veja o [guia da API](api/README.md#limitações-conhecidas)).
-- Não há limite de tentativas de login (_rate limiting_). Igualar o tempo de resposta evita descobrir emails, mas não impede tentativas de senha em massa.
-- A senha não é validada na criação ou na atualização (tamanho mínimo, por exemplo), e o campo ausente resulta em erro 500.
-- As respostas de usuários incluem o hash da senha, e a de sessões inclui o token. Ambos devem sair das respostas quando as rotas forem protegidas.
+### Logout
+
+`DELETE /api/v1/sessions` procura a sessão válida associada ao cookie, antecipa sua expiração e envia um cookie `session_id` inválido com `Max-Age=-1`, removendo-o do navegador. A sessão permanece registrada no banco; não há exclusão física do registro.
+
+### Limpeza de cookie em erros 401
+
+O tratamento central de erros limpa o cookie sempre que uma requisição termina em `UnauthorizedError`. Isso também ocorre em uma tentativa de login com credenciais inválidas: se o cliente já enviar um cookie de sessão, ele será removido na resposta.
+
+## Autorização por features
+
+O model `models/authorization.js` centraliza as permissões conhecidas. As features atualmente declaradas são:
+
+| Feature | Finalidade |
+| --- | --- |
+| `create:user` | Permite iniciar um cadastro |
+| `read:user` | Permite obter a representação pública de um usuário |
+| `read:user:self` | Permite obter dados privados do próprio usuário |
+| `update:user` | Permite atualizar o próprio usuário |
+| `update:user:others` | Permite atualizar usuários diferentes do próprio |
+| `create:session` | Permite criar uma sessão |
+| `read:session` | Permite consultar a própria sessão |
+| `read:activation_token` | Permite utilizar o fluxo de ativação |
+| `create:migration` | Permite aplicar migrations |
+| `read:migration` | Permite consultar migrations pendentes |
+| `read:status` | Identifica acesso de usuário ao status |
+| `read:status:all` | Permite incluir a versão do banco na resposta de status |
+
+### Perfis iniciais
+
+| Situação | Features |
+| --- | --- |
+| Visitante sem cookie | `create:session`, `create:user`, `read:activation_token` |
+| Conta cadastrada, ainda não ativada | `read:activation_token` |
+| Conta ativada | `create:session`, `read:session`, `update:user` |
+| Conta privilegiada | Features adicionais atribuídas explicitamente |
+
+A lista de features de um usuário pode ser alterada pelo model `user.setFeatures` ou ampliada por `user.addFeatures`. A concessão de permissões administrativas deve ser feita por um fluxo controlado; não existe endpoint público de administração de features.
+
+### Regras de acesso por endpoint
+
+| Endpoint | Regra |
+| --- | --- |
+| `GET /status` | Público; a versão do banco só aparece com `read:status:all` |
+| `POST /users` | Exige `create:user`; disponível ao visitante padrão |
+| `GET /users/{username}` | Público; retorna somente a representação pública |
+| `PATCH /users/{username}` | Exige `update:user`; o model também verifica se é o próprio usuário ou se há `update:user:others` |
+| `PATCH /activations/{token_id}` | Exige `read:activation_token`; o token precisa estar válido e não utilizado |
+| `POST /sessions` | Exige `create:session` |
+| `DELETE /sessions` | Exige sessão válida na prática; encerra a sessão identificada pelo cookie |
+| `GET /user` | Exige `read:session` |
+| `GET /migrations` | Exige `read:migration` |
+| `POST /migrations` | Exige `create:migration` |
+
+A autorização de saída também é centralizada em `authorization.filterOutput`. Ela define quais campos podem ser devolvidos para cada tipo de recurso. A representação pública de usuário não inclui e-mail ou hash da senha; a representação privada do próprio usuário inclui o e-mail, mas não a senha.
+
+## Cuidados e limitações conhecidas
+
+- Não há *rate limiting* para tentativas de login.
+- O código não implementa política de complexidade ou tamanho mínimo de senha.
+- Campos obrigatórios ausentes não possuem validação de entrada uniforme e podem resultar em erro 500.
+- O valor de e-mail é validado após `trim()`, mas o valor armazenado não é normalizado; a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
+- O corpo de `POST /api/v1/sessions` e de `DELETE /api/v1/sessions` inclui o token da sessão. Embora o cookie seja `HttpOnly`, devolver o token no JSON reduz o benefício dessa proteção e deve ser revisto antes de considerar o fluxo endurecido para produção.
+- O controller limpa o cookie em qualquer erro 401, inclusive login inválido.
+- As sessões encerradas permanecem no banco com data de expiração antecipada; não há rotina de limpeza física documentada ou implementada.
+
+Consulte também o [guia da API](api/README.md) para exemplos de requisições e respostas.
