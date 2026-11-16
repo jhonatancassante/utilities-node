@@ -1,182 +1,187 @@
 # Guia de desenvolvimento
 
-Este guia complementa o [README](../README.md) com os detalhes do dia a dia de desenvolvimento.
+Este guia descreve como preparar, executar, testar e manter o utilities-node. Para uma visão geral, consulte o [README](../README.md).
 
 ## Ambiente local
 
-### Versões
+### Requisitos e versões
 
-- **Node.js:** 24.14.1, definido em `.nvmrc`. O `package.json` exige Node 24 (`engines`).
-- **PostgreSQL:** 16.0 (`postgres:16.0-alpine3.18`), definido em `infra/compose.yaml`. Roda em um container chamado `postgres-dev`, na porta `5432`.
-- **npm:** o arquivo `.npmrc` ativa `legacy-peer-deps=true`, então a instalação ignora conflitos de _peer dependencies_.
+- **Node.js:** 24.14.1, definido em `.nvmrc`; o `package.json` exige Node 24.
+- **PostgreSQL:** imagem `postgres:16.0-alpine3.18`, container `postgres-dev`, porta `5432`.
+- **Mailcatcher:** container `mailcatcher-dev`, SMTP na porta `1025` e interface web na porta `1080`.
+- **Docker Compose**, Git e npm.
+- **ggshield** instalado e autenticado e **Gitleaks** disponível no `PATH`, necessários para os hooks locais.
 
-### Variáveis de ambiente
+O arquivo `.npmrc` habilita `legacy-peer-deps=true`.
 
-O arquivo `.env.development` é versionado e contém apenas valores de desenvolvimento, descartáveis:
-
-| Variável                                                                              | Para que serve                                                           |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD` | Conexão com o banco local; o Docker Compose cria o banco com esses dados |
-| `DATABASE_URL`                                                                        | Montada a partir das variáveis acima. Usada pelo `node-pg-migrate`       |
-| `PASSWORD_PEPPER`                                                                     | Segredo aplicado às senhas antes do bcrypt (valor de exemplo)            |
-
-O arquivo é lido pelo Docker Compose, pelos scripts de migration e pelo Jest.
-
-Os verificadores de segredos já levam isso em conta: o Gitleaks ignora o `.env.development` (veja `.gitleaks.toml`) e o `.gitguardian.yaml` define os caminhos que o ggshield ignora (`node_modules` e `.next`). Se o ggshield acusar os valores locais como segredo, o `.gitguardian.yaml` traz, comentado, o formato para ignorar essa ocorrência específica.
-
-Em produção, as variáveis ficam no painel da Vercel. O arquivo `.env` está no `.gitignore`.
-
-## Fluxo de trabalho
-
-### Subir o ambiente
+### Instalação e inicialização
 
 ```bash
+git clone https://github.com/jhonatancassante/utilities-node.git
+cd utilities-node
+nvm use
+npm install
 npm run dev
 ```
 
-Por trás, o `npm run dev` executa `infra/scripts/dev.js`, que roda o `dev:raw` e, quando ele termina, para os containers:
+O `npm run dev` executa `infra/scripts/dev.js`, que inicia `dev:raw` e encerra os serviços quando o processo termina. O fluxo `dev:raw`:
 
-| Etapa | Comando                          | O que acontece                                             |
-| ----- | -------------------------------- | ---------------------------------------------------------- |
-| 1     | `npm run services:up`            | Sobe o PostgreSQL com `docker compose`                     |
-| 2     | `npm run services:wait:database` | Consulta o `pg_isready` no container até o banco responder |
-| 3     | `npm run migrations:up`          | Aplica as migrations pendentes                             |
-| 4     | `next dev`                       | Inicia o servidor em `http://localhost:3000`               |
+1. Executa `npm run services:up`.
+2. Aguarda o PostgreSQL responder por meio de `services:wait:database`.
+3. Aplica as migrations pendentes com `migrations:up`.
+4. Inicia `next dev` em `http://localhost:3000`.
 
-Com o servidor no ar, a página inicial fica em `http://localhost:3000` e o painel de status em `http://localhost:3000/status`.
+Ao pressionar `Ctrl+C`, o script encerra o processo e executa `npm run services:stop`. A interface do Mailcatcher fica em <http://localhost:1080>.
 
-Ao pressionar `Ctrl+C`, o script executa `npm run services:stop` e exibe a mensagem "Pressione 'Enter' para voltar ao console...".
+### Variáveis de ambiente
 
-### Migrations
+O arquivo `.env.development` é versionado intencionalmente com credenciais descartáveis de desenvolvimento. Não armazene segredos reais nele.
 
-As migrations ficam em `infra/migrations` e usam o [node-pg-migrate](https://github.com/salsita/node-pg-migrate). O nome de cada arquivo começa com um timestamp, que define a ordem de execução.
+| Variável | Finalidade |
+| --- | --- |
+| `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD` | Configuração do PostgreSQL local e do container |
+| `DATABASE_URL` | URL montada com as variáveis locais; usada pelo node-pg-migrate |
+| `PASSWORD_PEPPER` | Segredo usado no HMAC das senhas |
+| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT` | Host e porta SMTP |
+| `EMAIL_SMTP_USER`, `EMAIL_SMTP_PASSWORD` | Credenciais SMTP; no Mailcatcher local podem ficar vazias |
+
+Em `development` e `test`, `infra/database.js` usa as variáveis `POSTGRES_*`. Nos demais ambientes usa `DATABASE_URL`, adicionando `sslmode=verify-full`. A aplicação exige `PASSWORD_PEPPER` para hash e comparação de senhas.
+
+O Nodemailer utiliza as quatro variáveis `EMAIL_SMTP_*`. O Mailcatcher local não exige autenticação. Em produção, configure as credenciais do provedor SMTP e use transporte seguro.
+
+A origem dos links de ativação é determinada em `infra/webserver.js`: localhost em desenvolvimento/teste, `https://${VERCEL_URL}` em preview e `https://jhonatancassante.com.br` nos demais ambientes.
+
+## Scripts npm
+
+| Script | Função |
+| --- | --- |
+| `npm run dev` | Inicia o ambiente completo e encerra os serviços ao sair |
+| `npm run dev:raw` | Sobe serviços, aguarda banco, aplica migrations e inicia Next.js |
+| `npm test` | Sobe serviços e Next.js, executa Jest e finaliza com `posttest` |
+| `npm run test:watch` | Jest em modo contínuo; requer servidor e banco já ativos |
+| `npm run services:up` | Inicia PostgreSQL e Mailcatcher |
+| `npm run services:stop` | Para os containers sem removê-los |
+| `npm run services:down` | Para e remove os containers |
+| `npm run services:wait:database` | Aguarda o PostgreSQL aceitar conexões |
+| `npm run migrations:create -- nome` | Cria uma migration |
+| `npm run migrations:up` | Aplica migrations pendentes |
+| `npm run migrations:up:dry` | Simula migrations sem alterar o banco |
+| `npm run build` | Gera build de produção |
+| `npm run lint:prettier:check` | Verifica formatação |
+| `npm run lint:prettier:fix` | Formata arquivos |
+| `npm run lint:eslint:check` | Executa ESLint sem avisos permitidos |
+| `npm run secrets:scan` | Varre arquivos com ggshield |
+| `npm run secrets:history` | Varre o histórico do repositório com ggshield |
+| `npm run commit` | Abre o assistente Commitizen |
+
+## Migrations
+
+Os arquivos ficam em `infra/migrations`, são executados por `node-pg-migrate` e seguem uma ordem definida pelo timestamp no nome.
 
 ```bash
-# Criar uma nova migration
 npm run migrations:create -- nome-da-migration
-
-# Ver o que seria aplicado, sem alterar o banco
 npm run migrations:up:dry
-
-# Aplicar as migrations pendentes
 npm run migrations:up
 ```
 
-Também é possível consultar e aplicar migrations pela API, com `GET` e `POST` em `/api/v1/migrations` (implementado em `models/migrator.js`). Veja o [guia da API](api/README.md). O controle de quais migrations já rodaram fica na tabela `pgmigrations`.
+Migrations existentes na branch principal:
 
-Migrations existentes:
+| Arquivo | Alteração |
+| --- | --- |
+| `1792077675178_create-users.js` | Cria a tabela `users` |
+| `1792179953104_altera-nomes-de-colunas-createdAt-e-updatedAt.js` | Renomeia colunas de data para `snake_case` |
+| `1792247067512_create-sessions.js` | Cria a tabela `sessions` |
+| `1792760460131_adiciona-features-na-tabela-users.js` | Adiciona `users.features` |
+| `1792781687009_cria-tabela-user-activation-tokens.js` | Cria `user_activation_tokens` |
 
-| Arquivo                                                          | O que faz                                                                |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `1792077675178_create-users.js`                                  | Cria a tabela `users` (`id`, `username`, `email`, `password`, datas)     |
-| `1792179953104_altera-nomes-de-colunas-createdAt-e-updatedAt.js` | Renomeia `createdAt` e `updatedAt` para `created_at` e `updated_at`      |
-| `1792247067512_create-sessions.js`                               | Cria a tabela `sessions` (`id`, `token`, `user_id`, `expires_at`, datas) |
+O histórico das execuções fica em `pgmigrations`. As migrations atuais exportam `down = false`; não existe rollback automático.
 
-Regras do projeto:
+Regras:
 
-- **Nunca edite uma migration que já rodou em produção.** Corrija com uma migration nova (foi assim com a renomeação das colunas de `users`).
-- As migrations não têm reversão: todas exportam `down = false`.
-- **Em produção a migration não roda sozinha.** Depois do deploy de um PR que cria migration, chame `POST /api/v1/migrations`.
-- O `next.config.js` inclui `infra/migrations` e o `package.json` no pacote da rota de migrations (`outputFileTracingIncludes`). O `node-pg-migrate` lê a pasta pelo sistema de arquivos, algo que o Next não detecta sozinho; sem essa configuração, a rota falha na Vercel com `ENOENT: no such file or directory, scandir '/var/task/infra/migrations/'`.
+- Nunca altere uma migration já aplicada em produção. Crie uma migration nova.
+- Em produção, migrations não são executadas automaticamente no deploy. Após publicar uma alteração de esquema, execute `POST /api/v1/migrations` com uma sessão que possua `create:migration`.
+- `next.config.js` inclui `infra/migrations` e `package.json` no pacote da função serverless da rota. Não remova essa configuração sem validar o funcionamento na Vercel.
 
-### Testes
+## Testes
 
 ```bash
 npm test
 ```
 
-O comando executa `npm run services:up` e, em paralelo, o servidor (`next dev`) e o Jest (`jest --runInBand --verbose`). Ao terminar, o `posttest` roda `npm run services:stop`. A opção `--runInBand` faz os testes rodarem em sequência, porque todos compartilham o mesmo banco. O tempo limite de cada teste é de 60 segundos (`jest.config.cjs`).
+O script sobe os containers, inicia `next dev` e executa Jest com `--runInBand --verbose`. Os testes compartilham o mesmo banco, por isso são executados em sequência. O `posttest` para os serviços.
 
-Os testes ficam em `tests/integration/api/v1/` e seguem a estrutura dos endpoints:
+Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm run test:watch`.
 
-| Arquivo                          | O que verifica                                                                                           |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `status/get.test.js`             | Resposta 200, formato de `updated_at`, `status` "Online", limite e conexões abertas do banco             |
-| `status/post.test.js`            | `POST` devolve 405, com o cabeçalho `Allow: GET` e o corpo de `MethodNotAllowedError`                    |
-| `migrations/get.test.js`         | `GET` devolve 200 e a lista de migrations pendentes                                                      |
-| `migrations/post.test.js`        | Primeiro `POST` devolve 201 e a lista aplicada; o segundo devolve 200 e lista vazia                      |
-| `migrations/delete.test.js`      | `DELETE` devolve 405, com `Allow: GET, POST`                                                             |
-| `users/post.test.js`             | Cadastro válido (201, senha com hash), nome de usuário duplicado, email inválido e email duplicado       |
-| `users/[username]/get.test.js`   | Consulta com o mesmo "case", com "case" diferente e usuário inexistente (404)                            |
-| `users/[username]/patch.test.js` | Usuário inexistente, duplicidades, email inválido e atualização de nome de usuário, email e senha        |
-| `sessions/post.test.js`          | Login com email incorreto, senha incorreta, ambos incorretos (401) e credenciais corretas (201 e cookie) |
+### Organização dos testes
 
-Padrão de escrita: cada arquivo tem um `describe` com o método e o caminho (por exemplo, `"GET /api/v1/status"`), dentro dele um `describe` por tipo de usuário (hoje só `"Usuário anônimo"`) e, por fim, os `test`. Quando existirem rotas protegidas, os novos cenários entram como outro tipo de usuário.
+- `tests/integration/api/v1/`: testes dos endpoints.
+- `tests/integration/infra/email.test.js`: integração do serviço de e-mail.
+- `tests/integration/_use-cases/registration-flow.test.js`: fluxo completo de cadastro, recebimento do e-mail, ativação, login e consulta do usuário.
+- `tests/unit/models/authorization.test.js`: testes unitários de autorização.
+- `tests/orchestrator.js`: utilitários compartilhados.
 
-O arquivo `tests/orchestrator.js` reúne os utilitários dos testes:
+Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão.
 
-- **`waitForAllServices()`:** espera o servidor responder em `/api/v1/status` (até 100 tentativas) antes de os testes começarem.
-- **`clearDatabase()`:** apaga e recria o schema `public`, deixando o banco vazio.
-- **`runPendingMigrations()`:** aplica as migrations pendentes, para os testes que precisam das tabelas.
-- **`createUser(userObject)`:** cria um usuário pelo model, com nome de usuário e email fictícios (Faker em português) e uma senha padrão, quando você não informa os campos.
+### Orchestrator
 
-Cuidados:
+`tests/orchestrator.js` fornece:
 
-- Os testes chamam `orchestrator.clearDatabase()`, que executa `drop schema if exists public cascade; create schema public;`. Rodam contra o banco do `.env.development`, então esse arquivo nunca deve apontar para um banco com dados reais.
-- O teste de status verifica `max_connections` igual a `100` e uma conexão aberta. Esses valores vêm da imagem do Docker.
-- Fora de produção, o bcrypt usa 4 rounds, o que mantém os testes rápidos. Em produção são 14 (veja [autenticação](autenticacao.md)).
-- Ainda não há testes para a página `/status` nem para a resposta `500` dos endpoints.
+- `API_URL`: origem da API versionada, derivada de `infra/webserver.js`.
+- `waitForAllServices()`: aguarda o endpoint de status e a interface do Mailcatcher responderem.
+- `clearDatabase()`: apaga e recria o schema `public`.
+- `runPendingMigrations()`: aplica migrations pendentes.
+- `createUser(userObject)`: cria usuário de teste pelo model.
+- `activateUser(user)`: concede as features padrão de conta ativada para o usuário de teste.
+- `createSession(user)`: cria sessão de teste.
+- `deleteAllEmail()` e `getLastEmail()`: limpam e recuperam mensagens do Mailcatcher.
+- `getSessionCookieObject(response)`: interpreta o cookie `session_id`.
+- `extractUUID(emailText)`: extrai UUID do texto do e-mail.
+- `addFeaturesToUser(user, features)`: adiciona permissões para cenários privilegiados.
 
-## Padrão de commits
+**Cuidado:** `clearDatabase()` executa `DROP SCHEMA public CASCADE` e recria o schema. Os testes usam as variáveis do ambiente de teste; nunca aponte esse ambiente para um banco com dados que devam ser preservados.
 
-O projeto usa [Conventional Commits](https://www.conventionalcommits.org/pt-br/). O jeito mais simples de seguir o padrão é o assistente:
+O teste de status depende dos valores da imagem PostgreSQL: `max_connections=100` e uma conexão aberta no momento da consulta.
+
+## Hooks locais
+
+O Husky instala os hooks durante `npm install` (script `prepare`).
+
+| Hook | Execução |
+| --- | --- |
+| `pre-commit` | ggshield secret scan, lint-staged e Gitleaks |
+| `commit-msg` | Commitlint valida a mensagem |
+
+O lint-staged executa Prettier e ESLint nos arquivos JavaScript/TypeScript/CSS/Markdown e Prettier nos demais arquivos JSON abrangidos pela configuração.
+
+Para escrever commits, use:
 
 ```bash
 git add .
 npm run commit
 ```
 
-Os tipos mais comuns são `feat` (nova funcionalidade), `fix` (correção), `docs` (documentação), `refactor`, `test` e `chore`. Exemplo: `docs: adiciona documentação da API`.
+O projeto segue [Conventional Commits](https://www.conventionalcommits.org/pt-br/), por exemplo `docs: atualiza o guia de desenvolvimento`.
 
-## Proteção contra vazamento de segredos
+## Verificação de segredos
 
-Duas ferramentas se complementam, e as duas rodam a cada commit:
+ggshield e Gitleaks são complementares:
 
-| Ferramenta             | Onde roda                                      | Configuração        |
-| ---------------------- | ---------------------------------------------- | ------------------- |
-| ggshield (GitGuardian) | Hook de pre-commit e scripts `npm run secrets` | `.gitguardian.yaml` |
-| Gitleaks               | Hook de pre-commit e CI de Pull Requests       | `.gitleaks.toml`    |
+- ggshield roda no hook local e também pode ser executado com `npm run secrets:scan` ou `npm run secrets:history`.
+- Gitleaks roda no hook local com `.gitleaks.toml` e no workflow de Pull Request.
 
-Varreduras sob demanda com o ggshield:
-
-```bash
-# Procura segredos nos arquivos do projeto
-npm run secrets:scan
-
-# Procura segredos em todo o histórico do repositório
-npm run secrets:history
-```
-
-O `.gitleaks.toml` usa as regras padrão do Gitleaks e define uma lista de exceções (_allowlist_):
-
-- pastas que não são código do projeto (`node_modules`, `dist`, `build`, `coverage`, `tmp`, `cache`, `vendor` e `.git`);
-- o arquivo `.env.development`;
-- valores que contêm termos de exemplo, como `changeme`, `placeholder`, `example_password` ou `your_api_key`.
-
-Se o Gitleaks bloquear um commit, confira primeiro se é um segredo de verdade. Sendo, tire-o do commit e troque a credencial, porque ela deve ser considerada exposta. Sendo um falso positivo, ajuste a lista de exceções em `.gitleaks.toml` em vez de pular os hooks.
-
-## Hooks do Git
-
-Instalados pelo Husky no `npm install` (script `prepare`):
-
-| Hook         | O que executa                                                                                                                                                                         |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pre-commit` | 1. `ggshield secret scan pre-commit`; 2. `npx lint-staged`; 3. `gitleaks protect --staged --config=.gitleaks.toml --redact` (bloqueia o commit se o `gitleaks` não estiver instalado) |
-| `commit-msg` | `npx commitlint --edit` (valida a mensagem)                                                                                                                                           |
-
-O `lint-staged` roda o Prettier (`--write`) e o ESLint (sem avisos permitidos) nos arquivos `js`, `jsx`, `ts`, `tsx`, `css` e `md` do commit, e o Prettier nos demais `json`.
+O `.gitleaks.toml` contém exclusões para artefatos e arquivos locais conhecidos, inclusive `.env.development`. Não use allowlist para ocultar um segredo real: remova a credencial e faça sua rotação.
 
 ## Integração contínua
 
-Três workflows do GitHub Actions rodam em todo Pull Request:
+Os workflows em `.github/workflows/` são:
 
-| Workflow        | Arquivo                           | Jobs                                                                                        |
-| --------------- | --------------------------------- | ------------------------------------------------------------------------------------------- |
-| Linting         | `.github/workflows/linting.yaml`  | Prettier, ESLint e Commitlint (das mensagens do PR)                                         |
-| Automated Tests | `.github/workflows/tests.yaml`    | Jest, com `npm test` no Node 24.14.1                                                        |
-| Gitleaks        | `.github/workflows/gitleaks.yaml` | `Scan for secrets`: varre o histórico do repositório com a configuração de `.gitleaks.toml` |
+| Workflow | Arquivo | Responsabilidade |
+| --- | --- | --- |
+| Linting | `linting.yaml` | Prettier, ESLint e Commitlint |
+| Automated Tests | `tests.yaml` | Jest no Node.js 24 |
+| Gitleaks | `gitleaks.yaml` | Varredura de segredos no histórico |
 
-Para reproduzir os checks localmente antes de abrir o PR:
+Antes de abrir um Pull Request, execute localmente:
 
 ```bash
 npm run lint:prettier:check
@@ -186,16 +191,17 @@ npm test
 
 ## Solução de problemas
 
-| Sintoma                                                 | O que verificar                                                                                  |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| O banco não sobe ou o `dev` fica esperando              | O Docker está em execução? A porta `5432` está livre (outro PostgreSQL local pode estar usando)? |
-| `npm test` falha logo no início                         | A porta `3000` está livre? Um `npm run dev` aberto em outro terminal ocupa essa porta            |
-| Teste de status falha em `opened_connections`           | Há outra conexão aberta no banco local (um cliente de banco, por exemplo)                        |
-| Cadastro ou login respondem 500 com a mensagem genérica | O `PASSWORD_PEPPER` está definido? O motivo (`ConfigurationError`) aparece só no log do servidor |
-| `GET /api/v1/migrations` falha em produção com `ENOENT` | O `next.config.js` precisa manter o `outputFileTracingIncludes` da rota de migrations            |
-| Tabela nova não existe em produção                      | As migrations não rodam sozinhas no deploy: chame `POST /api/v1/migrations`                      |
-| O commit falha em `ggshield`                            | O ggshield está instalado e autenticado (`ggshield auth login`)?                                 |
-| O commit falha com "Gitleaks não encontrado"            | O `gitleaks` está instalado e no `PATH`? Teste com `gitleaks version`                            |
-| O commit falha por segredo detectado                    | Veja a seção "Proteção contra vazamento de segredos" acima                                       |
-| O commit falha em `commitlint`                          | A mensagem segue o padrão `tipo: descrição`? Use `npm run commit`                                |
-| Avisos de versão do Node ao instalar                    | Rode `nvm use` para usar a versão do `.nvmrc`                                                    |
+| Sintoma | Verificação |
+| --- | --- |
+| PostgreSQL não inicia | Docker em execução e porta 5432 disponível |
+| Mailcatcher não inicia ou testes ficam aguardando | Container `mailcatcher-dev` ativo e portas 1025/1080 disponíveis |
+| `npm test` falha no início | Porta 3000 disponível; encerre outro servidor Next.js |
+| Teste de status falha na contagem | Nenhuma conexão extra aberta no banco de teste |
+| Cadastro/login retorna 500 | Verifique `PASSWORD_PEPPER` e logs do servidor |
+| Cadastro falha ao enviar e-mail | Verifique variáveis `EMAIL_SMTP_*` e disponibilidade do SMTP/Mailcatcher |
+| Migration não aparece em produção | Verifique `outputFileTracingIncludes` no `next.config.js` |
+| Nova tabela não existe após deploy | Execute `POST /api/v1/migrations` com `create:migration` |
+| Hook falha no ggshield | Instale e autentique ggshield com `ggshield auth login` |
+| Hook informa Gitleaks ausente | Instale Gitleaks e confira `gitleaks version` |
+| Commit é rejeitado | Use `npm run commit` e confira o padrão Conventional Commits |
+| Node em versão diferente | Execute `nvm use` |
