@@ -6,9 +6,11 @@ import database from "@/infra/database.js";
 import migrator from "@/models/migrator.js";
 import user from "@/models/user.js";
 import session from "@/models/session.js";
+import webserver from "@/infra/webserver.js";
+import activation from "@/models/activation";
 
-const API_URL = `http://${process.env.API_HOST}:${process.env.API_PORT}/api/v1`;
-const EMAIL_HTTP_URL = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`;
+const API_URL = `${webserver.origin}/api/v1`;
+const EMAIL_HTTP_URL = "http://localhost:1080";
 
 async function waitForAllServices() {
   await waitForWebServer();
@@ -64,8 +66,12 @@ async function createUser(userObject = {}) {
   });
 }
 
-async function createSession(userId) {
-  return await session.create(userId);
+async function activateUser(user) {
+  return await activation.activateUserByUserId(user.id);
+}
+
+async function createSession(user) {
+  return await session.create(user.id);
 }
 
 async function deleteAllEmail() {
@@ -78,6 +84,10 @@ async function getLastEmail() {
   const emailListResponse = await fetch(`${EMAIL_HTTP_URL}/messages`);
   const emailListBody = await emailListResponse.json();
   const lastEmailItem = emailListBody.pop();
+
+  if (!lastEmailItem) {
+    return null;
+  }
 
   const emailTextResponse = await fetch(
     `${EMAIL_HTTP_URL}/messages/${lastEmailItem.id}.plain`,
@@ -96,16 +106,31 @@ function getSessionCookieObject(response) {
     .find((parsed) => parsed.name === "session_id");
 }
 
+function extractUUID(emailText) {
+  const match = emailText.match(
+    /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/i,
+  );
+
+  return match ? match[0] : null;
+}
+
+async function addFeaturesToUser(userObject, features) {
+  return await user.addFeatures(userObject.id, features);
+}
+
 const orchestrator = {
   API_URL,
   waitForAllServices,
   clearDatabase,
   runPendingMigrations,
   createUser,
+  activateUser,
   createSession,
   deleteAllEmail,
   getLastEmail,
   getSessionCookieObject,
+  extractUUID,
+  addFeaturesToUser,
 };
 
 export default orchestrator;
