@@ -1,172 +1,147 @@
 # Arquitetura
 
-Visão da organização atual do código. O projeto ainda é pequeno: duas páginas (inicial e de status), quatro grupos de endpoints, uma camada de regras de negócio (`models/`) e a camada de acesso ao banco.
+Visão da organização atual do **utilities-node**. O projeto utiliza Next.js com Pages Router, PostgreSQL e separação entre endpoints HTTP, infraestrutura e regras de negócio.
 
 ## Visão geral
-
-A aplicação é um projeto [Next.js](https://nextjs.org/) com o **Pages Router**: as páginas ficam em `pages/` e os endpoints da API em `pages/api/`. Os dados ficam em um banco PostgreSQL, acessado diretamente pelo cliente `pg`, sem ORM.
-
-Cada requisição à API atravessa as mesmas camadas:
 
 ```text
 Cliente HTTP
     │
     ▼
-pages/api/v1/...      Endpoint: lê a requisição e escolhe a resposta
+pages/api/v1/...       Endpoints: recebem a requisição e montam a resposta
     │
     ▼
-infra/controller.js   Roteamento por método (next-connect) e tratamento de erros
+infra/controller.js    Middlewares, contexto de usuário, autorização e erros
     │
     ▼
-models/               Regras de negócio: validações, senhas, sessões, migrations
+models/                Regras de negócio, autenticação, autorização e persistência
     │
     ▼
-infra/database.js     Conexão e consultas
+infra/database.js      Cliente pg e consultas parametrizadas
     │
     ▼
-PostgreSQL            Docker (desenvolvimento) / Neon via DATABASE_URL (produção)
+PostgreSQL             Docker local / banco remoto via DATABASE_URL
 ```
 
-Os endpoints são finos: cada um declara os métodos que aceita e delega o trabalho a um model. Um `GET` em `/api/v1/users/{username}`, por exemplo, só chama `user.findOneByUsername` e devolve o resultado.
+Os endpoints usam `next-connect` por meio de `infra/controller.js`. Cada rota declara os métodos aceitos, middlewares compartilhados e handlers. As regras de negócio ficam nos models; a infraestrutura concentra conexão, e-mail, erros e configuração do servidor.
 
-## Estrutura do código
+## Estrutura relevante
 
-| Caminho                    | Responsabilidade                                                                                                   |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `pages/index.js`           | Página inicial provisória ("Em construção"), com estilos em `pages/index.module.css`                               |
-| `pages/status/`            | Página `/status`, painel de monitoramento em tempo real (veja [Interface](#interface))                             |
-| `pages/_app.js`            | Carrega os estilos globais em todas as páginas                                                                     |
-| `pages/_document.js`       | HTML base: idioma, ícones, fontes e script que aplica o tema salvo antes da primeira pintura                       |
-| `pages/api/v1/status`      | Endpoint de saúde da aplicação                                                                                     |
-| `pages/api/v1/migrations`  | Endpoint para consultar e aplicar migrations                                                                       |
-| `pages/api/v1/users`       | Cadastro (`POST`), consulta e atualização (`GET` e `PATCH` em `[username]`) de usuários                            |
-| `pages/api/v1/sessions`    | Login (`POST`): valida as credenciais, cria a sessão e envia o cookie                                              |
-| `models/user.js`           | Criar, buscar (por nome de usuário e por email) e atualizar usuários, com as validações                            |
-| `models/password.js`       | Hash e comparação de senhas (HMAC com pepper e bcrypt)                                                             |
-| `models/authentication.js` | Autentica por email e senha, sem revelar qual dos dois falhou                                                      |
-| `models/session.js`        | Cria sessões (token aleatório e validade de 30 dias)                                                               |
-| `models/migrator.js`       | Lista e aplica migrations pelo `node-pg-migrate`                                                                   |
-| `components/`              | `AppHead` (título e descrição), `Header`, `Footer`, `Layout` (une os três) e `ThemeToggle` (tema claro e escuro)   |
-| `configs/site.js`          | Configurações do site: nome, separador de título e descrição padrão                                                |
-| `styles/`                  | `globals.css` (variáveis de cor, fonte e reset) e `shared.module.css` (estilos compartilhados entre as páginas)    |
-| `infra/controller.js`      | Roteamento por método e tratamento de erros dos endpoints                                                          |
-| `infra/database.js`        | Configuração da conexão e funções `query` e `getNewClient`                                                         |
-| `infra/errors.js`          | Classes de erro da aplicação                                                                                       |
-| `infra/migrations/`        | Migrations do banco                                                                                                |
-| `infra/compose.yaml`       | Container do PostgreSQL local                                                                                      |
-| `infra/scripts/`           | `dev.js` (ambiente de desenvolvimento), `spawn.js` (execução e encerramento de processos) e `wait-for-postgres.js` |
-| `tests/`                   | Testes de integração e o `orchestrator.js`                                                                         |
-| `next.config.js`           | Inclui as migrations no pacote da rota de migrations na Vercel                                                     |
+| Caminho                               | Responsabilidade                                                                     |
+| ------------------------------------- | ------------------------------------------------------------------------------------ |
+| `pages/api/v1/status`                 | Saúde do banco e informações de status                                               |
+| `pages/api/v1/migrations`             | Consulta e aplicação de migrations                                                   |
+| `pages/api/v1/users`                  | Cadastro de usuários                                                                 |
+| `pages/api/v1/users/[username]`       | Consulta pública e atualização autorizada                                            |
+| `pages/api/v1/activations/[token_id]` | Ativação de contas                                                                   |
+| `pages/api/v1/sessions`               | Criação e encerramento de sessões                                                    |
+| `pages/api/v1/user`                   | Consulta do usuário autenticado e renovação da sessão                                |
+| `models/user.js`                      | Cadastro, consulta, atualização e gerenciamento interno de features                  |
+| `models/password.js`                  | HMAC-SHA256 com pepper e bcrypt                                                      |
+| `models/authentication.js`            | Validação das credenciais                                                            |
+| `models/authorization.js`             | Catálogo de features, verificação de acesso e filtragem de saída                     |
+| `models/session.js`                   | Criação, validação, renovação e expiração de sessões                                 |
+| `models/activation.js`                | Tokens de ativação, e-mail e ativação da conta                                       |
+| `models/migrator.js`                  | Execução e listagem de migrations                                                    |
+| `infra/controller.js`                 | Middlewares de usuário anônimo/autenticado, verificação de features, cookies e erros |
+| `infra/database.js`                   | Conexão PostgreSQL e execução de consultas                                           |
+| `infra/email.js`                      | Transporte SMTP via Nodemailer                                                       |
+| `infra/webserver.js`                  | Origem usada nos links de ativação                                                   |
+| `infra/errors.js`                     | Classes de erro e serialização JSON                                                  |
+| `infra/migrations/`                   | Histórico versionado do esquema do banco                                             |
+| `infra/compose.yaml`                  | PostgreSQL e Mailcatcher locais                                                      |
+| `tests/`                              | Testes de integração, unidade e fluxo completo de cadastro                           |
 
-A API é versionada no caminho (`/api/v1/...`), o que permite lançar uma `v2` sem quebrar quem usa a `v1`.
+A API é versionada no caminho `/api/v1`.
+
+## Contexto de requisição e autorização
+
+As rotas que usam `injectAnonymousOrUser` recebem um usuário em `request.context.user`.
+
+- Sem cookie `session_id`, o controller injeta o perfil anônimo com `create:session`, `create:user` e `read:activation_token`.
+- Com cookie, o controller procura uma sessão não expirada e carrega o usuário correspondente.
+- Um token inválido ou expirado gera `UnauthorizedError`.
+- `canRequest(feature)` verifica a feature necessária e gera `ForbiddenError` quando não há permissão.
+
+O model `authorization.js` mantém o catálogo de features e a função `can(user, feature, resource)`. Para atualização de usuário, a autorização considera o recurso: o próprio usuário pode ser atualizado com `update:user`; outro usuário exige `update:user:others`.
+
+A função `filterOutput(user, feature, resource)` controla os campos que podem ser enviados em cada resposta. A representação pública de usuário não inclui e-mail ou hash de senha; a representação privada do próprio usuário inclui e-mail, mas não senha. A representação de sessão atualmente inclui o token.
+
+### Features conhecidas
+
+`create:user`, `read:user`, `read:user:self`, `update:user`, `update:user:others`, `create:session`, `read:session`, `read:activation_token`, `create:migration`, `read:migration`, `read:status` e `read:status:all`.
+
+O cadastro recebe `read:activation_token`; após ativação, recebe `create:session`, `read:session` e `update:user`. Features administrativas não são concedidas automaticamente.
+
+**Observação de implementação:** `read:status` está no catálogo e nos testes, mas o endpoint `GET /status` não chama `canRequest`; portanto, a rota é pública. `read:status:all` é consultada pela filtragem de saída para decidir se a versão do PostgreSQL pode ser incluída.
 
 ## Interface
 
-### Estrutura das páginas
+- `pages/_app.js` carrega estilos globais.
+- `pages/_document.js` define o documento HTML e aplica o tema salvo antes da primeira pintura.
+- `components/Layout` compõe cabeçalho, conteúdo e rodapé.
+- `components/ThemeToggle` alterna tema claro/escuro.
+- `components/AppHead` define título e descrição.
+- `pages/status` apresenta o painel alimentado por SWR, com atualização a cada cinco segundos.
 
-- **`pages/_app.js`** importa `styles/globals.css`, que vale para todas as páginas.
-- **`pages/_document.js`** define `lang="pt-BR"`, os ícones, a cor do tema e o Font Awesome (por CDN). Também executa, antes da primeira pintura, um script que lê o tema salvo no `localStorage` (chave `theme`) e o aplica em `<html data-theme="...">`, evitando o "flash" de tema claro para quem escolheu o escuro.
-- **`components/Layout`** monta a página com `Header`, o conteúdo e `Footer`. O `Header` mostra o título, o ícone, o botão de voltar (quando a página informa `backHref`) e o `ThemeToggle`.
-- **`components/ThemeToggle`** alterna entre tema claro e escuro, lendo e gravando o atributo `data-theme`. Se o `localStorage` estiver indisponível, o tema vale só para a sessão.
-- **`components/AppHead`** monta o `<title>` e a descrição da página. O título sai como `Nome do site | Título da página`; sem título, usa só o nome do site. Se a descrição não for informada, usa a padrão de `configs/site.js`.
-- **`configs/site.js`** guarda o nome do site (`Utilities`), o separador do título e a descrição padrão. O objeto é congelado (`Object.freeze`).
+## Banco de dados
 
-### Estilos
+`infra/database.js` exporta:
 
-- `styles/globals.css` define as variáveis de cor em `:root` (superfícies, texto, marca e as cores de sucesso, alerta e erro), com uma versão para o tema escuro. Carrega as fontes Space Grotesk, Inter e JetBrains Mono (Google Fonts) e faz o reset de estilos.
-- `styles/shared.module.css` reúne estilos usados por mais de uma página (container, cartão, ícone e selo).
-- Cada página e componente tem o seu CSS Module (`pages/index.module.css`, `pages/status/index.module.css`, `components/*/index.module.css`) para o que é específico dele.
-- O ESLint valida o CSS e aceita variáveis ainda não declaradas no mesmo arquivo (`allowUnknownVariables`), já que elas vêm do `globals.css`.
+- `query(queryObject)`: abre um cliente PostgreSQL, executa a consulta e fecha a conexão no `finally`. Erros são encapsulados em `ServiceError`.
+- `getNewClient()`: retorna um cliente conectado; quem chama deve executar `client.end()`. É utilizado pelo migrador.
 
-### Página de status (`/status`)
+Não há pool de conexões: cada chamada a `query` abre e fecha uma conexão. Consultas que recebem valores externos devem utilizar parâmetros (`$1`, `$2` etc.).
 
-Consome `GET /api/v1/status` com o [SWR](https://swr.vercel.app/), repetindo a consulta a cada 5 segundos (`refreshInterval: 5000`). Qualquer resposta que não seja de sucesso (`response.ok` falso) é tratada como erro.
+### Configuração
 
-| Situação            | Selo no topo          | O que a página mostra                                                      |
-| ------------------- | --------------------- | -------------------------------------------------------------------------- |
-| Carregando          | `CARREGANDO...`       | Barra de progresso no lugar das métricas do banco                          |
-| Sucesso             | `SISTEMA OPERACIONAL` | Situação, máximo de conexões e conexões abertas, mais a última atualização |
-| Falha na requisição | `ERRO NO SISTEMA`     | A mensagem "Não foi possível conectar ao banco de dados."                  |
+| Ambiente               | Origem                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| `development` e `test` | `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD` |
+| Demais ambientes       | `DATABASE_URL`, com `sslmode=verify-full`                                             |
 
-Cada métrica aparece com a etiqueta `OK`. A de conexões abertas muda para `WARNING` quando passa de 80% do máximo, e qualquer valor ausente aparece como `N/A`, com a etiqueta `ERROR`.
+## Esquema e migrations
 
-## Acesso ao banco
+As migrations são executadas por `node-pg-migrate`, ficam em `infra/migrations` e têm seu histórico na tabela `pgmigrations`. O endpoint `GET /api/v1/migrations` usa `dryRun`; `POST` aplica as pendentes. No deploy da Vercel, a pasta de migrations e o `package.json` são incluídos no pacote serverless por `next.config.js`.
 
-O módulo `infra/database.js` expõe duas funções:
+Migrations atualmente presentes:
 
-- **`query(queryObject)`:** abre uma conexão nova, executa a consulta e sempre fecha a conexão ao final. Se algo falhar (conexão ou SQL), lança um `ServiceError` com o erro original em `cause`. Aceita texto SQL ou um objeto `{ text, values }`, que deve ser usado com parâmetros (`$1`, `$2`...) sempre que houver valores vindos de fora.
-- **`getNewClient()`:** devolve um cliente já conectado. Quem chama é responsável por fechá-lo com `client.end()`. É usado pelo `models/migrator.js`, que precisa de uma conexão própria para o `node-pg-migrate`.
+1. Criação da tabela `users`.
+2. Renomeação de `createdAt` e `updatedAt` para `created_at` e `updated_at`.
+3. Criação da tabela `sessions`.
+4. Inclusão da coluna `features` em `users`.
+5. Criação da tabela `user_activation_tokens`.
 
-Como cada chamada a `query` abre e fecha uma conexão, não há pool de conexões. Isso é simples e suficiente para o volume atual; se a aplicação passar a fazer muitas consultas por requisição, vale reavaliar.
+| Tabela                   | Campos relevantes                                                             |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| `users`                  | `id`, `username`, `email`, `password`, `features`, `created_at`, `updated_at` |
+| `sessions`               | `id`, `token`, `user_id`, `expires_at`, `created_at`, `updated_at`            |
+| `user_activation_tokens` | `id`, `user_id`, `expires_at`, `used_at`, `created_at`, `updated_at`          |
+| `pgmigrations`           | Histórico gerenciado pelo `node-pg-migrate`                                   |
 
-### Configuração por ambiente
+Os identificadores são UUID. `username` tem até 30 caracteres, `email` até 254, `password` armazena hash de 60 caracteres, `sessions.token` tem 96 caracteres. As migrations atuais declaram `down = false`: não há rollback automático. Nunca altere uma migration já aplicada; crie outra.
 
-A função `getConfig` escolhe a configuração conforme o `NODE_ENV`:
+## E-mail e ativação
 
-| Ambiente                                      | Origem da configuração                                                                           |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `development` e `test`                        | Variáveis `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_DB` e `POSTGRES_PASSWORD` |
-| Qualquer outro (produção e preview na Vercel) | `DATABASE_URL`, com `sslmode=verify-full`. Se a variável não existir, lança um erro              |
+`infra/email.js` cria um transporter Nodemailer a partir de `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USER` e `EMAIL_SMTP_PASSWORD`. Em produção, `secure` é habilitado. Falhas de envio são encapsuladas em `ServiceError`, com contexto do envio.
 
-### Banco de dados e migrations
+No desenvolvimento, o Docker Compose inicia Mailcatcher: SMTP na porta `1025` e interface web na porta `1080`. `models/activation.js` gera tokens de 15 minutos, envia o link de ativação e marca o token como usado após a ativação.
 
-- Usam o `node-pg-migrate`, com os arquivos em `infra/migrations`.
-- O histórico fica na tabela `pgmigrations`.
-- Podem ser aplicadas pelo terminal (`npm run migrations:up`) ou pelo endpoint `POST /api/v1/migrations`.
-- No endpoint, `GET` roda em modo `dryRun` (só lista) e `POST` aplica de fato. A lógica está em `models/migrator.js`.
-- Nenhuma migration tem reversão (`down = false`) e, uma vez aplicada em produção, não deve ser editada.
-
-Tabelas hoje:
-
-| Tabela     | Colunas                                                                                                  |
-| ---------- | -------------------------------------------------------------------------------------------------------- |
-| `users`    | `id` (uuid), `username` (até 30), `email` (até 254), `password` (60, o hash), `created_at`, `updated_at` |
-| `sessions` | `id` (uuid), `token` (96, único), `user_id`, `expires_at`, `created_at`, `updated_at`                    |
-
-`username` e `email` são únicos. A aplicação também valida a unicidade sem diferenciar maiúsculas de minúsculas, e as buscas por nome de usuário e por email usam `LOWER()`. A coluna `sessions.user_id` ainda não tem chave estrangeira para `users`.
-
-## Endpoints atuais
-
-Os grupos de endpoints têm papéis diferentes:
-
-- **`/api/v1/status`** serve apenas para verificar a saúde da aplicação. Hoje reporta a situação do banco e alimenta a página `/status`. A resposta organizada em `dependencies` permite acrescentar novos itens sem alterar o que já existe. A versão do banco não é enviada, para não expor a versão em uso.
-- **`/api/v1/migrations`** é uma ferramenta de manutenção do banco. Hoje está **sem proteção**; o plano é torná-lo uma rota protegida. Até lá, qualquer cliente que alcance a URL pode executar `POST` e aplicar migrations.
-- **`/api/v1/users`** cuida do cadastro, da consulta e da atualização de usuários. Hoje também está **sem proteção**, e as respostas incluem o hash da senha.
-- **`/api/v1/sessions`** faz o login: valida email e senha, cria a sessão e envia o cookie `session_id`. Veja [autenticação](autenticacao.md).
-
-Detalhes de cada um estão no [guia da API](api/README.md).
+A origem do link é definida por `infra/webserver.js`: localhost em desenvolvimento/teste, URL de preview da Vercel em preview e domínio de produção definido no código.
 
 ## Tratamento de erros
 
-Todos os endpoints passam pelo `infra/controller.js`, que registra os métodos aceitos e trata os erros de forma única. O arquivo `infra/errors.js` define as classes de erro, todas com os campos `name`, `message`, `action` e `statusCode`. No JSON da resposta, o código aparece como `status_code`.
+O controller serializa erros com `name`, `message`, `action` e `status_code`.
 
-| Classe                  | Código | Aparece para o cliente? | Quando acontece                                                                   |
-| ----------------------- | ------ | ----------------------- | --------------------------------------------------------------------------------- |
-| `ValidationError`       | 400    | Sim                     | Dados inválidos ou duplicados (nome de usuário, email)                            |
-| `UnauthorizedError`     | 401    | Sim                     | Login com credenciais que não conferem                                            |
-| `NotFoundError`         | 404    | Sim                     | Recurso inexistente (usuário não encontrado)                                      |
-| `MethodNotAllowedError` | 405    | Sim                     | Método HTTP não aceito pelo endpoint (a resposta traz o cabeçalho `Allow`)        |
-| `InternalServerError`   | 500    | Sim (mensagem fixa)     | Qualquer erro inesperado                                                          |
-| `ServiceError`          | 503    | Não                     | Falha no banco. Vira `InternalServerError` na resposta                            |
-| `ConfigurationError`    | 500    | Não                     | Configuração ausente (por exemplo, `PASSWORD_PEPPER`). Vira `InternalServerError` |
+| Classe                  | HTTP          | Tratamento                                             |
+| ----------------------- | ------------- | ------------------------------------------------------ |
+| `ValidationError`       | 400           | Devolvida ao cliente                                   |
+| `UnauthorizedError`     | 401           | Devolvida ao cliente e limpa cookie de sessão          |
+| `ForbiddenError`        | 403           | Devolvida ao cliente                                   |
+| `NotFoundError`         | 404           | Devolvida ao cliente                                   |
+| `MethodNotAllowedError` | 405           | Devolvida com cabeçalho `Allow`                        |
+| `InternalServerError`   | 500           | Mensagem genérica                                      |
+| `ServiceError`          | 503 na classe | Tratada pelo controller como erro interno genérico 500 |
+| `ConfigurationError`    | 500           | Tratada como erro interno genérico                     |
 
-Regra do controller: só `ValidationError`, `UnauthorizedError` e `NotFoundError` são devolvidos como estão. Qualquer outro erro é registrado no console, com o erro original em `cause`, e a resposta é sempre o `InternalServerError` com a mensagem fixa "Um erro interno não esperado aconteceu.", status 500. Assim detalhes internos (banco, variáveis de ambiente) nunca vazam.
-
-O `MethodNotAllowedError` é tratado à parte, quando o método não corresponde a nenhum registrado: o controller responde 405 e preenche o cabeçalho `Allow` com os métodos aceitos pelo endpoint.
-
-## Importações
-
-Há duas formas de importar módulos do projeto, ambas configuradas para funcionar:
-
-- **`@/`:** alias para a raiz do projeto, definido em `jsconfig.json`. Exemplo: `import database from "@/infra/database.js"`. É o usado no código da aplicação.
-- **Caminho a partir da raiz** (`infra/...`, `tests/...`): funciona nos testes, porque o `jest.config.cjs` inclui a raiz em `moduleDirectories`.
-
-## Qualidade de código
-
-| Ferramenta          | Função                                                                                                                 |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| EditorConfig        | Indentação de 2 espaços, quebra de linha final e remoção de espaços no fim das linhas                                  |
-| Prettier            | Formatação automática                                                                                                  |
-| ESLint              | Análise de JavaScript (com as regras do Next.js e do Jest), JSON, Markdown e CSS                                       |
-| Husky + lint-staged | Rodam as verificações antes de cada commit                                                                             |
-| ggshield e Gitleaks | Impedem que segredos sejam commitados: nos hooks de commit (os dois) e no Pull Request (Gitleaks, pelo GitHub Actions) |
+Erros inesperados são registrados no servidor; detalhes internos não devem ser expostos ao cliente.

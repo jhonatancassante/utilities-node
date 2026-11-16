@@ -1,30 +1,18 @@
 openapi: 3.1.0
-
 info:
   title: Utilities Node API
   version: 1.0.0
   summary: API do projeto utilities-node.
   description: |
-    API do **utilities-node**, a nova implementação dos utilitários de trabalho
-    em Node.js.
+    API do utilities-node. A autorização é baseada em features armazenadas
+    no usuário. Algumas rotas são públicas; outras exigem uma sessão válida
+    e/ou uma feature específica.
 
-    Grupos de endpoints:
+    O cadastro envia um e-mail de ativação. Contas não ativadas não podem
+    criar sessões. Sessões têm validade de 30 dias e são renovadas pelo
+    endpoint GET /api/v1/user.
 
-    - `GET /api/v1/status`: verifica a saúde da aplicação e do banco de dados.
-      Serve apenas para esse fim.
-    - `/api/v1/migrations`: consulta (`GET`) e aplica (`POST`) as migrations
-      do banco.
-    - `/api/v1/users`: cadastro, consulta e atualização de usuários.
-    - `POST /api/v1/sessions`: login por email e senha.
-
-    **Autenticação:** nenhum endpoint exige autenticação por enquanto. O login
-    cria a sessão e envia o cookie `session_id`, mas nenhuma rota o verifica
-    ainda. O endpoint de migrations será transformado em uma rota protegida, e
-    as rotas de usuários também precisarão de proteção.
-
-    **Erros:** todos seguem o mesmo formato (`name`, `message`, `action` e
-    `status_code`). O erro `500` sempre traz a mesma mensagem fixa; o erro
-    original é registrado só no servidor.
+    Erros seguem o formato { name, message, action, status_code }.
   license:
     name: MIT
     identifier: MIT
@@ -35,113 +23,89 @@ servers:
   - url: http://localhost:3000
     description: Desenvolvimento local
 
-# Nenhum endpoint exige autenticação por enquanto (lista vazia = sem proteção).
-# Quando as rotas passarem a ser protegidas, declare o esquema em
-# components.securitySchemes (cookie `session_id`) e aplique-o às rotas
-# protegidas.
-security: []
-
 tags:
   - name: Status
-    description: Verificação de saúde da aplicação.
+    description: Verificação da saúde do banco de dados.
   - name: Migrations
-    description: >-
-      Manutenção do esquema do banco de dados. Endpoint atualmente sem
-      proteção, que será uma rota protegida no futuro.
+    description: Consulta e aplicação de migrations; exige permissões administrativas.
   - name: Users
-    description: Cadastro, consulta e atualização de usuários. Atualmente sem proteção.
+    description: Cadastro, consulta pública e atualização autorizada de usuários.
+  - name: Activations
+    description: Ativação de cadastro por token enviado por e-mail.
   - name: Sessions
-    description: Login e criação de sessões.
+    description: Criação, consulta e encerramento de sessões.
 
 paths:
   /api/v1/status:
     get:
-      tags:
-        - Status
+      tags: [Status]
       operationId: getStatus
       summary: Verifica a saúde da aplicação
       description: |
-        Verifica se a aplicação está no ar e consegue consultar o banco de
-        dados. Não altera nenhum dado.
-
-        A resposta agrupa as informações por dependência em `dependencies`.
-        Hoje existe apenas `database`. A versão do banco não é informada, para
-        não expor a versão em uso.
-
-        A página `/status` do site consome este endpoint a cada 5 segundos.
-
-        O valor de `opened_connections` considera o banco da conexão atual
-        (`current_database()`).
+        Rota pública. Retorna informações de conexão do banco.
+        A versão do PostgreSQL só é incluída quando o usuário autenticado
+        possui a feature read:status:all.
       responses:
         "200":
-          description: Aplicação saudável.
+          description: Aplicação conseguiu consultar o banco.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/StatusResponse"
-              example:
-                updated_at: "2026-10-17T13:06:00.000Z"
-                dependencies:
-                  database:
-                    status: Online
-                    max_connections: 100
-                    opened_connections: 1
+              examples:
+                publico:
+                  value:
+                    updated_at: "2026-11-16T13:06:00.000Z"
+                    dependencies:
+                      database:
+                        max_connections: 100
+                        opened_connections: 1
+                privilegiado:
+                  value:
+                    updated_at: "2026-11-16T13:06:00.000Z"
+                    dependencies:
+                      database:
+                        version: "16.0"
+                        max_connections: 100
+                        opened_connections: 1
         "405":
           $ref: "#/components/responses/MethodNotAllowed"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
   /api/v1/migrations:
-    description: |
-      Aceita apenas `GET` e `POST`. Qualquer outro método recebe `405`, com o
-      cabeçalho `Allow: GET, POST`.
-
-      **Atenção:** este endpoint não exige autenticação. A intenção é
-      transformá-lo em uma rota protegida no futuro.
     get:
-      tags:
-        - Migrations
+      tags: [Migrations]
       operationId: listPendingMigrations
-      summary: Lista as migrations pendentes
-      description: |
-        Executa as migrations em modo de simulação (_dry-run_): informa quais
-        seriam aplicadas, sem alterar o banco de dados.
+      summary: Lista migrations pendentes
+      description: Exige a feature read:migration. Executa em modo dry-run e não altera o banco.
+      x-required-feature: read:migration
       responses:
         "200":
-          description: >-
-            Lista das migrations pendentes. Lista vazia indica que o banco
-            está em dia.
+          description: Lista de migrations pendentes; array vazio significa que o banco está atualizado.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/Migration"
-              example:
-                - path: /app/infra/migrations/1792247067512_create-sessions.js
-                  name: 1792247067512_create-sessions
-                  timestamp: 1792247067512
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "405":
           $ref: "#/components/responses/MethodNotAllowed"
         "500":
           $ref: "#/components/responses/InternalServerError"
     post:
-      tags:
-        - Migrations
+      tags: [Migrations]
       operationId: runMigrations
-      summary: Aplica as migrations pendentes
-      description: |
-        Aplica ao banco todas as migrations pendentes, em ordem de
-        `timestamp`. O histórico fica na tabela `pgmigrations`.
-
-        A operação é repetível: sem migrations novas, devolve `200` e uma
-        lista vazia.
-
-        Em produção, as migrations não rodam sozinhas no deploy: use este
-        endpoint depois de publicar uma migration nova.
+      summary: Aplica migrations pendentes
+      description: Exige a feature create:migration. Em produção, a execução deve ser feita após o deploy que introduz a migration.
+      x-required-feature: create:migration
       responses:
         "201":
-          description: Havia migrations pendentes e elas foram aplicadas.
+          description: Uma ou mais migrations foram aplicadas.
           content:
             application/json:
               schema:
@@ -149,12 +113,8 @@ paths:
                 minItems: 1
                 items:
                   $ref: "#/components/schemas/Migration"
-              example:
-                - path: /app/infra/migrations/1792247067512_create-sessions.js
-                  name: 1792247067512_create-sessions
-                  timestamp: 1792247067512
         "200":
-          description: Nenhuma migration pendente. Nada foi alterado.
+          description: Não havia migrations pendentes.
           content:
             application/json:
               schema:
@@ -163,25 +123,26 @@ paths:
                 items:
                   $ref: "#/components/schemas/Migration"
               example: []
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "405":
           $ref: "#/components/responses/MethodNotAllowed"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
   /api/v1/users:
-    description: "Aceita apenas `POST`. Qualquer outro método recebe `405`, com o cabeçalho `Allow: POST`."
     post:
-      tags:
-        - Users
+      tags: [Users]
       operationId: createUser
       summary: Cadastra um usuário
       description: |
-        Cria um usuário. O nome de usuário e o email precisam ser únicos (sem
-        diferenciar maiúsculas de minúsculas) e o email precisa ter formato
-        válido. A senha é guardada com hash (HMAC com pepper e bcrypt).
-
-        **Atenção:** a resposta devolve o hash da senha no campo `password`.
-        Campos ausentes ainda não são validados e resultam em `500`.
+        Exige create:user, concedida ao visitante padrão. Cria a conta com
+        read:activation_token, gera um token de ativação e envia um e-mail.
+        A senha é armazenada com HMAC-SHA256 e bcrypt. O e-mail enviado é um
+        efeito colateral necessário para concluir o cadastro.
+      x-required-feature: create:user
       requestBody:
         required: true
         content:
@@ -189,86 +150,46 @@ paths:
             schema:
               $ref: "#/components/schemas/UserCreate"
             example:
-              username: jhonatan
-              email: jhonatan@exemplo.com.br
-              password: uma-senha-forte
+              username: jhow
+              email: jhow@example.com
+              password: uma-senha
       responses:
         "201":
-          description: Usuário criado.
+          description: Usuário criado e e-mail de ativação enviado.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/PublicUser"
               example:
                 id: 5c5b0c0e-2f6e-4a39-9a4a-0d0d9d0a6f10
-                username: jhonatan
-                email: jhonatan@exemplo.com.br
-                password: $2b$14$Zl0hashDeExemploDeSessentaCaracteresQuePareceUmHashBcrypt
-                created_at: "2026-10-17T13:06:00.000Z"
-                updated_at: "2026-10-17T13:06:00.000Z"
+                username: jhow
+                features: [read:activation_token]
+                created_at: "2026-11-16T13:06:00.000Z"
+                updated_at: "2026-11-16T13:06:00.000Z"
         "400":
-          description: >-
-            Nome de usuário já em uso, email com formato inválido ou email já
-            em uso.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationErrorBody"
-              examples:
-                nomeDeUsuarioDuplicado:
-                  summary: Nome de usuário já em uso
-                  value:
-                    name: ValidationError
-                    message: O nome de usuário informado já está sendo utilizado.
-                    action: Utilize outro nome de usuário para realizar esta operação.
-                    status_code: 400
-                emailInvalido:
-                  summary: Email com formato inválido
-                  value:
-                    name: ValidationError
-                    message: O e-mail informado não possui um formato válido.
-                    action: "Verifique se digitou o e-mail corretamente (ex: nome@dominio.com)."
-                    status_code: 400
-                emailDuplicado:
-                  summary: Email já em uso
-                  value:
-                    name: ValidationError
-                    message: O email informado já está sendo utilizado.
-                    action: Utilize outro email para realizar esta operação.
-                    status_code: 400
+          $ref: "#/components/responses/Validation"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "405":
           $ref: "#/components/responses/MethodNotAllowed"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
   /api/v1/users/{username}:
-    description: "Aceita apenas `GET` e `PATCH`. Qualquer outro método recebe `405`, com o cabeçalho `Allow: GET, PATCH`."
     parameters:
       - $ref: "#/components/parameters/Username"
     get:
-      tags:
-        - Users
+      tags: [Users]
       operationId: getUser
-      summary: Consulta um usuário
-      description: |
-        Busca o usuário pelo nome de usuário, sem diferenciar maiúsculas de
-        minúsculas.
-
-        **Atenção:** a resposta devolve o hash da senha no campo `password`.
+      summary: Consulta a representação pública de um usuário
+      description: Rota pública. A resposta não inclui e-mail nem hash da senha.
       responses:
         "200":
           description: Usuário encontrado.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-              example:
-                id: 5c5b0c0e-2f6e-4a39-9a4a-0d0d9d0a6f10
-                username: jhonatan
-                email: jhonatan@exemplo.com.br
-                password: $2b$14$Zl0hashDeExemploDeSessentaCaracteresQuePareceUmHashBcrypt
-                created_at: "2026-10-17T13:06:00.000Z"
-                updated_at: "2026-10-17T13:06:00.000Z"
+                $ref: "#/components/schemas/PublicUser"
         "404":
           $ref: "#/components/responses/UserNotFound"
         "405":
@@ -276,19 +197,15 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
     patch:
-      tags:
-        - Users
+      tags: [Users]
       operationId: updateUser
       summary: Atualiza um usuário
       description: |
-        Atualiza os campos enviados e mantém os demais. O `updated_at` é
-        atualizado. Se enviada, a nova senha também é guardada com hash.
-
-        Reenviar o próprio email (ou o próprio nome de usuário, mudando só as
-        maiúsculas) resulta em `400`, porque a checagem de unicidade encontra o
-        próprio registro.
-
-        **Atenção:** a resposta devolve o hash da senha no campo `password`.
+        Exige update:user. O usuário pode alterar a própria conta; para
+        atualizar outra conta também é necessária a feature update:user:others.
+        Apenas os campos enviados são alterados. A resposta é a representação
+        pública do usuário.
+      x-required-feature: update:user
       requestBody:
         required: true
         content:
@@ -296,34 +213,20 @@ paths:
             schema:
               $ref: "#/components/schemas/UserUpdate"
             example:
-              email: novo@exemplo.com.br
+              email: novo@example.com
       responses:
         "200":
           description: Usuário atualizado.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-              example:
-                id: 5c5b0c0e-2f6e-4a39-9a4a-0d0d9d0a6f10
-                username: jhonatan
-                email: novo@exemplo.com.br
-                password: $2b$14$Zl0hashDeExemploDeSessentaCaracteresQuePareceUmHashBcrypt
-                created_at: "2026-10-17T13:06:00.000Z"
-                updated_at: "2026-10-17T14:20:00.000Z"
+                $ref: "#/components/schemas/PublicUser"
         "400":
-          description: >-
-            Novo nome de usuário ou email já em uso, ou email com formato
-            inválido.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationErrorBody"
-              example:
-                name: ValidationError
-                message: O email informado já está sendo utilizado.
-                action: Utilize outro email para realizar esta operação.
-                status_code: 400
+          $ref: "#/components/responses/Validation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/UserNotFound"
         "405":
@@ -331,255 +234,274 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
-  /api/v1/sessions:
-    description: "Aceita apenas `POST`. Qualquer outro método recebe `405`, com o cabeçalho `Allow: POST`."
-    post:
-      tags:
-        - Sessions
-      operationId: createSession
-      summary: Faz o login e cria uma sessão
+  /api/v1/activations/{token_id}:
+    parameters:
+      - name: token_id
+        in: path
+        required: true
+        description: UUID do token recebido no e-mail de ativação.
+        schema:
+          type: string
+          format: uuid
+    patch:
+      tags: [Activations]
+      operationId: activateUser
+      summary: Ativa uma conta
       description: |
-        Confere o email (sem diferenciar maiúsculas de minúsculas) e a senha.
-        Com credenciais corretas, grava uma sessão válida por 30 dias e envia o
-        token no cookie `session_id` (`HttpOnly`, `SameSite=Lax`, `Path=/` e,
-        em produção, `Secure`).
+        Exige read:activation_token. O token expira em 15 minutos e só pode
+        ser utilizado uma vez. A ativação concede create:session, read:session
+        e update:user ao usuário.
+      x-required-feature: read:activation_token
+      responses:
+        "200":
+          description: Conta ativada e token marcado como utilizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivationToken"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Token inexistente, expirado ou já utilizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
-        Qualquer falha de credencial devolve `401` com a mesma mensagem, não
-        importa se o email não existe ou se a senha está errada, e com tempo de
-        resposta parecido.
-
-        Nenhuma outra rota verifica o cookie ainda. Campos ausentes resultam em
-        `500`.
+  /api/v1/sessions:
+    post:
+      tags: [Sessions]
+      operationId: createSession
+      summary: Autentica e cria uma sessão
+      description: |
+        Exige create:session. A conta precisa estar ativada. A sessão dura
+        30 dias. O token é enviado no cookie HttpOnly session_id e também
+        aparece no corpo da resposta. Credenciais incorretas retornam uma
+        mensagem genérica, sem distinguir e-mail inexistente de senha errada.
+      x-required-feature: create:session
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/SessionCreate"
-            example:
-              email: jhonatan@exemplo.com.br
-              password: uma-senha-forte
       responses:
         "201":
-          description: Credenciais corretas. Sessão criada.
+          description: Sessão criada.
           headers:
             Set-Cookie:
-              description: >-
-                Cookie de sessão. Exemplo:
-                `session_id=<token>; Max-Age=2592000; Path=/; HttpOnly;
-                SameSite=Lax`. Em produção inclui também `Secure`.
+              description: Cookie session_id; em produção inclui Secure.
               schema:
                 type: string
+              example: session_id=<token>; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Session"
-              example:
-                id: 0c7f0f3e-8e3b-4a58-93a7-3f1d4f3f5c21
-                token: token-placeholder-de-exemplo
-                user_id: 5c5b0c0e-2f6e-4a39-9a4a-0d0d9d0a6f10
-                expires_at: "2026-11-16T13:06:00.000Z"
-                created_at: "2026-10-17T13:06:00.000Z"
-                updated_at: "2026-10-17T13:06:00.000Z"
         "401":
-          description: Email ou senha não conferem.
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: [Sessions]
+      operationId: deleteSession
+      summary: Encerra a sessão atual
+      description: |
+        Exige uma sessão válida no cookie session_id. Antecipada a expiração
+        do registro no banco, o cookie é removido do navegador com Max-Age=-1.
+        O registro da sessão não é apagado fisicamente. A resposta inclui o
+        token da sessão encerrada.
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Sessão encerrada.
+          headers:
+            Set-Cookie:
+              description: Cookie session_id inválido e expirado no navegador.
+              schema:
+                type: string
+              example: session_id=invalid; Max-Age=-1; Path=/; HttpOnly; SameSite=Lax
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UnauthorizedErrorBody"
-              example:
-                name: UnauthorizedError
-                message: Não foi possível autenticar seu usuário no sistema.
-                action: Verifique se digitou o e-mail e a senha corretamente e tente novamente.
-                status_code: 401
+                $ref: "#/components/schemas/Session"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/user:
+    get:
+      tags: [Sessions]
+      operationId: getAuthenticatedUser
+      summary: Consulta o usuário autenticado
+      description: |
+        Exige uma sessão válida e a feature read:session. Renova a validade
+        da sessão para mais 30 dias, atualiza o cookie e retorna os dados
+        privados do próprio usuário, sem senha.
+      x-required-feature: read:session
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Dados do usuário autenticado.
+          headers:
+            Set-Cookie:
+              description: Cookie de sessão renovado por mais 30 dias.
+              schema:
+                type: string
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrivateUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "405":
           $ref: "#/components/responses/MethodNotAllowed"
         "500":
           $ref: "#/components/responses/InternalServerError"
 
 components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: session_id
+      description: Token da sessão, definido pelo endpoint de login.
+  headers:
+    NoStore:
+      description: Impede o armazenamento em cache da resposta.
+      schema:
+        type: string
+      example: no-store, no-cache, max-age=0, must-revalidate
   parameters:
     Username:
       name: username
       in: path
       required: true
-      description: Nome de usuário. A busca não diferencia maiúsculas de minúsculas.
+      description: Nome de usuário; a busca não diferencia maiúsculas de minúsculas.
       schema:
         type: string
         maxLength: 30
-      example: jhonatan
-
+      example: jhow
   schemas:
     StatusResponse:
       type: object
-      description: Situação da aplicação e de suas dependências.
-      required:
-        - updated_at
-        - dependencies
+      required: [updated_at, dependencies]
       properties:
         updated_at:
           type: string
           format: date-time
-          description: Momento em que a resposta foi gerada (ISO 8601, UTC).
-          examples:
-            - "2026-10-17T13:06:00.000Z"
         dependencies:
           type: object
-          description: Situação de cada dependência da aplicação.
-          required:
-            - database
+          required: [database]
           properties:
             database:
-              $ref: "#/components/schemas/DatabaseStatus"
-
-    DatabaseStatus:
-      type: object
-      description: Situação do banco de dados PostgreSQL.
-      required:
-        - status
-        - max_connections
-        - opened_connections
-      properties:
-        status:
-          type: string
-          const: Online
-          description: >-
-            Vale `Online` quando a consulta ao banco funcionou. Se o banco não
-            responder, o endpoint devolve `500`.
-        max_connections:
-          type: integer
-          minimum: 1
-          description: Limite de conexões simultâneas (`current_setting('max_connections')`).
-          examples:
-            - 100
-        opened_connections:
-          type: integer
-          minimum: 0
-          description: >-
-            Conexões abertas no banco da aplicação, contadas em
-            `pg_stat_activity`. Inclui a conexão da própria consulta.
-          examples:
-            - 1
-
+              type: object
+              required: [max_connections, opened_connections]
+              properties:
+                version:
+                  type: string
+                  description: Presente somente quando o usuário possui read:status:all.
+                max_connections:
+                  type: integer
+                opened_connections:
+                  type: integer
     Migration:
       type: object
-      description: Uma migration do banco de dados.
-      required:
-        - path
-        - name
-        - timestamp
+      required: [path, name, timestamp]
       properties:
         path:
           type: string
-          description: Caminho do arquivo da migration no servidor.
         name:
           type: string
-          description: Nome da migration, sem a extensão do arquivo.
-          examples:
-            - 1792247067512_create-sessions
         timestamp:
           type: integer
           format: int64
-          description: >-
-            Número que inicia o nome do arquivo. Define a ordem de execução.
-          examples:
-            - 1792247067512
-
     UserCreate:
       type: object
-      description: Dados para cadastrar um usuário.
-      required:
-        - username
-        - email
-        - password
+      required: [username, email, password]
       properties:
         username:
           type: string
           maxLength: 30
-          description: Único, sem diferenciar maiúsculas de minúsculas.
         email:
           type: string
           format: email
           maxLength: 254
-          description: Formato `nome@dominio.com`. Único, sem diferenciar maiúsculas de minúsculas.
         password:
           type: string
-          description: Senha em texto. É guardada com hash.
-
     UserUpdate:
       type: object
-      description: Campos a alterar. Envie apenas os que mudam.
-      minProperties: 1
       properties:
         username:
           type: string
           maxLength: 30
-          description: Novo nome de usuário. Precisa ser único.
         email:
           type: string
           format: email
           maxLength: 254
-          description: Novo email. Precisa ser único e ter formato válido.
         password:
           type: string
-          description: Nova senha, em texto. É guardada com hash.
-
-    User:
+    PublicUser:
       type: object
-      description: Um usuário.
-      required:
-        - id
-        - username
-        - email
-        - password
-        - created_at
-        - updated_at
+      required: [id, username, features, created_at, updated_at]
       properties:
         id:
           type: string
           format: uuid
         username:
           type: string
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          description: >-
-            Hash bcrypt da senha (60 caracteres). Hoje é devolvido na resposta;
-            deve deixar de sair quando as rotas forem protegidas.
+        features:
+          type: array
+          items:
+            type: string
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
-
+    PrivateUser:
+      allOf:
+        - $ref: "#/components/schemas/PublicUser"
+        - type: object
+          required: [email]
+          properties:
+            email:
+              type: string
+              format: email
     SessionCreate:
       type: object
-      description: Credenciais de login.
-      required:
-        - email
-        - password
+      required: [email, password]
       properties:
         email:
           type: string
           format: email
-          description: Email do usuário, sem diferenciar maiúsculas de minúsculas.
         password:
           type: string
-          description: Senha em texto.
-
     Session:
       type: object
-      description: Uma sessão de usuário.
-      required:
-        - id
-        - token
-        - user_id
-        - expires_at
-        - created_at
-        - updated_at
+      required: [id, token, user_id, expires_at, created_at, updated_at]
       properties:
         id:
           type: string
@@ -588,46 +510,54 @@ components:
           type: string
           minLength: 96
           maxLength: 96
-          description: Token aleatório de 96 caracteres hexadecimais. É o valor do cookie `session_id`.
+          description: Token aleatório em hexadecimal, também enviado no cookie.
         user_id:
           type: string
           format: uuid
-          description: Usuário dono da sessão.
         expires_at:
           type: string
           format: date-time
-          description: Fim da validade da sessão (30 dias após a criação).
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
-
+    ActivationToken:
+      type: object
+      required: [id, user_id, expires_at, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+        used_at:
+          type: [string, "null"]
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     Error:
       type: object
-      description: Formato comum a todos os erros.
-      required:
-        - name
-        - message
-        - action
-        - status_code
+      required: [name, message, action, status_code]
       properties:
         name:
           type: string
-          description: Tipo do erro.
         message:
           type: string
-          description: O que aconteceu.
         action:
           type: string
-          description: O que fazer a respeito.
         status_code:
           type: integer
-          description: Código HTTP da resposta.
-
-    ValidationErrorBody:
-      description: Dados inválidos ou já em uso.
+    ValidationError:
       allOf:
         - $ref: "#/components/schemas/Error"
         - type: object
@@ -636,9 +566,7 @@ components:
               const: ValidationError
             status_code:
               const: 400
-
-    UnauthorizedErrorBody:
-      description: Credenciais que não conferem.
+    UnauthorizedError:
       allOf:
         - $ref: "#/components/schemas/Error"
         - type: object
@@ -647,9 +575,16 @@ components:
               const: UnauthorizedError
             status_code:
               const: 401
-
-    NotFoundErrorBody:
-      description: Recurso não encontrado.
+    ForbiddenError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: ForbiddenError
+            status_code:
+              const: 403
+    NotFoundError:
       allOf:
         - $ref: "#/components/schemas/Error"
         - type: object
@@ -658,9 +593,7 @@ components:
               const: NotFoundError
             status_code:
               const: 404
-
-    MethodNotAllowedErrorBody:
-      description: Método HTTP não aceito pelo endpoint.
+    MethodNotAllowedError:
       allOf:
         - $ref: "#/components/schemas/Error"
         - type: object
@@ -669,11 +602,7 @@ components:
               const: MethodNotAllowedError
             status_code:
               const: 405
-
-    InternalServerErrorBody:
-      description: >-
-        Erro interno da aplicação. O erro original é registrado no console do
-        servidor e não é exposto na resposta.
+    InternalServerError:
       allOf:
         - $ref: "#/components/schemas/Error"
         - type: object
@@ -682,50 +611,45 @@ components:
               const: InternalServerError
             status_code:
               const: 500
-
   responses:
+    Validation:
+      description: Dados inválidos ou duplicados.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationError"
+    Unauthorized:
+      description: Sessão inválida ou credenciais incorretas.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UnauthorizedError"
+    Forbidden:
+      description: Usuário não possui a feature necessária.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ForbiddenError"
+    UserNotFound:
+      description: Usuário não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotFoundError"
     MethodNotAllowed:
-      description: >-
-        Método HTTP não aceito pelo endpoint. O cabeçalho `Allow` lista os
-        métodos aceitos.
+      description: Método HTTP não aceito.
       headers:
         Allow:
-          description: Métodos aceitos pelo endpoint, separados por vírgula.
+          description: Métodos aceitos, separados por vírgula.
           schema:
             type: string
-          example: GET, POST
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/MethodNotAllowedErrorBody"
-          example:
-            name: MethodNotAllowedError
-            message: Método não permitido para esse endpoint.
-            action: Verifique se o método HTTP é válido para este endpoint.
-            status_code: 405
-
-    UserNotFound:
-      description: Nenhum usuário com o nome de usuário informado.
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/NotFoundErrorBody"
-          example:
-            name: NotFoundError
-            message: O nome de usuário informado não foi encontrado no sistema.
-            action: Verifique se digitou o nome de usuário corretamente e tente novamente.
-            status_code: 404
-
+            $ref: "#/components/schemas/MethodNotAllowedError"
     InternalServerError:
-      description: >-
-        Falha inesperada (por exemplo, banco inacessível, configuração ausente
-        ou campos obrigatórios ausentes). A mensagem é sempre a mesma.
+      description: Erro interno genérico; detalhes são registrados no servidor.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/InternalServerErrorBody"
-          example:
-            name: InternalServerError
-            message: Um erro interno não esperado aconteceu.
-            action: Entre em contato com o suporte.
-            status_code: 500
+            $ref: "#/components/schemas/InternalServerError"

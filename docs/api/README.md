@@ -1,97 +1,69 @@
 # API
 
-Guia de leitura dos endpoints. A descrição formal, no padrão OpenAPI 3.1, está em [openapi.yaml](openapi.yaml).
+Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](openapi.yaml).
 
 ## Convenções
 
-- **Caminho base:** `/api/v1`. A versão faz parte do caminho.
-- **Formato:** requisições com corpo usam JSON (`Content-Type: application/json`) e as respostas são JSON (`application/json`).
-- **Ambientes:**
-  - Produção: `https://utilities-node.vercel.app`
-  - Local: `http://localhost:3000`
-- **Autenticação:** ainda não existe. Nenhum endpoint exige login hoje. Veja [Limitações conhecidas](#limitações-conhecidas).
-- **Nomes dos campos:** `snake_case` (`updated_at`, `max_connections`, `status_code`).
+- **Prefixo:** `/api/v1`.
+- **Formato:** JSON para corpos de requisição e respostas.
+- **Produção:** `https://utilities-node.vercel.app`.
+- **Desenvolvimento:** `http://localhost:3000`.
+- **Autenticação:** cookie `session_id`, quando a operação exige uma sessão.
+- **Autorização:** permissões granulares armazenadas em `users.features`; estar autenticado não concede acesso automaticamente.
+- **Campos:** `snake_case`.
 
 ## Resumo dos endpoints
 
-| Método  | Caminho                    | Descrição                                     | Proteção                      |
-| ------- | -------------------------- | --------------------------------------------- | ----------------------------- |
-| `GET`   | `/api/v1/status`           | Saúde da aplicação e do banco de dados        | Pública                       |
-| `GET`   | `/api/v1/migrations`       | Lista as migrations pendentes, sem aplicá-las | Sem proteção (será protegida) |
-| `POST`  | `/api/v1/migrations`       | Aplica as migrations pendentes                | Sem proteção (será protegida) |
-| `POST`  | `/api/v1/users`            | Cadastra um usuário                           | Sem proteção                  |
-| `GET`   | `/api/v1/users/{username}` | Consulta um usuário                           | Sem proteção                  |
-| `PATCH` | `/api/v1/users/{username}` | Atualiza nome de usuário, email e/ou senha    | Sem proteção                  |
-| `POST`  | `/api/v1/sessions`         | Autentica por email e senha e cria uma sessão | Pública (é o login)           |
+| Método   | Caminho                          | Acesso                                                         |
+| -------- | -------------------------------- | -------------------------------------------------------------- |
+| `GET`    | `/api/v1/status`                 | Público; detalhes de versão condicionados a `read:status:all`  |
+| `GET`    | `/api/v1/migrations`             | Feature `read:migration`                                       |
+| `POST`   | `/api/v1/migrations`             | Feature `create:migration`                                     |
+| `POST`   | `/api/v1/users`                  | Feature `create:user` (visitante padrão)                       |
+| `GET`    | `/api/v1/users/{username}`       | Público; saída filtrada                                        |
+| `PATCH`  | `/api/v1/users/{username}`       | Feature `update:user`; próprio usuário ou `update:user:others` |
+| `PATCH`  | `/api/v1/activations/{token_id}` | Feature `read:activation_token`                                |
+| `POST`   | `/api/v1/sessions`               | Feature `create:session`                                       |
+| `DELETE` | `/api/v1/sessions`               | Sessão válida                                                  |
+| `GET`    | `/api/v1/user`                   | Sessão válida e feature `read:session`                         |
 
-## Formato dos erros
+## Autorização e erros
 
-Todos os erros devolvem um JSON com os mesmos quatro campos:
+O middleware `injectAnonymousOrUser` identifica o visitante ou carrega o usuário associado a uma sessão válida. O middleware `canRequest(feature)` verifica a permissão exigida pelo endpoint. A autorização de atualização também compara o identificador do usuário autenticado com o recurso solicitado.
 
-```json
-{
-  "name": "ValidationError",
-  "message": "O nome de usuário informado já está sendo utilizado.",
-  "action": "Utilize outro nome de usuário para realizar esta operação.",
-  "status_code": 400
-}
-```
-
-| Campo         | Tipo    | Descrição                                            |
-| ------------- | ------- | ---------------------------------------------------- |
-| `name`        | texto   | Tipo do erro (`ValidationError`, `NotFoundError`...) |
-| `message`     | texto   | O que aconteceu                                      |
-| `action`      | texto   | O que fazer a respeito                               |
-| `status_code` | inteiro | Código HTTP da resposta                              |
-
-Códigos usados:
-
-| Código | Erro                    | Quando                                                                                   |
-| ------ | ----------------------- | ---------------------------------------------------------------------------------------- |
-| `400`  | `ValidationError`       | Dados inválidos ou já em uso (nome de usuário, email)                                    |
-| `401`  | `UnauthorizedError`     | Login com credenciais que não conferem                                                   |
-| `404`  | `NotFoundError`         | Usuário não encontrado                                                                   |
-| `405`  | `MethodNotAllowedError` | Método HTTP não aceito pelo endpoint. A resposta traz o cabeçalho `Allow` com os aceitos |
-| `500`  | `InternalServerError`   | Qualquer falha inesperada (banco inacessível, configuração ausente...)                   |
-
-O `500` sempre traz a mesma mensagem fixa ("Um erro interno não esperado aconteceu."). O erro original é registrado no console do servidor e não é exposto na resposta.
+Os erros seguem o formato:
 
 ```json
 {
-  "name": "InternalServerError",
-  "message": "Um erro interno não esperado aconteceu.",
-  "action": "Entre em contato com o suporte.",
-  "status_code": 500
+  "name": "ForbiddenError",
+  "message": "Você não possui permissão para executar esta ação.",
+  "action": "Verifique se o seu usuário possui a feature \"read:migration\".",
+  "status_code": 403
 }
 ```
 
-Exemplo de `405` (`POST /api/v1/status`, com `Allow: GET`):
+| Código | Erro                    | Significado                                                   |
+| ------ | ----------------------- | ------------------------------------------------------------- |
+| `400`  | `ValidationError`       | Dados inválidos ou duplicados                                 |
+| `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão ausente, inválida ou expirada |
+| `403`  | `ForbiddenError`        | Feature necessária não concedida                              |
+| `404`  | `NotFoundError`         | Usuário ou token não encontrado, expirado ou já utilizado     |
+| `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`                 |
+| `500`  | `InternalServerError`   | Falha inesperada; detalhes ficam no log                       |
 
-```json
-{
-  "name": "MethodNotAllowedError",
-  "message": "Método não permitido para esse endpoint.",
-  "action": "Verifique se o método HTTP é válido para este endpoint.",
-  "status_code": 405
-}
-```
+O controller limpa o cookie `session_id` em qualquer resposta `401`. Nas rotas que injetam o usuário a partir do cookie, um token inválido enviado pelo cliente também resulta em `401`, mesmo quando a operação é pública para visitantes sem cookie. As respostas que definem ou removem o cookie também usam `Cache-Control: no-store, no-cache, max-age=0, must-revalidate`.
 
 ## `GET /api/v1/status`
 
-Verifica a saúde da aplicação. É o endpoint para saber se o sistema está no ar e conseguindo falar com o banco de dados. O objetivo é apenas esse: não altera nenhum dado.
+Verifica a conectividade com o banco de dados. A página `/status` consulta o endpoint a cada cinco segundos.
 
-Hoje a aplicação depende só do banco. Conforme ela ganhar mais funcionalidades que usam o banco de dados, esse endpoint continua sendo a referência de saúde do sistema.
-
-A página [`/status`](https://utilities-node.vercel.app/status) do site consome este endpoint a cada 5 segundos para montar o painel de monitoramento.
-
-**Resposta `200`**
+**Resposta 200 para visitante ou usuário sem `read:status:all`:**
 
 ```json
 {
-  "updated_at": "2026-10-17T13:06:00.000Z",
+  "updated_at": "2026-11-16T13:06:00.000Z",
   "dependencies": {
     "database": {
-      "status": "Online",
       "max_connections": 100,
       "opened_connections": 1
     }
@@ -99,234 +71,138 @@ A página [`/status`](https://utilities-node.vercel.app/status) do site consome 
 }
 ```
 
-| Campo                                      | Tipo    | Descrição                                                                      |
-| ------------------------------------------ | ------- | ------------------------------------------------------------------------------ |
-| `updated_at`                               | texto   | Momento em que a resposta foi gerada, em ISO 8601 (UTC)                        |
-| `dependencies.database.status`             | texto   | `"Online"` quando a consulta ao banco funcionou                                |
-| `dependencies.database.max_connections`    | inteiro | Limite de conexões simultâneas do banco (`current_setting('max_connections')`) |
-| `dependencies.database.opened_connections` | inteiro | Conexões abertas hoje no banco da aplicação (inclui a da própria consulta)     |
-
-A versão do PostgreSQL deliberadamente **não** é informada, para não expor a versão em uso.
-
-O `status` só aparece com `"Online"`: se o banco não responder, o endpoint devolve `500` em vez de um `200` com `"Offline"`.
-
-A contagem de conexões considera o banco da conexão atual (`current_database()`).
-
-**Resposta `500`:** qualquer falha ao consultar o banco (por exemplo, banco inacessível). Veja o [formato dos erros](#formato-dos-erros).
-
-**Exemplo**
-
-```bash
-curl http://localhost:3000/api/v1/status
-```
+Com `read:status:all`, a resposta inclui também `dependencies.database.version`. Se a consulta ao banco falhar, a API responde `500`.
 
 ## `GET /api/v1/migrations`
 
-Mostra quais migrations ainda **não foram aplicadas**, sem alterar o banco (execução em modo dry-run).
-
-**Resposta `200`:** lista de migrations pendentes. Lista vazia significa que o banco está em dia.
-
-```json
-[
-  {
-    "path": "/app/infra/migrations/1792247067512_create-sessions.js",
-    "name": "1792247067512_create-sessions",
-    "timestamp": 1792247067512
-  }
-]
-```
-
-| Campo       | Tipo    | Descrição                                               |
-| ----------- | ------- | ------------------------------------------------------- |
-| `path`      | texto   | Caminho do arquivo da migration no servidor             |
-| `name`      | texto   | Nome da migration, sem a extensão                       |
-| `timestamp` | inteiro | Número do início do nome do arquivo, que define a ordem |
-
-```bash
-curl http://localhost:3000/api/v1/migrations
-```
+Exige `read:migration`. Lista migrations pendentes em modo `dry-run`, sem alterar o banco. Retorna `200` e um array; array vazio significa que não há migrations pendentes.
 
 ## `POST /api/v1/migrations`
 
-**Aplica** as migrations pendentes ao banco.
+Exige `create:migration`. Aplica migrations pendentes em ordem:
 
-| Código | Quando                                                       | Corpo                          |
-| ------ | ------------------------------------------------------------ | ------------------------------ |
-| `201`  | Havia migrations pendentes e foram aplicadas                 | Lista das migrations aplicadas |
-| `200`  | Nenhuma migration pendente                                   | Lista vazia (`[]`)             |
-| `500`  | Falha ao executar (banco inacessível, erro em uma migration) | `InternalServerError`          |
+- `201`: uma ou mais migrations foram aplicadas.
+- `200`: nenhuma migration estava pendente; retorna `[]`.
+- `403`: usuário não possui `create:migration`.
 
-```bash
-curl -X POST http://localhost:3000/api/v1/migrations
-```
-
-A operação é repetível: executá-la de novo, sem migrations novas, devolve `200` e `[]`.
-
-Qualquer método diferente de `GET` e `POST` recebe `405`, com `Allow: GET, POST`.
-
-> **Atenção:** este endpoint **não exige autenticação**. Qualquer cliente que alcance a URL pode consultar as migrations pendentes e executar o `POST`. A intenção é transformá-lo em uma **rota protegida**.
+Em produção, a execução não ocorre automaticamente no deploy. É necessário chamar o endpoint com uma sessão que tenha a feature administrativa.
 
 ## `POST /api/v1/users`
 
-Cadastra um usuário. A senha é guardada com hash (veja [autenticação](../autenticacao.md)).
-
-**Corpo**
+Exige `create:user`, concedida ao visitante padrão. Recebe:
 
 ```json
 {
-  "username": "jhonatan",
-  "email": "jhonatan@exemplo.com.br",
-  "password": "uma-senha-forte"
+  "username": "jhow",
+  "email": "jhow@example.com",
+  "password": "uma-senha"
 }
 ```
 
-| Campo      | Tipo  | Regras                                                                                          |
-| ---------- | ----- | ----------------------------------------------------------------------------------------------- |
-| `username` | texto | Único, sem diferenciar maiúsculas de minúsculas. Até 30 caracteres (limite do banco)            |
-| `email`    | texto | Formato `nome@dominio.com`. Único, sem diferenciar maiúsculas de minúsculas. Até 254 caracteres |
-| `password` | texto | Obrigatória                                                                                     |
+O nome de usuário e o e-mail precisam ser únicos, sem diferenciar maiúsculas de minúsculas. O e-mail passa por validação estrutural e a senha é armazenada com HMAC-SHA256 e bcrypt.
 
-**Respostas**
-
-| Código | Quando                                                     |
-| ------ | ---------------------------------------------------------- |
-| `201`  | Usuário criado. O corpo é o usuário (veja abaixo)          |
-| `400`  | Nome de usuário já usado, email inválido ou email já usado |
-| `500`  | Falha inesperada, inclusive campos ausentes                |
-
-**Resposta `201`**
+O cadastro cria um token de ativação e envia um e-mail com o link correspondente. A resposta `201` contém apenas os campos públicos:
 
 ```json
 {
   "id": "5c5b0c0e-2f6e-4a39-9a4a-0d0d9d0a6f10",
-  "username": "jhonatan",
-  "email": "jhonatan@exemplo.com.br",
-  "password": "$2b$14$Zl0...",
-  "created_at": "2026-10-17T13:06:00.000Z",
-  "updated_at": "2026-10-17T13:06:00.000Z"
+  "username": "jhow",
+  "features": ["read:activation_token"],
+  "created_at": "2026-11-16T13:06:00.000Z",
+  "updated_at": "2026-11-16T13:06:00.000Z"
 }
 ```
 
-> **Atenção:** o campo `password` da resposta é o **hash** da senha. Hoje ele é devolvido; deve deixar de sair quando as rotas forem protegidas.
+Respostas relevantes: `201` criado; `400` nome/email duplicado ou e-mail inválido; `500` falha inesperada, inclusive falha no envio do e-mail.
 
-```bash
-curl -X POST http://localhost:3000/api/v1/users \
-  -H "Content-Type: application/json" \
-  -d '{"username":"jhonatan","email":"jhonatan@exemplo.com.br","password":"uma-senha-forte"}'
-```
+## `PATCH /api/v1/activations/{token_id}`
+
+Exige `read:activation_token`. O identificador é o UUID enviado no link por e-mail.
+
+- O token tem validade de 15 minutos.
+- Só pode ser utilizado uma vez.
+- Token inexistente, expirado ou já utilizado resulta em `404`.
+- Token de conta que já foi ativada resulta em `403`.
+- Em caso de sucesso, responde `200` com os dados do token de ativação, incluindo `used_at`.
+
+A ativação substitui as permissões iniciais da conta por `create:session`, `read:session` e `update:user`.
 
 ## `GET /api/v1/users/{username}`
 
-Consulta um usuário pelo nome de usuário. A busca **não diferencia maiúsculas de minúsculas**: `/users/MesmoCase` e `/users/mesmocase` encontram o mesmo usuário.
+Consulta um usuário sem diferenciar maiúsculas de minúsculas. A rota é pública, mas a resposta é filtrada: inclui `id`, `username`, `features`, `created_at` e `updated_at`. Não inclui e-mail nem hash de senha.
 
-| Código | Quando                                                |
-| ------ | ----------------------------------------------------- |
-| `200`  | Usuário encontrado (mesmo corpo do `201` do cadastro) |
-| `404`  | Nenhum usuário com esse nome                          |
-
-```bash
-curl http://localhost:3000/api/v1/users/jhonatan
-```
+Respostas: `200` encontrado; `404` usuário inexistente.
 
 ## `PATCH /api/v1/users/{username}`
 
-Atualiza o usuário. Envie só os campos que quer mudar (`username`, `email` e/ou `password`); os demais ficam como estão. O `updated_at` é atualizado.
+Exige `update:user`. O usuário pode atualizar a própria conta; para alterar outra conta, precisa também de `update:user:others`.
+
+O corpo aceita um ou mais campos:
 
 ```json
 {
-  "email": "novo@exemplo.com.br"
+  "email": "novo@example.com",
+  "username": "novo-nome",
+  "password": "nova-senha"
 }
 ```
 
-| Código | Quando                                                                 |
-| ------ | ---------------------------------------------------------------------- |
-| `200`  | Usuário atualizado (mesmo corpo do `201` do cadastro)                  |
-| `400`  | Novo nome de usuário ou email já em uso, ou email com formato inválido |
-| `404`  | Nenhum usuário com esse nome                                           |
+Os campos não enviados permanecem inalterados. A senha, quando enviada, é novamente processada com HMAC e bcrypt. A resposta `200` usa a representação pública do usuário e não expõe e-mail nem hash.
 
-A nova senha, quando enviada, também é guardada com hash.
-
-```bash
-curl -X PATCH http://localhost:3000/api/v1/users/jhonatan \
-  -H "Content-Type: application/json" \
-  -d '{"email":"novo@exemplo.com.br"}'
-```
+Respostas: `200` atualizado; `400` validação ou duplicidade; `403` permissão insuficiente; `404` usuário inexistente.
 
 ## `POST /api/v1/sessions`
 
-Faz o login: confere email e senha, cria uma sessão no banco e envia o token no cookie `session_id`.
-
-**Corpo**
+Exige `create:session`, portanto contas ainda não ativadas não podem iniciar sessão. Recebe:
 
 ```json
 {
-  "email": "jhonatan@exemplo.com.br",
-  "password": "uma-senha-forte"
+  "email": "jhow@example.com",
+  "password": "uma-senha"
 }
 ```
 
-**Respostas**
+Com sucesso, responde `201`, cria uma sessão de 30 dias e define o cookie `session_id`:
 
-| Código | Quando                                                            |
-| ------ | ----------------------------------------------------------------- |
-| `201`  | Credenciais corretas. Sessão criada e cookie enviado              |
-| `401`  | Email ou senha não conferem (a mensagem é a mesma nos dois casos) |
-| `500`  | Falha inesperada, inclusive campos ausentes                       |
-
-**Resposta `201`**
-
-```json
-{
-  "id": "0c7f0f3e-8e3b-4a58-93a7-3f1d4f3f5c21",
-  "token": "token-placeholder-de-exemplo",
-  "user_id": "5c5b0c0e-2f6e-4a39-9a4a-0d0d9d0a6f10",
-  "expires_at": "2026-11-16T13:06:00.000Z",
-  "created_at": "2026-10-17T13:06:00.000Z",
-  "updated_at": "2026-10-17T13:06:00.000Z"
-}
+```http
+Set-Cookie: session_id=<token>; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax
 ```
 
-A resposta também traz o cabeçalho `Set-Cookie`:
+Em produção, inclui `Secure`. O corpo inclui os dados da sessão, inclusive o token. Credenciais incorretas respondem `401` com mensagem genérica. A tentativa de login inválida também limpa eventual cookie enviado na requisição.
 
-```text
-session_id=<token>; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax
-```
+## `DELETE /api/v1/sessions`
 
-Em produção o cookie também leva o atributo `Secure`. Detalhes sobre sessões e cookie em [autenticação](../autenticacao.md#sessões).
+Encerra a sessão identificada pelo cookie `session_id`. Exige que o token corresponda a uma sessão válida.
 
-**Resposta `401`:** o corpo é o `UnauthorizedError` com a mensagem "Não foi possível autenticar seu usuário no sistema." Ela é a mesma quando o email não existe e quando a senha está errada, para não revelar quais emails estão cadastrados.
+Em caso de sucesso:
 
-```bash
-curl -i -X POST http://localhost:3000/api/v1/sessions \
-  -H "Content-Type: application/json" \
-  -d '{"email":"jhonatan@exemplo.com.br","password":"uma-senha-forte"}'
-```
+- A expiração da sessão é antecipada no banco; o registro não é apagado.
+- O cookie é removido com `Max-Age=-1`.
+- A resposta é `200` e inclui os dados da sessão encerrada, inclusive o token.
 
-## Limitações conhecidas
+Sessão inexistente ou expirada resulta em `401`.
 
-Estado atual da API, para ninguém se surpreender:
+## `GET /api/v1/user`
 
-- **Sem autenticação nas rotas.** O login cria a sessão e o cookie, mas nenhum endpoint exige a sessão. Em especial, `GET` e `PATCH` em `/api/v1/users/{username}` e `/api/v1/migrations` aceitam qualquer cliente. A proteção está prevista.
-- **O hash da senha sai nas respostas de usuários**, e o token da sessão sai no corpo do login.
-- **Campos ausentes não são validados.** Faltar `email`, `username` ou `password` no corpo resulta em `500` em vez de `400`.
-- **No `PATCH`, reenviar o próprio email** (ou o próprio nome de usuário, mudando só as maiúsculas) resulta em `400`, porque a checagem de unicidade encontra o próprio registro.
-- **O email não é normalizado.** A validação de formato ignora espaços nas pontas, mas o valor gravado é o enviado.
-- **Sem limite de tentativas de login.**
+Exige sessão válida e `read:session`. Retorna os dados privados do próprio usuário (`id`, `username`, `email`, `features`, `created_at`, `updated_at`), sem senha.
 
-## Visualizar a especificação OpenAPI
+A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica cabeçalho `Cache-Control` para impedir armazenamento em cache. Sessão inválida ou expirada resulta em `401`.
 
-O arquivo [openapi.yaml](openapi.yaml) é legível como texto, mas dá para vê-lo como uma página navegável, com os botões "Try it out" (no Swagger):
+## Limitações conhecidas e observações de segurança
 
-| Opção                        | Como                                                                                       |
-| ---------------------------- | ------------------------------------------------------------------------------------------ |
-| **Editor online do Swagger** | Abra <https://editor.swagger.io> e cole o conteúdo do arquivo. Nada é instalado.           |
-| **Extensão do VS Code**      | Instale a extensão _OpenAPI (Swagger) Editor_ e abra o arquivo para ver a pré-visualização |
-| **Redocly, pelo terminal**   | Rode `npx @redocly/cli preview-docs docs/api/openapi.yaml` e abra o endereço mostrado      |
+- Não há _rate limiting_ para tentativas de login.
+- Não há política de complexidade ou tamanho mínimo de senha implementada.
+- Campos obrigatórios ausentes não possuem validação uniforme e podem resultar em `500`.
+- O e-mail é validado após `trim()`, mas o valor armazenado não é normalizado.
+- O corpo de login e logout inclui o token de sessão, apesar do cookie ser `HttpOnly`. Isso reduz a proteção oferecida pelo atributo e merece revisão.
+- O controller limpa o cookie em qualquer erro `401`, inclusive login inválido.
+- A feature `read:status` consta no catálogo e é usada nos testes, mas a rota de status não possui middleware `canRequest`; o acesso ao endpoint permanece público. A feature `read:status:all` controla apenas a inclusão da versão do banco.
+- Não existe endpoint público para administração das features. A atribuição de permissões privilegiadas é feita internamente.
 
-Para checar se o arquivo continua válido depois de uma alteração:
+## Visualizar e validar o OpenAPI
+
+Abra [Swagger Editor](https://editor.swagger.io) e cole o conteúdo de [openapi.yaml](openapi.yaml), ou use:
 
 ```bash
 npx @redocly/cli lint docs/api/openapi.yaml
 ```
-
-O comando deve terminar sem erros. Podem aparecer avisos sobre o servidor `localhost` (é o ambiente de desenvolvimento) e sobre operações sem resposta `4XX`; eles são esperados.
