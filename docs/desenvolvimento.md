@@ -6,7 +6,7 @@ Este guia descreve como preparar, executar, testar e manter o utilities-node. Pa
 
 ### Requisitos e versões
 
-- **Node.js:** 24.14.1, definido em `.nvmrc`; o `package.json` exige Node 24.
+- **Node.js:** 24, definido em `.nvmrc` e exigido pelo campo `engines` do `package.json`. O workflow de testes e os workflows de lint leem a versão diretamente do `package.json`.
 - **PostgreSQL:** imagem `postgres:16.0-alpine3.18`, container `postgres-dev`, porta `5432`.
 - **Mailcatcher:** container `mailcatcher-dev`, SMTP na porta `1025` e interface web na porta `1080`.
 - **Docker Compose**, Git e npm.
