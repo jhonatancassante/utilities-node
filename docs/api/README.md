@@ -51,7 +51,7 @@ Os erros seguem o formato:
 | `405` | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow` |
 | `500` | `InternalServerError` | Falha inesperada; detalhes ficam no log |
 
-O controller limpa o cookie `session_id` em qualquer resposta `401`. As respostas que definem ou removem o cookie também usam `Cache-Control: no-store, no-cache, max-age=0, must-revalidate`.
+O controller limpa o cookie `session_id` em qualquer resposta `401`. Nas rotas que injetam o usuário a partir do cookie, um token inválido enviado pelo cliente também resulta em `401`, mesmo quando a operação é pública para visitantes sem cookie. As respostas que definem ou removem o cookie também usam `Cache-Control: no-store, no-cache, max-age=0, must-revalidate`.
 
 ## `GET /api/v1/status`
 
