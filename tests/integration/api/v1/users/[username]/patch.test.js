@@ -16,7 +16,7 @@ describe("PATCH /api/v1/users/[username]", () => {
       const createdUser = await orchestrator.createUser();
 
       const response = await fetch(
-        `http://localhost:3000/api/v1/users/${createdUser.username}`,
+        `${orchestrator.API_URL}/users/${createdUser.username}`,
         {
           method: "PATCH",
           headers: {
@@ -244,6 +244,12 @@ describe("PATCH /api/v1/users/[username]", () => {
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
       expect(responseBody.updated_at > responseBody.created_at).toBe(true);
+
+      const userInDatabase = await user.findOneByUsername(createdUser.username);
+
+      expect(userInDatabase.email).toBe(
+        "newUniqueEmail@jhonatancassante.com.br",
+      );
     });
 
     test("Com um novo password", async () => {

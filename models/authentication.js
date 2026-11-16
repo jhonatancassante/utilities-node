@@ -7,7 +7,7 @@ const dummyHashPromise = password
   .hash(crypto.randomBytes(16).toString("hex"))
   .catch(() => null);
 
-async function getAuthenticatedUser(providedEmail, providedPassword) {
+async function getUser(providedEmail, providedPassword) {
   try {
     const storedUser = await findUserByEmail(providedEmail, providedPassword);
 
@@ -63,7 +63,7 @@ async function getAuthenticatedUser(providedEmail, providedPassword) {
 }
 
 const authentication = {
-  getAuthenticatedUser,
+  getUser,
 };
 
 export default authentication;
