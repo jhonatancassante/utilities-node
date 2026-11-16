@@ -27,30 +27,30 @@ Os endpoints usam `next-connect` por meio de `infra/controller.js`. Cada rota de
 
 ## Estrutura relevante
 
-| Caminho | Responsabilidade |
-| --- | --- |
-| `pages/api/v1/status` | Saúde do banco e informações de status |
-| `pages/api/v1/migrations` | Consulta e aplicação de migrations |
-| `pages/api/v1/users` | Cadastro de usuários |
-| `pages/api/v1/users/[username]` | Consulta pública e atualização autorizada |
-| `pages/api/v1/activations/[token_id]` | Ativação de contas |
-| `pages/api/v1/sessions` | Criação e encerramento de sessões |
-| `pages/api/v1/user` | Consulta do usuário autenticado e renovação da sessão |
-| `models/user.js` | Cadastro, consulta, atualização e gerenciamento interno de features |
-| `models/password.js` | HMAC-SHA256 com pepper e bcrypt |
-| `models/authentication.js` | Validação das credenciais |
-| `models/authorization.js` | Catálogo de features, verificação de acesso e filtragem de saída |
-| `models/session.js` | Criação, validação, renovação e expiração de sessões |
-| `models/activation.js` | Tokens de ativação, e-mail e ativação da conta |
-| `models/migrator.js` | Execução e listagem de migrations |
-| `infra/controller.js` | Middlewares de usuário anônimo/autenticado, verificação de features, cookies e erros |
-| `infra/database.js` | Conexão PostgreSQL e execução de consultas |
-| `infra/email.js` | Transporte SMTP via Nodemailer |
-| `infra/webserver.js` | Origem usada nos links de ativação |
-| `infra/errors.js` | Classes de erro e serialização JSON |
-| `infra/migrations/` | Histórico versionado do esquema do banco |
-| `infra/compose.yaml` | PostgreSQL e Mailcatcher locais |
-| `tests/` | Testes de integração, unidade e fluxo completo de cadastro |
+| Caminho                               | Responsabilidade                                                                     |
+| ------------------------------------- | ------------------------------------------------------------------------------------ |
+| `pages/api/v1/status`                 | Saúde do banco e informações de status                                               |
+| `pages/api/v1/migrations`             | Consulta e aplicação de migrations                                                   |
+| `pages/api/v1/users`                  | Cadastro de usuários                                                                 |
+| `pages/api/v1/users/[username]`       | Consulta pública e atualização autorizada                                            |
+| `pages/api/v1/activations/[token_id]` | Ativação de contas                                                                   |
+| `pages/api/v1/sessions`               | Criação e encerramento de sessões                                                    |
+| `pages/api/v1/user`                   | Consulta do usuário autenticado e renovação da sessão                                |
+| `models/user.js`                      | Cadastro, consulta, atualização e gerenciamento interno de features                  |
+| `models/password.js`                  | HMAC-SHA256 com pepper e bcrypt                                                      |
+| `models/authentication.js`            | Validação das credenciais                                                            |
+| `models/authorization.js`             | Catálogo de features, verificação de acesso e filtragem de saída                     |
+| `models/session.js`                   | Criação, validação, renovação e expiração de sessões                                 |
+| `models/activation.js`                | Tokens de ativação, e-mail e ativação da conta                                       |
+| `models/migrator.js`                  | Execução e listagem de migrations                                                    |
+| `infra/controller.js`                 | Middlewares de usuário anônimo/autenticado, verificação de features, cookies e erros |
+| `infra/database.js`                   | Conexão PostgreSQL e execução de consultas                                           |
+| `infra/email.js`                      | Transporte SMTP via Nodemailer                                                       |
+| `infra/webserver.js`                  | Origem usada nos links de ativação                                                   |
+| `infra/errors.js`                     | Classes de erro e serialização JSON                                                  |
+| `infra/migrations/`                   | Histórico versionado do esquema do banco                                             |
+| `infra/compose.yaml`                  | PostgreSQL e Mailcatcher locais                                                      |
+| `tests/`                              | Testes de integração, unidade e fluxo completo de cadastro                           |
 
 A API é versionada no caminho `/api/v1`.
 
@@ -95,10 +95,10 @@ Não há pool de conexões: cada chamada a `query` abre e fecha uma conexão. Co
 
 ### Configuração
 
-| Ambiente | Origem |
-| --- | --- |
+| Ambiente               | Origem                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------- |
 | `development` e `test` | `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD` |
-| Demais ambientes | `DATABASE_URL`, com `sslmode=verify-full` |
+| Demais ambientes       | `DATABASE_URL`, com `sslmode=verify-full`                                             |
 
 ## Esquema e migrations
 
@@ -112,12 +112,12 @@ Migrations atualmente presentes:
 4. Inclusão da coluna `features` em `users`.
 5. Criação da tabela `user_activation_tokens`.
 
-| Tabela | Campos relevantes |
-| --- | --- |
-| `users` | `id`, `username`, `email`, `password`, `features`, `created_at`, `updated_at` |
-| `sessions` | `id`, `token`, `user_id`, `expires_at`, `created_at`, `updated_at` |
-| `user_activation_tokens` | `id`, `user_id`, `expires_at`, `used_at`, `created_at`, `updated_at` |
-| `pgmigrations` | Histórico gerenciado pelo `node-pg-migrate` |
+| Tabela                   | Campos relevantes                                                             |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| `users`                  | `id`, `username`, `email`, `password`, `features`, `created_at`, `updated_at` |
+| `sessions`               | `id`, `token`, `user_id`, `expires_at`, `created_at`, `updated_at`            |
+| `user_activation_tokens` | `id`, `user_id`, `expires_at`, `used_at`, `created_at`, `updated_at`          |
+| `pgmigrations`           | Histórico gerenciado pelo `node-pg-migrate`                                   |
 
 Os identificadores são UUID. `username` tem até 30 caracteres, `email` até 254, `password` armazena hash de 60 caracteres, `sessions.token` tem 96 caracteres. As migrations atuais declaram `down = false`: não há rollback automático. Nunca altere uma migration já aplicada; crie outra.
 
@@ -133,15 +133,15 @@ A origem do link é definida por `infra/webserver.js`: localhost em desenvolvime
 
 O controller serializa erros com `name`, `message`, `action` e `status_code`.
 
-| Classe | HTTP | Tratamento |
-| --- | --- | --- |
-| `ValidationError` | 400 | Devolvida ao cliente |
-| `UnauthorizedError` | 401 | Devolvida ao cliente e limpa cookie de sessão |
-| `ForbiddenError` | 403 | Devolvida ao cliente |
-| `NotFoundError` | 404 | Devolvida ao cliente |
-| `MethodNotAllowedError` | 405 | Devolvida com cabeçalho `Allow` |
-| `InternalServerError` | 500 | Mensagem genérica |
-| `ServiceError` | 503 na classe | Tratada pelo controller como erro interno genérico 500 |
-| `ConfigurationError` | 500 | Tratada como erro interno genérico |
+| Classe                  | HTTP          | Tratamento                                             |
+| ----------------------- | ------------- | ------------------------------------------------------ |
+| `ValidationError`       | 400           | Devolvida ao cliente                                   |
+| `UnauthorizedError`     | 401           | Devolvida ao cliente e limpa cookie de sessão          |
+| `ForbiddenError`        | 403           | Devolvida ao cliente                                   |
+| `NotFoundError`         | 404           | Devolvida ao cliente                                   |
+| `MethodNotAllowedError` | 405           | Devolvida com cabeçalho `Allow`                        |
+| `InternalServerError`   | 500           | Mensagem genérica                                      |
+| `ServiceError`          | 503 na classe | Tratada pelo controller como erro interno genérico 500 |
+| `ConfigurationError`    | 500           | Tratada como erro interno genérico                     |
 
 Erros inesperados são registrados no servidor; detalhes internos não devem ser expostos ao cliente.

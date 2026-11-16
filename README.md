@@ -4,7 +4,7 @@ Nova implementação dos meus utilitários de trabalho, originalmente desenvolvi
 
 **Aplicação publicada:** <https://utilities-node.vercel.app>
 
-> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em *features*, consulta e execução de migrations. Os utilitários de trabalho serão migrados gradualmente.
+> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em _features_, consulta e execução de migrations. Os utilitários de trabalho serão migrados gradualmente.
 
 ## Sumário
 
@@ -37,25 +37,25 @@ O que existe hoje:
 - `GET /api/v1/user`: consulta os dados do usuário autenticado e renova a sessão.
 - Ambiente local com PostgreSQL e Mailcatcher em Docker, testes de integração, lint, hooks de commit, verificação de segredos e GitHub Actions.
 
-O sistema de autorização é baseado em *features*. O cadastro começa com permissões limitadas; após a ativação, o usuário recebe as permissões padrão de uma conta ativa. Recursos administrativos, como migrations, exigem permissões adicionais. Consulte [Autenticação e autorização](docs/autenticacao.md).
+O sistema de autorização é baseado em _features_. O cadastro começa com permissões limitadas; após a ativação, o usuário recebe as permissões padrão de uma conta ativa. Recursos administrativos, como migrations, exigem permissões adicionais. Consulte [Autenticação e autorização](docs/autenticacao.md).
 
 ## Tecnologias
 
-| Área | Ferramentas |
-| --- | --- |
-| Framework | Next.js 16 (Pages Router) e React 19 |
-| Runtime | Node.js 24 |
-| Interface | React, CSS Modules e SWR |
-| Banco de dados | PostgreSQL 16 e cliente `pg`, sem ORM |
-| Migrations | `node-pg-migrate` |
-| Senhas | HMAC-SHA256 com pepper e `bcryptjs` |
-| API | `next-connect` e `cookie` |
-| E-mail | Nodemailer e Mailcatcher no desenvolvimento |
-| Testes | Jest 30, Faker e testes de integração |
-| Qualidade | ESLint, Prettier e EditorConfig |
-| Commits | Conventional Commits, Commitizen, Commitlint e Husky |
-| Segurança | GitGuardian ggshield e Gitleaks |
-| CI/CD | GitHub Actions e Vercel |
+| Área           | Ferramentas                                          |
+| -------------- | ---------------------------------------------------- |
+| Framework      | Next.js 16 (Pages Router) e React 19                 |
+| Runtime        | Node.js 24                                           |
+| Interface      | React, CSS Modules e SWR                             |
+| Banco de dados | PostgreSQL 16 e cliente `pg`, sem ORM                |
+| Migrations     | `node-pg-migrate`                                    |
+| Senhas         | HMAC-SHA256 com pepper e `bcryptjs`                  |
+| API            | `next-connect` e `cookie`                            |
+| E-mail         | Nodemailer e Mailcatcher no desenvolvimento          |
+| Testes         | Jest 30, Faker e testes de integração                |
+| Qualidade      | ESLint, Prettier e EditorConfig                      |
+| Commits        | Conventional Commits, Commitizen, Commitlint e Husky |
+| Segurança      | GitGuardian ggshield e Gitleaks                      |
+| CI/CD          | GitHub Actions e Vercel                              |
 
 ## Pré-requisitos
 
@@ -103,26 +103,26 @@ Para executar os testes continuamente, mantenha o ambiente ativo com `npm run de
 
 ## Scripts disponíveis
 
-| Script | Descrição |
-| --- | --- |
-| `npm run dev` | Inicia o ambiente completo e encerra os serviços ao sair |
-| `npm run dev:raw` | Sobe serviços, aguarda o banco, aplica migrations e inicia o Next.js |
-| `npm test` | Sobe serviços e servidor, executa Jest e para os serviços |
-| `npm run test:watch` | Jest em modo contínuo; exige banco e servidor em execução |
-| `npm run services:up` | Sobe PostgreSQL e Mailcatcher |
-| `npm run services:stop` | Para os containers, mantendo-os criados |
-| `npm run services:down` | Para e remove os containers |
-| `npm run services:wait:database` | Aguarda o PostgreSQL aceitar conexões |
-| `npm run migrations:create -- <nome>` | Cria uma migration em `infra/migrations` |
-| `npm run migrations:up` | Aplica migrations pendentes no banco local |
-| `npm run migrations:up:dry` | Simula a aplicação das migrations |
-| `npm run build` | Gera o build de produção |
-| `npm run lint:prettier:check` | Verifica a formatação |
-| `npm run lint:prettier:fix` | Corrige a formatação |
-| `npm run lint:eslint:check` | Executa o ESLint sem aceitar avisos |
-| `npm run secrets:scan` | Procura segredos nos arquivos do projeto |
-| `npm run secrets:history` | Procura segredos no histórico Git |
-| `npm run commit` | Abre o assistente Commitizen |
+| Script                                | Descrição                                                            |
+| ------------------------------------- | -------------------------------------------------------------------- |
+| `npm run dev`                         | Inicia o ambiente completo e encerra os serviços ao sair             |
+| `npm run dev:raw`                     | Sobe serviços, aguarda o banco, aplica migrations e inicia o Next.js |
+| `npm test`                            | Sobe serviços e servidor, executa Jest e para os serviços            |
+| `npm run test:watch`                  | Jest em modo contínuo; exige banco e servidor em execução            |
+| `npm run services:up`                 | Sobe PostgreSQL e Mailcatcher                                        |
+| `npm run services:stop`               | Para os containers, mantendo-os criados                              |
+| `npm run services:down`               | Para e remove os containers                                          |
+| `npm run services:wait:database`      | Aguarda o PostgreSQL aceitar conexões                                |
+| `npm run migrations:create -- <nome>` | Cria uma migration em `infra/migrations`                             |
+| `npm run migrations:up`               | Aplica migrations pendentes no banco local                           |
+| `npm run migrations:up:dry`           | Simula a aplicação das migrations                                    |
+| `npm run build`                       | Gera o build de produção                                             |
+| `npm run lint:prettier:check`         | Verifica a formatação                                                |
+| `npm run lint:prettier:fix`           | Corrige a formatação                                                 |
+| `npm run lint:eslint:check`           | Executa o ESLint sem aceitar avisos                                  |
+| `npm run secrets:scan`                | Procura segredos nos arquivos do projeto                             |
+| `npm run secrets:history`             | Procura segredos no histórico Git                                    |
+| `npm run commit`                      | Abre o assistente Commitizen                                         |
 
 ## Estrutura de pastas
 
@@ -155,13 +155,13 @@ Para executar os testes continuamente, mantenha o ambiente ativo com `npm run de
 
 ## Variáveis de ambiente
 
-| Variável | Uso |
-| --- | --- |
-| `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD` | Conexão local e configuração do container PostgreSQL |
-| `DATABASE_URL` | Conexão PostgreSQL em preview e produção |
-| `PASSWORD_PEPPER` | Segredo usado no processamento das senhas |
-| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT` | Host e porta SMTP |
-| `EMAIL_SMTP_USER`, `EMAIL_SMTP_PASSWORD` | Credenciais SMTP; podem ficar vazias no Mailcatcher local |
+| Variável                                                                              | Uso                                                       |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD` | Conexão local e configuração do container PostgreSQL      |
+| `DATABASE_URL`                                                                        | Conexão PostgreSQL em preview e produção                  |
+| `PASSWORD_PEPPER`                                                                     | Segredo usado no processamento das senhas                 |
+| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`                                                  | Host e porta SMTP                                         |
+| `EMAIL_SMTP_USER`, `EMAIL_SMTP_PASSWORD`                                              | Credenciais SMTP; podem ficar vazias no Mailcatcher local |
 
 Em `development` e `test`, o banco usa as variáveis `POSTGRES_*`. Nos demais ambientes, usa `DATABASE_URL` com `sslmode=verify-full`. A aplicação exige `PASSWORD_PEPPER` para criar ou comparar senhas.
 
@@ -173,17 +173,17 @@ A origem dos links de ativação é definida em `infra/webserver.js`: localmente
 
 Todos os endpoints usam o prefixo `/api/v1`.
 
-| Método | Caminho | Descrição |
-| --- | --- | --- |
-| `GET` | `/status` | Consulta o status do banco |
-| `GET`, `POST` | `/migrations` | Lista e aplica migrations; exige features administrativas |
-| `POST` | `/users` | Cadastra usuário e envia e-mail de ativação |
-| `GET`, `PATCH` | `/users/{username}` | Consulta dados públicos e atualiza conforme autorização |
-| `PATCH` | `/activations/{token_id}` | Ativa um cadastro com token válido |
-| `POST`, `DELETE` | `/sessions` | Cria e encerra sessões |
-| `GET` | `/user` | Retorna o usuário autenticado e renova a sessão |
+| Método           | Caminho                   | Descrição                                                 |
+| ---------------- | ------------------------- | --------------------------------------------------------- |
+| `GET`            | `/status`                 | Consulta o status do banco                                |
+| `GET`, `POST`    | `/migrations`             | Lista e aplica migrations; exige features administrativas |
+| `POST`           | `/users`                  | Cadastra usuário e envia e-mail de ativação               |
+| `GET`, `PATCH`   | `/users/{username}`       | Consulta dados públicos e atualiza conforme autorização   |
+| `PATCH`          | `/activations/{token_id}` | Ativa um cadastro com token válido                        |
+| `POST`, `DELETE` | `/sessions`               | Cria e encerra sessões                                    |
+| `GET`            | `/user`                   | Retorna o usuário autenticado e renova a sessão           |
 
-A API usa autorização por *features*, não uma regra única de “estar logado”. Algumas operações são públicas, outras exigem sessão válida e outras exigem permissões específicas. Consulte o [guia da API](docs/api/README.md) e a [especificação OpenAPI](docs/api/openapi.yaml).
+A API usa autorização por _features_, não uma regra única de “estar logado”. Algumas operações são públicas, outras exigem sessão válida e outras exigem permissões específicas. Consulte o [guia da API](docs/api/README.md) e a [especificação OpenAPI](docs/api/openapi.yaml).
 
 ## Como contribuir
 

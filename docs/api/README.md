@@ -14,18 +14,18 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 
 ## Resumo dos endpoints
 
-| Método | Caminho | Acesso |
-| --- | --- | --- |
-| `GET` | `/api/v1/status` | Público; detalhes de versão condicionados a `read:status:all` |
-| `GET` | `/api/v1/migrations` | Feature `read:migration` |
-| `POST` | `/api/v1/migrations` | Feature `create:migration` |
-| `POST` | `/api/v1/users` | Feature `create:user` (visitante padrão) |
-| `GET` | `/api/v1/users/{username}` | Público; saída filtrada |
-| `PATCH` | `/api/v1/users/{username}` | Feature `update:user`; próprio usuário ou `update:user:others` |
-| `PATCH` | `/api/v1/activations/{token_id}` | Feature `read:activation_token` |
-| `POST` | `/api/v1/sessions` | Feature `create:session` |
-| `DELETE` | `/api/v1/sessions` | Sessão válida |
-| `GET` | `/api/v1/user` | Sessão válida e feature `read:session` |
+| Método   | Caminho                          | Acesso                                                         |
+| -------- | -------------------------------- | -------------------------------------------------------------- |
+| `GET`    | `/api/v1/status`                 | Público; detalhes de versão condicionados a `read:status:all`  |
+| `GET`    | `/api/v1/migrations`             | Feature `read:migration`                                       |
+| `POST`   | `/api/v1/migrations`             | Feature `create:migration`                                     |
+| `POST`   | `/api/v1/users`                  | Feature `create:user` (visitante padrão)                       |
+| `GET`    | `/api/v1/users/{username}`       | Público; saída filtrada                                        |
+| `PATCH`  | `/api/v1/users/{username}`       | Feature `update:user`; próprio usuário ou `update:user:others` |
+| `PATCH`  | `/api/v1/activations/{token_id}` | Feature `read:activation_token`                                |
+| `POST`   | `/api/v1/sessions`               | Feature `create:session`                                       |
+| `DELETE` | `/api/v1/sessions`               | Sessão válida                                                  |
+| `GET`    | `/api/v1/user`                   | Sessão válida e feature `read:session`                         |
 
 ## Autorização e erros
 
@@ -42,14 +42,14 @@ Os erros seguem o formato:
 }
 ```
 
-| Código | Erro | Significado |
-| --- | --- | --- |
-| `400` | `ValidationError` | Dados inválidos ou duplicados |
-| `401` | `UnauthorizedError` | Credenciais inválidas ou sessão ausente, inválida ou expirada |
-| `403` | `ForbiddenError` | Feature necessária não concedida |
-| `404` | `NotFoundError` | Usuário ou token não encontrado, expirado ou já utilizado |
-| `405` | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow` |
-| `500` | `InternalServerError` | Falha inesperada; detalhes ficam no log |
+| Código | Erro                    | Significado                                                   |
+| ------ | ----------------------- | ------------------------------------------------------------- |
+| `400`  | `ValidationError`       | Dados inválidos ou duplicados                                 |
+| `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão ausente, inválida ou expirada |
+| `403`  | `ForbiddenError`        | Feature necessária não concedida                              |
+| `404`  | `NotFoundError`         | Usuário ou token não encontrado, expirado ou já utilizado     |
+| `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`                 |
+| `500`  | `InternalServerError`   | Falha inesperada; detalhes ficam no log                       |
 
 O controller limpa o cookie `session_id` em qualquer resposta `401`. Nas rotas que injetam o usuário a partir do cookie, um token inválido enviado pelo cliente também resulta em `401`, mesmo quando a operação é pública para visitantes sem cookie. As respostas que definem ou removem o cookie também usam `Cache-Control: no-store, no-cache, max-age=0, must-revalidate`.
 
@@ -190,7 +190,7 @@ A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica c
 
 ## Limitações conhecidas e observações de segurança
 
-- Não há *rate limiting* para tentativas de login.
+- Não há _rate limiting_ para tentativas de login.
 - Não há política de complexidade ou tamanho mínimo de senha implementada.
 - Campos obrigatórios ausentes não possuem validação uniforme e podem resultar em `500`.
 - O e-mail é validado após `trim()`, mas o valor armazenado não é normalizado.

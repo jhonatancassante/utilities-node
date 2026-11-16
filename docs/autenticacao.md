@@ -8,7 +8,7 @@ O sistema separa três conceitos:
 
 - **Cadastro:** cria uma conta ainda não ativada e envia um link por e-mail.
 - **Autenticação:** valida e-mail e senha e cria uma sessão identificada pelo cookie `session_id`.
-- **Autorização:** verifica se o usuário possui a *feature* necessária para executar uma operação.
+- **Autorização:** verifica se o usuário possui a _feature_ necessária para executar uma operação.
 
 Estar autenticado não significa ter acesso a todas as operações. As permissões são armazenadas no campo `users.features` e avaliadas por `models/authorization.js`.
 
@@ -104,24 +104,24 @@ Credenciais incorretas retornam `401 UnauthorizedError` com a mesma mensagem, in
 
 ## Sessões
 
-| Item | Implementação |
-| --- | --- |
-| Token | 48 bytes aleatórios, representados por 96 caracteres hexadecimais |
-| Validade | 30 dias |
-| Persistência | Tabela `sessions` |
-| Validação | Token correspondente e `expires_at > NOW()` |
-| Renovação | `GET /api/v1/user` renova a validade para mais 30 dias |
-| Encerramento | `DELETE /api/v1/sessions` antecipa a expiração da sessão |
+| Item         | Implementação                                                     |
+| ------------ | ----------------------------------------------------------------- |
+| Token        | 48 bytes aleatórios, representados por 96 caracteres hexadecimais |
+| Validade     | 30 dias                                                           |
+| Persistência | Tabela `sessions`                                                 |
+| Validação    | Token correspondente e `expires_at > NOW()`                       |
+| Renovação    | `GET /api/v1/user` renova a validade para mais 30 dias            |
+| Encerramento | `DELETE /api/v1/sessions` antecipa a expiração da sessão          |
 
 ### Cookie `session_id`
 
-| Atributo | Valor |
-| --- | --- |
-| `Path` | `/` |
-| `Max-Age` | 2.592.000 segundos (30 dias) |
-| `HttpOnly` | `true` |
-| `SameSite` | `Lax` |
-| `Secure` | Ativado em produção |
+| Atributo   | Valor                        |
+| ---------- | ---------------------------- |
+| `Path`     | `/`                          |
+| `Max-Age`  | 2.592.000 segundos (30 dias) |
+| `HttpOnly` | `true`                       |
+| `SameSite` | `Lax`                        |
+| `Secure`   | Ativado em produção          |
 
 As respostas que criam, renovam ou limpam o cookie também recebem:
 
@@ -145,52 +145,52 @@ O tratamento central de erros limpa o cookie sempre que uma requisição termina
 
 O model `models/authorization.js` centraliza as permissões conhecidas. As features atualmente declaradas são:
 
-| Feature | Finalidade |
-| --- | --- |
-| `create:user` | Permite iniciar um cadastro |
-| `read:user` | Permite obter a representação pública de um usuário |
-| `read:user:self` | Permite obter dados privados do próprio usuário |
-| `update:user` | Permite atualizar o próprio usuário |
-| `update:user:others` | Permite atualizar usuários diferentes do próprio |
-| `create:session` | Permite criar uma sessão |
-| `read:session` | Permite consultar a própria sessão |
-| `read:activation_token` | Permite utilizar o fluxo de ativação |
-| `create:migration` | Permite aplicar migrations |
-| `read:migration` | Permite consultar migrations pendentes |
-| `read:status` | Identifica acesso de usuário ao status |
-| `read:status:all` | Permite incluir a versão do banco na resposta de status |
+| Feature                 | Finalidade                                              |
+| ----------------------- | ------------------------------------------------------- |
+| `create:user`           | Permite iniciar um cadastro                             |
+| `read:user`             | Permite obter a representação pública de um usuário     |
+| `read:user:self`        | Permite obter dados privados do próprio usuário         |
+| `update:user`           | Permite atualizar o próprio usuário                     |
+| `update:user:others`    | Permite atualizar usuários diferentes do próprio        |
+| `create:session`        | Permite criar uma sessão                                |
+| `read:session`          | Permite consultar a própria sessão                      |
+| `read:activation_token` | Permite utilizar o fluxo de ativação                    |
+| `create:migration`      | Permite aplicar migrations                              |
+| `read:migration`        | Permite consultar migrations pendentes                  |
+| `read:status`           | Identifica acesso de usuário ao status                  |
+| `read:status:all`       | Permite incluir a versão do banco na resposta de status |
 
 ### Perfis iniciais
 
-| Situação | Features |
-| --- | --- |
-| Visitante sem cookie | `create:session`, `create:user`, `read:activation_token` |
-| Conta cadastrada, ainda não ativada | `read:activation_token` |
-| Conta ativada | `create:session`, `read:session`, `update:user` |
-| Conta privilegiada | Features adicionais atribuídas explicitamente |
+| Situação                            | Features                                                 |
+| ----------------------------------- | -------------------------------------------------------- |
+| Visitante sem cookie                | `create:session`, `create:user`, `read:activation_token` |
+| Conta cadastrada, ainda não ativada | `read:activation_token`                                  |
+| Conta ativada                       | `create:session`, `read:session`, `update:user`          |
+| Conta privilegiada                  | Features adicionais atribuídas explicitamente            |
 
 A lista de features de um usuário pode ser alterada pelo model `user.setFeatures` ou ampliada por `user.addFeatures`. A concessão de permissões administrativas deve ser feita por um fluxo controlado; não existe endpoint público de administração de features.
 
 ### Regras de acesso por endpoint
 
-| Endpoint | Regra |
-| --- | --- |
-| `GET /status` | Público; a versão do banco só aparece com `read:status:all` |
-| `POST /users` | Exige `create:user`; disponível ao visitante padrão |
-| `GET /users/{username}` | Público; retorna somente a representação pública |
-| `PATCH /users/{username}` | Exige `update:user`; o model também verifica se é o próprio usuário ou se há `update:user:others` |
-| `PATCH /activations/{token_id}` | Exige `read:activation_token`; o token precisa estar válido e não utilizado |
-| `POST /sessions` | Exige `create:session` |
-| `DELETE /sessions` | Exige sessão válida na prática; encerra a sessão identificada pelo cookie |
-| `GET /user` | Exige `read:session` |
-| `GET /migrations` | Exige `read:migration` |
-| `POST /migrations` | Exige `create:migration` |
+| Endpoint                        | Regra                                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `GET /status`                   | Público; a versão do banco só aparece com `read:status:all`                                       |
+| `POST /users`                   | Exige `create:user`; disponível ao visitante padrão                                               |
+| `GET /users/{username}`         | Público; retorna somente a representação pública                                                  |
+| `PATCH /users/{username}`       | Exige `update:user`; o model também verifica se é o próprio usuário ou se há `update:user:others` |
+| `PATCH /activations/{token_id}` | Exige `read:activation_token`; o token precisa estar válido e não utilizado                       |
+| `POST /sessions`                | Exige `create:session`                                                                            |
+| `DELETE /sessions`              | Exige sessão válida na prática; encerra a sessão identificada pelo cookie                         |
+| `GET /user`                     | Exige `read:session`                                                                              |
+| `GET /migrations`               | Exige `read:migration`                                                                            |
+| `POST /migrations`              | Exige `create:migration`                                                                          |
 
 A autorização de saída também é centralizada em `authorization.filterOutput`. Ela define quais campos podem ser devolvidos para cada tipo de recurso. A representação pública de usuário não inclui e-mail ou hash da senha; a representação privada do próprio usuário inclui o e-mail, mas não a senha.
 
 ## Cuidados e limitações conhecidas
 
-- Não há *rate limiting* para tentativas de login.
+- Não há _rate limiting_ para tentativas de login.
 - O código não implementa política de complexidade ou tamanho mínimo de senha.
 - Campos obrigatórios ausentes não possuem validação de entrada uniforme e podem resultar em erro 500.
 - O valor de e-mail é validado após `trim()`, mas o valor armazenado não é normalizado; a unicidade é verificada sem diferenciar maiúsculas de minúsculas.

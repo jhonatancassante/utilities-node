@@ -2,13 +2,13 @@
 
 Índice da documentação técnica do **utilities-node**. Para conhecer o projeto e iniciar o ambiente local, comece pelo [README principal](../README.md).
 
-| Documento | Conteúdo |
-| --- | --- |
-| [Guia de desenvolvimento](desenvolvimento.md) | Ambiente local, variáveis, scripts, migrations, testes, hooks, CI e solução de problemas |
-| [Arquitetura](arquitetura.md) | Organização do código, camadas, banco de dados, migrations, autorização e erros |
-| [Autenticação, sessões e autorização](autenticacao.md) | Senhas, ativação de cadastro, cookies, ciclo de vida das sessões e *features* |
-| [Guia da API](api/README.md) | Endpoints, regras de acesso, payloads, códigos HTTP e limitações conhecidas |
-| [Especificação OpenAPI](api/openapi.yaml) | Contrato formal da API no padrão OpenAPI 3.1 |
+| Documento                                              | Conteúdo                                                                                 |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| [Guia de desenvolvimento](desenvolvimento.md)          | Ambiente local, variáveis, scripts, migrations, testes, hooks, CI e solução de problemas |
+| [Arquitetura](arquitetura.md)                          | Organização do código, camadas, banco de dados, migrations, autorização e erros          |
+| [Autenticação, sessões e autorização](autenticacao.md) | Senhas, ativação de cadastro, cookies, ciclo de vida das sessões e _features_            |
+| [Guia da API](api/README.md)                           | Endpoints, regras de acesso, payloads, códigos HTTP e limitações conhecidas              |
+| [Especificação OpenAPI](api/openapi.yaml)              | Contrato formal da API no padrão OpenAPI 3.1                                             |
 
 ## Como manter esta documentação
 
