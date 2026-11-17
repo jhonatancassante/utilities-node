@@ -1,0 +1,279 @@
+/* features/csv-to-json/components/CsvToJson/index.module.css */
+.converter {
+  width: 100%;
+  min-width: 0;
+}
+
+.configPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 20px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.settingsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.settingField {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.settingField select {
+  font-size: 14px;
+}
+
+.settingBlock {
+  width: 100%;
+}
+
+.sectionTitle {
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.settingHint {
+  margin: 0 0 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.headerLineList {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+.headerLineItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color var(--transition-fast);
+}
+
+.headerLineItem:last-child {
+  border-bottom: 0;
+}
+
+.headerLineItem:hover,
+.headerLineItem.selected {
+  background: var(--accent-soft);
+}
+
+.headerLineItem.selected {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.headerLineItem input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.lineNumber {
+  min-width: 22px;
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  text-align: right;
+}
+
+.lineNumber::after {
+  content: "—";
+  margin-left: 8px;
+  color: var(--text-faint);
+}
+
+.selected .lineNumber,
+.selected .lineText {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.lineText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.columnsHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.columnsHeader .sectionTitle {
+  margin: 0;
+}
+
+.selectGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.linkButton:hover:not(:disabled) {
+  background: transparent;
+  color: var(--accent-hover);
+}
+
+.linkButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.columnsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+.columnItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  text-align: left;
+}
+
+.columnItem input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.columnItem label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.jsonContainer {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  margin-top: 24px;
+}
+
+.outputHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.outputHeader h2 {
+  font-size: 16px;
+}
+
+.copyButton {
+  min-height: 34px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.copyButton:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.copyButton.copied {
+  border-color: var(--success);
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.jsonOutput {
+  max-width: 100%;
+  max-height: 320px;
+  margin-top: 10px;
+  padding: 20px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  background: #1c2333;
+  color: #e8edf7;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+@media (max-width: 600px) {
+  .columnsHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .columnsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .jsonOutput {
+    padding: 14px;
+    font-size: 12px;
+  }
+}
