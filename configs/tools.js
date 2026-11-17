@@ -20,9 +20,10 @@ const toolsList = [
   {
     slug: "divisor-pdf",
     title: "Divisor de PDF",
-    description: "Separe as páginas de um PDF em arquivos individuais.",
+    description:
+      "Extraia intervalos de páginas de um ou mais PDFs, direto no navegador.",
     icon: "fa-file-pdf",
-    status: TOOL_STATUS.soon,
+    status: TOOL_STATUS.available,
   },
   {
     slug: "unificador-pdf",
