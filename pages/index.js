@@ -5,7 +5,7 @@ import headConfigs from "@/configs/head.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
-const PROGRESS = 26.5 + 4;
+const PROGRESS = 26.5 + 8;
 
 function Home() {
   const progressLabel = `${PROGRESS.toLocaleString("pt-BR")}%`;
