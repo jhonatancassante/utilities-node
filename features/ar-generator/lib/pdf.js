@@ -197,11 +197,16 @@ export function encodeCode128B(value) {
 // O JsBarcode usa o conjunto C para CEPs numéricos pares, reduzindo o
 // comprimento do código sem alterar o conteúdo codificado.
 export function encodeCode128C(value) {
- const input=String(value??"");
- if(!/^\\d{2,}$/.test(input)||input.length%2!==0) return [];
- const data=input.match(/\\d{2}/g).map(Number);
- const checksum=data.reduce((sum,code,index)=>sum+code*(index+1),105)%103;
- return [105,...data,checksum,106];
+  const input = String(value ?? "");
+  if (!/^\d{2,}$/.test(input) || input.length % 2 !== 0) return [];
+
+  const data = input.match(/\d{2}/g).map(Number);
+  const checksum = data.reduce(
+    (sum, code, index) => sum + code * (index + 1),
+    105,
+  ) % 103;
+
+  return [105, ...data, checksum, 106];
 }
 // prettier-ignore
 function drawCode128(page,value,x,y,width,height) {
@@ -244,6 +249,10 @@ function drawLabel(page, x, y, data, title, fonts, logo) {
 
 // prettier-ignore
 export async function generateArPdf(records, includeSenderLabels, logoBytes, now) {
+  if (!records.length) {
+    throw new Error("Inclua ao menos um destinatário para gerar o PDF.");
+  }
+
   const pdf = await PDFDocument.create();
   const fonts = {
     regular: await pdf.embedFont(StandardFonts.Helvetica),
