@@ -19,7 +19,7 @@ const themeInitScript = `
 
 export default function Document() {
   return (
-    <Html lang="pt-BR">
+    <Html lang="pt-BR" data-scroll-behavior="smooth">
       <Head>
         <meta name="theme-color" content="#16305a" />
         <link rel="icon" type="image/png" href="/favicon.png" />

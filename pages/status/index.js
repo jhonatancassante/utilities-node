@@ -38,7 +38,7 @@ function StatusPage() {
         description="Painel de monitoramento do sistema e banco de dados em tempo real."
       />
 
-      <Layout title="Status" icon="fa-heartbeat" backHref="/">
+      <Layout>
         <main className={shared.container}>
           <section className={`${shared.card} ${styles.card}`}>
             <div style={{ textAlign: "center" }}>

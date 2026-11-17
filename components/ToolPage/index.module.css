@@ -1,0 +1,37 @@
+/* components/ToolPage/index.module.css */
+.card {
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+.heading {
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 28px;
+}
+
+.heading h1 {
+  margin-bottom: 8px;
+  font-size: clamp(1.4rem, 2vw + 1rem, 1.9rem);
+  line-height: 1.2;
+}
+
+.heading p {
+  max-width: 440px;
+  margin: 0 auto;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
