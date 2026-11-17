@@ -118,7 +118,6 @@ O Unificador de PDF combina dois ou mais arquivos em um único documento:
 
 Os arquivos são ordenados alfabeticamente com comparação numérica natural (por exemplo, `arquivo2.pdf` antes de `arquivo10.pdf`). Por padrão, cada PDF com quantidade ímpar de páginas recebe uma página em branco ao final, usando as dimensões da última página daquele arquivo. A opção pode ser desativada antes da unificação. A dependência `pdf-lib` é importada sob demanda e todo o processamento ocorre no navegador.
 
-
 ## Referência: Gerador de AR e Etiquetas
 
 O Gerador de AR e Etiquetas migra o utilitário legado para a aplicação:
