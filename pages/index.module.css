@@ -47,7 +47,7 @@
 
 .progressBar {
   position: relative;
-  width: calc(26.5% + 4%);
+  width: var(--progress-width);
   height: 100%;
   overflow: hidden;
   border-radius: inherit;
@@ -77,7 +77,7 @@
 .progressTooltip {
   position: absolute;
   top: 0;
-  left: 30.5%;
+  left: var(--progress-width);
   z-index: 1;
   padding: 4px 9px;
   border: 1px solid var(--accent-hover);
