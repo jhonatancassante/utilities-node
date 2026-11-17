@@ -181,7 +181,11 @@ function RegistrationPage() {
                   )}
 
                   <div className={styles.submit}>
-                    <Button type="submit" icon="fa-user-plus" disabled={isSubmitting}>
+                    <Button
+                      type="submit"
+                      icon="fa-user-plus"
+                      disabled={isSubmitting}
+                    >
                       {isSubmitting ? "Criando conta..." : "Criar conta"}
                     </Button>
                   </div>
@@ -203,15 +207,18 @@ function RegistrationPage() {
 function RegistrationSuccess({ email }) {
   return (
     <div className={styles.success}>
-      <div className={`${shared.icon} ${styles.successIcon}`} aria-hidden="true">
+      <div
+        className={`${shared.icon} ${styles.successIcon}`}
+        aria-hidden="true"
+      >
         <i className="fas fa-envelope"></i>
       </div>
 
       <span className={shared.badge}>CADASTRO RECEBIDO</span>
       <h1>Quase lá!</h1>
       <p>
-        Sua conta foi criada. Enviamos um e-mail para{" "}
-        <strong>{email}</strong> com as instruções para ativá-la.
+        Sua conta foi criada. Enviamos um e-mail para <strong>{email}</strong>{" "}
+        com as instruções para ativá-la.
       </p>
       <p className={styles.successHint}>
         O link de ativação é válido por 15 minutos. Confira também sua caixa de
