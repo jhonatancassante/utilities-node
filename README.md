@@ -31,7 +31,7 @@ O que existe hoje:
 - Página inicial provisória em `pages/index.js`, com tema claro e escuro.
 - Catálogo de ferramentas em `/tools`, com registro centralizado em `configs/tools.js` e indicação dos recursos disponíveis e planejados.
 - Gerador de QR Code em `/tools/qr-code`, com personalização de cores e download em PNG. A geração e a captura da imagem são realizadas no navegador.
-- Divisor de PDF em `/tools/divisor-pdf`, que extrai um intervalo de páginas de um ou mais PDFs (resultado em PDF ou ZIP). O processamento é realizado no navegador.
+- Divisor de PDF em `/tools/pdf-splitter`, que extrai um intervalo de páginas de um ou mais PDFs (resultado em PDF ou ZIP). O processamento é realizado no navegador.
 - Página `/status`, com painel de monitoramento do banco de dados e atualização automática a cada 5 segundos.
 - `GET /api/v1/status`: consulta a saúde do banco. A versão do PostgreSQL só é incluída para usuários com a feature `read:status:all`.
 - `GET` e `POST /api/v1/migrations`: lista e aplica migrations, mediante as features `read:migration` e `create:migration`.

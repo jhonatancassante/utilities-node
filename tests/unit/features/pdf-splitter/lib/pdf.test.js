@@ -6,7 +6,7 @@ import {
   extractPages,
   splitPdfFiles,
   validateRange,
-} from "@/features/divisor-pdf/lib/pdf.js";
+} from "@/features/pdf-splitter/lib/pdf.js";
 
 async function createPdfFile(name, totalPages) {
   const doc = await PDFDocument.create();
@@ -24,7 +24,7 @@ async function countPages(bytes) {
   return (await PDFDocument.load(bytes)).getPageCount();
 }
 
-describe("features/divisor-pdf/lib/pdf.js", () => {
+describe("features/pdf-splitter/lib/pdf.js", () => {
   describe("validateRange()", () => {
     test("Valores válidos, inclusive como texto", () => {
       expect(validateRange({ pageInit: "2", pageCount: 3 })).toEqual({

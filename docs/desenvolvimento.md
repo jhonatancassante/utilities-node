@@ -58,7 +58,7 @@ Durante o desenvolvimento, a interface fica disponível em `http://localhost:300
 - `/`: página inicial provisória.
 - `/tools`: catálogo de ferramentas registradas em `configs/tools.js`.
 - `/tools/qr-code`: Gerador de QR Code.
-- `/tools/divisor-pdf`: Divisor de PDF.
+- `/tools/pdf-splitter`: Divisor de PDF.
 - `/status`: painel de monitoramento da conexão com o banco de dados.
 
 As páginas de ferramentas seguem a estrutura `pages/tools/<slug>/index.js`, com componentes e lógica isolados em `features/<slug>/`. Para adicionar uma ferramenta, atualizar seu status ou conhecer os componentes compartilhados, consulte o [guia Adicionando uma nova ferramenta](adicionando-ferramentas.md).
