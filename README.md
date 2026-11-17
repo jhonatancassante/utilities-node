@@ -4,23 +4,25 @@ Nova implementação dos meus utilitários de trabalho, originalmente desenvolvi
 
 **Aplicação publicada:** <https://utilities-node.vercel.app>
 
-> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, um catálogo de ferramentas em `/tools`, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em _features_, consulta e execução de migrations. O Gerador de QR Code já está disponível; os demais utilitários serão implementados gradualmente.
+> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, um catálogo de ferramentas em `/tools`, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em _features_, consulta e execução de migrations. O Gerador de QR Code e o Divisor de PDF já estão disponíveis; os demais utilitários serão implementados gradualmente.
 
 ## Sumário
 
-- [Visão geral](#visão-geral)
-- [Tecnologias](#tecnologias)
-- [Pré-requisitos](#pré-requisitos)
-- [Primeiros passos](#primeiros-passos)
-- [Testes](#testes)
-- [Scripts disponíveis](#scripts-disponíveis)
-- [Estrutura de pastas](#estrutura-de-pastas)
-- [Variáveis de ambiente](#variáveis-de-ambiente)
-- [API](#api)
-- [Como contribuir](#como-contribuir)
-- [Deploy](#deploy)
-- [Documentação completa](#documentação-completa)
-- [Licença](#licença)
+- [utilities-node](#utilities-node)
+  - [Sumário](#sumário)
+  - [Visão geral](#visão-geral)
+  - [Tecnologias](#tecnologias)
+  - [Pré-requisitos](#pré-requisitos)
+  - [Primeiros passos](#primeiros-passos)
+  - [Testes](#testes)
+  - [Scripts disponíveis](#scripts-disponíveis)
+  - [Estrutura de pastas](#estrutura-de-pastas)
+  - [Variáveis de ambiente](#variáveis-de-ambiente)
+  - [API](#api)
+  - [Como contribuir](#como-contribuir)
+  - [Deploy](#deploy)
+  - [Documentação completa](#documentação-completa)
+  - [Licença](#licença)
 
 ## Visão geral
 
@@ -29,6 +31,7 @@ O que existe hoje:
 - Página inicial provisória em `pages/index.js`, com tema claro e escuro.
 - Catálogo de ferramentas em `/tools`, com registro centralizado em `configs/tools.js` e indicação dos recursos disponíveis e planejados.
 - Gerador de QR Code em `/tools/qr-code`, com personalização de cores e download em PNG. A geração e a captura da imagem são realizadas no navegador.
+- Divisor de PDF em `/tools/divisor-pdf`, que extrai um intervalo de páginas de um ou mais PDFs (resultado em PDF ou ZIP). O processamento é realizado no navegador.
 - Página `/status`, com painel de monitoramento do banco de dados e atualização automática a cada 5 segundos.
 - `GET /api/v1/status`: consulta a saúde do banco. A versão do PostgreSQL só é incluída para usuários com a feature `read:status:all`.
 - `GET` e `POST /api/v1/migrations`: lista e aplica migrations, mediante as features `read:migration` e `create:migration`.
