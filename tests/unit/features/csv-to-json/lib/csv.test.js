@@ -22,6 +22,16 @@ describe("features/csv-to-json/lib/csv.js", () => {
       expect(result.data).toEqual([{ nome: "Ana", idade: "30" }]);
     });
 
+    test("Renomeia cabeçalhos duplicados sem perder os valores", () => {
+      const result = parseCsv("nome;nome;idade\\nAna;Maria;30", ";");
+
+      expect(result.fields).toEqual(["nome", "nome (2)", "idade"]);
+      expect(result.data).toEqual([
+        { nome: "Ana", "nome (2)": "Maria", idade: "30" },
+      ]);
+      expect(result.error).toBe("");
+    });
+
     test("Interpreta campos entre aspas que contêm delimitadores", () => {
       const result = parseCsv('nome;observacao\nAna;"São Paulo; SP"', ";");
 
