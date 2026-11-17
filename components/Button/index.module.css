@@ -52,9 +52,9 @@
 }
 
 .outline {
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--accent);
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--accent);
 }
 
 .outline:hover {
