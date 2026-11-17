@@ -15,7 +15,7 @@ function text(page, value, x, y, size, font, color = rgb(0, 0, 0)) {
   if (!value) return;
   page.drawText(String(value), {
     x: mm(x),
-    y: yTop(y) - size * 0.82,
+    y: yTop(y),
     size,
     font,
     color,
@@ -65,7 +65,7 @@ function wrapText(value, font, size, maxWidth) {
 function verticalText(page, value, x, y, size, font) {
   page.drawText(value, {
     x: mm(x),
-    y: yTop(y) - size * 0.82,
+    y: yTop(y),
     size,
     font,
     rotate: degrees(90),
