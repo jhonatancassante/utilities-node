@@ -10,10 +10,33 @@ import Papa from "papaparse";
  * @returns {{ data: object[], fields: string[], error: string }}
  */
 export function parseCsv(content, delimiter = "auto") {
+  const headerOccurrences = new Map();
+  const usedHeaders = new Set();
+
   const result = Papa.parse(content, {
     header: true,
     skipEmptyLines: true,
     delimiter: delimiter === "auto" ? "" : delimiter,
+    transformHeader(header) {
+      const occurrence = (headerOccurrences.get(header) ?? 0) + 1;
+      headerOccurrences.set(header, occurrence);
+
+      if (occurrence === 1 && !usedHeaders.has(header)) {
+        usedHeaders.add(header);
+        return header;
+      }
+
+      let suffix = Math.max(occurrence, 2);
+      let uniqueHeader = `${header} (${suffix})`;
+
+      while (usedHeaders.has(uniqueHeader)) {
+        suffix += 1;
+        uniqueHeader = `${header} (${suffix})`;
+      }
+
+      usedHeaders.add(uniqueHeader);
+      return uniqueHeader;
+    },
   });
 
   const fields = result.meta?.fields ?? [];
