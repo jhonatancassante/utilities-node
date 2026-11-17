@@ -118,6 +118,17 @@ O Unificador de PDF combina dois ou mais arquivos em um único documento:
 
 Os arquivos são ordenados alfabeticamente com comparação numérica natural (por exemplo, `arquivo2.pdf` antes de `arquivo10.pdf`). Por padrão, cada PDF com quantidade ímpar de páginas recebe uma página em branco ao final, usando as dimensões da última página daquele arquivo. A opção pode ser desativada antes da unificação. A dependência `pdf-lib` é importada sob demanda e todo o processamento ocorre no navegador.
 
+## Referência: Conversor de JSON para CSV
+
+O Conversor de JSON para CSV migra o utilitário legado para a aplicação:
+
+- Rota: `pages/tools/json-para-csv/index.js`.
+- Interface: `features/json-to-csv/components/JsonToCsv/`.
+- Lógica auxiliar: `features/json-to-csv/lib/json.js`.
+- Testes: `tests/unit/features/json-to-csv/lib/json.test.js`.
+
+A lógica normaliza listas de objetos, listas de valores simples, objetos únicos e objetos que possuem uma única propriedade array. As colunas são coletadas na ordem da primeira ocorrência; valores nulos ou ausentes geram células vazias, enquanto objetos e listas são serializados como JSON dentro da célula. Papa Parse gera o CSV com o delimitador escolhido. O download oferece UTF-8 com BOM, UTF-8 puro ou ISO-8859-1, substituindo por `?` os caracteres que não existem nessa codificação. Todo o processamento ocorre no navegador.
+
 ## Referência: Gerador de AR e Etiquetas
 
 O Gerador de AR e Etiquetas migra o utilitário legado para a aplicação:

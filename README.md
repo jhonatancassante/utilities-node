@@ -33,6 +33,8 @@ O que existe hoje:
 - Gerador de QR Code em `/tools/qr-code`, com personalização de cores e download em PNG. A geração e a captura da imagem são realizadas no navegador.
 - Divisor de PDF em `/tools/pdf-splitter`, que extrai um intervalo de páginas de um ou mais PDFs (resultado em PDF ou ZIP). O processamento é realizado no navegador.
 - Unificador de PDF em `/tools/pdf-merger`, que combina dois ou mais PDFs em um único documento, com ordenação natural dos nomes e opção de inserir páginas em branco para manter a paridade de cada arquivo. O processamento é realizado no navegador.
+- Conversor de CSV para JSON em `/tools/csv-para-json`, com seleção da codificação de leitura, delimitador, linha de cabeçalho e colunas. A interpretação é realizada no navegador com Papa Parse.
+- Conversor de JSON para CSV em `/tools/json-para-csv`, com seleção de colunas, delimitador e codificação de saída (UTF-8 com BOM, UTF-8 ou ISO-8859-1). A conversão é realizada no navegador com Papa Parse.
 - Gerador de AR e Etiquetas em `/tools/ar-generator`, que cadastra destinatários e remetente, consulta CEP e localidades, e gera ARs e etiquetas em PDF A4 com código de barras Code 128. O processamento do PDF é realizado no navegador; a conferência visual e a impressão em escala real ainda precisam ser validadas.
 - Página `/status`, com painel de monitoramento do banco de dados e atualização automática a cada 5 segundos.
 - `GET /api/v1/status`: consulta a saúde do banco. A versão do PostgreSQL só é incluída para usuários com a feature `read:status:all`.
