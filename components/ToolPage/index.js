@@ -16,7 +16,9 @@ function ToolPage({ slug, children, wide = false }) {
 
       <Layout>
         <main className={shared.container}>
-          <section className={`${shared.card} ${styles.card} ${wide ? styles.wide : ""}`}>
+          <section
+            className={`${shared.card} ${styles.card} ${wide ? styles.wide : ""}`}
+          >
             <header className={styles.heading}>
               <span className={styles.icon} aria-hidden="true">
                 <i className={`fas ${tool.icon}`}></i>
