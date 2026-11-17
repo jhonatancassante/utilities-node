@@ -4,6 +4,8 @@ import styles from "./index.module.css";
 const VARIANT_CLASS = {
   primary: styles.primary,
   danger: styles.danger,
+  success: styles.success,
+  outline: styles.outline,
 };
 
 function Button({
