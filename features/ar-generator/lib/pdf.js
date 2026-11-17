@@ -236,12 +236,12 @@ function drawLabel(page, x, y, data, title, fonts, logo) {
   else text(page, "Correios", x + 83, y + 4, 7, bold);
   fit(page, data.nome, x + 2, y + 8, 90, 6.5, regular);
   text(page, `${data.endereco}, ${data.numero}`, x + 2, y + 11, 6.5, regular);
-  let lineY = y + 14;
-  if (data.complemento) { text(page, data.complemento, x + 2, lineY, 6.5, regular); lineY += 3; }
-  text(page, data.bairro, x + 2, lineY, 6.5, regular);
-  const cepY = y + 21.5 + (data.complemento ? 3 : 0);
-  text(page, data.cep, x + 2, cepY, 8, bold);
-  text(page, `${data.cidade}-${data.uf}`, x + 25, cepY, 8, regular);
+  if (data.complemento) fit(page, data.complemento, x + 2, y + 14, 90, 6.5, regular);
+  fit(page, data.bairro, x + 2, y + 17, 90, 6.5, regular);
+  // CEP e cidade permanecem sempre acima do código de barras,
+  // independentemente da presença do campo Complemento.
+  text(page, data.cep, x + 2, y + 21.5, 8, bold);
+  fit(page, `${data.cidade}-${data.uf}`, x + 25, y + 21.5, 69, 8, regular);
   // Código de barras Code 128 do CEP, nas dimensões do layout legado.
   drawCode128(page, String(data.cep ?? "").replace(/\D/g, ""), x + 4, y + 23, 47, 20);
   if (data.observacao && title === "DESTINATÁRIO") {
