@@ -79,12 +79,44 @@
   box-shadow: inset 3px 0 0 var(--accent);
 }
 
-.headerLineItem input {
+.headerLineItem input,
+.columnItem input {
+  display: grid;
+  flex: 0 0 auto;
+  place-content: center;
   width: 16px;
   height: 16px;
-  flex: 0 0 auto;
   margin: 2px 0 0;
-  accent-color: var(--accent);
+  appearance: none;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.headerLineItem input:checked,
+.columnItem input:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.headerLineItem input:checked::after,
+.columnItem input:checked::after {
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  content: "";
+  transform: rotate(45deg);
+}
+
+.headerLineItem input:focus-visible,
+.columnItem input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .lineNumber {
