@@ -236,8 +236,12 @@ function drawLabel(page, x, y, data, title, fonts, logo) {
   else text(page, "Correios", x + 83, y + 4, 7, bold);
   fit(page, data.nome, x + 2, y + 8, 90, 6.5, regular);
   text(page, `${data.endereco}, ${data.numero}`, x + 2, y + 11, 6.5, regular);
-  if (data.complemento) fit(page, data.complemento, x + 2, y + 14, 90, 6.5, regular);
-  fit(page, data.bairro, x + 2, y + 17, 90, 6.5, regular);
+  if (data.complemento) {
+    fit(page, data.complemento, x + 2, y + 14, 90, 6.5, regular);
+  }
+  // Sem complemento, o bairro ocupa imediatamente a linha seguinte ao endereço.
+  const neighborhoodY = data.complemento ? y + 17 : y + 14;
+  fit(page, data.bairro, x + 2, neighborhoodY, 90, 6.5, regular);
   // CEP e cidade permanecem sempre acima do código de barras,
   // independentemente da presença do campo Complemento.
   text(page, data.cep, x + 2, y + 21.5, 8, bold);
