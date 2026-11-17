@@ -43,10 +43,9 @@ function CsvToJson() {
     return parseCsv(rawLines.slice(headerLineIndex).join("\n"), delimiter);
   }, [rawLines, headerLineIndex, delimiter]);
 
-  const activeFields =
-    selectedFields === null
-      ? parsed.fields
-      : selectedFields.filter((field) => parsed.fields.includes(field));
+  const activeFields = parsed.fields.filter(
+    (field) => selectedFields === null || selectedFields.includes(field),
+  );
 
   const generatedJson = useMemo(
     () => createJson(parsed.data, activeFields),
@@ -368,7 +367,7 @@ function CsvToJson() {
         </div>
       )}
 
-      {rawLines.length > 0 && !generatedJson && (
+      {currentFile && !generatedJson && (
         <div className={styles.actions}>
           <Button variant="danger" icon="fa-trash-alt" onClick={handleClear}>
             Limpar
