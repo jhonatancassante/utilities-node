@@ -206,13 +206,6 @@
   text-align: left;
 }
 
-.columnItem input {
-  width: 16px;
-  height: 16px;
-  flex: 0 0 auto;
-  margin: 2px 0 0;
-  accent-color: var(--accent);
-}
 
 .columnItem label {
   min-width: 0;
