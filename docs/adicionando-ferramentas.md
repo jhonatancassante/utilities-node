@@ -6,7 +6,7 @@ Toda ferramenta segue o mesmo padrão. O Gerador de QR Code é a referência.
 
 ```text
 configs/tools.js                      registro central (menu, home, título, descrição)
-pages/ferramentas/<slug>.js           rota fina: só monta <ToolPage> + o componente
+pages/tools/<slug>.js           rota fina: só monta <ToolPage> + o componente
 features/<slug>/components/...        componentes da ferramenta (cada um com seu CSS Module)
 features/<slug>/lib/...               lógica pura, sem React (fácil de testar)
 tests/unit/features/<slug>/...        testes da lógica
@@ -16,7 +16,7 @@ tests/unit/features/<slug>/...        testes da lógica
 
 1. Em `configs/tools.js`, troque o `status` da ferramenta de `soon` para
    `available` (ela já está registrada com título, descrição e ícone).
-2. Crie `pages/ferramentas/<slug>.js`:
+2. Crie `pages/tools/<slug>.js`:
 
    ```js
    import ToolPage from "@/components/ToolPage";
