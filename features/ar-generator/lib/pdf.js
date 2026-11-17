@@ -1,0 +1,174 @@
+// features/ar-generator/lib/pdf.js
+// Gera os documentos no navegador. A geometria é definida em milímetros
+// para preservar o posicionamento do gerador legado.
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { getFormattedTimestamp } from "@/lib/files.js";
+
+const MM = 72 / 25.4;
+const pageW = 210;
+const pageH = 297;
+const mm = (value) => value * MM;
+const yTop = (value) => mm(pageH - value);
+
+function text(page, value, x, y, size, font, color = rgb(0, 0, 0)) {
+  if (!value) return;
+  page.drawText(String(value), {
+    x: mm(x),
+    y: yTop(y) - size * 0.82,
+    size,
+    font,
+    color,
+  });
+}
+
+function line(page, x1, y1, x2, y2, width = 0.35) {
+  page.drawLine({
+    start: { x: mm(x1), y: yTop(y1) },
+    end: { x: mm(x2), y: yTop(y2) },
+    thickness: mm(width),
+    color: rgb(0, 0, 0),
+  });
+}
+
+function rect(page, x, y, w, h, width = 0.35) {
+  page.drawRectangle({
+    x: mm(x),
+    y: yTop(y + h),
+    width: mm(w),
+    height: mm(h),
+    borderWidth: mm(width),
+    borderColor: rgb(0, 0, 0),
+  });
+}
+
+function fit(page, value, x, y, maxWidth, size, font) {
+  let current = size;
+  const label = String(value ?? "");
+  while (current > 4.5 && font.widthOfTextAtSize(label, current) > mm(maxWidth)) current -= 0.25;
+  text(page, label, x, y, current, font);
+}
+
+function drawAR(page, x, y, data, fonts, logo) {
+  const { regular, bold } = fonts;
+  const sender = data.remetente;
+  rect(page, x, y, 140, 94);
+  line(page, x + 8, y, x + 8, y + 94);
+  line(page, x + 7, y, x + 7, y + 94, 0.2);
+  text(page, "(ÁREA DE COLA NO VERSO)", x + 4.5, y + 65, 6, regular);
+  const right = x + 106;
+  line(page, right, y, right, y + 52);
+  line(page, right, y + 59, right, y + 94);
+  line(page, x + 8, y + 8, x + 140, y + 8);
+  if (logo) page.drawImage(logo, { x: mm(x + 9.5), y: yTop(y + 6.7), width: mm(28), height: mm(5.5) });
+  else text(page, "Correios", x + 10, y + 5.5, 9, bold);
+  text(page, "AVISO DE RECEBIMENTO", x + 41, y + 5, 9, bold);
+  text(page, "AR", x + 85, y + 6, 15, bold);
+  text(page, "DATA DE POSTAGEM", right + 0.7, y + 2.5, 6, bold);
+  line(page, x + 8, y + 52, x + 140, y + 52);
+  text(page, "DESTINATÁRIO", x + 10, y + 11.5, 6, bold);
+  let yy = y + 14;
+  fit(page, data.nome.toUpperCase(), x + 10, yy, 94, 6, regular);
+  yy += 2.5;
+  text(page, `${data.endereco.toUpperCase()}, ${data.numero}`, x + 10, yy, 6, regular);
+  yy += 2.5;
+  if (data.complemento) { text(page, data.complemento.toUpperCase(), x + 10, yy, 6, regular); yy += 2.5; }
+  text(page, data.bairro.toUpperCase(), x + 10, yy, 6, regular);
+  yy += 2.5;
+  text(page, `${data.cep} - ${data.cidade.toUpperCase()} - ${data.uf}`, x + 10, yy, 6, regular);
+  rect(page, x + 28, y + 30, 52, 3.5, 0.2);
+  text(page, "(CÓDIGO DE BARRAS OU Nº DE REGISTRO DO OBJETO)", x + 30, y + 32.5, 5, regular);
+  text(page, "ENDEREÇO PARA DEVOLUÇÃO DO AR", x + 10, y + 40, 6, bold);
+  const senderStreet = `${sender.endereco}, ${sender.numero}${sender.complemento ? ` - ${sender.complemento}` : ""}`;
+  fit(page, sender.nome.toUpperCase(), x + 10, y + 42.5, 94, 6, regular);
+  fit(page, senderStreet.toUpperCase(), x + 10, y + 45, 94, 6, regular);
+  text(page, sender.bairro.toUpperCase(), x + 10, y + 47.5, 6, regular);
+  text(page, `${sender.cep} - ${sender.cidade.toUpperCase()} - ${sender.uf}`, x + 10, y + 50, 6, regular);
+  text(page, "UNIDADE DE POSTAGEM", right + 0.7, y + 10.5, 6, bold);
+  line(page, right, y + 16, x + 140, y + 16);
+  text(page, "CARIMBO / UNIDADE DE ENTREGA", right + 2, y + 19, 5.5, bold);
+  const motiveX = x + 56;
+  line(page, motiveX, y + 52, motiveX, y + 80);
+  line(page, motiveX, y + 59, x + 140, y + 59);
+  text(page, "TENTATIVAS DE ENTREGA", x + 18, y + 54.5, 5.5, bold);
+  ["1ª ______/______/______     ______:______h", "2ª ______/______/______     ______:______h", "3ª ______/______/______     ______:______h"].forEach((v, i) => text(page, v, x + 9.5, y + 61 + i * 7, 6, regular));
+  text(page, "OBSERVAÇÃO:", motiveX + 0.5, y + 54.5, 6, bold);
+  if (data.observacao) fit(page, data.observacao.toUpperCase(), motiveX + 18, y + 54.5, 60, 6, regular);
+  text(page, "MOTIVO DE DEVOLUÇÃO", motiveX + 12, y + 61.5, 6, bold);
+  const reasonsA = ["Mudou-se", "Endereço insuficiente", "Não existe o número", "Desconhecido", "Outros: __________________"];
+  const reasonsB = ["Recusado", "Não procurado", "Ausente", "Falecido"];
+  reasonsA.forEach((v, i) => {
+    const top = y + 66 + i * 3.2;
+    rect(page, motiveX + 2, top - 3, 2.5, 2.5, 0.2);
+    text(page, String(i === 4 ? 9 : i + 1), motiveX + 2.7, top - 1, 5.5, regular);
+    text(page, v, motiveX + 5.5, top - 1, 5.5, regular);
+  });
+  reasonsB.forEach((v, i) => {
+    const top = y + 66 + i * 3.2;
+    rect(page, motiveX + 32, top - 3, 2.5, 2.5, 0.2);
+    text(page, String(i + 5), motiveX + 32.7, top - 1, 5.5, regular);
+    text(page, v, motiveX + 35.5, top - 1, 5.5, regular);
+  });
+  text(page, "RUBRICA E MATRÍCULA DO CARTEIRO", right + 0.7, y + 62, 5.5, bold);
+  line(page, x + 8, y + 80, x + 140, y + 80);
+  line(page, x + 8, y + 87, x + 140, y + 87);
+  text(page, "ASSINATURA DO RECEBEDOR", x + 8.4, y + 82.5, 6, bold);
+  text(page, "DATA DE ENTREGA", right + 0.7, y + 82.5, 6, bold);
+  text(page, "NOME LEGÍVEL DO RECEBEDOR", x + 8.4, y + 89.5, 6, bold);
+  text(page, "Nº DOC. DE IDENTIDADE", right + 0.7, y + 89.5, 6, bold);
+}
+
+function drawLabel(page, x, y, data, title, fonts, logo) {
+  const { regular, bold } = fonts;
+  rect(page, x, y, 96, 45);
+  page.drawRectangle({ x: mm(x), y: yTop(y + 5.5), width: mm(35), height: mm(5.5), color: rgb(0, 0, 0) });
+  text(page, title, x + (title === "DESTINATÁRIO" ? 5.5 : 7.5), y + 4, 9, bold, rgb(1, 1, 1));
+  if (logo) page.drawImage(logo, { x: mm(x + 80), y: yTop(y + 4.2), width: mm(14), height: mm(3) });
+  else text(page, "Correios", x + 83, y + 4, 7, bold);
+  fit(page, data.nome, x + 2, y + 8, 90, 6.5, regular);
+  text(page, `${data.endereco}, ${data.numero}`, x + 2, y + 11, 6.5, regular);
+  let lineY = y + 14;
+  if (data.complemento) { text(page, data.complemento, x + 2, lineY, 6.5, regular); lineY += 3; }
+  text(page, data.bairro, x + 2, lineY, 6.5, regular);
+  const cepY = y + 21.5 + (data.complemento ? 3 : 0);
+  text(page, data.cep, x + 2, cepY, 8, bold);
+  text(page, `${data.cidade}-${data.uf}`, x + 25, cepY, 8, regular);
+  // A área inferior fica reservada ao código de barras postal; o CEP é
+  // impresso novamente em caracteres para continuar identificável.
+  text(page, data.cep.replace(/\D/g, ""), x + 4, y + 37, 5, regular);
+  if (data.observacao && title === "DESTINATÁRIO") {
+    text(page, "Observação:", x + 55, y + 26, 8.5, bold);
+    fit(page, data.observacao, x + 55, y + 30.5, 38, 8, regular);
+  }
+}
+
+export async function generateArPdf(records, includeSenderLabels, logoBytes, now) {
+  const pdf = await PDFDocument.create();
+  const fonts = {
+    regular: await pdf.embedFont(StandardFonts.Helvetica),
+    bold: await pdf.embedFont(StandardFonts.HelveticaBold),
+  };
+  let logo = null;
+  if (logoBytes) {
+    try { logo = await pdf.embedPng(logoBytes); } catch { logo = null; }
+  }
+  for (let index = 0; index < records.length; index += 2) {
+    const page = pdf.addPage([mm(pageW), mm(pageH)]);
+    drawAR(page, 35, 25, records[index], fonts, logo);
+    if (records[index + 1]) drawAR(page, 35, 155, records[index + 1], fonts, logo);
+  }
+  const labels = records.flatMap((record) => [
+    { data: record, title: "DESTINATÁRIO" },
+    ...(includeSenderLabels ? [{ data: record.remetente, title: "REMETENTE" }] : []),
+  ]);
+  for (let offset = 0; offset < labels.length; offset += 8) {
+    const page = pdf.addPage([mm(pageW), mm(pageH)]);
+    labels.slice(offset, offset + 8).forEach((label, i) => {
+      drawLabel(page, 7 + (i % 2) * 98, 8.5 + Math.floor(i / 2) * 47, label.data, label.title, fonts, logo);
+    });
+  }
+  return {
+    bytes: await pdf.save(),
+    filename: `AR_e_Etiquetas_${getFormattedTimestamp(now)}.pdf`,
+    pageCount: pdf.getPageCount(),
+  };
+}
