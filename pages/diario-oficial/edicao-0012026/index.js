@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 import styles from "./index.module.css";
 
 const PDF_URL =
-  "/diario-oficial/edicao-0012026/diario-oficila-edicao-0012026.pdf";
+  "/diario-oficial/edicao-0012026/diario-oficial-edicao-0012026.pdf";
 
 function DiarioOficialPage() {
   return (
@@ -45,8 +45,8 @@ function DiarioOficialPage() {
             </div>
 
             <p className={styles.helpText}>
-              Utilize os controles do leitor para navegar pelas páginas,
-              ajustar o zoom ou imprimir o documento.
+              Utilize os controles do leitor para navegar pelas páginas, ajustar
+              o zoom ou imprimir o documento.
             </p>
           </section>
         </main>
