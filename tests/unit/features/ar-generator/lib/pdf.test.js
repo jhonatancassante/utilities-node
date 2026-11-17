@@ -1,5 +1,9 @@
 import { PDFDocument } from "pdf-lib";
-import { encodeCode128B, encodeCode128C, generateArPdf } from "@/features/ar-generator/lib/pdf.js";
+import {
+  encodeCode128B,
+  encodeCode128C,
+  generateArPdf,
+} from "@/features/ar-generator/lib/pdf.js";
 
 function makeRecord(index) {
   return {
@@ -78,11 +82,10 @@ describe("features/ar-generator/lib/pdf.js", () => {
       expect((await PDFDocument.load(result.bytes)).getPageCount()).toBe(4);
     });
 
-    test("Retorna PDF sem páginas para uma lista vazia", async () => {
-      const result = await generateArPdf([], false, null);
-
-      expect(result.pageCount).toBe(0);
-      expect((await PDFDocument.load(result.bytes)).getPageCount()).toBe(0);
+    test("Rejeita a geração quando não há destinatários", async () => {
+      await expect(generateArPdf([], false, null)).rejects.toThrow(
+        "Inclua ao menos um destinatário para gerar o PDF.",
+      );
     });
   });
 });
