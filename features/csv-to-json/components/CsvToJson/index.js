@@ -4,7 +4,7 @@ import Button from "@/components/Button";
 import FileDropzone from "@/components/FileDropzone";
 import HelpToggle from "@/components/HelpToggle";
 import StatusMessage from "@/components/StatusMessage";
-import { downloadBlob } from "@/lib/files.js";
+import { downloadBlob, getFormattedTimestamp } from "@/lib/files.js";
 import shared from "@/styles/shared.module.css";
 import { createJson, parseCsv } from "../../lib/csv.js";
 import styles from "./index.module.css";
@@ -177,7 +177,7 @@ function CsvToJson() {
       type: "application/json;charset=utf-8",
     });
 
-    downloadBlob(blob, "dados_convertidos.json");
+    downloadBlob(blob, `${getFormattedTimestamp()}.json`);
   }
 
   function handleClear() {
