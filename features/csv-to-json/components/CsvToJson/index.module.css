@@ -233,46 +233,50 @@
   margin-top: 24px;
 }
 
-.jsonOutputWrapper {
-  position: relative;
-  width: 100%;
-  min-width: 0;
+.outputHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.outputHeader h2 {
+  font-size: 16px;
 }
 
 .copyButton {
-  position: absolute;
-  top: 18px;
-  right: 12px;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: 0;
+  min-height: 34px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  background: transparent;
-  color: #e8edf7;
-  font-size: 15px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 12px;
   cursor: pointer;
   transition:
     background-color var(--transition-fast),
-    color var(--transition-fast);
+    border-color var(--transition-fast);
 }
 
 .copyButton:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .copyButton.copied {
-  color: var(--success);
+  border-color: var(--success);
+  background: var(--success-bg);
+  color: var(--success-fg);
 }
-
 .jsonOutput {
   max-width: 100%;
   max-height: 320px;
   margin-top: 10px;
-  padding: 52px 20px 20px;
+  padding: 20px;
   overflow: auto;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-sm);
@@ -306,7 +310,7 @@
   }
 
   .jsonOutput {
-    padding: 48px 14px 14px;
+    padding: 14px;
     font-size: 12px;
   }
 }
