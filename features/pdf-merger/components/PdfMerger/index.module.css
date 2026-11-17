@@ -12,6 +12,10 @@
   cursor: pointer;
   color: var(--text-primary);
   font-weight: 500;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  /* eslint-disable-next-line css/use-baseline -- Evita seleção acidental do texto durante a interação com o switch. */
   user-select: none;
 }
 
