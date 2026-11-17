@@ -37,8 +37,21 @@ function Home() {
               Por enquanto, a obra está em andamento. Volte em breve! 🚧
             </p>
 
-            <div className={styles.progress}>
-              <div className={styles.progressBar}></div>
+            <div className={styles.progressWrapper}>
+              <div
+                className={styles.progress}
+                role="progressbar"
+                aria-label="Progresso do desenvolvimento"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={30.5}
+              >
+                <div className={styles.progressBar}></div>
+              </div>
+
+              <span className={styles.progressTooltip} aria-hidden="true">
+                30,5%
+              </span>
             </div>
 
             <small>{headConfigs.appName} · Em desenvolvimento</small>
