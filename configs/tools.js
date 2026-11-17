@@ -36,9 +36,10 @@ const toolsList = [
   {
     slug: "csv-para-json",
     title: "Conversor de CSV para JSON",
-    description: "Converta planilhas CSV em arquivos JSON.",
+    description:
+      "Converta arquivos CSV em JSON, ajustando a codificação, o delimitador, o cabeçalho e as colunas.",
     icon: "fa-file-csv",
-    status: TOOL_STATUS.soon,
+    status: TOOL_STATUS.available,
   },
   {
     slug: "json-para-csv",
