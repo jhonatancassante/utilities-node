@@ -251,7 +251,7 @@ export default function ArGenerator() {
         }}><i className="fas fa-user" aria-hidden="true"></i> Destinatário</button>
         <button type="button" role="tab" id="tab-sender" aria-controls="sender-panel" aria-selected={tab === "sender"} tabIndex={tab === "sender" ? 0 : -1} onClick={() => setTab("sender")} onKeyDown={(event) => {
           if (event.key === "ArrowLeft") { event.preventDefault(); setTab("recipient"); document.getElementById("tab-recipient")?.focus(); }
-        }}><i className="fas fa-paper-plane" aria-hidden="true"></i> Remetente</button>
+        }}><i className="fas fa-building" aria-hidden="true"></i> Remetente</button>
       </div>
       <form id="recipient-form" onSubmit={addRecord} hidden={tab !== "recipient"}>
         <div id="recipient-panel" role="tabpanel" aria-labelledby="tab-recipient">
