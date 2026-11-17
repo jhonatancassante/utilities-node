@@ -1,0 +1,44 @@
+/* features/qr-code/components/QrCard/index.module.css */
+.container {
+  width: 360px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: transparent;
+  border-radius: var(--radius-lg);
+  scroll-margin-top: 96px;
+}
+
+.border {
+  padding: 15px;
+  border: 12px solid;
+  border-radius: var(--radius-md);
+  background-color: #ffffff;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.footer {
+  margin-top: 15px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  border-radius: 50px;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 4vw, 1.9rem);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+@media (max-width: 400px) {
+  .container {
+    padding: 10px;
+  }
+
+  .border {
+    padding: 10px;
+    border-width: 8px;
+  }
+}

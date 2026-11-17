@@ -1,12 +1,13 @@
 /* components/Header/index.module.css */
 .header {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 50;
   width: 100%;
-  height: clamp(68px, 9vw, 80px);
+  height: clamp(64px, 9vw, 76px);
   padding: 0 20px;
   display: flex;
   align-items: center;
-  justify-content: center;
   background: linear-gradient(
     120deg,
     var(--header-grad-start),
@@ -17,47 +18,260 @@
 
 .content {
   width: 100%;
-  max-width: 600px;
+  max-width: 1100px;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 15px;
+  gap: 24px;
   color: var(--header-text);
 }
 
-.icon {
-  font-size: 2em;
-}
-
-.title {
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
   font-family: var(--font-display);
-  font-size: clamp(1.1rem, 2vw + 0.6rem, 1.5rem);
+  font-size: clamp(1.1rem, 2vw + 0.6rem, 1.4rem);
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--header-text);
 }
 
-.backBtn {
-  position: absolute;
-  left: 20px;
-  width: 40px;
-  height: 40px;
+.brand i {
+  font-size: 1.5rem;
+}
+
+/* ---------- Navegação (desktop) ---------- */
+.nav {
+  flex: 1;
+}
+
+.navList {
   display: flex;
   align-items: center;
+  gap: 4px;
+}
+
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--header-text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.navItem:hover,
+.navItemActive {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Link "Ferramentas" + setinha que abre o submenu */
+.splitItem {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: var(--radius-md);
+}
+
+.splitItem .navItem {
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.chevronButton {
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: transparent;
+  color: var(--header-text);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.chevronButton:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.chevronButton i {
+  transition: transform var(--transition-fast);
+}
+
+.chevronButton[aria-expanded="true"] i {
+  transform: rotate(180deg);
+}
+
+.group {
+  position: relative;
+}
+
+.groupLabel {
+  display: none;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 60;
+  min-width: 360px;
+  padding: 8px;
+  display: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.dropdownOpen {
+  display: block;
+}
+
+.toolItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: background-color var(--transition-fast);
+}
+
+.toolItem i {
+  width: 20px;
+  text-align: center;
+  color: var(--accent);
+}
+
+a.toolItem:hover,
+a.toolItem[aria-current="page"] {
+  background-color: var(--accent-soft);
+}
+
+.toolItemSoon {
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
+
+.toolItemSoon i {
+  color: var(--text-faint);
+}
+
+.soonTag {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 2px 8px;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* ---------- Ações à direita (login futuro, tema, menu mobile) ---------- */
+.actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menuButton {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: none;
+  align-items: center;
   justify-content: center;
+  border: none;
   border-radius: 50%;
-  color: #ffffff;
-  transition:
-    transform var(--transition-fast),
-    background-color var(--transition-fast);
+  background: transparent;
+  color: var(--header-text);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
 }
 
-.backBtn:hover {
-  transform: translateX(-3px);
-  background-color: rgba(255, 255, 255, 0.12);
+.menuButton:hover {
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
-.backBtn i {
-  font-size: 1.1rem;
+/* ---------- Mobile ---------- */
+@media (max-width: 860px) {
+  .menuButton {
+    display: inline-flex;
+  }
+
+  .nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    display: none;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+    padding: 12px 20px 20px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+  }
+
+  .navOpen {
+    display: block;
+  }
+
+  .navList {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  .navItem {
+    display: flex;
+    color: var(--text-primary);
+  }
+
+  .navItem:hover,
+  .navItemActive {
+    background-color: var(--accent-soft);
+  }
+
+  .splitItem {
+    display: flex;
+  }
+
+  .splitItem .navItem {
+    flex: 1;
+    border-radius: var(--radius-md);
+  }
+
+  /* No celular a lista já fica sempre aberta, então a setinha some */
+  .chevronButton {
+    display: none;
+  }
+
+  .dropdown {
+    position: static;
+    min-width: 0;
+    margin-left: 22px;
+    padding: 0 0 0 8px;
+    display: block;
+    background: transparent;
+    border: none;
+    border-left: 2px solid var(--border-color);
+    border-radius: 0;
+    box-shadow: none;
+  }
 }

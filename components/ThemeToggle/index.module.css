@@ -1,7 +1,5 @@
 /* components/ThemeToggle/index.module.css */
 .toggle {
-  position: absolute;
-  right: 20px;
   width: 40px;
   height: 40px;
   padding: 0;
