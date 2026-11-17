@@ -337,9 +337,6 @@ function CsvToJson() {
 
       {rawLines.length > 0 && (
         <section className={styles.jsonContainer} aria-labelledby="json-title">
-          <h2 id="json-title" className={styles.sectionTitle}>
-            Resultado do JSON
-          </h2>
           <div className={styles.outputHeader}>
             <h2 id="json-title" className={styles.sectionTitle}>
               Resultado do JSON
