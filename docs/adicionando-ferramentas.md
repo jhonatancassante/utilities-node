@@ -117,3 +117,18 @@ O Unificador de PDF combina dois ou mais arquivos em um único documento:
 - Testes: `tests/unit/features/pdf-merger/lib/`.
 
 Os arquivos são ordenados alfabeticamente com comparação numérica natural (por exemplo, `arquivo2.pdf` antes de `arquivo10.pdf`). Por padrão, cada PDF com quantidade ímpar de páginas recebe uma página em branco ao final, usando as dimensões da última página daquele arquivo. A opção pode ser desativada antes da unificação. A dependência `pdf-lib` é importada sob demanda e todo o processamento ocorre no navegador.
+
+## Referência: Gerador de AR e Etiquetas
+
+O Gerador de AR e Etiquetas migra o utilitário legado para a aplicação:
+
+- Rota: `pages/tools/ar-generator/index.js`.
+- Interface: `features/ar-generator/components/ArGenerator/`.
+- Lógica de PDF: `features/ar-generator/lib/pdf.js`.
+- Testes: `tests/unit/features/ar-generator/lib/pdf.test.js`.
+
+A interface mantém cadastros separados para destinatário e remetente. O CEP é consultado pelo ViaCEP e as listas de UFs e municípios são obtidas da API do IBGE. Cada destinatário guarda uma cópia dos dados do remetente no momento da inclusão, para que alterações posteriores não modifiquem registros já cadastrados.
+
+A geração utiliza `pdf-lib` no navegador. O documento mantém dois ARs por página A4 (140 × 94 mm) e etiquetas de 98 × 47 mm, organizadas em duas colunas e quatro linhas. As etiquetas incluem código de barras Code 128 no conjunto C para CEPs numéricos. O logo GIF dos Correios é convertido em PNG no navegador antes de ser incorporado ao PDF.
+
+Como a ferramenta produz material destinado à impressão física, além dos testes automatizados é necessário conferir o PDF em escala real, especialmente alinhamento, margens, legibilidade e compatibilidade com as folhas de etiquetas utilizadas.

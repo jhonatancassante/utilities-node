@@ -35,3 +35,8 @@
   font-size: 15px;
   line-height: 1.6;
 }
+
+.wide {
+  width: 92%;
+  max-width: 800px;
+}

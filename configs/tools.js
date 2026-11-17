@@ -62,12 +62,12 @@ const toolsList = [
     status: TOOL_STATUS.soon,
   },
   {
-    slug: "gerador-ar",
+    slug: "ar-generator",
     title: "Gerador de AR",
     description:
-      "Gere o aviso de recebimento (confirmação de recebimento) dos Correios.",
+      "Gere avisos de recebimento e etiquetas de endereçamento para correspondências.",
     icon: "fa-envelope-open-text",
-    status: TOOL_STATUS.soon,
+    status: TOOL_STATUS.available,
   },
 ];
 
