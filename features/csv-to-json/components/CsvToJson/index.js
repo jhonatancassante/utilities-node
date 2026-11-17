@@ -10,7 +10,6 @@ import { createJson, parseCsv } from "../../lib/csv.js";
 import styles from "./index.module.css";
 
 const DEFAULT_LABEL = "Clique ou arraste o arquivo CSV aqui";
-const DEFAULT_OUTPUT = "O resultado aparecerá aqui após o envio do arquivo...";
 const MAX_PREVIEW_LINES = 15;
 const MAX_LINE_PREVIEW_CHARS = 140;
 
@@ -53,15 +52,13 @@ function CsvToJson() {
 
   const previewLines = useMemo(() => getPreviewLines(rawLines), [rawLines]);
 
-  const outputMessage = !rawLines.length
-    ? DEFAULT_OUTPUT
-    : !parsed.fields.length
-      ? "Não foi possível identificar colunas nesta linha. Escolha outra linha de cabeçalho."
-      : !parsed.data.length
-        ? "O cabeçalho foi identificado, mas não há registros para converter."
-        : !activeFields.length
-          ? "Selecione ao menos uma coluna para gerar o JSON."
-          : generatedJson;
+  const outputMessage = !parsed.fields.length
+    ? "Não foi possível identificar colunas nesta linha. Escolha outra linha de cabeçalho."
+    : !parsed.data.length
+      ? "O cabeçalho foi identificado, mas não há registros para converter."
+      : !activeFields.length
+        ? "Selecione ao menos uma coluna para gerar o JSON."
+        : generatedJson;
 
   const displayedError =
     fileError ||
@@ -338,29 +335,32 @@ function CsvToJson() {
         </section>
       )}
 
-      <section className={styles.jsonContainer} aria-labelledby="json-title">
-        <div className={styles.outputHeader}>
-          <h2 id="json-title">Resultado do JSON</h2>
-          {generatedJson && (
-            <button
-              type="button"
-              className={`${styles.copyButton} ${isCopied ? styles.copied : ""}`}
-              onClick={handleCopy}
-              aria-label="Copiar código JSON"
-              title="Copiar código"
-            >
-              <i
-                className={`fas ${isCopied ? "fa-check" : "fa-copy"}`}
-                aria-hidden="true"
-              ></i>
-              {isCopied ? "Copiado!" : "Copiar"}
-            </button>
-          )}
-        </div>
-        <pre className={styles.jsonOutput}>
-          <code>{outputMessage}</code>
-        </pre>
-      </section>
+      {rawLines.length > 0 && (
+        <section className={styles.jsonContainer} aria-labelledby="json-title">
+          <h2 id="json-title" className={styles.sectionTitle}>
+            Resultado do JSON
+          </h2>
+          <div className={styles.jsonOutputWrapper}>
+            <pre className={styles.jsonOutput}>
+              <code>{outputMessage}</code>
+            </pre>
+            {generatedJson && (
+              <button
+                type="button"
+                className={`${styles.copyButton} ${isCopied ? styles.copied : ""}`}
+                onClick={handleCopy}
+                aria-label={isCopied ? "Código copiado" : "Copiar código JSON"}
+                title={isCopied ? "Código copiado" : "Copiar código"}
+              >
+                <i
+                  className={`fas ${isCopied ? "fa-check" : "fa-copy"}`}
+                  aria-hidden="true"
+                ></i>
+              </button>
+            )}
+          </div>
+        </section>
+      )}
 
       {generatedJson && (
         <div className={styles.actions}>
