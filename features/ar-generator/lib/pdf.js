@@ -42,6 +42,23 @@ function dashedRect(page, x, y, width, height, lineWidth = 0.2) {
   line(page, x, y + height, x, y, lineWidth, [0.3, 0.5]);
 }
 
+function wrapText(value, font, size, maxWidth) {
+  const words = String(value ?? "").split(/\\s+/);
+  const lines = [];
+  let current = "";
+  words.forEach((word) => {
+    const candidate = current ? `${current} ${word}` : word;
+    if (current && font.widthOfTextAtSize(candidate, size) > maxWidth) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  });
+  if (current) lines.push(current);
+  return lines;
+}
+
 function verticalText(page, value, x, y, size, font) {
   page.drawText(value, {
     x: mm(x),
@@ -110,16 +127,36 @@ function drawAR(page, x, y, data, fonts, logo) {
   text(page, `${sender.cep} - ${sender.cidade.toUpperCase()} - ${sender.uf}`, x + 10, y + 50, 6, regular);
   text(page, "UNIDADE DE POSTAGEM", right + 0.7, y + 10.5, 6, bold);
   line(page, right, y + 16, x + 140, y + 16);
-  text(page, "CARIMBO / UNIDADE DE ENTREGA", right + 2, y + 19, 5.5, bold);
+  const stampTitle = "UNIDADE DE ENTREGA";
+  text(
+    page,
+    "CARIMBO",
+    right + 17 - bold.widthOfTextAtSize("CARIMBO", 5.5) / MM / 2,
+    y + 18.5,
+    5.5,
+    bold,
+  );
+  text(
+    page,
+    stampTitle,
+    right + 17 - bold.widthOfTextAtSize(stampTitle, 5.5) / MM / 2,
+    y + 21,
+    5.5,
+    bold,
+  );
   const motiveX = x + 56;
   line(page, motiveX, y + 52, motiveX, y + 80);
   line(page, motiveX, y + 59, x + 140, y + 59);
   text(page, "TENTATIVAS DE ENTREGA", x + 18, y + 54.5, 5.5, bold);
   ["1ª ______/______/______     ______:______h", "2ª ______/______/______     ______:______h", "3ª ______/______/______     ______:______h"].forEach((v, i) => text(page, v, x + 9.5, y + 61 + i * 7, 6, regular));
   text(page, "OBSERVAÇÃO:", motiveX + 0.5, y + 54.5, 6, bold);
-  if (data.observacao) fit(page, data.observacao.toUpperCase(), motiveX + 18, y + 54.5, 60, 6, regular);
+  if (data.observacao) {
+    wrapText(data.observacao.toUpperCase(), regular, 6, mm(60)).forEach((value, index) => {
+      text(page, value, motiveX + 18, y + 54.5 + index * 2.5, 6, regular);
+    });
+  }
   text(page, "MOTIVO DE DEVOLUÇÃO", motiveX + 12, y + 61.5, 6, bold);
-  const reasonsA = ["Mudou-se", "Endereço insuficiente", "Não existe o número", "Desconhecido", "Outros: __________________"];
+  const reasonsA = ["Mudou-se", "Endereço insuficiente", "Não existe o número", "Desconhecido", "Outros: _______________________________"];
   const reasonsB = ["Recusado", "Não procurado", "Ausente", "Falecido"];
   reasonsA.forEach((v, i) => {
     const top = y + 66 + i * 3.2;
