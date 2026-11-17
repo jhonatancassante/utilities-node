@@ -4,7 +4,7 @@ import QrCodeGenerator from "@/features/qr-code/components/QrCodeGenerator";
 
 function QrCodePage() {
   return (
-    <ToolPage slug="qr-code">
+    <ToolPage wide slug="qr-code">
       <QrCodeGenerator />
     </ToolPage>
   );
