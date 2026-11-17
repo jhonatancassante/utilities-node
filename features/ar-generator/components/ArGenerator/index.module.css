@@ -28,9 +28,19 @@
 
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 14px;
 }
+
+.formGrid > :nth-child(1) { grid-column: span 3; }
+.formGrid > :nth-child(2) { grid-column: span 9; }
+.formGrid > :nth-child(3) { grid-column: span 7; }
+.formGrid > :nth-child(4) { grid-column: span 2; }
+.formGrid > :nth-child(5) { grid-column: span 3; }
+.formGrid > :nth-child(6) { grid-column: span 4; }
+.formGrid > :nth-child(7) { grid-column: span 2; }
+.formGrid > :nth-child(8) { grid-column: span 6; }
+.formGrid > :nth-child(9) { grid-column: 1 / -1; }
 
 .field {
   display: flex;
@@ -134,10 +144,27 @@
   color: var(--text-secondary);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 760px) {
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .formGrid > :nth-child(1),
+  .formGrid > :nth-child(4),
+  .formGrid > :nth-child(5),
+  .formGrid > :nth-child(7) { grid-column: span 1; }
+
+  .formGrid > :nth-child(2),
+  .formGrid > :nth-child(3),
+  .formGrid > :nth-child(6),
+  .formGrid > :nth-child(8),
+  .formGrid > :nth-child(9) { grid-column: 1 / -1; }
+
   .formGrid {
     grid-template-columns: 1fr;
   }
+
+  .formGrid > * { grid-column: 1 / -1 !important; }
 
   .tabs button {
     padding: 10px 6px;
