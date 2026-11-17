@@ -21,6 +21,11 @@
   font-weight: 600;
 }
 
+.tabs button:hover,
+.tabs button[aria-selected="true"] {
+  background: var(--accent-soft);
+}
+
 .tabs button i {
   margin-right: 7px;
 }
@@ -36,14 +41,14 @@
   gap: 14px;
 }
 
-.formGrid > :nth-child(1) { grid-column: span 3; }
-.formGrid > :nth-child(2) { grid-column: span 9; }
+.formGrid > :nth-child(1) { grid-column: span 4; }
+.formGrid > :nth-child(2) { grid-column: span 8; }
 .formGrid > :nth-child(3) { grid-column: span 9; }
 .formGrid > :nth-child(4) { grid-column: span 3; }
 .formGrid > :nth-child(5) { grid-column: span 6; }
 .formGrid > :nth-child(6) { grid-column: span 6; }
-.formGrid > :nth-child(7) { grid-column: span 2; }
-.formGrid > :nth-child(8) { grid-column: span 10; }
+.formGrid > :nth-child(7) { grid-column: span 3; }
+.formGrid > :nth-child(8) { grid-column: span 9; }
 .formGrid > :nth-child(9) { grid-column: 1 / -1; }
 
 .field {
