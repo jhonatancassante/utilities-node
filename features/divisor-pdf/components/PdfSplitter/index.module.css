@@ -1,0 +1,34 @@
+/* features/divisor-pdf/components/PdfSplitter/index.module.css */
+.fields {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.number {
+  width: 140px;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.actions {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+@media (max-width: 380px) {
+  .fields > div {
+    flex: 1 1 45%;
+  }
+
+  .number {
+    width: 100%;
+  }
+}

@@ -58,11 +58,14 @@ Durante o desenvolvimento, a interface fica disponível em `http://localhost:300
 - `/`: página inicial provisória.
 - `/tools`: catálogo de ferramentas registradas em `configs/tools.js`.
 - `/tools/qr-code`: Gerador de QR Code.
+- `/tools/divisor-pdf`: Divisor de PDF.
 - `/status`: painel de monitoramento da conexão com o banco de dados.
 
 As páginas de ferramentas seguem a estrutura `pages/tools/<slug>/index.js`, com componentes e lógica isolados em `features/<slug>/`. Para adicionar uma ferramenta, atualizar seu status ou conhecer os componentes compartilhados, consulte o [guia Adicionando uma nova ferramenta](adicionando-ferramentas.md).
 
 O Gerador de QR Code executa a validação da URL e a renderização no navegador. A captura para PNG usa `html2canvas`, importado dinamicamente para não incluir a dependência no carregamento inicial.
+
+O Divisor de PDF processa os arquivos no navegador com `pdf-lib` (extração das páginas) e `jszip` (ZIP quando há mais de um arquivo), ambos importados dinamicamente.
 
 ## Scripts npm
 
@@ -134,7 +137,7 @@ Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm 
 - `tests/unit/features/qr-code/lib/`: testes unitários da normalização de URLs e da formatação do timestamp usado nos downloads.
 - `tests/orchestrator.js`: utilitários compartilhados.
 
-Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão. Os testes unitários do Gerador de QR Code cobrem a validação/normalização de URLs e a formatação do nome dos arquivos PNG.
+Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão. Os testes unitários cobrem a validação/normalização de URLs do Gerador de QR Code, a formatação do nome dos arquivos baixados (`lib/files.js`) e as regras do Divisor de PDF (validação do intervalo, seleção de arquivos, extração de páginas e geração do ZIP).
 
 ### Orchestrator
 

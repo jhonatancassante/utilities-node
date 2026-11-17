@@ -67,6 +67,10 @@ Sempre que possível, reutilize:
 - `@/components/Button` para ações e botões.
 - `@/styles/shared.module.css` para classes comuns de formulário, mensagens de erro e caixas informativas.
 - `@/components/ToolPage` para manter o padrão visual e estrutural das páginas.
+- `@/components/FileDropzone` para o envio de arquivos por clique ou arrastar e soltar.
+- `@/components/StatusMessage` para mensagens de andamento, sucesso e erro.
+- `@/components/HelpToggle` para a caixa informativa "Como funciona?".
+- `@/lib/files.js` para `getFormattedTimestamp` e `downloadBlob` (download de arquivos gerados no navegador).
 
 Mantenha a lógica independente da interface quando isso facilitar os testes. Bibliotecas que dependem do navegador ou são pesadas devem ser carregadas sob demanda, por `import()`, dentro da função que as utiliza.
 
@@ -90,3 +94,14 @@ O Gerador de QR Code demonstra a organização adotada:
 - Testes: `tests/unit/features/qr-code/lib/`.
 
 A ferramenta valida e normaliza URLs HTTP/HTTPS, permite personalizar as cores do código, do fundo, da borda e do texto, e gera o download de uma imagem PNG. A dependência `html2canvas` é importada dinamicamente, pois a captura do componente depende do DOM do navegador.
+
+## Referência: Divisor de PDF
+
+O Divisor de PDF demonstra uma ferramenta que processa arquivos no navegador:
+
+- Rota: `pages/tools/divisor-pdf/index.js`.
+- Interface: `features/divisor-pdf/components/PdfSplitter/`.
+- Lógica auxiliar: `features/divisor-pdf/lib/pdf.js`.
+- Testes: `tests/unit/features/divisor-pdf/lib/`.
+
+A ferramenta extrai um intervalo de páginas de um ou mais PDFs: com um arquivo, o resultado é um PDF; com vários, um ZIP. As bibliotecas `pdf-lib` e `jszip` são importadas dinamicamente. As funções de `lib/pdf.js` retornam objetos `{ ok, ... }` para situações esperadas (intervalo inválido, arquivo que não é PDF), de modo que a interface exiba a mensagem sem depender de exceções.

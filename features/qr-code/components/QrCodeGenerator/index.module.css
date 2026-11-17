@@ -3,24 +3,6 @@
   width: 100%;
 }
 
-.helpButton {
-  margin: 0 auto 20px;
-  padding: 4px 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: none;
-  background: transparent;
-  color: var(--accent);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.helpButton:hover {
-  text-decoration: underline;
-}
-
 .colors {
   margin: 24px 0 8px;
   display: flex;
