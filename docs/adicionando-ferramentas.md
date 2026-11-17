@@ -140,6 +140,17 @@ O Conversor de TXT para CSV transforma relatórios com colunas de largura fixa e
 
 A lógica identifica o cabeçalho na primeira ou na segunda linha, considera os espaços entre os nomes para determinar as posições das colunas e fatia as linhas de dados usando essas posições. A leitura tenta UTF-8 e utiliza Windows-1252 quando os bytes não formam UTF-8 válido. A interface permite configurar o separador, o BOM UTF-8, a remoção da hora em datas e a conversão da vírgula decimal para ponto. A prévia exibe as primeiras 15 linhas e alerta sobre possíveis desalinhamentos. O arquivo é processado inteiramente no navegador.
 
+## Referência: Testador de CPF
+
+O Testador de CPF valida um número, calcula os dígitos verificadores corretos e procura variações válidas por substituição de um único dígito:
+
+- Rota: `pages/tools/cpf-tester/index.js`.
+- Interface: `features/cpf-tester/components/CpfTester/`.
+- Lógica auxiliar: `features/cpf-tester/lib/cpf.js`.
+- Testes: `tests/unit/features/cpf-tester/lib/cpf.test.js`.
+
+A lógica é independente do React e cobre a máscara de CPF, o cálculo módulo 11, a rejeição de sequências com todos os dígitos iguais e a geração de resultados únicos. A interface sinaliza a validade durante a digitação, apresenta os dígitos verificadores calculados e lista as combinações válidas, indicando a posição alterada. O processamento ocorre inteiramente no navegador.
+
 ## Referência: Gerador de AR e Etiquetas
 
 O Gerador de AR e Etiquetas migra o utilitário legado para a aplicação:

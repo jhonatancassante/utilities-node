@@ -60,9 +60,10 @@ const toolsList = [
   {
     slug: "cpf-tester",
     title: "Testador de CPF",
-    description: "Valide se um número de CPF é válido.",
+    description:
+      "Valide CPFs, calcule os dígitos verificadores e encontre variações válidas com a troca de um único dígito.",
     icon: "fa-id-card",
-    status: TOOL_STATUS.soon,
+    status: TOOL_STATUS.available,
   },
   {
     slug: "ar-generator",
