@@ -122,7 +122,7 @@ Os arquivos são ordenados alfabeticamente com comparação numérica natural (p
 
 O Conversor de JSON para CSV migra o utilitário legado para a aplicação:
 
-- Rota: `pages/tools/json-para-csv/index.js`.
+- Rota: `pages/tools/json-to-csv/index.js`.
 - Interface: `features/json-to-csv/components/JsonToCsv/`.
 - Lógica auxiliar: `features/json-to-csv/lib/json.js`.
 - Testes: `tests/unit/features/json-to-csv/lib/json.test.js`.
@@ -133,7 +133,7 @@ A lógica normaliza listas de objetos, listas de valores simples, objetos único
 
 O Conversor de TXT para CSV transforma relatórios com colunas de largura fixa em arquivos CSV:
 
-- Rota: `pages/tools/txt-para-csv/index.js`.
+- Rota: `pages/tools/txt-to-csv/index.js`.
 - Interface: `features/txt-to-csv/components/TxtToCsv/`.
 - Lógica auxiliar: `features/txt-to-csv/lib/txt.js`.
 - Testes: `tests/unit/features/txt-to-csv/lib/txt.test.js`.

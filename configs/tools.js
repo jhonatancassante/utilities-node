@@ -34,7 +34,7 @@ const toolsList = [
     status: TOOL_STATUS.available,
   },
   {
-    slug: "csv-para-json",
+    slug: "csv-to-json",
     title: "Conversor de CSV para JSON",
     description:
       "Converta arquivos CSV em JSON, ajustando a codificação, o delimitador, o cabeçalho e as colunas.",
@@ -42,7 +42,7 @@ const toolsList = [
     status: TOOL_STATUS.available,
   },
   {
-    slug: "json-para-csv",
+    slug: "json-to-csv",
     title: "Conversor de JSON para CSV",
     description:
       "Converta arquivos JSON em CSV, selecionando colunas, delimitador e codificação de saída.",
@@ -50,7 +50,7 @@ const toolsList = [
     status: TOOL_STATUS.available,
   },
   {
-    slug: "txt-para-csv",
+    slug: "txt-to-csv",
     title: "Conversor de TXT para CSV",
     description:
       "Converta relatórios TXT de largura fixa em CSV, ajustando o separador e a formatação de datas e números.",
@@ -58,7 +58,7 @@ const toolsList = [
     status: TOOL_STATUS.available,
   },
   {
-    slug: "testador-cpf",
+    slug: "cpf-tester",
     title: "Testador de CPF",
     description: "Valide se um número de CPF é válido.",
     icon: "fa-id-card",
