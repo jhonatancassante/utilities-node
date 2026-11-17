@@ -61,6 +61,7 @@ Durante o desenvolvimento, a interface fica disponível em `http://localhost:300
 - `/tools/pdf-splitter`: Divisor de PDF.
 - `/tools/csv-para-json`: Conversor de CSV para JSON.
 - `/tools/json-para-csv`: Conversor de JSON para CSV.
+- `/tools/txt-para-csv`: Conversor de TXT para CSV.
 - `/status`: painel de monitoramento da conexão com o banco de dados.
 
 As páginas de ferramentas seguem a estrutura `pages/tools/<slug>/index.js`, com componentes e lógica isolados em `features/<slug>/`. Para adicionar uma ferramenta, atualizar seu status ou conhecer os componentes compartilhados, consulte o [guia Adicionando uma nova ferramenta](adicionando-ferramentas.md).
@@ -70,6 +71,8 @@ O Gerador de QR Code executa a validação da URL e a renderização no navegado
 O Divisor de PDF processa os arquivos no navegador com `pdf-lib` (extração das páginas) e `jszip` (ZIP quando há mais de um arquivo), ambos importados dinamicamente.
 
 Os conversores de CSV e JSON processam os arquivos no navegador com Papa Parse. O Conversor de JSON para CSV aceita listas de objetos, listas de valores simples, objetos únicos e objetos que contenham uma única propriedade array. A seleção de colunas, o delimitador e a codificação do arquivo de saída são controlados na interface.
+
+O Conversor de TXT para CSV interpreta relatórios de largura fixa: identifica o cabeçalho na primeira ou segunda linha, usa as posições das colunas para separar os registros e detecta UTF-8 ou Windows-1252. A interface permite escolher o separador do CSV, incluir BOM UTF-8, remover a hora de datas e trocar a vírgula decimal por ponto. A prévia mostra até 15 linhas e sinaliza registros possivelmente desalinhados.
 
 ## Scripts npm
 
@@ -142,9 +145,10 @@ Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm 
 - `tests/unit/features/pdf-splitter/lib/`: testes unitários das regras de validação, seleção de arquivos, extração de páginas e geração dos arquivos PDF e ZIP.
 - `tests/unit/features/csv-to-json/lib/`: testes unitários da interpretação de CSV e geração de JSON.
 - `tests/unit/features/json-to-csv/lib/`: testes unitários da normalização do JSON, coleta de colunas, conversão de valores, geração do CSV e codificação Latin1.
+- `tests/unit/features/txt-to-csv/lib/`: testes unitários da detecção de codificação, interpretação de colunas de largura fixa, formatação de valores e geração do CSV.
 - `tests/orchestrator.js`: utilitários compartilhados.
 
-Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão. Os testes unitários cobrem a validação/normalização de URLs do Gerador de QR Code, a formatação do nome dos arquivos baixados (`lib/files.js`), as regras do Divisor de PDF, a conversão de CSV para JSON e a conversão de JSON para CSV.
+Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão. Os testes unitários cobrem a validação/normalização de URLs do Gerador de QR Code, a formatação do nome dos arquivos baixados (`lib/files.js`), as regras do Divisor de PDF, a conversão de CSV para JSON, a conversão de JSON para CSV e a conversão de TXT para CSV.
 
 ### Orchestrator
 

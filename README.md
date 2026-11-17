@@ -4,7 +4,7 @@ Nova implementação dos meus utilitários de trabalho, originalmente desenvolvi
 
 **Aplicação publicada:** <https://utilities-node.vercel.app>
 
-> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, um catálogo de ferramentas em `/tools`, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em _features_, consulta e execução de migrations. O Gerador de QR Code, o Divisor de PDF e os conversores de CSV e JSON já estão disponíveis. O Unificador de PDF e o Gerador de AR e Etiquetas foram implementados e aguardam validação prática; os demais utilitários serão implementados gradualmente.
+> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, um catálogo de ferramentas em `/tools`, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em _features_, consulta e execução de migrations. O Gerador de QR Code, o Divisor de PDF e os conversores de CSV, JSON e TXT já estão disponíveis. O Unificador de PDF e o Gerador de AR e Etiquetas foram implementados e aguardam validação prática; os demais utilitários serão implementados gradualmente.
 
 ## Sumário
 
@@ -33,6 +33,7 @@ O que existe hoje:
 - Gerador de QR Code em `/tools/qr-code`, com personalização de cores e download em PNG. A geração e a captura da imagem são realizadas no navegador.
 - Divisor de PDF em `/tools/pdf-splitter`, que extrai um intervalo de páginas de um ou mais PDFs (resultado em PDF ou ZIP). O processamento é realizado no navegador.
 - Unificador de PDF em `/tools/pdf-merger`, que combina dois ou mais PDFs em um único documento, com ordenação natural dos nomes e opção de inserir páginas em branco para manter a paridade de cada arquivo. O processamento é realizado no navegador.
+- Conversor de TXT para CSV em `/tools/txt-para-csv`, que interpreta relatórios de largura fixa, detecta o cabeçalho e permite configurar separador, BOM UTF-8, exibição de datas e separador decimal. O processamento é realizado no navegador.
 - Gerador de AR e Etiquetas em `/tools/ar-generator`, que cadastra destinatários e remetente, consulta CEP e localidades, e gera ARs e etiquetas em PDF A4 com código de barras Code 128. O processamento do PDF é realizado no navegador; a conferência visual e a impressão em escala real ainda precisam ser validadas.
 - Página `/status`, com painel de monitoramento do banco de dados e atualização automática a cada 5 segundos.
 - `GET /api/v1/status`: consulta a saúde do banco. A versão do PostgreSQL só é incluída para usuários com a feature `read:status:all`.
