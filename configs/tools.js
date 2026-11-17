@@ -31,7 +31,7 @@ const toolsList = [
     description:
       "Una vários arquivos PDF em um único documento, direto no navegador.",
     icon: "fa-object-group",
-    status: TOOL_STATUS.soon,
+    status: TOOL_STATUS.available,
   },
   {
     slug: "csv-para-json",
