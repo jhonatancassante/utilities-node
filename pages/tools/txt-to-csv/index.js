@@ -1,10 +1,10 @@
-// pages/tools/txt-para-csv/index.js
+// pages/tools/txt-to-csv/index.js
 import ToolPage from "@/components/ToolPage";
 import TxtToCsv from "@/features/txt-to-csv/components/TxtToCsv";
 
 function TxtToCsvPage() {
   return (
-    <ToolPage slug="txt-para-csv" wide>
+    <ToolPage slug="txt-to-csv" wide>
       <TxtToCsv />
     </ToolPage>
   );

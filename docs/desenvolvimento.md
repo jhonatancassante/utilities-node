@@ -59,9 +59,9 @@ Durante o desenvolvimento, a interface fica disponível em `http://localhost:300
 - `/tools`: catálogo de ferramentas registradas em `configs/tools.js`.
 - `/tools/qr-code`: Gerador de QR Code.
 - `/tools/pdf-splitter`: Divisor de PDF.
-- `/tools/csv-para-json`: Conversor de CSV para JSON.
-- `/tools/json-para-csv`: Conversor de JSON para CSV.
-- `/tools/txt-para-csv`: Conversor de TXT para CSV.
+- `/tools/csv-to-json`: Conversor de CSV para JSON.
+- `/tools/json-to-csv`: Conversor de JSON para CSV.
+- `/tools/txt-to-csv`: Conversor de TXT para CSV.\n- `/tools/cpf-tester`: Testador de CPF.
 - `/status`: painel de monitoramento da conexão com o banco de dados.
 
 As páginas de ferramentas seguem a estrutura `pages/tools/<slug>/index.js`, com componentes e lógica isolados em `features/<slug>/`. Para adicionar uma ferramenta, atualizar seu status ou conhecer os componentes compartilhados, consulte o [guia Adicionando uma nova ferramenta](adicionando-ferramentas.md).

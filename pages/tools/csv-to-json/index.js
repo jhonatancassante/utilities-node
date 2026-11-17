@@ -1,10 +1,10 @@
-// pages/tools/csv-para-json/index.js
+// pages/tools/csv-to-json/index.js
 import ToolPage from "@/components/ToolPage";
 import CsvToJson from "@/features/csv-to-json/components/CsvToJson";
 
 function CsvToJsonPage() {
   return (
-    <ToolPage slug="csv-para-json" wide>
+    <ToolPage slug="csv-to-json" wide>
       <CsvToJson />
     </ToolPage>
   );
