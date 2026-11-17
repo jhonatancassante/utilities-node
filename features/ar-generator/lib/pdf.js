@@ -117,6 +117,31 @@ function drawAR(page, x, y, data, fonts, logo) {
   text(page, "Nº DOC. DE IDENTIDADE", right + 0.7, y + 89.5, 6, bold);
 }
 
+
+const CODE128_PATTERNS = [
+"212222","222122","222221","121223","121322","131222","122213","122312","132212","221213","221312","231212","112232","122132","122231","113222","123122","123221","223211","221132","221231","213212","223112","312131","311222","321122","321221","312212","322112","322211","212123","212321","232121","111323","131123","131321","112313","132113","132311","211313","231113","231311","112133","112331","132131","113123","113321","133121","313121","211331","231131","213113","213311","213131","311123","311321","331121","312113","312311","332111","314111","221411","431111","111224","111422","121124","121421","141122","141221","112214","112412","122114","122411","142112","142211","241211","221114","413111","241112","134111","111242","121142","121241","114212","124112","124211","411212","421112","421211","212141","214121","412121","111143","111341","131141","114113","114311","411113","411311","113141","114131","311141","411131","211412","211214","211232","2331112",
+];
+export function encodeCode128B(value) {
+ const input=String(value??"");
+ if(!input||[...input].some(c=>c.charCodeAt(0)<32||c.charCodeAt(0)>126)) return [];
+ const data=[...input].map(c=>c.charCodeAt(0)-32);
+ const checksum=data.reduce((sum,code,index)=>sum+code*(index+1),104)%103;
+ return [104,...data,checksum,106];
+}
+function drawCode128(page,value,x,y,width,height) {
+ const symbols=encodeCode128B(value);
+ if(!symbols.length) return;
+ const patterns=symbols.map(symbol=>CODE128_PATTERNS[symbol]);
+ const moduleCount=patterns.reduce((sum,pattern)=>sum+[...pattern].reduce((total,run)=>total+Number(run),0),0);
+ const moduleWidth=width/moduleCount;
+ let cursor=0;
+ patterns.forEach(pattern=>[...pattern].forEach((run,index)=>{
+  const barWidth=Number(run)*moduleWidth;
+  if(index%2===0) page.drawRectangle({x:mm(x+cursor),y:yTop(y+height),width:mm(barWidth),height:mm(height),color:rgb(0,0,0)});
+  cursor+=barWidth;
+ }));
+}
+
 function drawLabel(page, x, y, data, title, fonts, logo) {
   const { regular, bold } = fonts;
   rect(page, x, y, 96, 45);
@@ -132,9 +157,8 @@ function drawLabel(page, x, y, data, title, fonts, logo) {
   const cepY = y + 21.5 + (data.complemento ? 3 : 0);
   text(page, data.cep, x + 2, cepY, 8, bold);
   text(page, `${data.cidade}-${data.uf}`, x + 25, cepY, 8, regular);
-  // A área inferior fica reservada ao código de barras postal; o CEP é
-  // impresso novamente em caracteres para continuar identificável.
-  text(page, data.cep.replace(/\D/g, ""), x + 4, y + 37, 5, regular);
+  // Código de barras Code 128 do CEP, nas dimensões do layout legado.
+  drawCode128(page, String(data.cep ?? "").replace(/\D/g, ""), x + 4, y + 23, 47, 20);
   if (data.observacao && title === "DESTINATÁRIO") {
     text(page, "Observação:", x + 55, y + 26, 8.5, bold);
     fit(page, data.observacao, x + 55, y + 30.5, 38, 8, regular);

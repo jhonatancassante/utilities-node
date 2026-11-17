@@ -18,6 +18,22 @@ const EMPTY = {
 };
 const IBGE = "https://servicodados.ibge.gov.br/api/v1/localidades/estados";
 
+
+async function loadLogoAsPng(blob) {
+ const objectUrl=URL.createObjectURL(blob);
+ try {
+  const image=new Image();
+  await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject;image.src=objectUrl;});
+  const canvas=document.createElement("canvas");
+  canvas.width=image.naturalWidth; canvas.height=image.naturalHeight;
+  const context=canvas.getContext("2d");
+  if(!context) throw new Error("Não foi possível preparar o logo.");
+  context.drawImage(image,0,0);
+  const base64=canvas.toDataURL("image/png").split(",")[1];
+  return Uint8Array.from(atob(base64),character=>character.charCodeAt(0));
+ } finally { URL.revokeObjectURL(objectUrl); }
+}
+
 function AddressFields({ value, setValue, prefix, ufs, cities, onUfChange, onCepBlur, observation = false }) {
   const update = (field, next) => setValue((current) => ({ ...current, [field]: next }));
   const input = (field, label, required = true, maxLength = 65) => (
@@ -35,6 +51,8 @@ function AddressFields({ value, setValue, prefix, ufs, cities, onUfChange, onCep
           if (field === "numero") next = next.replace(/\D/g, "").slice(0, 8);
           update(field, next);
         }}
+        pattern={field === "cep" ? "[0-9]{5}-[0-9]{3}" : undefined}
+        title={field === "cep" ? "Informe um CEP com oito dígitos." : undefined}
         onBlur={field === "cep" ? onCepBlur : undefined}
       />
     </label>
@@ -58,6 +76,7 @@ function AddressFields({ value, setValue, prefix, ufs, cities, onUfChange, onCep
         <span>Cidade *</span>
         <select required disabled={!value.uf || !cities.length} value={value.cidade} onChange={(event) => update("cidade", event.target.value)}>
           <option value="">{value.uf ? "Selecione a cidade..." : "Selecione a UF primeiro"}</option>
+          {value.cidade && !cities.some((city) => city.nome === value.cidade) && <option value={value.cidade}>{value.cidade}</option>}
           {cities.map((city) => <option key={city.id} value={city.nome}>{city.nome}</option>)}
         </select>
       </label>
@@ -86,9 +105,10 @@ export default function ArGenerator() {
       .then((response) => { if (!response.ok) throw new Error(); return response.json(); })
       .then((data) => { if (active) setUfs(data); })
       .catch(() => { if (active) setStatus({ type: "error", message: "Não foi possível carregar as UFs do IBGE." }); });
-    fetch("/assets/logo_correios.gif")
-      .then((response) => response.ok ? response.arrayBuffer() : null)
-      .then((bytes) => { if (active && bytes) setLogoBytes(new Uint8Array(bytes)); })
+    fetch("/logo_correios.gif")
+      .then((response) => { if (!response.ok) throw new Error("Logo indisponível."); return response.blob(); })
+      .then(loadLogoAsPng)
+      .then((bytes) => { if (active) setLogoBytes(bytes); })
       .catch(() => {});
     fetch(`${IBGE}/SP/municipios?orderBy=nome`)
       .then((response) => response.ok ? response.json() : [])
@@ -199,9 +219,14 @@ export default function ArGenerator() {
       <form id="recipient-form" onSubmit={addRecord} hidden={tab !== "recipient"}>
         <div id="recipient-panel" role="tabpanel" aria-labelledby="tab-recipient">
           <AddressFields value={recipient} setValue={setRecipient} prefix="recipient" ufs={ufs} cities={recipientCities} onUfChange={(uf) => changeUf("recipient", uf)} onCepBlur={() => lookupCep("recipient")} observation />
-          <div className={styles.actions}><Button type="submit" icon="fa-plus">Incluir destinatário</Button></div>
         </div>
       </form>
+      <div className={styles.actions}>
+        <Button type="button" icon="fa-plus" onClick={() => {
+          if (tab !== "recipient") setTab("recipient");
+          window.requestAnimationFrame(() => document.getElementById("recipient-form")?.requestSubmit());
+        }}>Incluir destinatário</Button>
+      </div>
       <form id="sender-form" onSubmit={(event) => event.preventDefault()} hidden={tab !== "sender"}>
         <div id="sender-panel" role="tabpanel" aria-labelledby="tab-sender">
           <AddressFields value={sender} setValue={setSender} prefix="sender" ufs={ufs} cities={senderCities} onUfChange={(uf) => changeUf("sender", uf)} onCepBlur={() => lookupCep("sender")} />
