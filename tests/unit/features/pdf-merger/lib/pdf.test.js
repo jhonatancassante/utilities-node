@@ -103,7 +103,7 @@ describe("features/pdf-merger/lib/pdf.js", () => {
 
       expect(result.ok).toBe(true);
       expect(result.filename).toBe("20260730140509.pdf");
-      expect(result.pageCount).toBe(6);
+      expect(result.pageCount).toBe(8);
       expect(await getPdfPageSizes(result.bytes)).toEqual([
         { width: 100, height: 150 },
         { width: 100, height: 150 },
@@ -111,6 +111,8 @@ describe("features/pdf-merger/lib/pdf.js", () => {
         { width: 200, height: 300 },
         { width: 200, height: 300 },
         { width: 200, height: 300 },
+        { width: 300, height: 400 },
+        { width: 300, height: 400 },
       ]);
     });
 
