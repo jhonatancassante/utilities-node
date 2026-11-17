@@ -9,12 +9,24 @@ import styles from "./index.module.css";
 
 const DEFAULT_SENDER = {
   nome: "MUNICÍPIO DE NOVA ODESSA - SETOR DE TRIBUTAÇÃO E DÍVIDA ATIVA",
-  cep: "13380-017", endereco: "AVENIDA JOÃO PESSOA", numero: "777",
-  complemento: "", bairro: "CENTRO", uf: "SP", cidade: "Nova Odessa",
+  cep: "13380-017",
+  endereco: "AVENIDA JOÃO PESSOA",
+  numero: "777",
+  complemento: "",
+  bairro: "CENTRO",
+  uf: "SP",
+  cidade: "Nova Odessa",
 };
 const EMPTY = {
-  cep: "", nome: "", endereco: "", numero: "", complemento: "",
-  bairro: "", uf: "", cidade: "", observacao: "",
+  cep: "",
+  nome: "",
+  endereco: "",
+  numero: "",
+  complemento: "",
+  bairro: "",
+  uf: "",
+  cidade: "",
+  observacao: "",
 };
 const IBGE = "https://servicodados.ibge.gov.br/api/v1/localidades/estados";
 

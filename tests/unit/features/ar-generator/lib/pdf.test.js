@@ -25,6 +25,7 @@ function makeRecord(index) {
   };
 }
 
+// prettier-ignore
 describe("features/ar-generator/lib/pdf.js", () => {
   describe("encodeCode128B()", () => {
     test("Codifica CEP em Code 128 conjunto B com checksum", () => {
