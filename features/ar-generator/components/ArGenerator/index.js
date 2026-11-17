@@ -248,10 +248,10 @@ export default function ArGenerator() {
       <div className={styles.tabs} role="tablist" aria-label="Dados do aviso de recebimento">
         <button type="button" role="tab" id="tab-recipient" aria-controls="recipient-panel" aria-selected={tab === "recipient"} tabIndex={tab === "recipient" ? 0 : -1} onClick={() => setTab("recipient")} onKeyDown={(event) => {
           if (event.key === "ArrowRight") { event.preventDefault(); setTab("sender"); document.getElementById("tab-sender")?.focus(); }
-        }}>Destinatário</button>
+        }}><i className="fas fa-user" aria-hidden="true"></i> Destinatário</button>
         <button type="button" role="tab" id="tab-sender" aria-controls="sender-panel" aria-selected={tab === "sender"} tabIndex={tab === "sender" ? 0 : -1} onClick={() => setTab("sender")} onKeyDown={(event) => {
           if (event.key === "ArrowLeft") { event.preventDefault(); setTab("recipient"); document.getElementById("tab-recipient")?.focus(); }
-        }}>Remetente</button>
+        }}><i className="fas fa-paper-plane" aria-hidden="true"></i> Remetente</button>
       </div>
       <form id="recipient-form" onSubmit={addRecord} hidden={tab !== "recipient"}>
         <div id="recipient-panel" role="tabpanel" aria-labelledby="tab-recipient">
@@ -261,7 +261,7 @@ export default function ArGenerator() {
       <form id="sender-form" onSubmit={(event) => event.preventDefault()} hidden={tab !== "sender"}>
         <div id="sender-panel" role="tabpanel" aria-labelledby="tab-sender">
           <AddressFields value={sender} setValue={setSender} prefix="sender" ufs={ufs} cities={senderCities} onUfChange={(uf) => changeUf("sender", uf)} onCepBlur={() => lookupCep("sender")} />
-          <div className={styles.actions}><Button type="button" variant="danger" icon="fa-undo" onClick={() => {
+          <div className={styles.actions}><Button type="button" variant="outline" icon="fa-undo" onClick={() => {
             setSender(DEFAULT_SENDER);
             fetchCities("SP", setSenderCities);
           }}>Restaurar remetente padrão</Button></div>
@@ -293,7 +293,7 @@ export default function ArGenerator() {
             <strong>{includeSenderLabels ? "Sim" : "Não"}</strong>
           </label>
           <div className={styles.actions}>
-            <Button icon="fa-file-pdf" onClick={printPdf} disabled={busy}>{busy ? "Gerando PDF..." : "Gerar PDF"}</Button>
+            <Button variant="success" icon="fa-file-pdf" onClick={printPdf} disabled={busy}>{busy ? "Gerando PDF..." : "Gerar PDF"}</Button>
             <Button variant="danger" icon="fa-trash-alt" onClick={clearRecords}>{confirmClear ? "Confirmar limpeza" : "Limpar tudo"}</Button>
           </div>
         </section>
