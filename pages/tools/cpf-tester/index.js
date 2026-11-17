@@ -4,7 +4,7 @@ import CpfTester from "@/features/cpf-tester/components/CpfTester";
 
 function CpfTesterPage() {
   return (
-    <ToolPage slug="cpf-tester">
+    <ToolPage slug="cpf-tester" wide>
       <CpfTester />
     </ToolPage>
   );
