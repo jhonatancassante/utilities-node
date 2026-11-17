@@ -4,7 +4,7 @@ Nova implementação dos meus utilitários de trabalho, originalmente desenvolvi
 
 **Aplicação publicada:** <https://utilities-node.vercel.app>
 
-> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, um catálogo de ferramentas em `/tools`, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em _features_, consulta e execução de migrations. O Gerador de QR Code, o Divisor de PDF e o Unificador de PDF já estão disponíveis; os demais utilitários serão implementados gradualmente.
+> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, um catálogo de ferramentas em `/tools`, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em _features_, consulta e execução de migrations. O Gerador de QR Code e o Divisor de PDF já estão disponíveis. O Unificador de PDF foi implementado e aguarda validação; os demais utilitários serão implementados gradualmente.
 
 ## Sumário
 
