@@ -137,7 +137,7 @@ Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm 
 - `tests/unit/features/qr-code/lib/`: testes unitários da normalização de URLs e da formatação do timestamp usado nos downloads.
 - `tests/orchestrator.js`: utilitários compartilhados.
 
-Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão. Os testes unitários cobrem a validação/normalização de URLs do Gerador de QR Code, a formatação do nome dos arquivos baixados (`lib/files.js`) e as regras do Divisor de PDF (validação do intervalo, seleção de arquivos, extração de páginas e geração do ZIP).
+Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão. Os testes unitários cobrem a validação/normalização de URLs do Gerador de QR Code, a formatação do nome dos arquivos baixados (`lib/files.js`) e as regras do Divisor de PDF (validação do intervalo, seleção de arquivos, extração de páginas, tratamento de arquivos mais curtos que o intervalo pedido e geração do ZIP).
 
 ### Orchestrator
 

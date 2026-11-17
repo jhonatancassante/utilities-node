@@ -4,6 +4,7 @@ import Button from "@/components/Button";
 import FileDropzone from "@/components/FileDropzone";
 import HelpToggle from "@/components/HelpToggle";
 import StatusMessage from "@/components/StatusMessage";
+import WarningList from "@/components/WarningList";
 import { downloadBlob } from "@/lib/files.js";
 import shared from "@/styles/shared.module.css";
 import { addPdfFiles, splitPdfFiles, validateRange } from "../../lib/pdf.js";
@@ -23,6 +24,7 @@ function PdfSplitter() {
   const [pageInit, setPageInit] = useState("1");
   const [pageCount, setPageCount] = useState("4");
   const [status, setStatus] = useState({ type: "info", message: "" });
+  const [warnings, setWarnings] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
   function handleFiles(incoming) {
@@ -39,6 +41,7 @@ function PdfSplitter() {
 
   function handleClear() {
     setFiles([]);
+    setWarnings([]);
     setStatus({ type: "info", message: "" });
   }
 
@@ -60,6 +63,7 @@ function PdfSplitter() {
     }
 
     setIsProcessing(true);
+    setWarnings([]);
     setStatus({ type: "info", message: "Processando..." });
 
     try {
@@ -71,6 +75,7 @@ function PdfSplitter() {
       }
 
       downloadBlob(result.blob, result.filename);
+      setWarnings(result.warnings);
       setStatus({ type: "success", message: "Download iniciado!" });
     } catch {
       setStatus({
@@ -89,8 +94,11 @@ function PdfSplitter() {
         enviar (vários arquivos são permitidos). Em seguida, defina a página
         inicial e o número de páginas que deseja extrair de cada PDF. O
         resultado será um arquivo PDF (se você enviar apenas um arquivo) ou um
-        ZIP (se enviar vários) contendo os PDFs extraídos. Tudo é processado no
-        seu navegador: os arquivos não são enviados a nenhum servidor.
+        ZIP (se enviar vários) contendo os PDFs extraídos. Se um arquivo tiver
+        menos páginas que o pedido, serão extraídas as páginas da inicial até a
+        última, e ele aparecerá em um aviso; se não chegar à página inicial, ele
+        será ignorado. Tudo é processado no seu navegador: os arquivos não são
+        enviados a nenhum servidor.
       </HelpToggle>
 
       <form onSubmit={handleSubmit} noValidate>
@@ -154,6 +162,15 @@ function PdfSplitter() {
       </form>
 
       <StatusMessage type={status.type}>{status.message}</StatusMessage>
+
+      <WarningList
+        title={
+          warnings.length === 1
+            ? "1 arquivo tem menos páginas que o intervalo pedido:"
+            : `${warnings.length} arquivos têm menos páginas que o intervalo pedido:`
+        }
+        items={warnings}
+      />
     </div>
   );
 }
