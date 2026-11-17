@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import requestAPI, { APIError } from "@/lib/api.js";
 
 describe("lib/api.js", () => {
