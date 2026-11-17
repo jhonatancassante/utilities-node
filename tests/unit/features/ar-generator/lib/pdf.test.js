@@ -1,5 +1,5 @@
 import { PDFDocument } from "pdf-lib";
-import { encodeCode128B, generateArPdf } from "@/features/ar-generator/lib/pdf.js";
+import { encodeCode128B, encodeCode128C, generateArPdf } from "@/features/ar-generator/lib/pdf.js";
 
 function makeRecord(index) {
   return {
@@ -31,6 +31,16 @@ describe("features/ar-generator/lib/pdf.js", () => {
       expect(encodeCode128B("13380017")).toEqual([
         104, 17, 19, 19, 24, 16, 16, 17, 23, 70, 106,
       ]);
+    });
+
+    test("Codifica CEP numérico no conjunto C, como o JsBarcode do gerador original", () => {
+      expect(encodeCode128C("13380017")).toEqual([105, 13, 38, 0, 17, 56, 106]);
+    });
+
+    test("Rejeita conteúdo vazio, ímpar ou não numérico no conjunto C", () => {
+      expect(encodeCode128C("")).toEqual([]);
+      expect(encodeCode128C("1338001")).toEqual([]);
+      expect(encodeCode128C("13380A17")).toEqual([]);
     });
 
     test("Rejeita conteúdo vazio ou fora do conjunto ASCII suportado", () => {

@@ -1,7 +1,7 @@
 // features/ar-generator/lib/pdf.js
 // Gera os documentos no navegador. A geometria é definida em milímetros
 // para preservar o posicionamento do gerador legado.
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib";
 import { getFormattedTimestamp } from "@/lib/files.js";
 
 const MM = 72 / 25.4;
@@ -23,12 +23,32 @@ function text(page, value, x, y, size, font, color = rgb(0, 0, 0)) {
 }
 
 // prettier-ignore
-function line(page, x1, y1, x2, y2, width = 0.35) {
-  page.drawLine({
+function line(page, x1, y1, x2, y2, width = 0.35, dashArray) {
+  const options = {
     start: { x: mm(x1), y: yTop(y1) },
     end: { x: mm(x2), y: yTop(y2) },
     thickness: mm(width),
     color: rgb(0, 0, 0),
+  };
+  if (dashArray) options.dashArray = dashArray.map(mm);
+  page.drawLine(options);
+}
+
+// Desenha um retângulo tracejado, como no formulário original dos Correios.
+function dashedRect(page, x, y, width, height, lineWidth = 0.2) {
+  line(page, x, y, x + width, y, lineWidth, [0.3, 0.5]);
+  line(page, x + width, y, x + width, y + height, lineWidth, [0.3, 0.5]);
+  line(page, x + width, y + height, x, y + height, lineWidth, [0.3, 0.5]);
+  line(page, x, y + height, x, y, lineWidth, [0.3, 0.5]);
+}
+
+function verticalText(page, value, x, y, size, font) {
+  page.drawText(value, {
+    x: mm(x),
+    y: yTop(y) - size * 0.82,
+    size,
+    font,
+    rotate: degrees(90),
   });
 }
 
@@ -58,8 +78,8 @@ function drawAR(page, x, y, data, fonts, logo) {
   const sender = data.remetente;
   rect(page, x, y, 140, 94);
   line(page, x + 8, y, x + 8, y + 94);
-  line(page, x + 7, y, x + 7, y + 94, 0.2);
-  text(page, "(ÁREA DE COLA NO VERSO)", x + 4.5, y + 65, 6, regular);
+  line(page, x + 7, y, x + 7, y + 94, 0.2, [0.3, 0.5]);
+  verticalText(page, "(ÁREA DE COLA NO VERSO)", x + 5, y + 65, 6, regular);
   const right = x + 106;
   line(page, right, y, right, y + 52);
   line(page, right, y + 59, right, y + 94);
@@ -80,7 +100,7 @@ function drawAR(page, x, y, data, fonts, logo) {
   text(page, data.bairro.toUpperCase(), x + 10, yy, 6, regular);
   yy += 2.5;
   text(page, `${data.cep} - ${data.cidade.toUpperCase()} - ${data.uf}`, x + 10, yy, 6, regular);
-  rect(page, x + 28, y + 30, 52, 3.5, 0.2);
+  dashedRect(page, x + 28, y + 30, 52, 3.5);
   text(page, "(CÓDIGO DE BARRAS OU Nº DE REGISTRO DO OBJETO)", x + 30, y + 32.5, 5, regular);
   text(page, "ENDEREÇO PARA DEVOLUÇÃO DO AR", x + 10, y + 40, 6, bold);
   const senderStreet = `${sender.endereco}, ${sender.numero}${sender.complemento ? ` - ${sender.complemento}` : ""}`;
@@ -113,7 +133,8 @@ function drawAR(page, x, y, data, fonts, logo) {
     text(page, String(i + 5), motiveX + 32.7, top - 1, 5.5, regular);
     text(page, v, motiveX + 35.5, top - 1, 5.5, regular);
   });
-  text(page, "RUBRICA E MATRÍCULA DO CARTEIRO", right + 0.7, y + 62, 5.5, bold);
+  text(page, "RUBRICA E MATRÍCULA DO", right + 0.7, y + 61.5, 5.5, bold);
+  text(page, "CARTEIRO", right + 0.7, y + 64, 5.5, bold);
   line(page, x + 8, y + 80, x + 140, y + 80);
   line(page, x + 8, y + 87, x + 140, y + 87);
   text(page, "ASSINATURA DO RECEBEDOR", x + 8.4, y + 82.5, 6, bold);
@@ -134,9 +155,19 @@ export function encodeCode128B(value) {
  const checksum=data.reduce((sum,code,index)=>sum+code*(index+1),104)%103;
  return [104,...data,checksum,106];
 }
+
+// O JsBarcode usa o conjunto C para CEPs numéricos pares, reduzindo o
+// comprimento do código sem alterar o conteúdo codificado.
+export function encodeCode128C(value) {
+ const input=String(value??"");
+ if(!/^\\d{2,}$/.test(input)||input.length%2!==0) return [];
+ const data=input.match(/\\d{2}/g).map(Number);
+ const checksum=data.reduce((sum,code,index)=>sum+code*(index+1),105)%103;
+ return [105,...data,checksum,106];
+}
 // prettier-ignore
 function drawCode128(page,value,x,y,width,height) {
- const symbols=encodeCode128B(value);
+ const symbols=encodeCode128C(value);
  if(!symbols.length) return;
  const patterns=symbols.map(symbol=>CODE128_PATTERNS[symbol]);
  const moduleCount=patterns.reduce((sum,pattern)=>sum+[...pattern].reduce((total,run)=>total+Number(run),0),0);
