@@ -4,7 +4,7 @@ import PdfMerger from "@/features/pdf-merger/components/PdfMerger";
 
 function PdfMergerPage() {
   return (
-    <ToolPage slug="pdf-merger">
+    <ToolPage wide slug="pdf-merger">
       <PdfMerger />
     </ToolPage>
   );

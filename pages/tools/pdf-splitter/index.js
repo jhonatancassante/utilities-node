@@ -4,7 +4,7 @@ import PdfSplitter from "@/features/pdf-splitter/components/PdfSplitter";
 
 function PdfSplitterPage() {
   return (
-    <ToolPage slug="pdf-splitter">
+    <ToolPage wide slug="pdf-splitter">
       <PdfSplitter />
     </ToolPage>
   );
