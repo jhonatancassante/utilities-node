@@ -132,7 +132,8 @@ export default function ArGenerator() {
   }, []);
 
   async function fetchCities(uf, setter) {
-    if (!uf) { setter([]); return; }
+    setter([]);
+    if (!uf) return;
     try {
       const response = await fetch(`${IBGE}/${uf}/municipios?orderBy=nome`);
       if (!response.ok) throw new Error();
@@ -186,7 +187,29 @@ export default function ArGenerator() {
       window.requestAnimationFrame(() => senderForm?.reportValidity());
       return;
     }
-    setRecords((current) => [...current, { ...recipient, remetente: { ...sender } }]);
+    const requiredFields = ["cep", "nome", "endereco", "numero", "bairro", "uf", "cidade"];
+    const recipientIsIncomplete = requiredFields.some((field) => !recipient[field]?.trim());
+    const senderIsIncomplete = requiredFields.some((field) => !sender[field]?.trim());
+
+    if (recipientIsIncomplete || senderIsIncomplete) {
+      setStatus({
+        type: "error",
+        message: "Preencha todos os campos obrigatórios com informações válidas.",
+      });
+      return;
+    }
+
+    const cleanRecipient = Object.fromEntries(
+      Object.entries(recipient).map(([field, value]) => [field, value.trim()]),
+    );
+    const cleanSender = Object.fromEntries(
+      Object.entries(sender).map(([field, value]) => [field, value.trim()]),
+    );
+
+    setRecords((current) => [
+      ...current,
+      { ...cleanRecipient, remetente: cleanSender },
+    ]);
     setRecipient(EMPTY);
     setRecipientCities([]);
     setStatus({ type: "success", message: "Destinatário incluído na lista." });
