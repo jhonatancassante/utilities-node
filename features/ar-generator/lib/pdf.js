@@ -43,7 +43,7 @@ function dashedRect(page, x, y, width, height, lineWidth = 0.2) {
 }
 
 function wrapText(value, font, size, maxWidth) {
-  const words = String(value ?? "").split(/\\s+/);
+  const words = String(value ?? "").split(/\s+/);
   const lines = [];
   let current = "";
   words.forEach((word) => {
