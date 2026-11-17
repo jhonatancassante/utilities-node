@@ -258,12 +258,6 @@ export default function ArGenerator() {
           <AddressFields value={recipient} setValue={setRecipient} prefix="recipient" ufs={ufs} cities={recipientCities} onUfChange={(uf) => changeUf("recipient", uf)} onCepBlur={() => lookupCep("recipient")} observation />
         </div>
       </form>
-      <div className={styles.actions}>
-        <Button type="button" icon="fa-plus" onClick={() => {
-          if (tab !== "recipient") setTab("recipient");
-          window.requestAnimationFrame(() => document.getElementById("recipient-form")?.requestSubmit());
-        }}>Incluir destinatário</Button>
-      </div>
       <form id="sender-form" onSubmit={(event) => event.preventDefault()} hidden={tab !== "sender"}>
         <div id="sender-panel" role="tabpanel" aria-labelledby="tab-sender">
           <AddressFields value={sender} setValue={setSender} prefix="sender" ufs={ufs} cities={senderCities} onUfChange={(uf) => changeUf("sender", uf)} onCepBlur={() => lookupCep("sender")} />
@@ -273,6 +267,12 @@ export default function ArGenerator() {
           }}>Restaurar remetente padrão</Button></div>
         </div>
       </form>
+      <div className={styles.actions}>
+        <Button type="button" icon="fa-plus" onClick={() => {
+          if (tab !== "recipient") setTab("recipient");
+          window.requestAnimationFrame(() => document.getElementById("recipient-form")?.requestSubmit());
+        }}>Incluir destinatário</Button>
+      </div>
       {records.length > 0 && (
         <section className={styles.tableSection}>
           <h2>Destinatários cadastrados ({records.length})</h2>
