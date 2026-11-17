@@ -179,7 +179,7 @@ export async function splitPdfFiles(files, { pageInit, pageCount }, now) {
 
     if (result.status === "extracted") {
       outputs.push({
-        name: buildOutputName(file.name, pageInit, pageCount),
+        name: buildOutputName(file.name, pageInit, result.extractedCount),
         bytes: result.bytes,
       });
     }

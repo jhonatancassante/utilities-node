@@ -200,8 +200,9 @@ describe("features/pdf-splitter/lib/pdf.js", () => {
       for (const [name, entry] of Object.entries(zip.files)) {
         pageCounts[name] = await countPages(await entry.async("uint8array"));
       }
+
       expect(pageCounts).toEqual({
-        "10_pages_from_10_onze.pdf": 2,
+        "2_pages_from_10_onze.pdf": 2,
         "10_pages_from_10_vinte.pdf": 10,
       });
     });
