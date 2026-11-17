@@ -10,6 +10,7 @@ const pageH = 297;
 const mm = (value) => value * MM;
 const yTop = (value) => mm(pageH - value);
 
+// prettier-ignore
 function text(page, value, x, y, size, font, color = rgb(0, 0, 0)) {
   if (!value) return;
   page.drawText(String(value), {
@@ -21,6 +22,7 @@ function text(page, value, x, y, size, font, color = rgb(0, 0, 0)) {
   });
 }
 
+// prettier-ignore
 function line(page, x1, y1, x2, y2, width = 0.35) {
   page.drawLine({
     start: { x: mm(x1), y: yTop(y1) },
@@ -30,6 +32,7 @@ function line(page, x1, y1, x2, y2, width = 0.35) {
   });
 }
 
+// prettier-ignore
 function rect(page, x, y, w, h, width = 0.35) {
   page.drawRectangle({
     x: mm(x),
@@ -41,6 +44,7 @@ function rect(page, x, y, w, h, width = 0.35) {
   });
 }
 
+// prettier-ignore
 function fit(page, value, x, y, maxWidth, size, font) {
   let current = size;
   const label = String(value ?? "");
@@ -48,6 +52,7 @@ function fit(page, value, x, y, maxWidth, size, font) {
   text(page, label, x, y, current, font);
 }
 
+// prettier-ignore
 function drawAR(page, x, y, data, fonts, logo) {
   const { regular, bold } = fonts;
   const sender = data.remetente;
@@ -121,6 +126,7 @@ function drawAR(page, x, y, data, fonts, logo) {
 const CODE128_PATTERNS = [
 "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213","221312","231212","112232","122132","122231","113222","123122","123221","223211","221132","221231","213212","223112","312131","311222","321122","321221","312212","322112","322211","212123","212321","232121","111323","131123","131321","112313","132113","132311","211313","231113","231311","112133","112331","132131","113123","113321","133121","313121","211331","231131","213113","213311","213131","311123","311321","331121","312113","312311","332111","314111","221411","431111","111224","111422","121124","121421","141122","141221","112214","112412","122114","122411","142112","142211","241211","221114","413111","241112","134111","111242","121142","121241","114212","124112","124211","411212","421112","421211","212141","214121","412121","111143","111341","131141","114113","114311","411113","411311","113141","114131","311141","411131","211412","211214","211232","2331112",
 ];
+// prettier-ignore
 export function encodeCode128B(value) {
  const input=String(value??"");
  if(!input||[...input].some(c=>c.charCodeAt(0)<32||c.charCodeAt(0)>126)) return [];
@@ -128,6 +134,7 @@ export function encodeCode128B(value) {
  const checksum=data.reduce((sum,code,index)=>sum+code*(index+1),104)%103;
  return [104,...data,checksum,106];
 }
+// prettier-ignore
 function drawCode128(page,value,x,y,width,height) {
  const symbols=encodeCode128B(value);
  if(!symbols.length) return;
@@ -142,6 +149,7 @@ function drawCode128(page,value,x,y,width,height) {
  }));
 }
 
+// prettier-ignore
 function drawLabel(page, x, y, data, title, fonts, logo) {
   const { regular, bold } = fonts;
   rect(page, x, y, 96, 45);
@@ -165,6 +173,7 @@ function drawLabel(page, x, y, data, title, fonts, logo) {
   }
 }
 
+// prettier-ignore
 export async function generateArPdf(records, includeSenderLabels, logoBytes, now) {
   const pdf = await PDFDocument.create();
   const fonts = {

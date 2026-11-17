@@ -19,6 +19,7 @@ const EMPTY = {
 const IBGE = "https://servicodados.ibge.gov.br/api/v1/localidades/estados";
 
 
+// prettier-ignore
 async function loadLogoAsPng(blob) {
  const objectUrl=URL.createObjectURL(blob);
  try {
@@ -34,6 +35,7 @@ async function loadLogoAsPng(blob) {
  } finally { URL.revokeObjectURL(objectUrl); }
 }
 
+// prettier-ignore
 function AddressFields({ value, setValue, prefix, ufs, cities, onUfChange, onCepBlur, observation = false }) {
   const update = (field, next) => setValue((current) => ({ ...current, [field]: next }));
   const input = (field, label, required = true, maxLength = 65) => (
@@ -85,6 +87,7 @@ function AddressFields({ value, setValue, prefix, ufs, cities, onUfChange, onCep
   );
 }
 
+// prettier-ignore
 export default function ArGenerator() {
   const [tab, setTab] = useState("recipient");
   const [recipient, setRecipient] = useState(EMPTY);
