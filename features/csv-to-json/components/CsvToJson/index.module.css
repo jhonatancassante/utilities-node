@@ -56,6 +56,7 @@
 }
 
 .headerLineItem {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -79,7 +80,6 @@
   box-shadow: inset 3px 0 0 var(--accent);
 }
 
-.headerLineItem input,
 .columnItem input {
   display: grid;
   flex: 0 0 auto;
@@ -97,13 +97,11 @@
     border-color var(--transition-fast);
 }
 
-.headerLineItem input:checked,
 .columnItem input:checked {
   border-color: var(--accent);
   background: var(--accent);
 }
 
-.headerLineItem input:checked::after,
 .columnItem input:checked::after {
   width: 4px;
   height: 8px;
@@ -113,10 +111,26 @@
   transform: rotate(45deg);
 }
 
-.headerLineItem input:focus-visible,
 .columnItem input:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.headerLineItem input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  margin: -1px;
+}
+
+.headerLineItem:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .lineNumber {
@@ -219,51 +233,46 @@
   margin-top: 24px;
 }
 
-.outputHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.outputHeader h2 {
-  font-size: 16px;
+.jsonOutputWrapper {
+  position: relative;
+  width: 100%;
+  min-width: 0;
 }
 
 .copyButton {
-  min-height: 34px;
-  padding: 6px 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  border: 1px solid var(--border-color);
+  position: absolute;
+  top: 18px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
   border-radius: var(--radius-sm);
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  font-size: 12px;
+  background: transparent;
+  color: #e8edf7;
+  font-size: 15px;
   cursor: pointer;
   transition:
     background-color var(--transition-fast),
-    border-color var(--transition-fast);
+    color var(--transition-fast);
 }
 
 .copyButton:hover {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
 .copyButton.copied {
-  border-color: var(--success);
-  background: var(--success-bg);
-  color: var(--success-fg);
+  color: var(--success);
 }
 
 .jsonOutput {
   max-width: 100%;
   max-height: 320px;
   margin-top: 10px;
-  padding: 20px;
+  padding: 52px 20px 20px;
   overflow: auto;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-sm);
@@ -297,7 +306,7 @@
   }
 
   .jsonOutput {
-    padding: 14px;
+    padding: 48px 14px 14px;
     font-size: 12px;
   }
 }
