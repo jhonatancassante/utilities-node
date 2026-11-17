@@ -12,7 +12,7 @@ components/ToolPage/                          estrutura compartilhada das págin
 components/Button/                            botão reutilizável
 pages/tools/index.js                          catálogo de ferramentas (/tools)
 pages/tools/<slug>/index.js                   página da ferramenta (/tools/<slug>)
-features/<slug>/components/                   componentes e CSS Modules da ferramenta
+features/<slug>/components/                   componentes React e CSS Modules da ferramenta
 features/<slug>/lib/                           lógica auxiliar independente de React
 tests/unit/features/<slug>/                   testes unitários da lógica
 ```
@@ -106,3 +106,14 @@ O Divisor de PDF demonstra uma ferramenta que processa arquivos no navegador:
 - Testes: `tests/unit/features/pdf-splitter/lib/`.
 
 A ferramenta extrai um intervalo de páginas de um ou mais PDFs: com um arquivo, o resultado é um PDF; com vários, um ZIP. Arquivos com menos páginas que o intervalo pedido não geram erro: são extraídos da página inicial até a última e listados em um aviso; arquivos que não chegam à página inicial são ignorados e também listados. Só há erro quando nenhum arquivo tem a página inicial. As bibliotecas `pdf-lib` e `jszip` são importadas dinamicamente. As funções de `lib/pdf.js` retornam objetos `{ ok, ... }` para situações esperadas (intervalo inválido, arquivo que não é PDF, nenhum arquivo com a página inicial), de modo que a interface exiba a mensagem sem depender de exceções.
+
+## Referência: Unificador de PDF
+
+O Unificador de PDF combina dois ou mais arquivos em um único documento:
+
+- Rota: `pages/tools/pdf-merger/index.js`.
+- Interface: `features/pdf-merger/components/PdfMerger/`.
+- Lógica auxiliar: `features/pdf-merger/lib/pdf.js`.
+- Testes: `tests/unit/features/pdf-merger/lib/`.
+
+Os arquivos são ordenados alfabeticamente com comparação numérica natural (por exemplo, `arquivo2.pdf` antes de `arquivo10.pdf`). Por padrão, cada PDF com quantidade ímpar de páginas recebe uma página em branco ao final, usando as dimensões da última página daquele arquivo. A opção pode ser desativada antes da unificação. A dependência `pdf-lib` é importada sob demanda e todo o processamento ocorre no navegador.

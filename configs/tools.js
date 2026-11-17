@@ -26,11 +26,12 @@ const toolsList = [
     status: TOOL_STATUS.available,
   },
   {
-    slug: "unificador-pdf",
+    slug: "pdf-merger",
     title: "Unificador de PDF",
-    description: "Junte vários arquivos PDF em um único documento.",
-    icon: "fa-layer-group",
-    status: TOOL_STATUS.soon,
+    description:
+      "Una vários arquivos PDF em um único documento, direto no navegador.",
+    icon: "fa-object-group",
+    status: TOOL_STATUS.available,
   },
   {
     slug: "csv-para-json",
