@@ -30,7 +30,6 @@ const EMPTY = {
 };
 const IBGE = "https://servicodados.ibge.gov.br/api/v1/localidades/estados";
 
-
 // prettier-ignore
 async function loadLogoAsPng(blob) {
  const objectUrl=URL.createObjectURL(blob);
