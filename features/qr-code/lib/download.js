@@ -1,21 +1,5 @@
 // features/qr-code/lib/download.js
-
-/**
- * Gera uma string AAAAMMDDHHmmSS para nomear arquivos baixados.
- * @param {Date} [date]
- */
-export function getFormattedTimestamp(date = new Date()) {
-  const pad = (value) => String(value).padStart(2, "0");
-
-  return (
-    date.getFullYear() +
-    pad(date.getMonth() + 1) +
-    pad(date.getDate()) +
-    pad(date.getHours()) +
-    pad(date.getMinutes()) +
-    pad(date.getSeconds())
-  );
-}
+import { getFormattedTimestamp } from "@/lib/files.js";
 
 /**
  * Captura um elemento do DOM como PNG com fundo transparente e inicia o

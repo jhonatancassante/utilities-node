@@ -1,6 +1,7 @@
 // features/qr-code/components/QrCodeGenerator/index.js
 import { useEffect, useRef, useState } from "react";
 import Button from "@/components/Button";
+import HelpToggle from "@/components/HelpToggle";
 import shared from "@/styles/shared.module.css";
 import { downloadElementAsPng } from "../../lib/download.js";
 import { normalizeUrl } from "../../lib/url.js";
@@ -29,7 +30,6 @@ function QrCodeGenerator() {
   const [generated, setGenerated] = useState(null);
   const [error, setError] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
 
   const inputRef = useRef(null);
   const cardRef = useRef(null);
@@ -81,24 +81,11 @@ function QrCodeGenerator() {
 
   return (
     <div className={styles.generator}>
-      <button
-        type="button"
-        className={styles.helpButton}
-        aria-expanded={showHelp}
-        aria-controls="qr-help"
-        onClick={() => setShowHelp((current) => !current)}
-      >
-        <i className="fas fa-question-circle" aria-hidden="true"></i>
-        Como funciona?
-      </button>
-
-      {showHelp && (
-        <div id="qr-help" className={shared.infoBox}>
-          <strong>Como funciona:</strong> digite o link que deseja codificar,
-          escolha as cores e clique em &quot;Gerar QR Code&quot;. Depois, baixe
-          a imagem com fundo transparente.
-        </div>
-      )}
+      <HelpToggle>
+        <strong>Como funciona:</strong> digite o link que deseja codificar,
+        escolha as cores e clique em &quot;Gerar QR Code&quot;. Depois, baixe a
+        imagem com fundo transparente.
+      </HelpToggle>
 
       <form onSubmit={handleSubmit} noValidate>
         <label htmlFor="qr-url" className={shared.label}>
