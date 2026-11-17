@@ -87,9 +87,9 @@
   overflow-wrap: anywhere;
 }
 
-.successHint {
-  color: var(--text-secondary) !important;
-  font-size: 14px !important;
+.success > .successHint {
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 
 .successIcon {
