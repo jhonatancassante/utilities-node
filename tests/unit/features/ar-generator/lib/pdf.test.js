@@ -3,7 +3,7 @@ import { encodeCode128B, generateArPdf } from "@/features/ar-generator/lib/pdf.j
 
 function makeRecord(index) {
   return {
-    nome: \`DESTINATÁRIO \${index}\`,
+    nome: "DESTINATÁRIO " + index,
     cep: "13380-017",
     endereco: "AVENIDA JOÃO PESSOA",
     numero: String(index),
