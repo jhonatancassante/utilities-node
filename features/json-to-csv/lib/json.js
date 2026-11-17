@@ -81,9 +81,7 @@ export function createCsv(rows, fields, delimiter = ";") {
   if (!rows.length || !fields.length) return "";
 
   const rowsAsText = rows.map((row) =>
-    Object.fromEntries(
-      fields.map((field) => [field, cellToText(row[field])]),
-    ),
+    Object.fromEntries(fields.map((field) => [field, cellToText(row[field])])),
   );
 
   return Papa.unparse(rowsAsText, {

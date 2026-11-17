@@ -25,10 +25,7 @@ function JsonToCsv() {
   const [fileError, setFileError] = useState("");
   const [isCopied, setIsCopied] = useState(false);
 
-  const fields = useMemo(
-    () => collectOrderedFields(parsedRows),
-    [parsedRows],
-  );
+  const fields = useMemo(() => collectOrderedFields(parsedRows), [parsedRows]);
 
   const activeFields = fields.filter(
     (field) => selectedFields === null || selectedFields.includes(field),
@@ -80,9 +77,7 @@ function JsonToCsv() {
       const rows = normalizeToRows(parsed);
 
       if (!rows || !rows.length) {
-        setFileError(
-          "Não foi possível encontrar dados tabuláveis neste JSON.",
-        );
+        setFileError("Não foi possível encontrar dados tabuláveis neste JSON.");
         return;
       }
 
@@ -174,13 +169,12 @@ function JsonToCsv() {
   return (
     <div className={styles.converter}>
       <HelpToggle>
-        <strong>Como funciona:</strong> envie um arquivo JSON contendo uma
-        lista de objetos ou um único objeto. Escolha quais campos serão
-        convertidos em colunas, o delimitador e a codificação de saída. O CSV é
-        gerado automaticamente e pode ser copiado ou baixado. Valores que forem
-        objetos ou listas são convertidos em texto na célula. Todo o
-        processamento acontece no navegador; o arquivo não é enviado a um
-        servidor.
+        <strong>Como funciona:</strong> envie um arquivo JSON contendo uma lista
+        de objetos ou um único objeto. Escolha quais campos serão convertidos em
+        colunas, o delimitador e a codificação de saída. O CSV é gerado
+        automaticamente e pode ser copiado ou baixado. Valores que forem objetos
+        ou listas são convertidos em texto na célula. Todo o processamento
+        acontece no navegador; o arquivo não é enviado a um servidor.
       </HelpToggle>
 
       <FileDropzone
@@ -260,7 +254,9 @@ function JsonToCsv() {
             <div className={styles.columnsGrid}>
               {fields.map((field, index) => {
                 const label =
-                  field && field.trim() ? field : "(coluna " + (index + 1) + ")";
+                  field && field.trim()
+                    ? field
+                    : "(coluna " + (index + 1) + ")";
                 const id = "json-csv-column-" + index;
 
                 return (
@@ -301,9 +297,7 @@ function JsonToCsv() {
                 title="Copiar código"
               >
                 <i
-                  className={
-                    isCopied ? "fas fa-check" : "fas fa-copy"
-                  }
+                  className={isCopied ? "fas fa-check" : "fas fa-copy"}
                   aria-hidden="true"
                 ></i>
                 {isCopied ? "Copiado!" : "Copiar"}
