@@ -151,11 +151,24 @@ function Header() {
                 </NavLink>
               </li>
             )}
+
+            <li>
+              <Link
+                href="/cadastro"
+                className={styles.signupLink}
+                aria-current={
+                  router.pathname === "/cadastro" ? "page" : undefined
+                }
+                onClick={closeMenus}
+              >
+                <i className="fas fa-user-plus" aria-hidden="true"></i>
+                Criar conta
+              </Link>
+            </li>
           </ul>
         </nav>
 
         <div className={styles.actions}>
-          {/* Espaço reservado para a futura sessão de login (Entrar / menu do usuário). */}
           <ThemeToggle />
           <button
             type="button"

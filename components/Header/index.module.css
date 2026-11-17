@@ -275,3 +275,46 @@ a.toolItem[aria-current="page"] {
     box-shadow: none;
   }
 }
+
+/* components/Header/index.module.css */
+/* Ação de cadastro na navegação principal */
+.signupLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-left: 8px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--header-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.signupLink:hover,
+.signupLink[aria-current="page"] {
+  border-color: #ffffff;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+@media (max-width: 860px) {
+  .signupLink {
+    justify-content: flex-start;
+    margin: 6px 0 0;
+    padding: 10px 14px;
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #ffffff;
+  }
+
+  .signupLink:hover,
+  .signupLink[aria-current="page"] {
+    background: var(--accent-hover);
+  }
+}
