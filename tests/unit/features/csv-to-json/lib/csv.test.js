@@ -23,7 +23,7 @@ describe("features/csv-to-json/lib/csv.js", () => {
     });
 
     test("Renomeia cabeçalhos duplicados sem perder os valores", () => {
-      const result = parseCsv("nome;nome;idade\\nAna;Maria;30", ";");
+      const result = parseCsv("nome;nome;idade\nAna;Maria;30", ";");
 
       expect(result.fields).toEqual(["nome", "nome (2)", "idade"]);
       expect(result.data).toEqual([
