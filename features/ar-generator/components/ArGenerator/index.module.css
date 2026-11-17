@@ -160,12 +160,6 @@
   .formGrid > :nth-child(8),
   .formGrid > :nth-child(9) { grid-column: 1 / -1; }
 
-  .formGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .formGrid > * { grid-column: 1 / -1 !important; }
-
   .tabs button {
     padding: 10px 6px;
   }
@@ -173,4 +167,9 @@
   .switchRow {
     flex-wrap: wrap;
   }
+}
+
+@media (max-width: 600px) {
+  .formGrid { grid-template-columns: 1fr; }
+  .formGrid > * { grid-column: 1 / -1 !important; }
 }
