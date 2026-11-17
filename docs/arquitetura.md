@@ -1,6 +1,6 @@
 # Arquitetura
 
-Visão da organização atual do **utilities-node**. O projeto utiliza Next.js com Pages Router, PostgreSQL e separação entre endpoints HTTP, infraestrutura e regras de negócio.
+Visão da organização atual do **utilities-node**. O projeto utiliza Next.js com Pages Router, PostgreSQL e separação entre interface, funcionalidades das ferramentas, endpoints HTTP, infraestrutura e regras de negócio.
 
 ## Visão geral
 
@@ -82,7 +82,18 @@ O cadastro recebe `read:activation_token`; após ativação, recebe `create:sess
 - `components/Layout` compõe cabeçalho, conteúdo e rodapé.
 - `components/ThemeToggle` alterna tema claro/escuro.
 - `components/AppHead` define título e descrição.
+- `components/Header` reúne a navegação principal, o submenu de ferramentas e o seletor de tema; `components/Footer` apresenta os links externos e os créditos.
 - `pages/status` apresenta o painel alimentado por SWR, com atualização a cada cinco segundos.
+
+### Catálogo e ferramentas
+
+O catálogo de ferramentas é exibido em `/tools`, implementado por `pages/tools/index.js`. A lista é mantida em `configs/tools.js`: cada item possui `slug`, título, descrição, ícone e status (`available` ou `soon`). O módulo deriva o caminho (`href`) e a disponibilidade (`isAvailable`), evitando manter essas informações em mais de um lugar. O cabeçalho e o catálogo consomem o mesmo registro.
+
+As páginas individuais ficam em `pages/tools/<slug>/index.js` e utilizam `components/ToolPage` para compartilhar título, descrição, ícone e layout. A implementação específica fica em `features/<slug>/`, separando componentes React de funções auxiliares em `lib/`.
+
+Atualmente, o Gerador de QR Code é a ferramenta disponível. Sua interface está em `features/qr-code/components/`; a validação e normalização de URLs ficam em `lib/url.js`, e a captura para PNG em `lib/download.js`. O QR Code é renderizado com `qrcode.react`; o download utiliza `html2canvas`, carregado dinamicamente porque depende do DOM. O processamento ocorre no navegador, sem envio do link a um endpoint da aplicação.
+
+Para incluir novas ferramentas, consulte o [guia Adicionando uma nova ferramenta](adicionando-ferramentas.md).
 
 ## Banco de dados
 
