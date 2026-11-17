@@ -99,9 +99,9 @@ A ferramenta valida e normaliza URLs HTTP/HTTPS, permite personalizar as cores d
 
 O Divisor de PDF demonstra uma ferramenta que processa arquivos no navegador:
 
-- Rota: `pages/tools/divisor-pdf/index.js`.
-- Interface: `features/divisor-pdf/components/PdfSplitter/`.
-- Lógica auxiliar: `features/divisor-pdf/lib/pdf.js`.
-- Testes: `tests/unit/features/divisor-pdf/lib/`.
+- Rota: `pages/tools/pdf-splitter/index.js`.
+- Interface: `features/pdf-splitter/components/PdfSplitter/`.
+- Lógica auxiliar: `features/pdf-splitter/lib/pdf.js`.
+- Testes: `tests/unit/features/pdf-splitter/lib/`.
 
 A ferramenta extrai um intervalo de páginas de um ou mais PDFs: com um arquivo, o resultado é um PDF; com vários, um ZIP. As bibliotecas `pdf-lib` e `jszip` são importadas dinamicamente. As funções de `lib/pdf.js` retornam objetos `{ ok, ... }` para situações esperadas (intervalo inválido, arquivo que não é PDF), de modo que a interface exiba a mensagem sem depender de exceções.

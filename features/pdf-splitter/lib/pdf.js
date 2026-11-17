@@ -1,4 +1,4 @@
-// features/divisor-pdf/lib/pdf.js
+// features/pdf-splitter/lib/pdf.js
 // Regras do Divisor de PDF, independentes de React. O processamento ocorre
 // no navegador: os arquivos não são enviados ao servidor. `pdf-lib` e `jszip`
 // são importados sob demanda, dentro das funções que os utilizam.

@@ -18,7 +18,7 @@ const toolsList = [
     status: TOOL_STATUS.available,
   },
   {
-    slug: "divisor-pdf",
+    slug: "pdf-splitter",
     title: "Divisor de PDF",
     description:
       "Extraia intervalos de páginas de um ou mais PDFs, direto no navegador.",

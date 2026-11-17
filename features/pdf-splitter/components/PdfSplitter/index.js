@@ -1,4 +1,4 @@
-// features/divisor-pdf/components/PdfSplitter/index.js
+// features/pdf-splitter/components/PdfSplitter/index.js
 import { useState } from "react";
 import Button from "@/components/Button";
 import FileDropzone from "@/components/FileDropzone";
