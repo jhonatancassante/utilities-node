@@ -43,6 +43,26 @@
   background-color: #b92e32;
 }
 
+.success {
+  background-color: var(--success);
+}
+
+.success:hover {
+  filter: brightness(0.92);
+}
+
+.outline {
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.outline:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 /* No tema escuro o acento é claro: texto escuro mantém o contraste. */
 :global([data-theme="dark"]) .primary {
   color: #0b1526;
