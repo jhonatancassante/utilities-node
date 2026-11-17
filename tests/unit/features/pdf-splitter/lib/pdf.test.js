@@ -94,7 +94,12 @@ describe("features/pdf-splitter/lib/pdf.js", () => {
       const file = await createPdfFile("doc.pdf", 10);
       const result = await extractPages(file, 3, 4);
 
-      expect(result.ok).toBe(true);
+      expect(result).toMatchObject({
+        ok: true,
+        status: "extracted",
+        totalPages: 10,
+        extractedCount: 4,
+      });
       expect(await countPages(result.bytes)).toBe(4);
     });
 
@@ -102,17 +107,30 @@ describe("features/pdf-splitter/lib/pdf.js", () => {
       const file = await createPdfFile("doc.pdf", 5);
       const result = await extractPages(file, 2, 4);
 
-      expect(result.ok).toBe(true);
+      expect(result.extractedCount).toBe(4);
       expect(await countPages(result.bytes)).toBe(4);
     });
 
-    test("Rejeita intervalo maior que o documento", async () => {
+    test("Extrai até a última página quando o documento é mais curto", async () => {
+      const file = await createPdfFile("doc.pdf", 11);
+      const result = await extractPages(file, 10, 10);
+
+      expect(result).toMatchObject({
+        ok: true,
+        status: "extracted",
+        totalPages: 11,
+        extractedCount: 2,
+      });
+      expect(await countPages(result.bytes)).toBe(2);
+    });
+
+    test("Ignora o arquivo que não chega à página inicial", async () => {
       const file = await createPdfFile("doc.pdf", 5);
 
-      expect(await extractPages(file, 3, 4)).toEqual({
-        ok: false,
-        error:
-          'Intervalo inválido em "doc.pdf": o documento tem apenas 5 página(s).',
+      expect(await extractPages(file, 6, 2)).toEqual({
+        ok: true,
+        status: "skipped",
+        totalPages: 5,
       });
     });
 
@@ -136,6 +154,7 @@ describe("features/pdf-splitter/lib/pdf.js", () => {
       expect(result.ok).toBe(true);
       expect(result.filename).toBe("3_pages_from_2_doc.pdf");
       expect(result.blob.type).toBe("application/pdf");
+      expect(result.warnings).toEqual([]);
       expect(await countPages(await result.blob.arrayBuffer())).toBe(3);
     });
 
@@ -152,6 +171,7 @@ describe("features/pdf-splitter/lib/pdf.js", () => {
 
       expect(result.ok).toBe(true);
       expect(result.filename).toBe("20260730140509.zip");
+      expect(result.warnings).toEqual([]);
 
       const zip = await JSZip.loadAsync(await result.blob.arrayBuffer());
       expect(Object.keys(zip.files).sort()).toEqual([
@@ -160,15 +180,87 @@ describe("features/pdf-splitter/lib/pdf.js", () => {
       ]);
     });
 
-    test("Interrompe no primeiro arquivo com intervalo inválido", async () => {
+    test("Arquivo mais curto é extraído até o fim e gera aviso", async () => {
+      const files = [
+        await createPdfFile("onze.pdf", 11),
+        await createPdfFile("vinte.pdf", 20),
+      ];
+      const result = await splitPdfFiles(files, {
+        pageInit: 10,
+        pageCount: 10,
+      });
+
+      expect(result.ok).toBe(true);
+      expect(result.warnings).toEqual([
+        '"onze.pdf" tem apenas 11 páginas: foram extraídas as páginas 10 a 11.',
+      ]);
+
+      const zip = await JSZip.loadAsync(await result.blob.arrayBuffer());
+      const pageCounts = {};
+      for (const [name, entry] of Object.entries(zip.files)) {
+        pageCounts[name] = await countPages(await entry.async("uint8array"));
+      }
+
+      expect(pageCounts).toEqual({
+        "2_pages_from_10_onze.pdf": 2,
+        "10_pages_from_10_vinte.pdf": 10,
+      });
+    });
+
+    test("Aviso no singular quando sobra só uma página", async () => {
+      const file = await createPdfFile("doc.pdf", 10);
+      const result = await splitPdfFiles([file], {
+        pageInit: 10,
+        pageCount: 3,
+      });
+
+      expect(result.warnings).toEqual([
+        '"doc.pdf" tem apenas 10 páginas: foi extraída a página 10.',
+      ]);
+    });
+
+    test("Arquivo que não chega à página inicial é ignorado com aviso", async () => {
+      const files = [
+        await createPdfFile("curto.pdf", 5),
+        await createPdfFile("longo.pdf", 20),
+      ];
+      const result = await splitPdfFiles(files, { pageInit: 10, pageCount: 2 });
+
+      expect(result.ok).toBe(true);
+      // Só sobrou um arquivo: o resultado é um PDF, não um ZIP.
+      expect(result.filename).toBe("2_pages_from_10_longo.pdf");
+      expect(result.warnings).toEqual([
+        '"curto.pdf" tem apenas 5 páginas e não chega à página 10: foi ignorado.',
+      ]);
+    });
+
+    test("Erro quando nenhum arquivo chega à página inicial", async () => {
+      const files = [
+        await createPdfFile("a.pdf", 3),
+        await createPdfFile("b.pdf", 4),
+      ];
+
+      expect(
+        await splitPdfFiles(files, { pageInit: 10, pageCount: 2 }),
+      ).toEqual({
+        ok: false,
+        error:
+          "Nenhum dos arquivos tem a página 10. Informe uma página inicial menor.",
+      });
+    });
+
+    test("Interrompe no primeiro arquivo que não é um PDF válido", async () => {
       const files = [
         await createPdfFile("a.pdf", 5),
-        await createPdfFile("curto.pdf", 1),
+        {
+          name: "falso.pdf",
+          arrayBuffer: async () => new TextEncoder().encode("x").buffer,
+        },
       ];
       const result = await splitPdfFiles(files, { pageInit: 1, pageCount: 3 });
 
       expect(result.ok).toBe(false);
-      expect(result.error).toMatch(/curto\.pdf/);
+      expect(result.error).toMatch(/falso\.pdf/);
     });
   });
 });

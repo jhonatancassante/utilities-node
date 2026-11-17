@@ -69,6 +69,7 @@ Sempre que possível, reutilize:
 - `@/components/ToolPage` para manter o padrão visual e estrutural das páginas.
 - `@/components/FileDropzone` para o envio de arquivos por clique ou arrastar e soltar.
 - `@/components/StatusMessage` para mensagens de andamento, sucesso e erro.
+- `@/components/WarningList` para avisos em destaque amarelo com uma lista rolável de itens, usada quando a operação foi concluída, mas com ressalvas.
 - `@/components/HelpToggle` para a caixa informativa "Como funciona?".
 - `@/lib/files.js` para `getFormattedTimestamp` e `downloadBlob` (download de arquivos gerados no navegador).
 
@@ -104,4 +105,4 @@ O Divisor de PDF demonstra uma ferramenta que processa arquivos no navegador:
 - Lógica auxiliar: `features/pdf-splitter/lib/pdf.js`.
 - Testes: `tests/unit/features/pdf-splitter/lib/`.
 
-A ferramenta extrai um intervalo de páginas de um ou mais PDFs: com um arquivo, o resultado é um PDF; com vários, um ZIP. As bibliotecas `pdf-lib` e `jszip` são importadas dinamicamente. As funções de `lib/pdf.js` retornam objetos `{ ok, ... }` para situações esperadas (intervalo inválido, arquivo que não é PDF), de modo que a interface exiba a mensagem sem depender de exceções.
+A ferramenta extrai um intervalo de páginas de um ou mais PDFs: com um arquivo, o resultado é um PDF; com vários, um ZIP. Arquivos com menos páginas que o intervalo pedido não geram erro: são extraídos da página inicial até a última e listados em um aviso; arquivos que não chegam à página inicial são ignorados e também listados. Só há erro quando nenhum arquivo tem a página inicial. As bibliotecas `pdf-lib` e `jszip` são importadas dinamicamente. As funções de `lib/pdf.js` retornam objetos `{ ok, ... }` para situações esperadas (intervalo inválido, arquivo que não é PDF, nenhum arquivo com a página inicial), de modo que a interface exiba a mensagem sem depender de exceções.

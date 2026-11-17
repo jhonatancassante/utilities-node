@@ -93,9 +93,9 @@ As páginas individuais ficam em `pages/tools/<slug>/index.js` e utilizam `compo
 
 Atualmente, o Gerador de QR Code e o Divisor de PDF são as ferramentas disponíveis. Sua interface está em `features/qr-code/components/`; a validação e normalização de URLs ficam em `lib/url.js`, e a captura para PNG em `lib/download.js`. O QR Code é renderizado com `qrcode.react`; o download utiliza `html2canvas`, carregado dinamicamente porque depende do DOM. O processamento ocorre no navegador, sem envio do link a um endpoint da aplicação.
 
-O Divisor de PDF está em `features/pdf-splitter/`: a interface fica em `components/PdfSplitter/` e as regras (validação do intervalo, seleção de arquivos, extração de páginas e geração do ZIP) em `lib/pdf.js`. Utiliza `pdf-lib` e `jszip`, carregados dinamicamente, e os arquivos não são enviados a nenhum endpoint.
+O Divisor de PDF está em `features/pdf-splitter/`: a interface fica em `components/PdfSplitter/` e as regras (validação do intervalo, seleção de arquivos, extração de páginas e geração do ZIP) em `lib/pdf.js`. Utiliza `pdf-lib` e `jszip`, carregados dinamicamente, e os arquivos não são enviados a nenhum endpoint. Arquivos com menos páginas que o intervalo pedido são extraídos até a última página, ou ignorados quando não chegam à página inicial, e aparecem em um aviso ao final do processamento.
 
-Componentes e utilitários compartilhados entre ferramentas: `components/FileDropzone` (envio por clique ou arrastar e soltar), `components/StatusMessage` (mensagens de andamento, sucesso e erro), `components/HelpToggle` (caixa "Como funciona?") e `lib/files.js` (`getFormattedTimestamp` e `downloadBlob`).
+Componentes e utilitários compartilhados entre ferramentas: `components/FileDropzone` (envio por clique ou arrastar e soltar), `components/StatusMessage` (mensagens de andamento, sucesso e erro), `components/WarningList` (aviso amarelo com lista rolável), `components/HelpToggle` (caixa "Como funciona?") e `lib/files.js` (`getFormattedTimestamp` e `downloadBlob`).
 
 Para incluir novas ferramentas, consulte o [guia Adicionando uma nova ferramenta](adicionando-ferramentas.md).
 

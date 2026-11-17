@@ -45,7 +45,7 @@ O arquivo `.env.development` é versionado intencionalmente com credenciais desc
 | `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`                                                  | Host e porta SMTP                                               |
 | `EMAIL_SMTP_USER`, `EMAIL_SMTP_PASSWORD`                                              | Credenciais SMTP; no Mailcatcher local podem ficar vazias       |
 
-Em `development` e `test`, `infra/database.js` usa as variáveis `POSTGRES_*`. Nos demais ambientes usa `DATABASE_URL`, adicionando `sslmode=verify-full`. A aplicação exige `PASSWORD_PEPPER` para hash e comparação de senhas.
+Em `development` e `test`, `infra/database.js` usa as variáveis `POSTGRES_*`. Nos demais ambientes usa `DATABASE_URL`, adicionando `sslmode=verify-full`. A aplicação exige `PASSWORD_PEPPER` para hash e comparação das senhas.
 
 O Nodemailer utiliza as quatro variáveis `EMAIL_SMTP_*`. O Mailcatcher local não exige autenticação. Em produção, configure as credenciais do provedor SMTP e use transporte seguro.
 
@@ -107,8 +107,8 @@ Migrations existentes na branch principal:
 | `1792077675178_create-users.js`                                  | Cria a tabela `users`                      |
 | `1792179953104_altera-nomes-de-colunas-createdAt-e-updatedAt.js` | Renomeia colunas de data para `snake_case` |
 | `1792247067512_create-sessions.js`                               | Cria a tabela `sessions`                   |
-| `1792760460131_adiciona-features-na-tabela-users.js`             | Adiciona `users.features`                  |
-| `1792781687009_cria-tabela-user-activation-tokens.js`            | Cria `user_activation_tokens`              |
+| `1792760460131-adiciona-features-na-tabela-users.js`             | Adiciona `users.features`                  |
+| `1792781687009-cria-tabela-user-activation-tokens.js`            | Cria `user_activation_tokens`              |
 
 O histórico das execuções fica em `pgmigrations`. As migrations atuais exportam `down = false`; não existe rollback automático.
 
@@ -135,9 +135,10 @@ Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm 
 - `tests/integration/_use-cases/registration-flow.test.js`: fluxo completo de cadastro, recebimento do e-mail, ativação, login e consulta do usuário.
 - `tests/unit/models/authorization.test.js`: testes unitários de autorização.
 - `tests/unit/features/qr-code/lib/`: testes unitários da normalização de URLs e da formatação do timestamp usado nos downloads.
+- `tests/unit/features/pdf-splitter/lib/`: testes unitários das regras de validação, seleção de arquivos, extração de páginas e geração dos arquivos PDF e ZIP.
 - `tests/orchestrator.js`: utilitários compartilhados.
 
-Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão. Os testes unitários cobrem a validação/normalização de URLs do Gerador de QR Code, a formatação do nome dos arquivos baixados (`lib/files.js`) e as regras do Divisor de PDF (validação do intervalo, seleção de arquivos, extração de páginas e geração do ZIP).
+Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão. Os testes unitários cobrem a validação/normalização de URLs do Gerador de QR Code, a formatação do nome dos arquivos baixados (`lib/files.js`) e as regras do Divisor de PDF (validação do intervalo, seleção de arquivos, extração de páginas, tratamento de arquivos mais curtos que o intervalo pedido e geração do ZIP).
 
 ### Orchestrator
 
