@@ -93,12 +93,12 @@ function PdfMerger() {
   return (
     <div>
       <HelpToggle>
-        <strong>Como funciona:</strong> clique ou arraste seus arquivos PDF
-        para enviar. Os arquivos serão ordenados alfabeticamente pelo nome.
-        Por padrão, PDFs com número ímpar de páginas recebem uma página em
-        branco ao final para manter a paridade. Você pode desativar essa opção
-        antes de unificar. Tudo é processado no seu navegador: os arquivos não
-        são enviados a nenhum servidor.
+        <strong>Como funciona:</strong> clique ou arraste seus arquivos PDF para
+        enviar. Os arquivos serão ordenados alfabeticamente pelo nome. Por
+        padrão, PDFs com número ímpar de páginas recebem uma página em branco ao
+        final para manter a paridade. Você pode desativar essa opção antes de
+        unificar. Tudo é processado no seu navegador: os arquivos não são
+        enviados a nenhum servidor.
       </HelpToggle>
 
       <FileDropzone

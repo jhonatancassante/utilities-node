@@ -119,7 +119,10 @@ describe("features/pdf-merger/lib/pdf.js", () => {
     test("Não adiciona páginas em branco quando a opção está desativada", async () => {
       const files = [
         await createPdfFile("a.pdf", [[100, 150]]),
-        await createPdfFile("b.pdf", [[200, 300], [200, 300]]),
+        await createPdfFile("b.pdf", [
+          [200, 300],
+          [200, 300],
+        ]),
       ];
       const result = await mergePdfFiles(files, false);
 
