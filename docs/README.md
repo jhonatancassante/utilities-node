@@ -9,6 +9,7 @@
 | [Autenticação, sessões e autorização](autenticacao.md) | Senhas, ativação de cadastro, cookies, ciclo de vida das sessões e _features_            |
 | [Guia da API](api/README.md)                           | Endpoints, regras de acesso, payloads, códigos HTTP e limitações conhecidas              |
 | [Especificação OpenAPI](api/openapi.yaml)              | Contrato formal da API no padrão OpenAPI 3.1                                             |
+| [Adicionando ferramentas](adicionando-ferramentas.md)  | Estrutura, registro, rotas, componentes e testes das ferramentas da interface            |
 
 ## Como manter esta documentação
 

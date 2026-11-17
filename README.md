@@ -4,7 +4,7 @@ Nova implementação dos meus utilitários de trabalho, originalmente desenvolvi
 
 **Aplicação publicada:** <https://utilities-node.vercel.app>
 
-> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em _features_, consulta e execução de migrations. Os utilitários de trabalho serão migrados gradualmente.
+> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, um catálogo de ferramentas em `/tools`, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em _features_, consulta e execução de migrations. O Gerador de QR Code já está disponível; os demais utilitários serão implementados gradualmente.
 
 ## Sumário
 
@@ -27,6 +27,8 @@ Nova implementação dos meus utilitários de trabalho, originalmente desenvolvi
 O que existe hoje:
 
 - Página inicial provisória em `pages/index.js`, com tema claro e escuro.
+- Catálogo de ferramentas em `/tools`, com registro centralizado em `configs/tools.js` e indicação dos recursos disponíveis e planejados.
+- Gerador de QR Code em `/tools/qr-code`, com personalização de cores e download em PNG. A geração e a captura da imagem são realizadas no navegador.
 - Página `/status`, com painel de monitoramento do banco de dados e atualização automática a cada 5 segundos.
 - `GET /api/v1/status`: consulta a saúde do banco. A versão do PostgreSQL só é incluída para usuários com a feature `read:status:all`.
 - `GET` e `POST /api/v1/migrations`: lista e aplica migrations, mediante as features `read:migration` e `create:migration`.
@@ -131,8 +133,9 @@ Para executar os testes continuamente, mantenha o ambiente ativo com `npm run de
 ├── .github/workflows/    # Workflows de lint, testes e Gitleaks
 ├── .husky/               # Hooks pre-commit e commit-msg
 ├── components/           # Componentes compartilhados da interface
-├── configs/              # Configurações de metadados do site
-├── docs/                 # Documentação técnica e especificação OpenAPI
+├── configs/              # Metadados do site e registro central das ferramentas
+├── docs/                 # Documentação técnica, guias e especificação OpenAPI
+├── features/             # Componentes e lógica isolada de cada ferramenta
 ├── infra/
 │   ├── compose.yaml      # PostgreSQL e Mailcatcher
 │   ├── controller.js     # Middlewares, autorização e tratamento de erros
@@ -145,7 +148,8 @@ Para executar os testes continuamente, mantenha o ambiente ativo com `npm run de
 ├── pages/
 │   ├── api/v1/           # Endpoints versionados da API
 │   ├── status/           # Painel de status
-│   └── ...               # Páginas da interface
+│   ├── tools/             # Catálogo e páginas individuais das ferramentas
+│   └── ...               # Demais páginas da interface
 ├── styles/               # Estilos globais e compartilhados
 └── tests/
     ├── integration/      # Testes da API, infraestrutura e fluxos
@@ -214,6 +218,7 @@ O `next.config.js` inclui `infra/migrations` e `package.json` no pacote da funç
 - [Autenticação, sessões e autorização](docs/autenticacao.md)
 - [Guia da API](docs/api/README.md)
 - [Especificação OpenAPI](docs/api/openapi.yaml)
+- [Adicionando ferramentas](docs/adicionando-ferramentas.md)
 
 ## Licença
 

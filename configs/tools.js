@@ -1,7 +1,7 @@
 // configs/tools.js
 // Registro central das ferramentas. Alimenta o menu superior, a página
 // inicial e o título/descrição de cada página de ferramenta. Para adicionar
-// uma nova ferramenta: inclua um item aqui e crie `pages/ferramentas/<slug>.js`.
+// uma nova ferramenta: inclua um item aqui e crie `pages/tools/<slug>/index.js`.
 
 export const TOOL_STATUS = Object.freeze({
   available: "available",

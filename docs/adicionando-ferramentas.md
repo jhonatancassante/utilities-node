@@ -1,46 +1,92 @@
 # Adicionando uma nova ferramenta
 
-Toda ferramenta segue o mesmo padrão. O Gerador de QR Code é a referência.
+As ferramentas da aplicação seguem uma estrutura comum para manter a navegação, as páginas e os componentes consistentes. O Gerador de QR Code é a implementação de referência.
 
 ## Estrutura
 
+Cada ferramenta é registrada em `configs/tools.js` e possui uma rota própria no Pages Router. A implementação específica fica isolada em `features/`.
+
 ```text
-configs/tools.js                      registro central (menu, home, título, descrição)
-pages/tools/<slug>.js           rota fina: só monta <ToolPage> + o componente
-features/<slug>/components/...        componentes da ferramenta (cada um com seu CSS Module)
-features/<slug>/lib/...               lógica pura, sem React (fácil de testar)
-tests/unit/features/<slug>/...        testes da lógica
+configs/tools.js                              registro central das ferramentas
+components/ToolPage/                          estrutura compartilhada das páginas
+components/Button/                            botão reutilizável
+pages/tools/index.js                          catálogo de ferramentas (/tools)
+pages/tools/<slug>/index.js                   página da ferramenta (/tools/<slug>)
+features/<slug>/components/                   componentes e CSS Modules da ferramenta
+features/<slug>/lib/                           lógica auxiliar independente de React
+tests/unit/features/<slug>/                   testes unitários da lógica
 ```
 
-## Passo a passo
+## 1. Registrar a ferramenta
 
-1. Em `configs/tools.js`, troque o `status` da ferramenta de `soon` para
-   `available` (ela já está registrada com título, descrição e ícone).
-2. Crie `pages/tools/<slug>.js`:
+Inclua ou atualize um item na lista `toolsList`, em `configs/tools.js`:
 
-   ```js
-   import ToolPage from "@/components/ToolPage";
-   import MinhaFerramenta from "@/features/<slug>/components/MinhaFerramenta";
+```js
+{
+  slug: "minha-ferramenta",
+  title: "Minha Ferramenta",
+  description: "Descrição breve do que a ferramenta faz.",
+  icon: "fa-wrench",
+  status: TOOL_STATUS.soon,
+},
+```
 
-   export default function Page() {
-     return (
-       <ToolPage slug="<slug>">
-         <MinhaFerramenta />
-       </ToolPage>
-     );
-   }
-   ```
+Use `TOOL_STATUS.soon` enquanto a ferramenta não estiver pronta. Quando a página estiver implementada e testada, altere para `TOOL_STATUS.available`. O registro deriva automaticamente o endereço (`href`) a partir de `TOOLS_BASE_PATH` e a propriedade `isAvailable`; não duplique esses valores manualmente.
 
-3. Implemente a ferramenta em `features/<slug>/`, reutilizando `Button`
-   (`@/components/Button`) e as classes `label`, `input`, `errorText` e
-   `infoBox` de `@/styles/shared.module.css`.
-4. Escreva os testes da lógica em `tests/unit/features/<slug>/`.
+O registro central alimenta o catálogo em `/tools`, o submenu do cabeçalho e os metadados das páginas de ferramentas.
 
-## Regras
+## 2. Criar a página
 
-- Bibliotecas pesadas e que dependem do navegador (como `html2canvas`) entram
-  por `import()` dinâmico, dentro da função que as usa.
-- Ferramentas que processam arquivos (PDF, CSV, JSON, TXT) rodam no navegador:
-  o arquivo não precisa ser enviado ao servidor.
-- A futura sessão de login entra no espaço reservado em
-  `components/Header/index.js` (bloco `actions`).
+Crie `pages/tools/<slug>/index.js`:
+
+```js
+import ToolPage from "@/components/ToolPage";
+import MinhaFerramenta from "@/features/minha-ferramenta/components/MinhaFerramenta";
+
+export default function MinhaFerramentaPage() {
+  return (
+    <ToolPage slug="minha-ferramenta">
+      <MinhaFerramenta />
+    </ToolPage>
+  );
+}
+```
+
+O componente `ToolPage` consulta o registro pelo `slug` e fornece o título, a descrição, o ícone, o cabeçalho, o layout e os estilos compartilhados. A página individual deve permanecer fina, delegando a interface à implementação em `features/<slug>/`.
+
+## 3. Implementar a ferramenta
+
+Organize a implementação dentro de `features/<slug>/`:
+
+- `components/`: componentes React específicos da ferramenta, com seus respectivos CSS Modules.
+- `lib/`: funções auxiliares e regras que não dependem de React ou do DOM.
+- `tests/unit/features/<slug>/`: testes unitários das funções auxiliares.
+
+Sempre que possível, reutilize:
+
+- `@/components/Button` para ações e botões.
+- `@/styles/shared.module.css` para classes comuns de formulário, mensagens de erro e caixas informativas.
+- `@/components/ToolPage` para manter o padrão visual e estrutural das páginas.
+
+Mantenha a lógica independente da interface quando isso facilitar os testes. Bibliotecas que dependem do navegador ou são pesadas devem ser carregadas sob demanda, por `import()`, dentro da função que as utiliza.
+
+Para ferramentas que processam arquivos, avalie executar o processamento no navegador quando isso atender aos requisitos e evitar o envio desnecessário de arquivos ao servidor.
+
+## 4. Testar e disponibilizar
+
+1. Crie testes unitários para as funções de `lib/` em `tests/unit/features/<slug>/`.
+2. Execute os testes e as verificações de qualidade do projeto.
+3. Confira a rota `/tools/<slug>`, o catálogo e o submenu do cabeçalho.
+4. Altere o status para `TOOL_STATUS.available` somente quando a ferramenta estiver pronta para uso.
+
+## Referência: Gerador de QR Code
+
+O Gerador de QR Code demonstra a organização adotada:
+
+- Rota: `pages/tools/qr-code/index.js`.
+- Interface: `features/qr-code/components/QrCodeGenerator/`.
+- Componentes auxiliares: `ColorField/` e `QrCard/`.
+- Lógica auxiliar: `features/qr-code/lib/url.js` e `download.js`.
+- Testes: `tests/unit/features/qr-code/lib/`.
+
+A ferramenta valida e normaliza URLs HTTP/HTTPS, permite personalizar as cores do código, do fundo, da borda e do texto, e gera o download de uma imagem PNG. A dependência `html2canvas` é importada dinamicamente, pois a captura do componente depende do DOM do navegador.
