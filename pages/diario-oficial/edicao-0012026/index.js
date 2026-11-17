@@ -12,7 +12,9 @@ function DiarioOficialPage() {
       <AppHead
         title="Diário Oficial · Edição 001/2026"
         description="Consulte a edição 001/2026 do Diário Oficial."
-      />
+      >
+        <meta name="robots" content="noindex, nofollow" />
+      </AppHead>
 
       <Layout>
         <main className={styles.container}>
