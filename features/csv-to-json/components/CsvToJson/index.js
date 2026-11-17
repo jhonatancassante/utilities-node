@@ -10,8 +10,7 @@ import { createJson, parseCsv } from "../../lib/csv.js";
 import styles from "./index.module.css";
 
 const DEFAULT_LABEL = "Clique ou arraste o arquivo CSV aqui";
-const DEFAULT_OUTPUT =
-  "O resultado aparecerá aqui após o envio do arquivo...";
+const DEFAULT_OUTPUT = "O resultado aparecerá aqui após o envio do arquivo...";
 const MAX_PREVIEW_LINES = 15;
 const MAX_LINE_PREVIEW_CHARS = 140;
 
@@ -65,7 +64,9 @@ function CsvToJson() {
           : generatedJson;
 
   const displayedError =
-    fileError || parsed.error || (!parsed.fields.length && rawLines.length
+    fileError ||
+    parsed.error ||
+    (!parsed.fields.length && rawLines.length
       ? "Não foi possível identificar colunas nesta linha. Escolha outra linha de cabeçalho."
       : "");
 
@@ -197,11 +198,10 @@ function CsvToJson() {
     <div className={styles.converter}>
       <HelpToggle>
         <strong>Como funciona:</strong> envie um arquivo CSV e ajuste, se
-        necessário, a codificação e o delimitador. Escolha a linha que contém
-        os nomes das colunas e marque quais delas deseja incluir. O JSON é
-        gerado automaticamente e pode ser copiado ou baixado. Todo o
-        processamento acontece no navegador; o arquivo não é enviado a um
-        servidor.
+        necessário, a codificação e o delimitador. Escolha a linha que contém os
+        nomes das colunas e marque quais delas deseja incluir. O JSON é gerado
+        automaticamente e pode ser copiado ou baixado. Todo o processamento
+        acontece no navegador; o arquivo não é enviado a um servidor.
       </HelpToggle>
 
       <FileDropzone
@@ -214,7 +214,10 @@ function CsvToJson() {
       <StatusMessage type="error">{displayedError}</StatusMessage>
 
       {rawLines.length > 0 && (
-        <section className={styles.configPanel} aria-label="Configurações do CSV">
+        <section
+          className={styles.configPanel}
+          aria-label="Configurações do CSV"
+        >
           <div className={styles.settingsRow}>
             <div className={styles.settingField}>
               <label htmlFor="csv-encoding" className={shared.label}>
@@ -227,7 +230,8 @@ function CsvToJson() {
                 onChange={handleEncodingChange}
               >
                 <option value="ISO-8859-1">
-                  ISO-8859-1 / Latin1 (padrão em exportações de sistemas municipais)
+                  ISO-8859-1 / Latin1 (padrão em exportações de sistemas
+                  municipais)
                 </option>
                 <option value="UTF-8">UTF-8</option>
               </select>
@@ -252,7 +256,9 @@ function CsvToJson() {
           </div>
 
           <div className={styles.settingBlock}>
-            <h2 className={styles.sectionTitle}>Selecione a linha de cabeçalho</h2>
+            <h2 className={styles.sectionTitle}>
+              Selecione a linha de cabeçalho
+            </h2>
             <p className={styles.settingHint}>
               Escolha a linha que contém os nomes das colunas. Use esta opção
               quando o arquivo tiver títulos ou informações antes dos dados.

@@ -1,15 +1,9 @@
-import {
-  createJson,
-  parseCsv,
-} from "@/features/csv-to-json/lib/csv.js";
+import { createJson, parseCsv } from "@/features/csv-to-json/lib/csv.js";
 
 describe("features/csv-to-json/lib/csv.js", () => {
   describe("parseCsv()", () => {
     test("Interpreta CSV separado por ponto e vírgula", () => {
-      const result = parseCsv(
-        "nome;idade\nAna;30\nBruno;25",
-        ";",
-      );
+      const result = parseCsv("nome;idade\nAna;30\nBruno;25", ";");
 
       expect(result).toEqual({
         data: [
