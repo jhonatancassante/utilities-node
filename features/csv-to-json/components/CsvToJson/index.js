@@ -340,25 +340,29 @@ function CsvToJson() {
           <h2 id="json-title" className={styles.sectionTitle}>
             Resultado do JSON
           </h2>
-          <div className={styles.jsonOutputWrapper}>
-            <pre className={styles.jsonOutput}>
-              <code>{outputMessage}</code>
-            </pre>
+          <div className={styles.outputHeader}>
+            <h2 id="json-title" className={styles.sectionTitle}>
+              Resultado do JSON
+            </h2>
             {generatedJson && (
               <button
                 type="button"
                 className={`${styles.copyButton} ${isCopied ? styles.copied : ""}`}
                 onClick={handleCopy}
-                aria-label={isCopied ? "Código copiado" : "Copiar código JSON"}
-                title={isCopied ? "Código copiado" : "Copiar código"}
+                aria-label="Copiar código JSON"
+                title="Copiar código"
               >
                 <i
                   className={`fas ${isCopied ? "fa-check" : "fa-copy"}`}
                   aria-hidden="true"
                 ></i>
+                {isCopied ? "Copiado!" : "Copiar"}
               </button>
             )}
           </div>
+          <pre className={styles.jsonOutput}>
+            <code>{outputMessage}</code>
+          </pre>
         </section>
       )}
 
