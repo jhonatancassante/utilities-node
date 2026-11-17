@@ -52,9 +52,10 @@ const toolsList = [
   {
     slug: "txt-para-csv",
     title: "Conversor de TXT para CSV",
-    description: "Transforme arquivos de texto em planilhas CSV.",
+    description:
+      "Converta relatórios TXT de largura fixa em CSV, ajustando o separador e a formatação de datas e números.",
     icon: "fa-file-alt",
-    status: TOOL_STATUS.soon,
+    status: TOOL_STATUS.available,
   },
   {
     slug: "testador-cpf",

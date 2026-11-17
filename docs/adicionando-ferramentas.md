@@ -129,6 +129,17 @@ O Conversor de JSON para CSV migra o utilitário legado para a aplicação:
 
 A lógica normaliza listas de objetos, listas de valores simples, objetos únicos e objetos que possuem uma única propriedade array. As colunas são coletadas na ordem da primeira ocorrência; valores nulos ou ausentes geram células vazias, enquanto objetos e listas são serializados como JSON dentro da célula. Papa Parse gera o CSV com o delimitador escolhido. O download oferece UTF-8 com BOM, UTF-8 puro ou ISO-8859-1, substituindo por `?` os caracteres que não existem nessa codificação. Todo o processamento ocorre no navegador.
 
+## Referência: Conversor de TXT para CSV
+
+O Conversor de TXT para CSV transforma relatórios com colunas de largura fixa em arquivos CSV:
+
+- Rota: `pages/tools/txt-para-csv/index.js`.
+- Interface: `features/txt-to-csv/components/TxtToCsv/`.
+- Lógica auxiliar: `features/txt-to-csv/lib/txt.js`.
+- Testes: `tests/unit/features/txt-to-csv/lib/txt.test.js`.
+
+A lógica identifica o cabeçalho na primeira ou na segunda linha, considera os espaços entre os nomes para determinar as posições das colunas e fatia as linhas de dados usando essas posições. A leitura tenta UTF-8 e utiliza Windows-1252 quando os bytes não formam UTF-8 válido. A interface permite configurar o separador, o BOM UTF-8, a remoção da hora em datas e a conversão da vírgula decimal para ponto. A prévia exibe as primeiras 15 linhas e alerta sobre possíveis desalinhamentos. O arquivo é processado inteiramente no navegador.
+
 ## Referência: Gerador de AR e Etiquetas
 
 O Gerador de AR e Etiquetas migra o utilitário legado para a aplicação:
