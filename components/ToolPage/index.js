@@ -7,7 +7,7 @@ import { getToolBySlug } from "@/configs/tools.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
-function ToolPage({ slug, children }) {
+function ToolPage({ slug, children, wide = false }) {
   const tool = getToolBySlug(slug);
 
   return (
@@ -16,7 +16,7 @@ function ToolPage({ slug, children }) {
 
       <Layout>
         <main className={shared.container}>
-          <section className={`${shared.card} ${styles.card}`}>
+          <section className={`${shared.card} ${styles.card} ${wide ? styles.wide : ""}`}>
             <header className={styles.heading}>
               <span className={styles.icon} aria-hidden="true">
                 <i className={`fas ${tool.icon}`}></i>
