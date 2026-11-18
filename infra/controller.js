@@ -116,7 +116,7 @@ function clearSessionCookie(response) {
 
 async function injectAnonymousOrUser(request, response, next) {
   if (request.cookies?.session_id) {
-    await injectAutheticatedUser(request);
+    await injectAuthenticatedUser(request);
   } else {
     injectAnonymousUser(request);
   }
@@ -124,7 +124,7 @@ async function injectAnonymousOrUser(request, response, next) {
   return next();
 }
 
-async function injectAutheticatedUser(request) {
+async function injectAuthenticatedUser(request) {
   const sessionToken = request.cookies.session_id;
   const sessionObject = await session.findOneValidByToken(sessionToken);
   const userObject = await user.findOneById(sessionObject.user_id);
