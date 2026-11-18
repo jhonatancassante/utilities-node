@@ -13,7 +13,7 @@ describe("POST /api/v1/sessions", () => {
   describe("Usuário anônimo", () => {
     test("Com o email incorreto mas com a senha correta", async () => {
       await orchestrator.createUser({
-        password: "Senha-de-teste-segura-123!",
+        password: "Senha-De-Teste-Segura-123!!",
       });
 
       const response = await fetch(`${orchestrator.API_URL}/sessions`, {
@@ -23,7 +23,7 @@ describe("POST /api/v1/sessions", () => {
         },
         body: JSON.stringify({
           email: "email@errado.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: "Senha-De-Teste-Segura-123!!",
         }),
       });
       expect(response.status).toBe(401);
@@ -96,7 +96,7 @@ describe("POST /api/v1/sessions", () => {
     test("Com o email e a senha corretos", async () => {
       const newUser = await orchestrator.createUser({
         email: "email.e.senha@correto.com.br",
-        password: "email.e.senha@correto",
+        password: "Email.E.Senha12!!",
       });
 
       await orchestrator.activateUser(newUser);
@@ -108,7 +108,7 @@ describe("POST /api/v1/sessions", () => {
         },
         body: JSON.stringify({
           email: "email.e.senha@correto.com.br",
-          password: "email.e.senha@correto",
+          password: "Email.E.Senha12!!",
         }),
       });
       expect(response.status).toBe(201);
