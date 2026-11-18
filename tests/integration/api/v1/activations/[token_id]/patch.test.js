@@ -159,6 +159,28 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
       ]);
     });
 
+    test("Com duas requisições simultâneas e o mesmo token", async () => {
+      const createdUser = await orchestrator.createUser();
+      const activationToken = await activation.create(createdUser.id);
+
+      const responses = await Promise.all(
+        [1, 2].map(() =>
+          fetch(`${orchestrator.API_URL}/activations/${activationToken.id}`, {
+            method: "PATCH",
+          }),
+        ),
+      );
+
+      expect(responses.map((r) => r.status).sort()).toEqual([200, 404]);
+
+      const activatedUser = await user.findOneById(createdUser.id);
+      expect(activatedUser.features).toEqual([
+        "create:session",
+        "read:session",
+        "update:user",
+      ]);
+    });
+
     test("Com um token válido mas de um usuário já ativo", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);

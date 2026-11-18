@@ -45,6 +45,31 @@ async function query(queryObject) {
   }
 }
 
+// Executa `callback(client)` dentro de uma transação: COMMIT se terminar sem
+// erro, ROLLBACK se lançar. Erros da aplicação (NotFoundError, ForbiddenError
+// etc.) são repassados como estão; falhas do banco viram ServiceError.
+async function transaction(callback) {
+  let client;
+  try {
+    client = await getNewClient();
+    await client.query("BEGIN");
+    const result = await callback(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client?.query("ROLLBACK").catch(() => {});
+
+    if (error?.statusCode) throw error;
+
+    throw new ServiceError({
+      message: "Erro na conexão com o banco de dados ou na transação.",
+      cause: error,
+    });
+  } finally {
+    await client?.end();
+  }
+}
+
 async function getNewClient() {
   const client = new Client(getConfig());
   await client.connect();
@@ -53,6 +78,7 @@ async function getNewClient() {
 
 const database = {
   query,
+  transaction,
   getNewClient,
 };
 

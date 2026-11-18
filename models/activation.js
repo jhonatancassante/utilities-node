@@ -8,6 +8,7 @@ import user from "@/models/user.js";
 import authorization from "@/models/authorization.js";
 
 const EXPIRATION_IN_MILLISECONDS = 15 * 60 * 1000; // 15 minutos
+const ACTIVE_USER_FEATURES = ["create:session", "read:session", "update:user"];
 
 async function create(userId) {
   const expiresAt = new Date(Date.now() + EXPIRATION_IN_MILLISECONDS);
@@ -113,6 +114,82 @@ async function markTokenAsUsed(activationTokenId) {
   }
 }
 
+// Consome o token e ativa o usuário na mesma transação: ou acontecem as duas
+// coisas, ou nenhuma. O UPDATE do token bloqueia a linha, então duas
+// requisições simultâneas com o mesmo token não conseguem ativar duas vezes.
+async function activate(activationTokenId) {
+  return await database.transaction(async (client) => {
+    const tokenResults = await client.query({
+      text: `
+        UPDATE
+          user_activation_tokens
+        SET
+          used_at = timezone('utc', now()),
+          updated_at = timezone('utc', now())
+        WHERE
+          id = $1
+          AND used_at IS NULL
+          AND expires_at > NOW()
+        RETURNING
+          *
+      ;`,
+      values: [activationTokenId],
+    });
+
+    if (tokenResults.rowCount === 0) {
+      throw new NotFoundError({
+        message:
+          "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
+        action: "Faça um novo cadastro.",
+      });
+    }
+
+    const usedToken = tokenResults.rows[0];
+
+    const userResults = await client.query({
+      text: `
+        SELECT
+          *
+        FROM
+          users
+        WHERE
+          id = $1
+        FOR UPDATE
+      ;`,
+      values: [usedToken.user_id],
+    });
+
+    if (userResults.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O usuário deste token de ativação não foi encontrado.",
+        action: "Faça um novo cadastro.",
+      });
+    }
+
+    if (!authorization.can(userResults.rows[0], "read:activation_token")) {
+      throw new ForbiddenError({
+        message: "Você não pode mais utilizar tokens de ativação.",
+        action: "Entre em contato com o suporte.",
+      });
+    }
+
+    await client.query({
+      text: `
+        UPDATE
+          users
+        SET
+          features = $2,
+          updated_at = timezone('utc', now())
+        WHERE
+          id = $1
+      ;`,
+      values: [usedToken.user_id, ACTIVE_USER_FEATURES],
+    });
+
+    return usedToken;
+  });
+}
+
 async function activateUserByUserId(userId) {
   const userToActivate = await user.findOneById(userId);
 
@@ -123,11 +200,7 @@ async function activateUserByUserId(userId) {
     });
   }
 
-  const activatedUser = await user.setFeatures(userId, [
-    "create:session",
-    "read:session",
-    "update:user",
-  ]);
+  const activatedUser = await user.setFeatures(userId, ACTIVE_USER_FEATURES);
   return activatedUser;
 }
 
@@ -138,6 +211,7 @@ const activation = {
   sendEmailToUser,
   markTokenAsUsed,
   activateUserByUserId,
+  activate,
 };
 
 export default activation;
