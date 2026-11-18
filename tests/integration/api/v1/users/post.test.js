@@ -21,7 +21,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "unicoevalido",
           email: "unicoevalido@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: "Senha-De-Teste-Segura-123!!",
         }),
       });
       expect(response.status).toBe(201);
@@ -42,14 +42,14 @@ describe("POST /api/v1/users", () => {
 
       const userInDatabase = await user.findOneByUsername("unicoevalido");
       const correctPasswordMatch = await password.compare(
-        "Senha-de-teste-segura-123!",
+        "Senha-De-Teste-Segura-123!!",
         userInDatabase.password,
       );
 
       expect(correctPasswordMatch).toBe(true);
 
       const incorrectPasswordMatch = await password.compare(
-        "Senha-de-teste-segura-124!",
+        "Senha-De-Teste-Segura-124!!",
         userInDatabase.password,
       );
 
@@ -65,7 +65,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "usernameduplicado",
           email: "usernameduplicado1@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: "Senha-De-Teste-Segura-123!!",
         }),
       });
       expect(response1.status).toBe(201);
@@ -78,7 +78,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "UsernameDuplicado",
           email: "usernameduplicado2@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: "Senha-De-Teste-Segura-123!!",
         }),
       });
       expect(response2.status).toBe(400);
@@ -102,7 +102,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "emailInvalido",
           email: "emailInvalido",
-          password: "Senha-de-teste-segura-123!",
+          password: "Senha-De-Teste-Segura-123!!",
         }),
       });
       expect(response.status).toBe(400);
@@ -127,7 +127,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "emailduplicado1",
           email: "emailduplicado@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: "Senha-De-Teste-Segura-123!!",
         }),
       });
       expect(response1.status).toBe(201);
@@ -140,7 +140,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "emailduplicado2",
           email: "EmailDuplicado@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: "Senha-De-Teste-Segura-123!!",
         }),
       });
       expect(response2.status).toBe(400);
@@ -161,7 +161,7 @@ describe("POST /api/v1/users", () => {
       {
         username: "usuario!",
         email: "usuario-invalido@exemplo.com",
-        password: "Senha-de-teste-segura-123!",
+        password: "Senha-De-Teste-Segura-123!!",
       },
       "O nome de usuário contém caracteres não permitidos.",
     ],
@@ -169,7 +169,7 @@ describe("POST /api/v1/users", () => {
       {
         username: "usuario123",
         email: "a".repeat(245) + "@example.com",
-        password: "Senha-de-teste-segura-123!",
+        password: "Senha-De-Teste-Segura-123!!",
       },
       "O e-mail deve ter no máximo 254 caracteres.",
     ],
@@ -177,9 +177,17 @@ describe("POST /api/v1/users", () => {
       {
         username: "usuario123",
         email: "usuario-valido@exemplo.com",
-        password: "curta",
+        password: "AaBb12!!xyZ",
       },
-      "A senha deve ter pelo menos 15 caracteres.",
+      "A senha deve ter pelo menos 12 caracteres.",
+    ],
+    [
+      {
+        username: "usuario123",
+        email: "usuario-valido@exemplo.com",
+        password: "123456789012345",
+      },
+      "A senha deve conter pelo menos 2 letras minúsculas.",
     ],
     [
       {
@@ -219,7 +227,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "unicoevalido",
           email: "unicoevalido@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: "Senha-De-Teste-Segura-123!!",
         }),
       });
       expect(user2Response.status).toBe(403);
