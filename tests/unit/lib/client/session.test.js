@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
-import session from "@/lib/session.js";
+import session from "@/lib/client/session.js";
 
-describe("lib/session.js", () => {
+describe("lib/client/session.js", () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });

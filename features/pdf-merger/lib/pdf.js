@@ -2,7 +2,7 @@
 // Regras de unificação independentes de React. O processamento ocorre no
 // navegador: os arquivos não são enviados ao servidor. pdf-lib é carregado
 // sob demanda, apenas quando a unificação é solicitada.
-import { getFormattedTimestamp } from "@/lib/files.js";
+import { getFormattedTimestamp } from "@/lib/client/files.js";
 
 const PDF_EXTENSION = ".pdf";
 

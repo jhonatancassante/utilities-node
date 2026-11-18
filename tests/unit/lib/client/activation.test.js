@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
-import activateAccount from "@/lib/activation.js";
+import activateAccount from "@/lib/client/activation.js";
 
-describe("lib/activation.js", () => {
+describe("lib/client/activation.js", () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });

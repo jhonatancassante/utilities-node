@@ -4,7 +4,7 @@ import Button from "@/components/Button";
 import FileDropzone from "@/components/FileDropzone";
 import HelpToggle from "@/components/HelpToggle";
 import StatusMessage from "@/components/StatusMessage";
-import { downloadBlob } from "@/lib/files.js";
+import { downloadBlob } from "@/lib/client/files.js";
 import { addPdfFiles, mergePdfFiles } from "../../lib/pdf.js";
 import styles from "./index.module.css";
 

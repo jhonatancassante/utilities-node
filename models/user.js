@@ -5,7 +5,7 @@ import {
   validateUsername,
   validateEmail,
   validatePassword,
-} from "@/lib/user-validation.js";
+} from "@/lib/shared/user-validation.js";
 
 async function create(userInputValues) {
   validateUsernameFormat(userInputValues.username);

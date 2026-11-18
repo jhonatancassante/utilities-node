@@ -6,12 +6,12 @@ import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
-import requestAPI from "@/lib/api.js";
+import requestAPI from "@/lib/client/api.js";
 import {
   validateUsername,
   validateEmail,
   validatePassword,
-} from "@/lib/user-validation.js";
+} from "@/lib/shared/user-validation.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 

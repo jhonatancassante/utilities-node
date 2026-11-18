@@ -141,6 +141,8 @@ Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm 
 - `tests/integration/infra/email.test.js`: integração do serviço de e-mail.
 - `tests/integration/_use-cases/registration-flow.test.js`: fluxo completo de cadastro, recebimento do e-mail, ativação, login e consulta do usuário.
 - `tests/unit/models/authorization.test.js`: testes unitários de autorização.
+- `tests/unit/models/authentication.test.js`: testes unitários do hash falso usado contra timing attack.
+- `tests/unit/lib/client/` e `tests/unit/lib/shared/`: testes unitários do cliente HTTP, sessão, ativação, arquivos e validação de usuário.
 - `tests/unit/features/qr-code/lib/`: testes unitários da normalização de URLs e da formatação do timestamp usado nos downloads.
 - `tests/unit/features/pdf-splitter/lib/`: testes unitários das regras de validação, seleção de arquivos, extração de páginas e geração dos arquivos PDF e ZIP.
 - `tests/unit/features/csv-to-json/lib/`: testes unitários da interpretação de CSV e geração de JSON.

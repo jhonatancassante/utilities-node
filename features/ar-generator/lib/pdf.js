@@ -2,7 +2,7 @@
 // Gera os documentos no navegador. A geometria é definida em milímetros
 // para preservar o posicionamento do gerador legado.
 import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib";
-import { getFormattedTimestamp } from "@/lib/files.js";
+import { getFormattedTimestamp } from "@/lib/client/files.js";
 
 const MM = 72 / 25.4;
 const pageW = 210;
