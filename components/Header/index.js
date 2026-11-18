@@ -152,7 +152,7 @@ function Header() {
               </li>
             )}
 
-            <li>
+            <li className={styles.mobileSignup}>
               <Link
                 href="/cadastro"
                 className={styles.signupLink}
@@ -169,7 +169,22 @@ function Header() {
         </nav>
 
         <div className={styles.actions}>
+          <div className={styles.accountActions}>
+            <Link
+              href="/cadastro"
+              className={styles.signupLink}
+              aria-current={
+                router.pathname === "/cadastro" ? "page" : undefined
+              }
+              onClick={closeMenus}
+            >
+              <i className="fas fa-user-plus" aria-hidden="true"></i>
+              Criar conta
+            </Link>
+          </div>
+
           <ThemeToggle />
+
           <button
             type="button"
             className={styles.menuButton}
