@@ -77,7 +77,6 @@ function filterOutput(user, feature, resource) {
     if (user.id === resource.user_id) {
       return {
         id: resource.id,
-        token: resource.token,
         user_id: resource.user_id,
         expires_at: resource.expires_at,
         created_at: resource.created_at,
