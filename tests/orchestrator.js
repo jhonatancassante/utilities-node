@@ -61,7 +61,7 @@ async function createUser(userObject = {}) {
   return await user.create({
     username:
       userObject.username || faker.internet.username().replace(/[_.-]/g, ""),
-    email: userObject.email || faker.internet.email(),
+    email: userObject.email || `${faker.string.uuid()}@example.com`,
     password: userObject.password || "Senha_Padrao_V@l1d@_1234",
   });
 }

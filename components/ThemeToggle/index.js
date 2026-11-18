@@ -42,6 +42,7 @@ function ThemeToggle() {
       onClick={toggleTheme}
       title="Alternar tema"
       aria-label="Alternar entre tema claro e escuro"
+      aria-pressed={isDark}
     >
       <i
         className={`fas ${isDark ? "fa-sun" : "fa-moon"}`}

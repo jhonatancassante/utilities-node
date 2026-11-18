@@ -1,10 +1,19 @@
 import database from "@/infra/database.js";
 import password from "@/models/password.js";
 import { ValidationError, NotFoundError } from "@/infra/errors.js";
+import {
+  validateUsername,
+  validateEmail,
+  validatePassword,
+} from "@/lib/user-validation.js";
 
 async function create(userInputValues) {
-  await validateUniqueUsername(userInputValues.username);
+  validateUsernameFormat(userInputValues.username);
   validateEmailFormat(userInputValues.email);
+  validatePasswordFormat(userInputValues.password);
+  userInputValues.username = userInputValues.username.trim();
+  userInputValues.email = userInputValues.email.trim();
+  await validateUniqueUsername(userInputValues.username);
   await validateUniqueEmail(userInputValues.email);
   await hashPasswordInObject(userInputValues);
 
@@ -134,19 +143,22 @@ async function findOneByEmail(email) {
 async function update(username, userInputValues) {
   const currentUser = await findOneByUsername(username);
 
-  if (
-    "username" in userInputValues &&
-    currentUser.username !== userInputValues.username
-  ) {
-    await validateUniqueUsername(userInputValues.username);
+  if ("username" in userInputValues) {
+    validateUsernameFormat(userInputValues.username);
+    userInputValues.username = userInputValues.username.trim();
+    if (currentUser.username !== userInputValues.username) {
+      await validateUniqueUsername(userInputValues.username);
+    }
   }
 
   if ("email" in userInputValues) {
     validateEmailFormat(userInputValues.email);
+    userInputValues.email = userInputValues.email.trim();
     await validateUniqueEmail(userInputValues.email);
   }
 
   if ("password" in userInputValues) {
+    validatePasswordFormat(userInputValues.password);
     await hashPasswordInObject(userInputValues);
   }
 
@@ -252,19 +264,19 @@ async function validateUniqueUsername(username) {
   }
 }
 
+function validateUsernameFormat(username) {
+  const error = validateUsername(username);
+  if (error) throw new ValidationError(error);
+}
+
 function validateEmailFormat(email) {
-  const cleanEmail = email.trim();
+  const error = validateEmail(email);
+  if (error) throw new ValidationError(error);
+}
 
-  // Regex padrão para validação estrutural de e-mail
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (!emailRegex.test(cleanEmail)) {
-    throw new ValidationError({
-      message: "O e-mail informado não possui um formato válido.",
-      action:
-        "Verifique se digitou o e-mail corretamente (ex: nome@dominio.com).",
-    });
-  }
+function validatePasswordFormat(password) {
+  const error = validatePassword(password);
+  if (error) throw new ValidationError(error);
 }
 
 async function validateUniqueEmail(email) {

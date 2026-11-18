@@ -152,7 +152,7 @@ paths:
             example:
               username: jhow
               email: jhow@example.com
-              password: uma-senha
+              password: uma frase-senha longa e exclusiva
       responses:
         "201":
           description: Usuário criado e e-mail de ativação enviado.
@@ -443,25 +443,35 @@ components:
       properties:
         username:
           type: string
+          minLength: 3
           maxLength: 30
+          pattern: "^[a-zA-Z0-9_-]+$"
         email:
           type: string
           format: email
           maxLength: 254
         password:
           type: string
+          minLength: 15
+          maxLength: 64
+          description: >
+            Frase-senha de 15 a 64 caracteres, sem regras artificiais de composição.
     UserUpdate:
       type: object
       properties:
         username:
           type: string
+          minLength: 3
           maxLength: 30
+          pattern: "^[a-zA-Z0-9_-]+$"
         email:
           type: string
           format: email
           maxLength: 254
         password:
           type: string
+          minLength: 15
+          maxLength: 64
     PublicUser:
       type: object
       required: [id, username, features, created_at, updated_at]
