@@ -253,7 +253,9 @@ function ProfileForm({ user, onUpdated }) {
             value={form.username}
             onChange={handleChange}
             onBlur={() => handleBlur("username")}
-            aria-invalid={Boolean(isEditing && touched.username && errors.username)}
+            aria-invalid={Boolean(
+              isEditing && touched.username && errors.username,
+            )}
             disabled={!isEditing || isSubmitting}
           />
           {renderError("username")}
@@ -389,11 +391,7 @@ function ProfileForm({ user, onUpdated }) {
         <div className={styles.formActions}>
           {isEditing ? (
             <>
-              <Button
-                type="submit"
-                icon="fa-save"
-                disabled={isSubmitting}
-              >
+              <Button type="submit" icon="fa-save" disabled={isSubmitting}>
                 {isSubmitting ? "Salvando..." : "Salvar alterações"}
               </Button>
               <Button
@@ -407,11 +405,7 @@ function ProfileForm({ user, onUpdated }) {
               </Button>
             </>
           ) : (
-            <Button
-              type="button"
-              icon="fa-edit"
-              onClick={handleEdit}
-            >
+            <Button type="button" icon="fa-edit" onClick={handleEdit}>
               Editar informações
             </Button>
           )}
