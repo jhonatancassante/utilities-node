@@ -60,10 +60,7 @@ function LoginPage() {
 
   return (
     <>
-      <AppHead
-        title="Entrar"
-        description="Acesse sua conta do Utilities."
-      />
+      <AppHead title="Entrar" description="Acesse sua conta do Utilities." />
       <Layout>
         <main className={shared.container}>
           <section className={`${shared.card} ${styles.card}`}>

@@ -356,8 +356,7 @@ function RegistrationPage() {
                 </form>
 
                 <p className={styles.loginPrompt}>
-                  Já possui uma conta?{" "}
-                  <Link href="/login">Entrar</Link>
+                  Já possui uma conta? <Link href="/login">Entrar</Link>
                 </p>
               </>
             )}

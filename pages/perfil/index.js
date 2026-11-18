@@ -19,11 +19,14 @@ import styles from "./index.module.css";
 function ProfilePage() {
   const router = useRouter();
   const { mutate } = useSWRConfig();
-  const { data: user, error, isLoading } = useSWR(
-    "/api/v1/user",
-    session.getCurrentUser,
-    { revalidateOnFocus: false, shouldRetryOnError: false },
-  );
+  const {
+    data: user,
+    error,
+    isLoading,
+  } = useSWR("/api/v1/user", session.getCurrentUser, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
 
   useEffect(() => {
     if (!isLoading && !user && !error) router.replace("/login");
@@ -109,11 +112,7 @@ function ProfileForm({ user, onUpdated }) {
     if (!touched[name] || !errors[name]) return null;
 
     return (
-      <small
-        className={styles.fieldError}
-        id={`${name}-error`}
-        role="alert"
-      >
+      <small className={styles.fieldError} id={`${name}-error`} role="alert">
         {errors[name]}
       </small>
     );
@@ -169,13 +168,10 @@ function ProfileForm({ user, onUpdated }) {
     setFeedback(null);
 
     try {
-      await requestAPI(
-        `/api/v1/users/${encodeURIComponent(user.username)}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify(payload),
-        },
-      );
+      await requestAPI(`/api/v1/users/${encodeURIComponent(user.username)}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      });
 
       const updatedUser = {
         ...user,
@@ -333,9 +329,7 @@ function ProfileForm({ user, onUpdated }) {
               }
               aria-pressed={showPasswordConfirmation}
               onMouseDown={(event) => event.preventDefault()}
-              onClick={() =>
-                setShowPasswordConfirmation((visible) => !visible)
-              }
+              onClick={() => setShowPasswordConfirmation((visible) => !visible)}
               disabled={isSubmitting}
             >
               <i

@@ -165,11 +165,7 @@ function Header() {
 
             {router.pathname === "/status" && (
               <li>
-                <NavLink
-                  href="/status"
-                  active
-                  onNavigate={closeMenus}
-                >
+                <NavLink href="/status" active onNavigate={closeMenus}>
                   Status
                 </NavLink>
               </li>
@@ -289,7 +285,10 @@ function Header() {
 
 function getInitials(username) {
   const parts = username.split(/[-_]+/).filter(Boolean);
-  const initials = parts.slice(0, 2).map((part) => part[0]).join("");
+  const initials = parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("");
   return (initials || username.slice(0, 2)).toUpperCase();
 }
 

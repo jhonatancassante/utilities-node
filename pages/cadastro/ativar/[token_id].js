@@ -148,7 +148,8 @@ function AccountActivationPage() {
                     Utilities foi ativada com sucesso.
                   </p>
                   <p className={styles.hint}>
-                    Sua conta está pronta para uso. Você já pode entrar no Utilities.
+                    Sua conta está pronta para uso. Você já pode entrar no
+                    Utilities.
                   </p>
                 </>
               )}
