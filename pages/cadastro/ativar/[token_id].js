@@ -52,7 +52,8 @@ function AccountActivationPage() {
 
         if (
           error.statusCode === 403 &&
-          error.message === "Você não pode mais utilizar tokens de ativação."
+          error.message ===
+            "Você não pode mais utilizar tokens de ativação."
         ) {
           setResult({ status: "already-active" });
           return;
@@ -79,6 +80,16 @@ function AccountActivationPage() {
   const isSuccessful =
     result.status === "success" || result.status === "already-active";
 
+  let iconClass = styles.loadingIcon;
+
+  if (isSuccessful) {
+    iconClass = styles.successIcon;
+  }
+
+  if (result.status === "error") {
+    iconClass = styles.errorIcon;
+  }
+
   return (
     <>
       <AppHead
@@ -90,18 +101,13 @@ function AccountActivationPage() {
         <main className={shared.container}>
           <section className={`${shared.card} ${styles.card}`}>
             <div
-              className={`${shared.icon} ${isSuccessful ? styles.successIcon : result.status === "error" ? styles.errorIcon : styles.loadingIcon}`}
+              className={`${shared.icon} ${iconClass}`}
               aria-hidden="true"
             >
               {result.status === "loading" && (
                 <i className="fas fa-circle-notch fa-spin"></i>
               )}
-              {result.status === "success" && (
-                <i className="fas fa-check-circle"></i>
-              )}
-              {result.status === "already-active" && (
-                <i className="fas fa-check-circle"></i>
-              )}
+              {isSuccessful && <i className="fas fa-check-circle"></i>}
               {result.status === "error" && (
                 <i className="fas fa-exclamation-circle"></i>
               )}
