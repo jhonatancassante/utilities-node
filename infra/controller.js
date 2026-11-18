@@ -124,6 +124,31 @@ async function injectAnonymousOrUser(request, response, next) {
   return next();
 }
 
+// Para rotas públicas que não devem falhar por causa de um cookie antigo
+// (ex.: login). Se a sessão do cookie for inválida ou expirada, a requisição
+// segue como anônima e o cookie inválido é removido.
+async function injectUserOrAnonymousOnInvalidSession(request, response, next) {
+  if (!request.cookies?.session_id) {
+    injectAnonymousUser(request);
+    return next();
+  }
+
+  try {
+    await injectAuthenticatedUser(request);
+  } catch (error) {
+    if (!(
+      error instanceof UnauthorizedError || error instanceof NotFoundError
+    )) {
+      throw error;
+    }
+
+    clearSessionCookie(response);
+    injectAnonymousUser(request);
+  }
+
+  return next();
+}
+
 async function injectAuthenticatedUser(request) {
   const sessionToken = request.cookies.session_id;
   const sessionObject = await session.findOneValidByToken(sessionToken);
@@ -166,6 +191,7 @@ const controller = {
   setSessionCookie,
   clearSessionCookie,
   injectAnonymousOrUser,
+  injectUserOrAnonymousOnInvalidSession,
   canRequest,
 };
 
