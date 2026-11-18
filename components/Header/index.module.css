@@ -351,10 +351,10 @@ a.toolItem[aria-current="page"] {
   justify-content: center;
   gap: 8px;
   padding: 9px 16px;
-  border: 1px solid #ffffff;
+  border: 1px solid var(--accent);
   border-radius: var(--radius-md);
-  background: #ffffff;
-  color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
   font-size: 0.95rem;
   font-weight: 700;
   white-space: nowrap;
@@ -364,7 +364,8 @@ a.toolItem[aria-current="page"] {
 }
 
 .loginLink:hover {
-  background: var(--accent-soft);
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
   transform: translateY(-1px);
 }
 
