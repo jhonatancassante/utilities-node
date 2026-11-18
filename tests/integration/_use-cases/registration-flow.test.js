@@ -14,6 +14,7 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
   let createUserRespondseBody;
   let activationTokenId;
   let createSessionResponseBody;
+  let sessionToken;
 
   test("Cria um usuário", async () => {
     const createUserRespondse = await fetch(`${orchestrator.API_URL}/users`, {
@@ -104,12 +105,18 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
 
     createSessionResponseBody = await createSessionResponse.json();
     expect(createSessionResponseBody.user_id).toBe(createUserRespondseBody.id);
+    expect(createSessionResponseBody).not.toHaveProperty("token");
+
+    // O token só existe no cookie HttpOnly, nunca no corpo da resposta.
+    sessionToken = orchestrator.getSessionCookieObject(
+      createSessionResponse,
+    ).value;
   });
 
   test("Recebe dados do usuário", async () => {
     const userResponse = await fetch(`${orchestrator.API_URL}/user`, {
       headers: {
-        Cookie: `session_id=${createSessionResponseBody.token}`,
+        Cookie: `session_id=${sessionToken}`,
       },
     });
     expect(userResponse.status).toBe(200);

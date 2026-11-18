@@ -92,5 +92,31 @@ describe("models/authorization.js", () => {
         updated_at: "2026-01-01T00:00:00Z",
       });
     });
+    test("`read:session` não devolve o token da sessão", () => {
+      const sessionOwner = { id: "user-1", features: ["read:session"] };
+      const sessionResource = {
+        id: "session-1",
+        token: "token-secreto",
+        user_id: "user-1",
+        expires_at: "2026-02-01T00:00:00Z",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      };
+
+      const result = authorization.filterOutput(
+        sessionOwner,
+        "read:session",
+        sessionResource,
+      );
+
+      expect(result).toEqual({
+        id: "session-1",
+        user_id: "user-1",
+        expires_at: "2026-02-01T00:00:00Z",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      });
+      expect(result).not.toHaveProperty("token");
+    });
   });
 });

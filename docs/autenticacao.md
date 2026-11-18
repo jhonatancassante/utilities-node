@@ -79,7 +79,7 @@ O token é armazenado em `user_activation_tokens` e possui:
 - `expires_at`, definido para 15 minutos após a criação.
 - `used_at`, inicialmente nulo e preenchido quando utilizado.
 
-O endpoint `PATCH /api/v1/activations/{token_id}` valida o token, ativa a conta e marca o token como utilizado. Tokens inexistentes, expirados ou já utilizados não podem ser reaproveitados.
+O endpoint `PATCH /api/v1/activations/{token_id}` valida o token, ativa a conta e marca o token como utilizado. As duas alterações acontecem na mesma transação do PostgreSQL (`activation.activate()`): se qualquer passo falhar, nada é gravado e o token continua válido. Se duas requisições chegarem ao mesmo tempo com o mesmo token, só uma tem sucesso e a outra recebe `404`. Tokens inexistentes, expirados ou já utilizados não podem ser reaproveitados.
 
 ### 3. Permissões após a ativação
 
@@ -98,7 +98,9 @@ Assim, a conta pode iniciar sessões, consultar a própria sessão autenticada e
 1. `models/authentication.js` procura o usuário pelo e-mail, sem diferenciar maiúsculas de minúsculas.
 2. A senha é comparada com o hash armazenado.
 3. O usuário precisa possuir `create:session`; contas ainda não ativadas não recebem essa permissão.
-4. Uma sessão é criada e o token é enviado no cookie `session_id`.
+4. Uma sessão é criada e o token é enviado **somente** no cookie `session_id` (`HttpOnly`); o corpo da resposta não inclui o token.
+
+Se a requisição trouxer um cookie `session_id` inválido ou expirado, o login o trata como visitante anônimo, segue para a verificação de e-mail e senha e remove o cookie antigo. Assim, ninguém precisa tentar entrar duas vezes.
 
 Credenciais incorretas retornam `401 UnauthorizedError` com a mesma mensagem, independentemente de o e-mail não existir ou de a senha estar errada. Quando o e-mail não é encontrado, o fluxo executa uma comparação contra um hash descartável para aproximar o tempo de resposta.
 
@@ -194,7 +196,7 @@ A autorização de saída também é centralizada em `authorization.filterOutput
 - As senhas devem ter de 12 a 64 caracteres, com pelo menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns conhecidos também são rejeitados.
 - Campos obrigatórios ausentes não possuem validação de entrada uniforme e podem resultar em erro 500.
 - O valor de e-mail é validado após `trim()`, mas o valor armazenado não é normalizado; a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
-- O corpo de `POST /api/v1/sessions` e de `DELETE /api/v1/sessions` inclui o token da sessão. Embora o cookie seja `HttpOnly`, devolver o token no JSON reduz o benefício dessa proteção e deve ser revisto antes de considerar o fluxo endurecido para produção.
+- Cookie `session_id` inválido ou expirado é tolerado apenas nas rotas públicas (login, cadastro e ativação), onde a requisição segue como visitante anônimo. Nas demais rotas, que dependem do usuário logado, o resultado continua sendo `401`.
 - O controller limpa o cookie em qualquer erro 401, inclusive login inválido.
 - As sessões encerradas permanecem no banco com data de expiração antecipada; não há rotina de limpeza física documentada ou implementada.
 

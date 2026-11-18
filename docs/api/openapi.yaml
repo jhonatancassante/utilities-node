@@ -249,7 +249,8 @@ paths:
       summary: Ativa uma conta
       description: |
         Exige read:activation_token. O token expira em 15 minutos e só pode
-        ser utilizado uma vez. A ativação concede create:session, read:session
+        ser utilizado uma vez. O consumo do token e a ativação acontecem na mesma
+        transação. A ativação concede create:session, read:session
         e update:user ao usuário.
       x-required-feature: read:activation_token
       responses:
@@ -279,8 +280,9 @@ paths:
       summary: Autentica e cria uma sessão
       description: |
         Exige create:session. A conta precisa estar ativada. A sessão dura
-        30 dias. O token é enviado no cookie HttpOnly session_id e também
-        aparece no corpo da resposta. Credenciais incorretas retornam uma
+        30 dias. O token é enviado somente no cookie HttpOnly session_id e não
+        aparece no corpo da resposta. Um cookie session_id inválido ou expirado
+        na requisição é ignorado (visitante anônimo). Credenciais incorretas retornam uma
         mensagem genérica, sem distinguir e-mail inexistente de senha errada.
       x-required-feature: create:session
       requestBody:
@@ -319,7 +321,7 @@ paths:
       description: |
         Exige uma sessão válida no cookie session_id. Antecipada a expiração
         do registro no banco, o cookie é removido do navegador com Max-Age=-1.
-        O registro da sessão não é apagado fisicamente. A resposta inclui o
+        O registro da sessão não é apagado fisicamente. A resposta não inclui o
         token da sessão encerrada.
       security:
         - SessionCookie: []
@@ -515,16 +517,11 @@ components:
           type: string
     Session:
       type: object
-      required: [id, token, user_id, expires_at, created_at, updated_at]
+      required: [id, user_id, expires_at, created_at, updated_at]
       properties:
         id:
           type: string
           format: uuid
-        token:
-          type: string
-          minLength: 96
-          maxLength: 96
-          description: Token aleatório em hexadecimal, também enviado no cookie.
         user_id:
           type: string
           format: uuid

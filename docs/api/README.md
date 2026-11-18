@@ -51,7 +51,7 @@ Os erros seguem o formato:
 | `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`                 |
 | `500`  | `InternalServerError`   | Falha inesperada; detalhes ficam no log                       |
 
-O controller limpa o cookie `session_id` em qualquer resposta `401`. Nas rotas que injetam o usuário a partir do cookie, um token inválido enviado pelo cliente também resulta em `401`, mesmo quando a operação é pública para visitantes sem cookie. As respostas que definem ou removem o cookie também usam `Cache-Control: no-store, no-cache, max-age=0, must-revalidate`.
+O controller limpa o cookie `session_id` em qualquer resposta `401`. Nas rotas que injetam o usuário a partir do cookie, um token inválido enviado pelo cliente também resulta em `401`, mesmo quando a operação é pública para visitantes sem cookie. As exceções são as rotas públicas `/api/v1/sessions`, `POST /api/v1/users` e `PATCH /api/v1/activations/{token_id}`, que tratam cookie inválido ou expirado como visitante anônimo e removem o cookie antigo. As respostas que definem ou removem o cookie também usam `Cache-Control: no-store, no-cache, max-age=0, must-revalidate`.
 
 ## `GET /api/v1/status`
 
@@ -120,7 +120,7 @@ Respostas relevantes: `201` criado; `400` nome/email duplicado ou e-mail inváli
 Exige `read:activation_token`. O identificador é o UUID enviado no link por e-mail.
 
 - O token tem validade de 15 minutos.
-- Só pode ser utilizado uma vez.
+- Só pode ser utilizado uma vez. A ativação da conta e o consumo do token acontecem em uma única transação; com requisições simultâneas, só uma tem sucesso e as demais recebem `404`.
 - Token inexistente, expirado ou já utilizado resulta em `404`.
 - Token de conta que já foi ativada resulta em `403`.
 - Em caso de sucesso, responde `200` com os dados do token de ativação, incluindo `used_at`.
@@ -168,7 +168,7 @@ Com sucesso, responde `201`, cria uma sessão de 30 dias e define o cookie `sess
 Set-Cookie: session_id=<token>; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax
 ```
 
-Em produção, inclui `Secure`. O corpo inclui os dados da sessão, inclusive o token. Credenciais incorretas respondem `401` com mensagem genérica. A tentativa de login inválida também limpa eventual cookie enviado na requisição.
+Em produção, inclui `Secure`. O corpo inclui os dados da sessão, sem o token, que só existe no cookie `HttpOnly`. Credenciais incorretas respondem `401` com mensagem genérica. A tentativa de login inválida também limpa eventual cookie enviado na requisição.
 
 ## `DELETE /api/v1/sessions`
 
@@ -178,7 +178,7 @@ Em caso de sucesso:
 
 - A expiração da sessão é antecipada no banco; o registro não é apagado.
 - O cookie é removido com `Max-Age=-1`.
-- A resposta é `200` e inclui os dados da sessão encerrada, inclusive o token.
+- A resposta é `200` e inclui os dados da sessão encerrada, sem o token.
 
 Sessão inexistente ou expirada resulta em `401`.
 
@@ -194,7 +194,6 @@ A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica c
 - Não há política de complexidade ou tamanho mínimo de senha implementada.
 - Campos obrigatórios ausentes não possuem validação uniforme e podem resultar em `500`.
 - O e-mail é validado após `trim()`, mas o valor armazenado não é normalizado.
-- O corpo de login e logout inclui o token de sessão, apesar do cookie ser `HttpOnly`. Isso reduz a proteção oferecida pelo atributo e merece revisão.
 - O controller limpa o cookie em qualquer erro `401`, inclusive login inválido.
 - A feature `read:status` consta no catálogo e é usada nos testes, mas a rota de status não possui middleware `canRequest`; o acesso ao endpoint permanece público. A feature `read:status:all` controla apenas a inclusão da versão do banco.
 - Não existe endpoint público para administração das features. A atribuição de permissões privilegiadas é feita internamente.

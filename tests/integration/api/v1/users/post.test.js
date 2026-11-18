@@ -3,6 +3,7 @@ import { version as uuidVersion } from "uuid";
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
 import password from "@/models/password.js";
+import session from "@/models/session.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -213,6 +214,56 @@ describe("POST /api/v1/users", () => {
     const responseBody = await response.json();
     expect(responseBody.name).toBe("ValidationError");
     expect(responseBody.message).toBe(expectedMessage);
+  });
+
+  describe("Usuário anônimo com cookie antigo", () => {
+    test("Com um cookie `session_id` expirado", async () => {
+      const oldUser = await orchestrator.createUser();
+      await orchestrator.activateUser(oldUser);
+      const oldSession = await orchestrator.createSession(oldUser);
+      await session.expireById(oldSession.id);
+
+      const response = await fetch(`${orchestrator.API_URL}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${oldSession.token}`,
+        },
+        body: JSON.stringify({
+          username: "cadastroComCookieExpirado",
+          email: "cadastro.cookie.expirado@example.com",
+          password: validPassword,
+        }),
+      });
+      expect(response.status).toBe(201);
+
+      const sessionCookie = orchestrator.getSessionCookieObject(response);
+      expect(sessionCookie).toEqual({
+        name: "session_id",
+        value: "invalid",
+        maxAge: -1,
+        httpOnly: true,
+        path: "/",
+        sameSite: "lax",
+      });
+    });
+
+    test("Com um cookie `session_id` inexistente", async () => {
+      const response = await fetch(`${orchestrator.API_URL}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${"0".repeat(96)}`,
+        },
+        body: JSON.stringify({
+          username: "cadastroComCookieInexistente",
+          email: "cadastro.cookie.inexistente@example.com",
+          password: validPassword,
+        }),
+      });
+
+      expect(response.status).toBe(201);
+    });
   });
 
   describe("Usuário autenticado", () => {

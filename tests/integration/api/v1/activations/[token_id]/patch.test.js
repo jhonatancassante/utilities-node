@@ -1,6 +1,7 @@
 import { jest } from "@jest/globals";
 import { version as uuidVersion } from "uuid";
 import activation from "@/models/activation.js";
+import session from "@/models/session.js";
 import user from "@/models/user.js";
 import orchestrator from "@/tests/orchestrator.js";
 
@@ -152,6 +153,58 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
       expect(lifetimeDifferenceInMilliseconds).toBeLessThanOrEqual(100);
 
       const activatedUser = await user.findOneById(responseBody.user_id);
+      expect(activatedUser.features).toEqual([
+        "create:session",
+        "read:session",
+        "update:user",
+      ]);
+    });
+
+    test("Com duas requisições simultâneas e o mesmo token", async () => {
+      const createdUser = await orchestrator.createUser();
+      const activationToken = await activation.create(createdUser.id);
+
+      const responses = await Promise.all(
+        [1, 2].map(() =>
+          fetch(`${orchestrator.API_URL}/activations/${activationToken.id}`, {
+            method: "PATCH",
+          }),
+        ),
+      );
+
+      expect(responses.map((r) => r.status).sort()).toEqual([200, 404]);
+
+      const activatedUser = await user.findOneById(createdUser.id);
+      expect(activatedUser.features).toEqual([
+        "create:session",
+        "read:session",
+        "update:user",
+      ]);
+    });
+
+    test("Com um token válido e um cookie `session_id` expirado", async () => {
+      const oldUser = await orchestrator.createUser();
+      await orchestrator.activateUser(oldUser);
+      const oldSession = await orchestrator.createSession(oldUser);
+      await session.expireById(oldSession.id);
+
+      const newUser = await orchestrator.createUser();
+      const activationToken = await activation.create(newUser.id);
+
+      const response = await fetch(
+        `${orchestrator.API_URL}/activations/${activationToken.id}`,
+        {
+          method: "PATCH",
+          headers: { Cookie: `session_id=${oldSession.token}` },
+        },
+      );
+      expect(response.status).toBe(200);
+
+      const sessionCookie = orchestrator.getSessionCookieObject(response);
+      expect(sessionCookie.value).toBe("invalid");
+      expect(sessionCookie.maxAge).toBe(-1);
+
+      const activatedUser = await user.findOneById(newUser.id);
       expect(activatedUser.features).toEqual([
         "create:session",
         "read:session",

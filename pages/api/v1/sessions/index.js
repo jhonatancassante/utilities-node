@@ -10,7 +10,7 @@ export default controller.createController(
     POST: [controller.canRequest("create:session"), postHandler],
     DELETE: deleteHandler,
   },
-  { middlewares: [controller.injectAnonymousOrUser] },
+  { middlewares: [controller.injectUserOrAnonymousOnInvalidSession] },
 );
 
 async function postHandler(request, response) {
