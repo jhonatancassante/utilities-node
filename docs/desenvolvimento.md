@@ -114,14 +114,17 @@ Migrations existentes na branch principal:
 | `1792077675178_create-users.js`                                  | Cria a tabela `users`                      |
 | `1792179953104_altera-nomes-de-colunas-createdAt-e-updatedAt.js` | Renomeia colunas de data para `snake_case` |
 | `1792247067512_create-sessions.js`                               | Cria a tabela `sessions`                   |
-| `1792760460131-adiciona-features-na-tabela-users.js`             | Adiciona `users.features`                  |
-| `1792781687009-cria-tabela-user-activation-tokens.js`            | Cria `user_activation_tokens`              |
+| `1792760460131_adiciona-features-na-tabela-users.js`             | Adiciona `users.features`                  |
+| `1792781687009_cria-tabela-user-activation-tokens.js`            | Cria `user_activation_tokens`              |
 
 O histórico das execuções fica em `pgmigrations`. As migrations atuais exportam `down = false`; não existe rollback automático.
 
 Regras:
 
 - Nunca altere uma migration já aplicada em produção. Crie uma migration nova.
+- Nunca renomeie o arquivo de uma migration já aplicada: o `node-pg-migrate` compara os nomes com a tabela `pgmigrations` e passa a recusar o histórico. Os nomes em português acima ficam como estão.
+- Migrations novas usam nome em inglês, no formato `create-...`, `add-...-to-...`, `rename-...` ou `drop-...`; tabelas e colunas em inglês e `snake_case`.
+- Consultas que usam `LOWER(coluna)` não aproveitam o índice normal da coluna; se esse caminho passar a ser lento, crie um índice por expressão (`CREATE INDEX ... ON users (LOWER(username))`).
 - Em produção, migrations não são executadas automaticamente no deploy. Após publicar uma alteração de esquema, execute `POST /api/v1/migrations` com uma sessão que possua `create:migration`.
 - `next.config.js` inclui `infra/migrations` e `package.json` no pacote da função serverless da rota. Não remova essa configuração sem validar o funcionamento na Vercel.
 
@@ -140,8 +143,8 @@ Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm 
 - `tests/integration/api/v1/`: testes dos endpoints.
 - `tests/integration/infra/email.test.js`: integração do serviço de e-mail.
 - `tests/integration/_use-cases/registration-flow.test.js`: fluxo completo de cadastro, recebimento do e-mail, ativação, login e consulta do usuário.
-- `tests/unit/models/authorization.test.js`: testes unitários de autorização.
-- `tests/unit/models/authentication.test.js`: testes unitários do hash falso usado contra timing attack.
+- `tests/unit/models/`: testes unitários de `user`, `password`, `session`, `activation`, `authentication` (hash falso contra timing attack) e `authorization`, sem banco de dados (as consultas são simuladas).
+- `tests/unit/infra/`: testes unitários de `errors` e `database`.
 - `tests/unit/lib/client/` e `tests/unit/lib/shared/`: testes unitários do cliente HTTP, sessão, ativação, arquivos e validação de usuário.
 - `tests/unit/features/qr-code/lib/`: testes unitários da normalização de URLs e da formatação do timestamp usado nos downloads.
 - `tests/unit/features/pdf-splitter/lib/`: testes unitários das regras de validação, seleção de arquivos, extração de páginas e geração dos arquivos PDF e ZIP.
