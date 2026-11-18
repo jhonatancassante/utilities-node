@@ -406,7 +406,7 @@ function ProfileForm({ user, onUpdated }) {
               <Button
                 key="cancel"
                 type="button"
-                variant="outline"
+                variant="danger"
                 icon="fa-times"
                 onClick={handleCancel}
                 disabled={isSubmitting}
