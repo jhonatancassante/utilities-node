@@ -75,6 +75,7 @@ function ProfileForm({ user, onUpdated }) {
     password: "",
     passwordConfirmation: "",
   });
+  const [isEditing, setIsEditing] = useState(false);
   const [touched, setTouched] = useState({});
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,8 +109,34 @@ function ProfileForm({ user, onUpdated }) {
     setTouched((current) => ({ ...current, [name]: true }));
   }
 
+  function handleEdit() {
+    setForm({
+      username: user.username,
+      email: user.email,
+      password: "",
+      passwordConfirmation: "",
+    });
+    setTouched({});
+    setFeedback(null);
+    setIsEditing(true);
+  }
+
+  function handleCancel() {
+    setForm({
+      username: user.username,
+      email: user.email,
+      password: "",
+      passwordConfirmation: "",
+    });
+    setTouched({});
+    setFeedback(null);
+    setShowPassword(false);
+    setShowPasswordConfirmation(false);
+    setIsEditing(false);
+  }
+
   function renderError(name) {
-    if (!touched[name] || !errors[name]) return null;
+    if (!isEditing || !touched[name] || !errors[name]) return null;
 
     return (
       <small className={styles.fieldError} id={`${name}-error`} role="alert">
@@ -120,6 +147,7 @@ function ProfileForm({ user, onUpdated }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
+
     setTouched({
       username: true,
       email: true,
@@ -157,10 +185,7 @@ function ProfileForm({ user, onUpdated }) {
     }
 
     if (Object.keys(payload).length === 0) {
-      setFeedback({
-        type: "info",
-        message: "Nenhuma alteração foi realizada.",
-      });
+      handleCancel();
       return;
     }
 
@@ -180,18 +205,16 @@ function ProfileForm({ user, onUpdated }) {
       };
 
       onUpdated(updatedUser);
-      setForm((current) => ({
-        ...current,
+      setForm({
         username: updatedUser.username,
         email: updatedUser.email,
         password: "",
         passwordConfirmation: "",
-      }));
-      setTouched({});
-      setFeedback({
-        type: "success",
-        message: "Seus dados foram atualizados com sucesso.",
       });
+      setTouched({});
+      setShowPassword(false);
+      setShowPasswordConfirmation(false);
+      setIsEditing(false);
     } catch (error) {
       setFeedback({
         type: "error",
@@ -211,7 +234,9 @@ function ProfileForm({ user, onUpdated }) {
       <span className={shared.badge}>MINHA CONTA</span>
       <h1>Meu perfil</h1>
       <p className={styles.description}>
-        Consulte e atualize as informações da sua conta.
+        {isEditing
+          ? "Atualize as informações da sua conta."
+          : "Confira as informações da sua conta."}
       </p>
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -220,7 +245,7 @@ function ProfileForm({ user, onUpdated }) {
             Nome de usuário
           </label>
           <input
-            className={`${shared.input} ${touched.username && errors.username ? styles.invalidInput : ""}`}
+            className={`${shared.input} ${isEditing && touched.username && errors.username ? styles.invalidInput : ""}`}
             id="username"
             name="username"
             type="text"
@@ -228,14 +253,16 @@ function ProfileForm({ user, onUpdated }) {
             value={form.username}
             onChange={handleChange}
             onBlur={() => handleBlur("username")}
-            aria-invalid={Boolean(touched.username && errors.username)}
-            disabled={isSubmitting}
+            aria-invalid={Boolean(isEditing && touched.username && errors.username)}
+            disabled={!isEditing || isSubmitting}
           />
           {renderError("username")}
-          <small className={styles.fieldHint}>
-            De 3 a 30 caracteres. Letras sem acento, números, hífen e
-            sublinhado.
-          </small>
+          {isEditing && (
+            <small className={styles.fieldHint}>
+              De 3 a 30 caracteres. Letras sem acento, números, hífen e
+              sublinhado.
+            </small>
+          )}
         </div>
 
         <div className={styles.field}>
@@ -243,7 +270,7 @@ function ProfileForm({ user, onUpdated }) {
             E-mail
           </label>
           <input
-            className={`${shared.input} ${touched.email && errors.email ? styles.invalidInput : ""}`}
+            className={`${shared.input} ${isEditing && touched.email && errors.email ? styles.invalidInput : ""}`}
             id="email"
             name="email"
             type="email"
@@ -251,95 +278,102 @@ function ProfileForm({ user, onUpdated }) {
             value={form.email}
             onChange={handleChange}
             onBlur={() => handleBlur("email")}
-            aria-invalid={Boolean(touched.email && errors.email)}
-            disabled={isSubmitting}
+            aria-invalid={Boolean(isEditing && touched.email && errors.email)}
+            disabled={!isEditing || isSubmitting}
           />
           {renderError("email")}
         </div>
 
-        <div className={styles.divider}>
-          <span>Alterar senha</span>
-          <small>Deixe em branco se não quiser trocar sua senha.</small>
-        </div>
+        {isEditing && (
+          <>
+            <div className={styles.divider}>
+              <span>Alterar senha</span>
+              <small>Deixe em branco se não quiser trocar sua senha.</small>
+            </div>
 
-        <div className={styles.field}>
-          <label className={shared.label} htmlFor="password">
-            Nova senha
-          </label>
-          <div className={styles.passwordWrapper}>
-            <input
-              className={`${shared.input} ${styles.passwordInput} ${touched.password && errors.password ? styles.invalidInput : ""}`}
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              value={form.password}
-              onChange={handleChange}
-              onBlur={() => handleBlur("password")}
-              aria-invalid={Boolean(touched.password && errors.password)}
-              disabled={isSubmitting}
-            />
-            <button
-              className={styles.passwordToggle}
-              type="button"
-              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-              aria-pressed={showPassword}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => setShowPassword((visible) => !visible)}
-              disabled={isSubmitting}
-            >
-              <i
-                className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}
-                aria-hidden="true"
-              ></i>
-            </button>
-          </div>
-          {renderError("password")}
-          <small className={styles.fieldHint}>
-            De 15 a 64 caracteres. Prefira uma frase-senha longa e exclusiva.
-          </small>
-        </div>
+            <div className={styles.field}>
+              <label className={shared.label} htmlFor="password">
+                Nova senha
+              </label>
+              <div className={styles.passwordWrapper}>
+                <input
+                  className={`${shared.input} ${styles.passwordInput} ${touched.password && errors.password ? styles.invalidInput : ""}`}
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={form.password}
+                  onChange={handleChange}
+                  onBlur={() => handleBlur("password")}
+                  aria-invalid={Boolean(touched.password && errors.password)}
+                  disabled={isSubmitting}
+                />
+                <button
+                  className={styles.passwordToggle}
+                  type="button"
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  aria-pressed={showPassword}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  disabled={isSubmitting}
+                >
+                  <i
+                    className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}
+                    aria-hidden="true"
+                  ></i>
+                </button>
+              </div>
+              {renderError("password")}
+              <small className={styles.fieldHint}>
+                De 12 a 64 caracteres, com pelo menos 2 letras minúsculas, 2
+                maiúsculas, 2 números e 2 caracteres especiais.
+              </small>
+            </div>
 
-        <div className={styles.field}>
-          <label className={shared.label} htmlFor="passwordConfirmation">
-            Confirmar nova senha
-          </label>
-          <div className={styles.passwordWrapper}>
-            <input
-              className={`${shared.input} ${styles.passwordInput} ${touched.passwordConfirmation && errors.passwordConfirmation ? styles.invalidInput : ""}`}
-              id="passwordConfirmation"
-              name="passwordConfirmation"
-              type={showPasswordConfirmation ? "text" : "password"}
-              autoComplete="new-password"
-              value={form.passwordConfirmation}
-              onChange={handleChange}
-              onBlur={() => handleBlur("passwordConfirmation")}
-              aria-invalid={Boolean(
-                touched.passwordConfirmation && errors.passwordConfirmation,
-              )}
-              disabled={isSubmitting}
-            />
-            <button
-              className={styles.passwordToggle}
-              type="button"
-              aria-label={
-                showPasswordConfirmation
-                  ? "Ocultar confirmação da senha"
-                  : "Mostrar confirmação da senha"
-              }
-              aria-pressed={showPasswordConfirmation}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => setShowPasswordConfirmation((visible) => !visible)}
-              disabled={isSubmitting}
-            >
-              <i
-                className={`fas ${showPasswordConfirmation ? "fa-eye-slash" : "fa-eye"}`}
-                aria-hidden="true"
-              ></i>
-            </button>
-          </div>
-          {renderError("passwordConfirmation")}
-        </div>
+            <div className={styles.field}>
+              <label className={shared.label} htmlFor="passwordConfirmation">
+                Confirmar nova senha
+              </label>
+              <div className={styles.passwordWrapper}>
+                <input
+                  className={`${shared.input} ${styles.passwordInput} ${touched.passwordConfirmation && errors.passwordConfirmation ? styles.invalidInput : ""}`}
+                  id="passwordConfirmation"
+                  name="passwordConfirmation"
+                  type={showPasswordConfirmation ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={form.passwordConfirmation}
+                  onChange={handleChange}
+                  onBlur={() => handleBlur("passwordConfirmation")}
+                  aria-invalid={Boolean(
+                    touched.passwordConfirmation && errors.passwordConfirmation,
+                  )}
+                  disabled={isSubmitting}
+                />
+                <button
+                  className={styles.passwordToggle}
+                  type="button"
+                  aria-label={
+                    showPasswordConfirmation
+                      ? "Ocultar confirmação da senha"
+                      : "Mostrar confirmação da senha"
+                  }
+                  aria-pressed={showPasswordConfirmation}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() =>
+                    setShowPasswordConfirmation((visible) => !visible)
+                  }
+                  disabled={isSubmitting}
+                >
+                  <i
+                    className={`fas ${showPasswordConfirmation ? "fa-eye-slash" : "fa-eye"}`}
+                    aria-hidden="true"
+                  ></i>
+                </button>
+              </div>
+              {renderError("passwordConfirmation")}
+            </div>
+          </>
+        )}
 
         {feedback && (
           <div className={styles.feedback} role="alert">
@@ -352,10 +386,35 @@ function ProfileForm({ user, onUpdated }) {
           </div>
         )}
 
-        <div className={styles.submit}>
-          <Button type="submit" icon="fa-save" disabled={isSubmitting}>
-            {isSubmitting ? "Salvando..." : "Salvar alterações"}
-          </Button>
+        <div className={styles.formActions}>
+          {isEditing ? (
+            <>
+              <Button
+                type="submit"
+                icon="fa-save"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Salvando..." : "Salvar alterações"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                icon="fa-times"
+                onClick={handleCancel}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              icon="fa-edit"
+              onClick={handleEdit}
+            >
+              Editar informações
+            </Button>
+          )}
         </div>
       </form>
     </section>
