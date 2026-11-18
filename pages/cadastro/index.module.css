@@ -30,12 +30,71 @@
   min-height: 46px;
 }
 
+.invalidInput,
+.invalidInput:focus-visible {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 1px var(--danger);
+}
+
+.fieldError {
+  display: block;
+  margin-top: 6px;
+  color: var(--danger-fg);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .fieldHint {
   display: block;
   margin-top: 6px;
   color: var(--text-faint);
   font-size: 12px;
   line-height: 1.5;
+}
+
+.passwordWrapper {
+  position: relative;
+}
+
+.passwordInput {
+  padding-right: 48px;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.passwordToggle:hover,
+.passwordToggle:focus-visible {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.passwordToggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.passwordToggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .feedback {
