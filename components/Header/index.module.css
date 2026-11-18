@@ -18,7 +18,7 @@
 
 .content {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -46,10 +46,14 @@
   flex: 1;
 }
 
-.navList {
+ .navList {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.navList > li:last-child {
+  margin-left: auto;
 }
 
 .navItem {
@@ -236,6 +240,10 @@ a.toolItem[aria-current="page"] {
     flex-direction: column;
     align-items: stretch;
     gap: 2px;
+  }
+
+  .navList > li:last-child {
+    margin-left: 0;
   }
 
   .navItem {
