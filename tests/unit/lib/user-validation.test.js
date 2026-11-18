@@ -68,7 +68,7 @@ describe("Validação dos dados de usuário", () => {
     });
 
     test("Rejeita senhas comuns conhecidas", () => {
-      expect(validatePassword("passwordpassword")).not.toBeNull();
+      expect(validatePassword("PasswordPassword12!!")).not.toBeNull();
     });
   });
 });
