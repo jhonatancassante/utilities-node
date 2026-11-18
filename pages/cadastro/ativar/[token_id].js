@@ -47,8 +47,7 @@ function AccountActivationPage() {
 
         if (
           error.statusCode === 403 &&
-          error.message ===
-            "Você não pode mais utilizar tokens de ativação."
+          error.message === "Você não pode mais utilizar tokens de ativação."
         ) {
           setResult({ status: "already-active" });
           return;
@@ -108,10 +107,7 @@ function AccountActivationPage() {
       <Layout>
         <main className={shared.container}>
           <section className={`${shared.card} ${styles.card}`}>
-            <div
-              className={`${shared.icon} ${iconClass}`}
-              aria-hidden="true"
-            >
+            <div className={`${shared.icon} ${iconClass}`} aria-hidden="true">
               {displayedResult.status === "loading" && (
                 <i className="fas fa-circle-notch fa-spin"></i>
               )}
@@ -126,13 +122,11 @@ function AccountActivationPage() {
               {displayedResult.status === "success" && "ATIVAÇÃO CONCLUÍDA"}
               {displayedResult.status === "already-active" &&
                 "CONTA JÁ ATIVADA"}
-              {displayedResult.status === "error" &&
-                "NÃO FOI POSSÍVEL ATIVAR"}
+              {displayedResult.status === "error" && "NÃO FOI POSSÍVEL ATIVAR"}
             </span>
 
             <h1>
-              {displayedResult.status === "loading" &&
-                "Ativando sua conta..."}
+              {displayedResult.status === "loading" && "Ativando sua conta..."}
               {displayedResult.status === "success" && "Tudo pronto!"}
               {displayedResult.status === "already-active" &&
                 "Sua conta já está ativa"}
@@ -167,8 +161,8 @@ function AccountActivationPage() {
                     utilizar este link novamente.
                   </p>
                   <p className={styles.hint}>
-                    A tela de acesso à conta será disponibilizada em uma
-                    próxima etapa.
+                    A tela de acesso à conta será disponibilizada em uma próxima
+                    etapa.
                   </p>
                 </>
               )}
