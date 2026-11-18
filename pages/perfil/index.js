@@ -1,32 +1,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import useSWR, { useSWRConfig } from "swr";
 
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
-import requestAPI from "@/lib/api.js";
-import session from "@/lib/session.js";
+import useUser from "@/hooks/use-user.js";
+import requestAPI from "@/lib/client/api.js";
 import {
   validateUsername,
   validateEmail,
   validatePassword,
-} from "@/lib/user-validation.js";
+} from "@/lib/shared/user-validation.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 function ProfilePage() {
   const router = useRouter();
-  const { mutate } = useSWRConfig();
-  const {
-    data: user,
-    error,
-    isLoading,
-  } = useSWR("/api/v1/user", session.getCurrentUser, {
-    revalidateOnFocus: false,
-    shouldRetryOnError: false,
-  });
+  const { user, error, isLoading, setUser } = useUser();
 
   useEffect(() => {
     if (!isLoading && !user && !error) router.replace("/login");
@@ -54,13 +45,7 @@ function ProfilePage() {
               </StatusMessage>
             </section>
           ) : user ? (
-            <ProfileForm
-              key={user.id}
-              user={user}
-              onUpdated={(updatedUser) =>
-                mutate("/api/v1/user", updatedUser, { revalidate: false })
-              }
-            />
+            <ProfileForm key={user.id} user={user} onUpdated={setUser} />
           ) : null}
         </main>
       </Layout>

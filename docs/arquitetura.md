@@ -23,6 +23,8 @@ infra/database.js      Cliente pg e consultas parametrizadas
 PostgreSQL             Docker local / banco remoto via DATABASE_URL
 ```
 
+Fora do backend, `lib/client/` reúne o que só roda no navegador (cliente HTTP, sessão, ativação e download de arquivos), `lib/shared/` guarda o que é usado nos dois lados (a validação de usuário, importada por `models/user.js` e pelas páginas) e `hooks/use-user.js` é a fonte única do usuário autenticado nas telas (chave `/api/v1/user` do SWR, com `refreshUser`, `setUser` e `clearUser`).
+
 Os endpoints usam `next-connect` por meio de `infra/controller.js`. Cada rota declara os métodos aceitos, middlewares compartilhados e handlers. As regras de negócio ficam nos models; a infraestrutura concentra conexão, e-mail, erros e configuração do servidor.
 
 ## Estrutura relevante

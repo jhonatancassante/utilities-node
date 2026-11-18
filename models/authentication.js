@@ -3,9 +3,22 @@ import user from "@/models/user.js";
 import password from "@/models/password.js";
 import { NotFoundError, UnauthorizedError } from "@/infra/errors.js";
 
-const dummyHashPromise = password
-  .hash(crypto.randomBytes(16).toString("hex"))
-  .catch(() => null);
+let dummyHashPromise = null;
+
+// O hash falso só é gerado na primeira vez em que é necessário, e não no
+// carregamento do módulo. Se a geração falhar, a próxima chamada tenta de novo.
+function getDummyHash() {
+  if (!dummyHashPromise) {
+    dummyHashPromise = password
+      .hash(crypto.randomBytes(16).toString("hex"))
+      .catch(() => {
+        dummyHashPromise = null;
+        return null;
+      });
+  }
+
+  return dummyHashPromise;
+}
 
 async function getUser(providedEmail, providedPassword) {
   try {
@@ -32,7 +45,7 @@ async function getUser(providedEmail, providedPassword) {
       return await user.findOneByEmail(providedEmail);
     } catch (error) {
       if (error instanceof NotFoundError) {
-        const dummyHash = await dummyHashPromise;
+        const dummyHash = await getDummyHash();
         if (dummyHash) {
           await password.compare(providedPassword, dummyHash);
         }

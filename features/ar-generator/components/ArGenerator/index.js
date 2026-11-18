@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import HelpToggle from "@/components/HelpToggle";
 import StatusMessage from "@/components/StatusMessage";
-import { downloadBlob } from "@/lib/files.js";
+import { downloadBlob } from "@/lib/client/files.js";
 import { generateArPdf } from "../../lib/pdf.js";
 import styles from "./index.module.css";
 

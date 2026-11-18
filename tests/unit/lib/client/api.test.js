@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
-import requestAPI, { APIError } from "@/lib/api.js";
+import requestAPI, { APIError } from "@/lib/client/api.js";
 
-describe("lib/api.js", () => {
+describe("lib/client/api.js", () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });

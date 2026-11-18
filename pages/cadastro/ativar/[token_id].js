@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 
 import AppHead from "@/components/AppHead";
 import Layout from "@/components/Layout";
-import activateAccount from "@/lib/activation.js";
+import activateAccount from "@/lib/client/activation.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 

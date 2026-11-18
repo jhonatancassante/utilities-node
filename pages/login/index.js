@@ -1,24 +1,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import useSWR, { useSWRConfig } from "swr";
 
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
-import session from "@/lib/session.js";
+import useUser from "@/hooks/use-user.js";
+import session from "@/lib/client/session.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 function LoginPage() {
   const router = useRouter();
-  const { mutate } = useSWRConfig();
-  const { data: currentUser, isLoading } = useSWR(
-    "/api/v1/user",
-    session.getCurrentUser,
-    { revalidateOnFocus: false, shouldRetryOnError: false },
-  );
+  const { user: currentUser, isLoading, refreshUser } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +40,7 @@ function LoginPage() {
 
     try {
       await session.login(email.trim(), password);
-      await mutate("/api/v1/user");
+      await refreshUser();
       router.replace("/perfil");
     } catch (error) {
       setFeedback({

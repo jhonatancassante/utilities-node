@@ -1,5 +1,5 @@
 // features/qr-code/lib/download.js
-import { getFormattedTimestamp } from "@/lib/files.js";
+import { getFormattedTimestamp } from "@/lib/client/files.js";
 
 /**
  * Captura um elemento do DOM como PNG com fundo transparente e inicia o

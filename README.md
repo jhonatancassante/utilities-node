@@ -143,6 +143,7 @@ Para executar os testes continuamente, mantenha o ambiente ativo com `npm run de
 ├── configs/              # Metadados do site e registro central das ferramentas
 ├── docs/                 # Documentação técnica, guias e especificação OpenAPI
 ├── features/             # Componentes e lógica isolada de cada ferramenta
+├── hooks/                # Hooks React compartilhados (ex.: useUser)
 ├── infra/
 │   ├── compose.yaml      # PostgreSQL e Mailcatcher
 │   ├── controller.js     # Middlewares, autorização e tratamento de erros
@@ -151,6 +152,9 @@ Para executar os testes continuamente, mantenha o ambiente ativo com `npm run de
 │   ├── errors.js         # Classes de erro
 │   ├── migrations/       # Histórico de alterações do banco
 │   └── scripts/          # Inicialização e gerenciamento dos serviços
+├── lib/
+│   ├── client/           # Código do navegador (cliente HTTP, sessão, ativação, download de arquivos)
+│   └── shared/           # Código usado no navegador e no servidor (validação de usuário)
 ├── models/               # Regras de negócio e acesso aos dados
 ├── pages/
 │   ├── api/v1/           # Endpoints versionados da API

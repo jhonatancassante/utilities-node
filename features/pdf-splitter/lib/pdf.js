@@ -2,7 +2,7 @@
 // Regras do Divisor de PDF, independentes de React. O processamento ocorre
 // no navegador: os arquivos não são enviados ao servidor. `pdf-lib` e `jszip`
 // são importados sob demanda, dentro das funções que os utilizam.
-import { getFormattedTimestamp } from "@/lib/files.js";
+import { getFormattedTimestamp } from "@/lib/client/files.js";
 
 const PDF_EXTENSION = ".pdf";
 

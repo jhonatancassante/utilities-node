@@ -2,7 +2,7 @@ import {
   validateUsername,
   validateEmail,
   validatePassword,
-} from "@/lib/user-validation.js";
+} from "@/lib/shared/user-validation.js";
 
 describe("Validação dos dados de usuário", () => {
   describe("validateUsername()", () => {

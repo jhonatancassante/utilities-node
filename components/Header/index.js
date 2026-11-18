@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import useSWR, { useSWRConfig } from "swr";
 
 import ThemeToggle from "@/components/ThemeToggle";
 import headConfigs from "@/configs/head.js";
 import { tools, TOOLS_BASE_PATH } from "@/configs/tools.js";
-import session from "@/lib/session.js";
+import useUser from "@/hooks/use-user.js";
+import session from "@/lib/client/session.js";
 import styles from "./index.module.css";
 
 const MENU = Object.freeze({
@@ -20,11 +20,7 @@ function Header() {
   const headerRef = useRef(null);
   const [openMenu, setOpenMenu] = useState(null);
   const [logoutError, setLogoutError] = useState("");
-  const { mutate } = useSWRConfig();
-  const { data: user } = useSWR("/api/v1/user", session.getCurrentUser, {
-    revalidateOnFocus: false,
-    shouldRetryOnError: false,
-  });
+  const { user, clearUser } = useUser();
 
   const closeMenus = () => setOpenMenu(null);
   const isMobileOpen = openMenu === MENU.mobile;
@@ -66,7 +62,7 @@ function Header() {
   async function handleLogout() {
     try {
       await session.logout();
-      await mutate("/api/v1/user", null, { revalidate: false });
+      await clearUser();
       closeMenus();
       router.push("/");
     } catch (error) {

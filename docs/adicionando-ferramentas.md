@@ -71,7 +71,7 @@ Sempre que possível, reutilize:
 - `@/components/StatusMessage` para mensagens de andamento, sucesso e erro.
 - `@/components/WarningList` para avisos em destaque amarelo com uma lista rolável de itens, usada quando a operação foi concluída, mas com ressalvas.
 - `@/components/HelpToggle` para a caixa informativa "Como funciona?".
-- `@/lib/files.js` para `getFormattedTimestamp` e `downloadBlob` (download de arquivos gerados no navegador).
+- `@/lib/client/files.js` para `getFormattedTimestamp` e `downloadBlob` (download de arquivos gerados no navegador).
 
 Mantenha a lógica independente da interface quando isso facilitar os testes. Bibliotecas que dependem do navegador ou são pesadas devem ser carregadas sob demanda, por `import()`, dentro da função que as utiliza.
 

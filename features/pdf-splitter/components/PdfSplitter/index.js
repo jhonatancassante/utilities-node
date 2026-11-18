@@ -5,7 +5,7 @@ import FileDropzone from "@/components/FileDropzone";
 import HelpToggle from "@/components/HelpToggle";
 import StatusMessage from "@/components/StatusMessage";
 import WarningList from "@/components/WarningList";
-import { downloadBlob } from "@/lib/files.js";
+import { downloadBlob } from "@/lib/client/files.js";
 import shared from "@/styles/shared.module.css";
 import { addPdfFiles, splitPdfFiles, validateRange } from "../../lib/pdf.js";
 import styles from "./index.module.css";

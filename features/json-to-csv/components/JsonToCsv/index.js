@@ -4,7 +4,7 @@ import Button from "@/components/Button";
 import FileDropzone from "@/components/FileDropzone";
 import HelpToggle from "@/components/HelpToggle";
 import StatusMessage from "@/components/StatusMessage";
-import { downloadBlob, getFormattedTimestamp } from "@/lib/files.js";
+import { downloadBlob, getFormattedTimestamp } from "@/lib/client/files.js";
 import shared from "@/styles/shared.module.css";
 import {
   collectOrderedFields,
