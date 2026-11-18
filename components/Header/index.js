@@ -1,23 +1,20 @@
+// components/Header/index.js
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import useSWR, { useSWRConfig } from "swr";
-
+import session from "@/lib/session.js";
 import ThemeToggle from "@/components/ThemeToggle";
 import headConfigs from "@/configs/head.js";
 import { tools, TOOLS_BASE_PATH } from "@/configs/tools.js";
-import session from "@/lib/session.js";
 import styles from "./index.module.css";
 
-const MENU = Object.freeze({
-  mobile: "mobile",
-  tools: "tools",
-  account: "account",
-});
+const MENU = Object.freeze({ mobile: "mobile", tools: "tools", account: "account" });
 
 function Header() {
   const router = useRouter();
   const headerRef = useRef(null);
+  // Qual menu está aberto: o painel mobile, o submenu de ferramentas ou nenhum.
   const [openMenu, setOpenMenu] = useState(null);
   const { mutate } = useSWRConfig();
   const { data: user } = useSWR("/api/v1/user", session.getCurrentUser, {
@@ -60,17 +57,6 @@ function Header() {
     setOpenMenu((current) => (current === menu ? null : menu));
   }
 
-  async function handleLogout() {
-    try {
-      await session.logout();
-      await mutate("/api/v1/user", null, { revalidate: false });
-      closeMenus();
-      router.push("/");
-    } catch {
-      // Mantém a sessão e o menu disponíveis caso o servidor não conclua o logout.
-    }
-  }
-
   return (
     <header className={styles.header} ref={headerRef}>
       <div className={styles.content}>
@@ -86,17 +72,25 @@ function Header() {
         >
           <ul className={styles.navList}>
             <li>
-              <NavLink href="/" active={router.pathname === "/"} onNavigate={closeMenus}>
+              <NavLink
+                href="/"
+                active={router.pathname === "/"}
+                onNavigate={closeMenus}
+              >
                 Início
               </NavLink>
             </li>
 
             <li className={styles.group}>
-              <div className={`${styles.splitItem} ${isToolsRoute ? styles.navItemActive : ""}`}>
+              <div
+                className={`${styles.splitItem} ${isToolsRoute ? styles.navItemActive : ""}`}
+              >
                 <Link
                   href={TOOLS_BASE_PATH}
                   className={styles.navItem}
-                  aria-current={router.pathname === TOOLS_BASE_PATH ? "page" : undefined}
+                  aria-current={
+                    router.pathname === TOOLS_BASE_PATH ? "page" : undefined
+                  }
                   onClick={closeMenus}
                 >
                   Ferramentas
@@ -115,7 +109,9 @@ function Header() {
 
               <ul
                 id="tools-menu"
-                className={`${styles.dropdown} ${isToolsOpen ? styles.dropdownOpen : ""}`}
+                className={`${styles.dropdown} ${
+                  isToolsOpen ? styles.dropdownOpen : ""
+                }`}
               >
                 {tools.map((tool) => (
                   <li key={tool.slug}>
@@ -123,15 +119,26 @@ function Header() {
                       <Link
                         href={tool.href}
                         className={styles.toolItem}
-                        aria-current={router.asPath === tool.href ? "page" : undefined}
+                        aria-current={
+                          router.asPath === tool.href ? "page" : undefined
+                        }
                         onClick={closeMenus}
                       >
-                        <i className={`fas ${tool.icon}`} aria-hidden="true"></i>
+                        <i
+                          className={`fas ${tool.icon}`}
+                          aria-hidden="true"
+                        ></i>
                         <span>{tool.title}</span>
                       </Link>
                     ) : (
-                      <span className={`${styles.toolItem} ${styles.toolItemSoon}`} aria-disabled="true">
-                        <i className={`fas ${tool.icon}`} aria-hidden="true"></i>
+                      <span
+                        className={`${styles.toolItem} ${styles.toolItemSoon}`}
+                        aria-disabled="true"
+                      >
+                        <i
+                          className={`fas ${tool.icon}`}
+                          aria-hidden="true"
+                        ></i>
                         <span>{tool.title}</span>
                         <small className={styles.soonTag}>Em breve</small>
                       </span>
@@ -143,7 +150,11 @@ function Header() {
 
             {router.pathname === "/status" && (
               <li>
-                <NavLink href="/status" active onNavigate={closeMenus}>
+                <NavLink
+                  href="/status"
+                  active={router.pathname === "/status"}
+                  onNavigate={closeMenus}
+                >
                   Status
                 </NavLink>
               </li>
@@ -221,7 +232,10 @@ function Header() {
             aria-label={isMobileOpen ? "Fechar menu" : "Abrir menu"}
             onClick={() => toggleMenu(MENU.mobile)}
           >
-            <i className={`fas ${isMobileOpen ? "fa-times" : "fa-bars"}`} aria-hidden="true"></i>
+            <i
+              className={`fas ${isMobileOpen ? "fa-times" : "fa-bars"}`}
+              aria-hidden="true"
+            ></i>
           </button>
         </div>
       </div>
@@ -229,13 +243,7 @@ function Header() {
   );
 }
 
-function getInitials(username) {
-  const parts = username.split(/[-_]+/).filter(Boolean);
-  const initials = parts.slice(0, 2).map((part) => part[0]).join("");
-  return (initials || username.slice(0, 2)).toUpperCase();
-}
-
-function NavLink({ href, active, onNavigate, children }) {
+function getInitials(username) {\n  const parts = username.split(/[-_]+/).filter(Boolean);\n  const initials = parts.slice(0, 2).map((part) => part[0]).join("");\n  return (initials || username.slice(0, 2)).toUpperCase();\n}\n\nfunction NavLink({ href, active, onNavigate, children }) {
   return (
     <Link
       href={href}

@@ -71,13 +71,11 @@ function ProfileForm({ user, onUpdated }) {
     email: validateEmail(form.email.trim())?.message ?? "",
     password: form.password ? validatePassword(form.password)?.message ?? "" : "",
     passwordConfirmation:
-      !form.password && form.passwordConfirmation
-        ? "Informe a nova senha antes de confirmá-la."
-        : form.password && !form.passwordConfirmation
-          ? "Confirme a nova senha."
-          : form.password && form.password !== form.passwordConfirmation
-            ? "As senhas informadas não coincidem."
-            : "",
+      form.password && !form.passwordConfirmation
+        ? "Confirme a nova senha."
+        : form.password && form.password !== form.passwordConfirmation
+          ? "As senhas informadas não coincidem."
+          : "",
   };
 
   function handleChange(event) {
@@ -103,13 +101,11 @@ function ProfileForm({ user, onUpdated }) {
       validateUsername(form.username.trim()) ||
       validateEmail(form.email.trim()) ||
       (form.password ? validatePassword(form.password) : null) ||
-      (!form.password && form.passwordConfirmation
-        ? { message: "Informe a nova senha antes de confirmá-la." }
-        : form.password && !form.passwordConfirmation
-          ? { message: "Confirme a nova senha." }
-          : form.password && form.password !== form.passwordConfirmation
-            ? { message: "As senhas informadas não coincidem." }
-            : null);
+      (form.password && !form.passwordConfirmation
+        ? { message: "Confirme a nova senha." }
+        : form.password && form.password !== form.passwordConfirmation
+          ? { message: "As senhas informadas não coincidem." }
+          : null);
 
     if (validationError) {
       setFeedback(null);
