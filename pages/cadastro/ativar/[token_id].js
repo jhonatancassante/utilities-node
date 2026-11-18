@@ -22,11 +22,6 @@ function AccountActivationPage() {
     const tokenId = router.query.token_id;
 
     if (typeof tokenId !== "string" || !tokenId) {
-      setResult({
-        status: "error",
-        message: "O link de ativação não contém um token válido.",
-        action: "Confira se você utilizou o link completo enviado por e-mail.",
-      });
       return;
     }
 
@@ -77,8 +72,21 @@ function AccountActivationPage() {
     };
   }, [router.isReady, router.query.token_id]);
 
+  const tokenId = router.query.token_id;
+  const hasInvalidToken =
+    router.isReady && (typeof tokenId !== "string" || !tokenId);
+
+  const displayedResult = hasInvalidToken
+    ? {
+        status: "error",
+        message: "O link de ativação não contém um token válido.",
+        action: "Confira se você utilizou o link completo enviado por e-mail.",
+      }
+    : result;
+
   const isSuccessful =
-    result.status === "success" || result.status === "already-active";
+    displayedResult.status === "success" ||
+    displayedResult.status === "already-active";
 
   let iconClass = styles.loadingIcon;
 
@@ -86,7 +94,7 @@ function AccountActivationPage() {
     iconClass = styles.successIcon;
   }
 
-  if (result.status === "error") {
+  if (displayedResult.status === "error") {
     iconClass = styles.errorIcon;
   }
 
@@ -104,38 +112,38 @@ function AccountActivationPage() {
               className={`${shared.icon} ${iconClass}`}
               aria-hidden="true"
             >
-              {result.status === "loading" && (
+              {displayedResult.status === "loading" && (
                 <i className="fas fa-circle-notch fa-spin"></i>
               )}
               {isSuccessful && <i className="fas fa-check-circle"></i>}
-              {result.status === "error" && (
+              {displayedResult.status === "error" && (
                 <i className="fas fa-exclamation-circle"></i>
               )}
             </div>
 
             <span className={shared.badge}>
-              {result.status === "loading" && "ATIVAÇÃO DE CONTA"}
-              {result.status === "success" && "ATIVAÇÃO CONCLUÍDA"}
-              {result.status === "already-active" && "CONTA JÁ ATIVADA"}
-              {result.status === "error" && "NÃO FOI POSSÍVEL ATIVAR"}
+              {displayedResult.status === "loading" && "ATIVAÇÃO DE CONTA"}
+              {displayedResult.status === "success" && "ATIVAÇÃO CONCLUÍDA"}
+              {displayedResult.status === "already-active" && "CONTA JÁ ATIVADA"}
+              {displayedResult.status === "error" && "NÃO FOI POSSÍVEL ATIVAR"}
             </span>
 
             <h1>
-              {result.status === "loading" && "Ativando sua conta..."}
-              {result.status === "success" && "Tudo pronto!"}
-              {result.status === "already-active" && "Sua conta já está ativa"}
-              {result.status === "error" && "Ops! Algo deu errado."}
+              {displayedResult.status === "loading" && "Ativando sua conta..."}
+              {displayedResult.status === "success" && "Tudo pronto!"}
+              {displayedResult.status === "already-active" && "Sua conta já está ativa"}
+              {displayedResult.status === "error" && "Ops! Algo deu errado."}
             </h1>
 
             <div className={styles.message} aria-live="polite">
-              {result.status === "loading" && (
+              {displayedResult.status === "loading" && (
                 <p>
                   Estamos confirmando seu endereço de e-mail e ativando sua
                   conta. Isso deve levar apenas alguns instantes.
                 </p>
               )}
 
-              {result.status === "success" && (
+              {displayedResult.status === "success" && (
                 <>
                   <p>
                     Seu endereço de e-mail foi confirmado e sua conta no
@@ -148,7 +156,7 @@ function AccountActivationPage() {
                 </>
               )}
 
-              {result.status === "already-active" && (
+              {displayedResult.status === "already-active" && (
                 <>
                   <p>
                     Esta conta já foi ativada anteriormente. Você não precisa
@@ -161,17 +169,17 @@ function AccountActivationPage() {
                 </>
               )}
 
-              {result.status === "error" && (
+              {displayedResult.status === "error" && (
                 <>
-                  <p className={styles.errorMessage}>{result.message}</p>
-                  {result.action && (
-                    <p className={styles.hint}>{result.action}</p>
+                  <p className={styles.errorMessage}>{displayedResult.message}</p>
+                  {displayedResult.action && (
+                    <p className={styles.hint}>{displayedResult.action}</p>
                   )}
                 </>
               )}
             </div>
 
-            {result.status !== "loading" && (
+            {displayedResult.status !== "loading" && (
               <Link href="/" className={styles.backLink}>
                 <i className="fas fa-home" aria-hidden="true"></i>
                 Voltar para o início
