@@ -196,7 +196,7 @@ A autorização de saída também é centralizada em `authorization.filterOutput
 - As senhas devem ter de 12 a 64 caracteres, com pelo menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns conhecidos também são rejeitados.
 - Campos obrigatórios ausentes não possuem validação de entrada uniforme e podem resultar em erro 500.
 - O valor de e-mail é validado após `trim()`, mas o valor armazenado não é normalizado; a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
-- Apenas `POST /api/v1/sessions` tolera cookie antigo. As demais rotas públicas que injetam o usuário a partir do cookie (por exemplo, cadastro e ativação) ainda respondem `401` na primeira tentativa se o cookie for inválido.
+- Cookie `session_id` inválido ou expirado é tolerado apenas nas rotas públicas (login, cadastro e ativação), onde a requisição segue como visitante anônimo. Nas demais rotas, que dependem do usuário logado, o resultado continua sendo `401`.
 - O controller limpa o cookie em qualquer erro 401, inclusive login inválido.
 - As sessões encerradas permanecem no banco com data de expiração antecipada; não há rotina de limpeza física documentada ou implementada.
 

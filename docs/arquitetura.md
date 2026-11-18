@@ -62,7 +62,7 @@ As rotas que usam `injectAnonymousOrUser` recebem um usuário em `request.contex
 
 - Sem cookie `session_id`, o controller injeta o perfil anônimo com `create:session`, `create:user` e `read:activation_token`.
 - Com cookie, o controller procura uma sessão não expirada e carrega o usuário correspondente.
-- Um token inválido ou expirado gera `UnauthorizedError`. Exceção: `injectUserOrAnonymousOnInvalidSession` (usado em `POST/DELETE /api/v1/sessions`) trata a sessão inválida como visitante anônimo e remove o cookie.
+- Um token inválido ou expirado gera `UnauthorizedError`. Exceção: `injectUserOrAnonymousOnInvalidSession` (usado em `/api/v1/sessions`, `POST /api/v1/users` e `PATCH /api/v1/activations/{token_id}`) trata a sessão inválida como visitante anônimo e remove o cookie.
 - `canRequest(feature)` verifica a feature necessária e gera `ForbiddenError` quando não há permissão.
 
 O model `authorization.js` mantém o catálogo de features e a função `can(user, feature, resource)`. Para atualização de usuário, a autorização considera o recurso: o próprio usuário pode ser atualizado com `update:user`; outro usuário exige `update:user:others`.

@@ -7,7 +7,7 @@ export default controller.createController(
   {
     POST: [controller.canRequest("create:user"), postHandler],
   },
-  { middlewares: [controller.injectAnonymousOrUser] },
+  { middlewares: [controller.injectUserOrAnonymousOnInvalidSession] },
 );
 
 async function postHandler(request, response) {

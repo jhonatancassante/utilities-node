@@ -6,7 +6,7 @@ export default controller.createController(
   {
     PATCH: [controller.canRequest("read:activation_token"), patchHandler],
   },
-  { middlewares: [controller.injectAnonymousOrUser] },
+  { middlewares: [controller.injectUserOrAnonymousOnInvalidSession] },
 );
 
 async function patchHandler(request, response) {
