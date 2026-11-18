@@ -41,22 +41,30 @@ describe("Validação dos dados de usuário", () => {
   });
 
   describe("validatePassword()", () => {
-    test("Aceita uma frase-senha longa sem exigir composição artificial", () => {
-      expect(
-        validatePassword("esta e uma frase senha bastante longa"),
-      ).toBeNull();
+    test("Aceita senha com 12 caracteres e a composição exigida", () => {
+      expect(validatePassword("AaBb12!!xyZz")).toBeNull();
     });
 
-    test("Conta caracteres Unicode corretamente", () => {
-      expect(validatePassword("😀".repeat(15))).toBeNull();
+    test("Conta letras Unicode corretamente", () => {
+      expect(validatePassword("ÁáÉéÜü12!@ab")).toBeNull();
     });
 
-    test("Rejeita senhas menores que 15 caracteres", () => {
-      expect(validatePassword("curta")).not.toBeNull();
+    test("Rejeita senha menor que 12 caracteres", () => {
+      expect(validatePassword("AaBb12!!xyZ")).not.toBeNull();
     });
 
-    test("Rejeita senhas maiores que 64 caracteres", () => {
-      expect(validatePassword("a".repeat(65))).not.toBeNull();
+    test("Rejeita senha maior que 64 caracteres", () => {
+      expect(validatePassword("AaBb12!!" + "x".repeat(57))).not.toBeNull();
+    });
+
+    test.each([
+      ["aaBB12!!xyzz", "sem duas maiúsculas"],
+      ["AABB12!!XYZZ", "sem duas minúsculas"],
+      ["AaBb!!xyZzCD", "sem dois números"],
+      ["AaBb12xyZzCD", "sem dois caracteres especiais"],
+      ["123456789012345", "composta somente por números"],
+    ])("Rejeita senha %s (%s)", (password) => {
+      expect(validatePassword(password)).not.toBeNull();
     });
 
     test("Rejeita senhas comuns conhecidas", () => {
