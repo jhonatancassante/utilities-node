@@ -39,7 +39,10 @@ describe("lib/session.js", () => {
 
     expect(fetch).toHaveBeenCalledWith("/api/v1/sessions", {
       method: "POST",
-      body: JSON.stringify({\n        email: "jhow@example.com",\n        password: "senha-segura",\n      }),
+      body: JSON.stringify({
+        email: "jhow@example.com",
+        password: "senha-segura",
+      }),
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",

@@ -71,7 +71,9 @@
   background: transparent;
   color: var(--text-faint);
   cursor: pointer;
-  transition:\n    color var(--transition-fast),\n    background-color var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 .passwordToggle:hover,

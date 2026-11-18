@@ -360,7 +360,9 @@ a.toolItem[aria-current="page"] {
   font-size: 0.95rem;
   font-weight: 700;
   white-space: nowrap;
-  transition:\n    background-color var(--transition-fast),\n    transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .loginLink:hover {
@@ -386,7 +388,9 @@ a.toolItem[aria-current="page"] {
   font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
-  transition:\n    background-color var(--transition-fast),\n    transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .avatar:hover,
