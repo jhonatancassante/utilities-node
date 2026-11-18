@@ -154,7 +154,9 @@ async function update(username, userInputValues) {
   if ("email" in userInputValues) {
     validateEmailFormat(userInputValues.email);
     userInputValues.email = userInputValues.email.trim();
-    if (currentUser.email.toLowerCase() !== userInputValues.email.toLowerCase()) {\n      await validateUniqueEmail(userInputValues.email);\n    }
+    if (currentUser.email.toLowerCase() !== userInputValues.email.toLowerCase()) {
+      await validateUniqueEmail(userInputValues.email);
+    }
   }
 
   if ("password" in userInputValues) {
