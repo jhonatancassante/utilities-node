@@ -24,7 +24,7 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
       body: JSON.stringify({
         username: "registrationFlow",
         email: "registrationFlow@jhonatancassante.com.br",
-        password: "RegistrationFlowPassword",
+        password: "Registration-Flow-123!!",
       }),
     });
     expect(createUserRespondse.status).toBe(201);
@@ -96,7 +96,7 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
         },
         body: JSON.stringify({
           email: "registrationFlow@jhonatancassante.com.br",
-          password: "RegistrationFlowPassword",
+          password: "Registration-Flow-123!!",
         }),
       },
     );
