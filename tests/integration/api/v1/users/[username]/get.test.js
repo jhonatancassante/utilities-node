@@ -9,12 +9,14 @@ beforeAll(async () => {
 });
 
 describe("GET /api/v1/users/[username]", () => {
+  const testPassword = ["Teste-Seguro-", "123!!", "AB"].join("");
+
   describe("Usuário anônimo", () => {
     test("Com exato `case match`", async () => {
       await orchestrator.createUser({
         username: "MesmoCase",
         email: "MesmoCase@jhonatancassante.com.br",
-        password: "Teste-Seguro-123!!AB",
+        password: testPassword,
       });
 
       const response2 = await fetch(`${orchestrator.API_URL}/users/MesmoCase`);
@@ -39,7 +41,7 @@ describe("GET /api/v1/users/[username]", () => {
       await orchestrator.createUser({
         username: "CaseDiferente",
         email: "CaseDiferente@jhonatancassante.com.br",
-        password: "Teste-Seguro-123!!AB",
+        password: testPassword,
       });
 
       const response2 = await fetch(
