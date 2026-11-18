@@ -124,14 +124,18 @@ function AccountActivationPage() {
             <span className={shared.badge}>
               {displayedResult.status === "loading" && "ATIVAÇÃO DE CONTA"}
               {displayedResult.status === "success" && "ATIVAÇÃO CONCLUÍDA"}
-              {displayedResult.status === "already-active" && "CONTA JÁ ATIVADA"}
-              {displayedResult.status === "error" && "NÃO FOI POSSÍVEL ATIVAR"}
+              {displayedResult.status === "already-active" &&
+                "CONTA JÁ ATIVADA"}
+              {displayedResult.status === "error" &&
+                "NÃO FOI POSSÍVEL ATIVAR"}
             </span>
 
             <h1>
-              {displayedResult.status === "loading" && "Ativando sua conta..."}
+              {displayedResult.status === "loading" &&
+                "Ativando sua conta..."}
               {displayedResult.status === "success" && "Tudo pronto!"}
-              {displayedResult.status === "already-active" && "Sua conta já está ativa"}
+              {displayedResult.status === "already-active" &&
+                "Sua conta já está ativa"}
               {displayedResult.status === "error" && "Ops! Algo deu errado."}
             </h1>
 
@@ -171,7 +175,9 @@ function AccountActivationPage() {
 
               {displayedResult.status === "error" && (
                 <>
-                  <p className={styles.errorMessage}>{displayedResult.message}</p>
+                  <p className={styles.errorMessage}>
+                    {displayedResult.message}
+                  </p>
                   {displayedResult.action && (
                     <p className={styles.hint}>{displayedResult.action}</p>
                   )}
