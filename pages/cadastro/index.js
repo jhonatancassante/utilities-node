@@ -273,8 +273,8 @@ function RegistrationPage() {
                     </div>
                     {renderFieldError("password")}
                     <small className={styles.fieldHint} id="password-hint">
-                      De 12 a 64 caracteres, com pelo menos 2 letras minúsculas, 2
-                      maiúsculas, 2 números e 2 caracteres especiais.
+                      De 12 a 64 caracteres, com pelo menos 2 letras minúsculas,
+                      2 maiúsculas, 2 números e 2 caracteres especiais.
                     </small>
                   </div>
 
