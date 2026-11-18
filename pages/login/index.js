@@ -42,12 +42,17 @@ function LoginPage() {
     }
 
     setIsSubmitting(true);
+
     try {
       await session.login(email.trim(), password);
       await mutate("/api/v1/user");
       router.replace("/perfil");
     } catch (error) {
-      setFeedback({ type: "error", message: error.message, action: error.action });
+      setFeedback({
+        type: "error",
+        message: error.message,
+        action: error.action,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -55,7 +60,10 @@ function LoginPage() {
 
   return (
     <>
-      <AppHead title="Entrar" description="Acesse sua conta do Utilities." />
+      <AppHead
+        title="Entrar"
+        description="Acesse sua conta do Utilities."
+      />
       <Layout>
         <main className={shared.container}>
           <section className={`${shared.card} ${styles.card}`}>
@@ -70,7 +78,9 @@ function LoginPage() {
 
             <form className={styles.form} onSubmit={handleSubmit} noValidate>
               <div className={styles.field}>
-                <label className={shared.label} htmlFor="email">E-mail</label>
+                <label className={shared.label} htmlFor="email">
+                  E-mail
+                </label>
                 <input
                   className={shared.input}
                   id="email"
@@ -88,7 +98,9 @@ function LoginPage() {
               </div>
 
               <div className={styles.field}>
-                <label className={shared.label} htmlFor="password">Senha</label>
+                <label className={shared.label} htmlFor="password">
+                  Senha
+                </label>
                 <div className={styles.passwordWrapper}>
                   <input
                     className={`${shared.input} ${styles.passwordInput}`}
@@ -105,33 +117,47 @@ function LoginPage() {
                   <button
                     className={styles.passwordToggle}
                     type="button"
-                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                    aria-label={
+                      showPassword ? "Ocultar senha" : "Mostrar senha"
+                    }
                     aria-pressed={showPassword}
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={() => setShowPassword((visible) => !visible)}
                     disabled={isSubmitting}
                   >
-                    <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`} aria-hidden="true"></i>
+                    <i
+                      className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}
+                      aria-hidden="true"
+                    ></i>
                   </button>
                 </div>
               </div>
 
               {feedback && (
                 <div className={styles.feedback} role="alert">
-                  <StatusMessage type={feedback.type}>{feedback.message}</StatusMessage>
-                  {feedback.action && <p className={styles.errorAction}>{feedback.action}</p>}
+                  <StatusMessage type={feedback.type}>
+                    {feedback.message}
+                  </StatusMessage>
+                  {feedback.action && (
+                    <p className={styles.errorAction}>{feedback.action}</p>
+                  )}
                 </div>
               )}
 
               <div className={styles.submit}>
-                <Button type="submit" icon="fa-sign-in-alt" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  icon="fa-sign-in-alt"
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? "Entrando..." : "Entrar"}
                 </Button>
               </div>
             </form>
 
             <p className={styles.signupPrompt}>
-              Ainda não possui uma conta? <Link href="/cadastro">Criar conta</Link>
+              Ainda não possui uma conta?{" "}
+              <Link href="/cadastro">Criar conta</Link>
             </p>
           </section>
         </main>

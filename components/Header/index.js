@@ -19,6 +19,7 @@ function Header() {
   const router = useRouter();
   const headerRef = useRef(null);
   const [openMenu, setOpenMenu] = useState(null);
+  const [logoutError, setLogoutError] = useState("");
   const { mutate } = useSWRConfig();
   const { data: user } = useSWR("/api/v1/user", session.getCurrentUser, {
     revalidateOnFocus: false,
@@ -50,6 +51,7 @@ function Header() {
 
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("pointerdown", handlePointerDown);
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("pointerdown", handlePointerDown);
@@ -58,6 +60,7 @@ function Header() {
 
   function toggleMenu(menu) {
     setOpenMenu((current) => (current === menu ? null : menu));
+    setLogoutError("");
   }
 
   async function handleLogout() {
@@ -66,8 +69,8 @@ function Header() {
       await mutate("/api/v1/user", null, { revalidate: false });
       closeMenus();
       router.push("/");
-    } catch {
-      // Mantém a sessão e o menu disponíveis caso o servidor não conclua o logout.
+    } catch (error) {
+      setLogoutError(error.message);
     }
   }
 
@@ -86,17 +89,25 @@ function Header() {
         >
           <ul className={styles.navList}>
             <li>
-              <NavLink href="/" active={router.pathname === "/"} onNavigate={closeMenus}>
+              <NavLink
+                href="/"
+                active={router.pathname === "/"}
+                onNavigate={closeMenus}
+              >
                 Início
               </NavLink>
             </li>
 
             <li className={styles.group}>
-              <div className={`${styles.splitItem} ${isToolsRoute ? styles.navItemActive : ""}`}>
+              <div
+                className={`${styles.splitItem} ${isToolsRoute ? styles.navItemActive : ""}`}
+              >
                 <Link
                   href={TOOLS_BASE_PATH}
                   className={styles.navItem}
-                  aria-current={router.pathname === TOOLS_BASE_PATH ? "page" : undefined}
+                  aria-current={
+                    router.pathname === TOOLS_BASE_PATH ? "page" : undefined
+                  }
                   onClick={closeMenus}
                 >
                   Ferramentas
@@ -123,15 +134,26 @@ function Header() {
                       <Link
                         href={tool.href}
                         className={styles.toolItem}
-                        aria-current={router.asPath === tool.href ? "page" : undefined}
+                        aria-current={
+                          router.asPath === tool.href ? "page" : undefined
+                        }
                         onClick={closeMenus}
                       >
-                        <i className={`fas ${tool.icon}`} aria-hidden="true"></i>
+                        <i
+                          className={`fas ${tool.icon}`}
+                          aria-hidden="true"
+                        ></i>
                         <span>{tool.title}</span>
                       </Link>
                     ) : (
-                      <span className={`${styles.toolItem} ${styles.toolItemSoon}`} aria-disabled="true">
-                        <i className={`fas ${tool.icon}`} aria-hidden="true"></i>
+                      <span
+                        className={`${styles.toolItem} ${styles.toolItemSoon}`}
+                        aria-disabled="true"
+                      >
+                        <i
+                          className={`fas ${tool.icon}`}
+                          aria-hidden="true"
+                        ></i>
                         <span>{tool.title}</span>
                         <small className={styles.soonTag}>Em breve</small>
                       </span>
@@ -143,7 +165,11 @@ function Header() {
 
             {router.pathname === "/status" && (
               <li>
-                <NavLink href="/status" active onNavigate={closeMenus}>
+                <NavLink
+                  href="/status"
+                  active
+                  onNavigate={closeMenus}
+                >
                   Status
                 </NavLink>
               </li>
@@ -152,13 +178,21 @@ function Header() {
             {user === null && (
               <>
                 <li className={styles.mobileSignup}>
-                  <Link href="/cadastro" className={styles.signupLink} onClick={closeMenus}>
+                  <Link
+                    href="/cadastro"
+                    className={styles.signupLink}
+                    onClick={closeMenus}
+                  >
                     <i className="fas fa-user-plus" aria-hidden="true"></i>
                     Criar conta
                   </Link>
                 </li>
                 <li className={styles.mobileSignup}>
-                  <Link href="/login" className={styles.loginLink} onClick={closeMenus}>
+                  <Link
+                    href="/login"
+                    className={styles.loginLink}
+                    onClick={closeMenus}
+                  >
                     <i className="fas fa-sign-in-alt" aria-hidden="true"></i>
                     Entrar
                   </Link>
@@ -171,11 +205,19 @@ function Header() {
         <div className={styles.actions}>
           {user === null && (
             <div className={styles.accountActions}>
-              <Link href="/cadastro" className={styles.signupLink} onClick={closeMenus}>
+              <Link
+                href="/cadastro"
+                className={styles.signupLink}
+                onClick={closeMenus}
+              >
                 <i className="fas fa-user-plus" aria-hidden="true"></i>
                 Criar conta
               </Link>
-              <Link href="/login" className={styles.loginLink} onClick={closeMenus}>
+              <Link
+                href="/login"
+                className={styles.loginLink}
+                onClick={closeMenus}
+              >
                 <i className="fas fa-sign-in-alt" aria-hidden="true"></i>
                 Entrar
               </Link>
@@ -199,14 +241,27 @@ function Header() {
                 className={`${styles.accountDropdown} ${isAccountOpen ? styles.accountDropdownOpen : ""}`}
               >
                 <span className={styles.accountName}>{user.username}</span>
-                <Link href="/perfil" className={styles.accountItem} onClick={closeMenus}>
+                <Link
+                  href="/perfil"
+                  className={styles.accountItem}
+                  onClick={closeMenus}
+                >
                   <i className="fas fa-user" aria-hidden="true"></i>
                   Meu perfil
                 </Link>
-                <button type="button" className={styles.accountItem} onClick={handleLogout}>
+                <button
+                  type="button"
+                  className={styles.accountItem}
+                  onClick={handleLogout}
+                >
                   <i className="fas fa-sign-out-alt" aria-hidden="true"></i>
                   Sair
                 </button>
+                {logoutError && (
+                  <span className={styles.logoutError} role="alert">
+                    {logoutError}
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -221,7 +276,10 @@ function Header() {
             aria-label={isMobileOpen ? "Fechar menu" : "Abrir menu"}
             onClick={() => toggleMenu(MENU.mobile)}
           >
-            <i className={`fas ${isMobileOpen ? "fa-times" : "fa-bars"}`} aria-hidden="true"></i>
+            <i
+              className={`fas ${isMobileOpen ? "fa-times" : "fa-bars"}`}
+              aria-hidden="true"
+            ></i>
           </button>
         </div>
       </div>
