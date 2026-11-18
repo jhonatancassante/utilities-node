@@ -58,7 +58,7 @@ describe("Validação dos dados de usuário", () => {
     });
 
     test.each([
-      ["aaBB12!!xyzz", "sem duas maiúsculas"],
+      ["aabb12!!xyzzC", "sem duas maiúsculas"],
       ["AABB12!!XYZZ", "sem duas minúsculas"],
       ["AaBb!!xyZzCD", "sem dois números"],
       ["AaBb12xyZzCD", "sem dois caracteres especiais"],
