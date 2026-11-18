@@ -14,7 +14,7 @@ describe("GET /api/v1/users/[username]", () => {
       await orchestrator.createUser({
         username: "MesmoCase",
         email: "MesmoCase@jhonatancassante.com.br",
-        password: "Senha-de-teste-segura-123!",
+        password: "Teste-Seguro-123!!AB",
       });
 
       const response2 = await fetch(`${orchestrator.API_URL}/users/MesmoCase`);
@@ -39,7 +39,7 @@ describe("GET /api/v1/users/[username]", () => {
       await orchestrator.createUser({
         username: "CaseDiferente",
         email: "CaseDiferente@jhonatancassante.com.br",
-        password: "Senha-de-teste-segura-123!",
+        password: "Teste-Seguro-123!!AB",
       });
 
       const response2 = await fetch(
