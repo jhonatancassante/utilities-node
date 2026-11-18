@@ -344,3 +344,15 @@ a.toolItem[aria-current="page"] {
     box-shadow: none;
   }
 }
+
+
+@media (max-width: 860px) {
+  .accountMenu {
+    margin-left: auto;
+  }
+
+  .avatar {
+    width: 38px;
+    height: 38px;
+  }
+}

@@ -2,22 +2,30 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import useSWR, { useSWRConfig } from "swr";
+import session from "@/lib/session.js";
 import ThemeToggle from "@/components/ThemeToggle";
 import headConfigs from "@/configs/head.js";
 import { tools, TOOLS_BASE_PATH } from "@/configs/tools.js";
 import styles from "./index.module.css";
 
-const MENU = Object.freeze({ mobile: "mobile", tools: "tools" });
+const MENU = Object.freeze({ mobile: "mobile", tools: "tools", account: "account" });
 
 function Header() {
   const router = useRouter();
   const headerRef = useRef(null);
   // Qual menu está aberto: o painel mobile, o submenu de ferramentas ou nenhum.
   const [openMenu, setOpenMenu] = useState(null);
+  const { mutate } = useSWRConfig();
+  const { data: user } = useSWR("/api/v1/user", session.getCurrentUser, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
 
   const closeMenus = () => setOpenMenu(null);
   const isMobileOpen = openMenu === MENU.mobile;
   const isToolsOpen = openMenu === MENU.tools;
+  const isAccountOpen = openMenu === MENU.account;
   const isToolsRoute = router.pathname.startsWith(TOOLS_BASE_PATH);
 
   useEffect(() => {
@@ -152,36 +160,67 @@ function Header() {
               </li>
             )}
 
-            <li className={styles.mobileSignup}>
-              <Link
-                href="/cadastro"
-                className={styles.signupLink}
-                aria-current={
-                  router.pathname === "/cadastro" ? "page" : undefined
-                }
-                onClick={closeMenus}
-              >
-                <i className="fas fa-user-plus" aria-hidden="true"></i>
-                Criar conta
-              </Link>
-            </li>
+            {user === null && (
+              <>
+                <li className={styles.mobileSignup}>
+                  <Link href="/cadastro" className={styles.signupLink} onClick={closeMenus}>
+                    <i className="fas fa-user-plus" aria-hidden="true"></i>
+                    Criar conta
+                  </Link>
+                </li>
+                <li className={styles.mobileSignup}>
+                  <Link href="/login" className={styles.loginLink} onClick={closeMenus}>
+                    <i className="fas fa-sign-in-alt" aria-hidden="true"></i>
+                    Entrar
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </nav>
 
         <div className={styles.actions}>
-          <div className={styles.accountActions}>
-            <Link
-              href="/cadastro"
-              className={styles.signupLink}
-              aria-current={
-                router.pathname === "/cadastro" ? "page" : undefined
-              }
-              onClick={closeMenus}
-            >
-              <i className="fas fa-user-plus" aria-hidden="true"></i>
-              Criar conta
-            </Link>
-          </div>
+          {user === null && (
+            <div className={styles.accountActions}>
+              <Link href="/cadastro" className={styles.signupLink} onClick={closeMenus}>
+                <i className="fas fa-user-plus" aria-hidden="true"></i>
+                Criar conta
+              </Link>
+              <Link href="/login" className={styles.loginLink} onClick={closeMenus}>
+                <i className="fas fa-sign-in-alt" aria-hidden="true"></i>
+                Entrar
+              </Link>
+            </div>
+          )}
+
+          {user && (
+            <div className={styles.accountMenu}>
+              <button
+                type="button"
+                className={styles.avatar}
+                aria-label={`Abrir menu da conta de ${user.username}`}
+                aria-expanded={isAccountOpen}
+                aria-controls="account-menu"
+                onClick={() => toggleMenu(MENU.account)}
+              >
+                {getInitials(user.username)}
+              </button>
+              <div
+                id="account-menu"
+                className={`${styles.accountDropdown} ${isAccountOpen ? styles.accountDropdownOpen : ""}`}
+              >
+                <span className={styles.accountName}>{user.username}</span>
+                <Link href="/perfil" className={styles.accountItem} onClick={closeMenus}>
+                  <i className="fas fa-user" aria-hidden="true"></i>
+                  Meu perfil
+                </Link>
+                <button type="button" className={styles.accountItem} onClick={handleLogout}>
+                  <i className="fas fa-sign-out-alt" aria-hidden="true"></i>
+                  Sair
+                </button>
+              </div>
+            </div>
+          )}
 
           <ThemeToggle />
 
@@ -204,7 +243,7 @@ function Header() {
   );
 }
 
-function NavLink({ href, active, onNavigate, children }) {
+function getInitials(username) {\n  const parts = username.split(/[-_]+/).filter(Boolean);\n  const initials = parts.slice(0, 2).map((part) => part[0]).join("");\n  return (initials || username.slice(0, 2)).toUpperCase();\n}\n\nfunction NavLink({ href, active, onNavigate, children }) {
   return (
     <Link
       href={href}

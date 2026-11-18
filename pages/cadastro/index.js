@@ -357,7 +357,7 @@ function RegistrationPage() {
 
                 <p className={styles.loginPrompt}>
                   Já possui uma conta?{" "}
-                  <span>O acesso será disponibilizado em breve.</span>
+                  <Link href="/login">Entrar</Link>
                 </p>
               </>
             )}
