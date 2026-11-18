@@ -452,10 +452,10 @@ components:
           maxLength: 254
         password:
           type: string
-          minLength: 15
+          minLength: 12
           maxLength: 64
           description: >
-            Frase-senha de 15 a 64 caracteres, sem regras artificiais de composição.
+            Senha de 12 a 64 caracteres, com pelo menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais.
     UserUpdate:
       type: object
       properties:
@@ -470,7 +470,7 @@ components:
           maxLength: 254
         password:
           type: string
-          minLength: 15
+          minLength: 12
           maxLength: 64
     PublicUser:
       type: object
