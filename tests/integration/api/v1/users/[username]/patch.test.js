@@ -267,7 +267,7 @@ describe("PATCH /api/v1/users/[username]", () => {
             Cookie: `session_id=${createdUserSessionObject.token}`,
           },
           body: JSON.stringify({
-            password: "1234senha",
+            password: "Senha-atualizada-segura-123!",
           }),
         },
       );
@@ -290,14 +290,14 @@ describe("PATCH /api/v1/users/[username]", () => {
 
       const userInDatabase = await user.findOneByUsername(createdUser.username);
       const correctPasswordMatch = await password.compare(
-        "1234senha",
+        "Senha-atualizada-segura-123!",
         userInDatabase.password,
       );
 
       expect(correctPasswordMatch).toBe(true);
 
       const incorrectPasswordMatch = await password.compare(
-        "senha123",
+        "Senha-anterior-segura-123!",
         userInDatabase.password,
       );
 

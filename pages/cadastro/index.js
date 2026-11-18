@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import requestAPI from "@/lib/api.js";
+import { validateUsername, validateEmail, validatePassword } from "@/lib/user-validation.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -35,6 +36,20 @@ function RegistrationPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    const validationError =
+      validateUsername(form.username.trim()) ||
+      validateEmail(form.email.trim()) ||
+      validatePassword(form.password);
+
+    if (validationError) {
+      setFeedback({
+        type: "error",
+        message: validationError.message,
+        action: validationError.action,
+      });
+      return;
+    }
 
     if (form.password !== form.passwordConfirmation) {
       setFeedback({
@@ -108,8 +123,17 @@ function RegistrationPage() {
                       value={form.username}
                       onChange={handleChange}
                       required
+                      minLength={3}
+                      maxLength={30}
+                      pattern="[A-Za-z0-9_-]+"
+                      title="Use somente letras sem acento, números, hífen e sublinhado."
+                      autoCapitalize="none"
+                      spellCheck={false}
                       disabled={isSubmitting}
                     />
+                    <small className={styles.fieldHint}>
+                      De 3 a 30 caracteres. Letras, números, hífen (-) e sublinhado (_).
+                    </small>
                   </div>
 
                   <div className={styles.field}>
@@ -126,8 +150,14 @@ function RegistrationPage() {
                       value={form.email}
                       onChange={handleChange}
                       required
+                      maxLength={254}
+                      autoCapitalize="none"
+                      spellCheck={false}
                       disabled={isSubmitting}
                     />
+                    <small className={styles.fieldHint}>
+                      Endereço de e-mail válido, com até 254 caracteres.
+                    </small>
                   </div>
 
                   <div className={styles.field}>
@@ -140,12 +170,18 @@ function RegistrationPage() {
                       name="password"
                       type="password"
                       autoComplete="new-password"
-                      placeholder="Digite sua senha"
+                      placeholder="Crie uma senha com pelo menos 15 caracteres"
+                      minLength={15}
+                      maxLength={128}
                       value={form.password}
                       onChange={handleChange}
                       required
                       disabled={isSubmitting}
                     />
+                    <small className={styles.fieldHint}>
+                      De 15 a 64 caracteres. Prefira uma frase-senha longa e exclusiva.
+                      Não exigimos combinações artificiais de caracteres.
+                    </small>
                   </div>
 
                   <div className={styles.field}>
@@ -162,6 +198,7 @@ function RegistrationPage() {
                       type="password"
                       autoComplete="new-password"
                       placeholder="Digite a senha novamente"
+                      maxLength={128}
                       value={form.passwordConfirmation}
                       onChange={handleChange}
                       required

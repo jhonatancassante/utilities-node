@@ -443,6 +443,222 @@ components:
       properties:
         username:
           type: string
+          minLength: 3
+          maxLength: 30
+          pattern: '^[a-zA-Z0-9_-]+
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 30
+          pattern: '^[a-zA-Z0-9_-]+
+      type: object
+      required: [id, username, features, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PrivateUser:
+      allOf:
+        - $ref: "#/components/schemas/PublicUser"
+        - type: object
+          required: [email]
+          properties:
+            email:
+              type: string
+              format: email
+    SessionCreate:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    Session:
+      type: object
+      required: [id, token, user_id, expires_at, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        token:
+          type: string
+          minLength: 96
+          maxLength: 96
+          description: Token aleatório em hexadecimal, também enviado no cookie.
+        user_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ActivationToken:
+      type: object
+      required: [id, user_id, expires_at, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+        used_at:
+          type: [string, "null"]
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      required: [name, message, action, status_code]
+      properties:
+        name:
+          type: string
+        message:
+          type: string
+        action:
+          type: string
+        status_code:
+          type: integer
+    ValidationError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: ValidationError
+            status_code:
+              const: 400
+    UnauthorizedError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: UnauthorizedError
+            status_code:
+              const: 401
+    ForbiddenError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: ForbiddenError
+            status_code:
+              const: 403
+    NotFoundError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: NotFoundError
+            status_code:
+              const: 404
+    MethodNotAllowedError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: MethodNotAllowedError
+            status_code:
+              const: 405
+    InternalServerError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: InternalServerError
+            status_code:
+              const: 500
+  responses:
+    Validation:
+      description: Dados inválidos ou duplicados.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationError"
+    Unauthorized:
+      description: Sessão inválida ou credenciais incorretas.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UnauthorizedError"
+    Forbidden:
+      description: Usuário não possui a feature necessária.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ForbiddenError"
+    UserNotFound:
+      description: Usuário não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotFoundError"
+    MethodNotAllowed:
+      description: Método HTTP não aceito.
+      headers:
+        Allow:
+          description: Métodos aceitos, separados por vírgula.
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MethodNotAllowedError"
+    InternalServerError:
+      description: Erro interno genérico; detalhes são registrados no servidor.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/InternalServerError"
+
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 15
+          maxLength: 64
+          description: >
+            Frase-senha de 15 a 64 caracteres, sem regras artificiais de composição.
+    UserUpdate:
+      type: object
+      properties:
+        username:
+          type: string
           maxLength: 30
         email:
           type: string
@@ -450,6 +666,408 @@ components:
           maxLength: 254
         password:
           type: string
+    PublicUser:
+      type: object
+      required: [id, username, features, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PrivateUser:
+      allOf:
+        - $ref: "#/components/schemas/PublicUser"
+        - type: object
+          required: [email]
+          properties:
+            email:
+              type: string
+              format: email
+    SessionCreate:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    Session:
+      type: object
+      required: [id, token, user_id, expires_at, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        token:
+          type: string
+          minLength: 96
+          maxLength: 96
+          description: Token aleatório em hexadecimal, também enviado no cookie.
+        user_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ActivationToken:
+      type: object
+      required: [id, user_id, expires_at, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+        used_at:
+          type: [string, "null"]
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      required: [name, message, action, status_code]
+      properties:
+        name:
+          type: string
+        message:
+          type: string
+        action:
+          type: string
+        status_code:
+          type: integer
+    ValidationError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: ValidationError
+            status_code:
+              const: 400
+    UnauthorizedError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: UnauthorizedError
+            status_code:
+              const: 401
+    ForbiddenError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: ForbiddenError
+            status_code:
+              const: 403
+    NotFoundError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: NotFoundError
+            status_code:
+              const: 404
+    MethodNotAllowedError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: MethodNotAllowedError
+            status_code:
+              const: 405
+    InternalServerError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: InternalServerError
+            status_code:
+              const: 500
+  responses:
+    Validation:
+      description: Dados inválidos ou duplicados.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationError"
+    Unauthorized:
+      description: Sessão inválida ou credenciais incorretas.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UnauthorizedError"
+    Forbidden:
+      description: Usuário não possui a feature necessária.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ForbiddenError"
+    UserNotFound:
+      description: Usuário não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotFoundError"
+    MethodNotAllowed:
+      description: Método HTTP não aceito.
+      headers:
+        Allow:
+          description: Métodos aceitos, separados por vírgula.
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MethodNotAllowedError"
+    InternalServerError:
+      description: Erro interno genérico; detalhes são registrados no servidor.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/InternalServerError"
+
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 15
+          maxLength: 64
+    PublicUser:
+      type: object
+      required: [id, username, features, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PrivateUser:
+      allOf:
+        - $ref: "#/components/schemas/PublicUser"
+        - type: object
+          required: [email]
+          properties:
+            email:
+              type: string
+              format: email
+    SessionCreate:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    Session:
+      type: object
+      required: [id, token, user_id, expires_at, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        token:
+          type: string
+          minLength: 96
+          maxLength: 96
+          description: Token aleatório em hexadecimal, também enviado no cookie.
+        user_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ActivationToken:
+      type: object
+      required: [id, user_id, expires_at, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+        used_at:
+          type: [string, "null"]
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      required: [name, message, action, status_code]
+      properties:
+        name:
+          type: string
+        message:
+          type: string
+        action:
+          type: string
+        status_code:
+          type: integer
+    ValidationError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: ValidationError
+            status_code:
+              const: 400
+    UnauthorizedError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: UnauthorizedError
+            status_code:
+              const: 401
+    ForbiddenError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: ForbiddenError
+            status_code:
+              const: 403
+    NotFoundError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: NotFoundError
+            status_code:
+              const: 404
+    MethodNotAllowedError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: MethodNotAllowedError
+            status_code:
+              const: 405
+    InternalServerError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: InternalServerError
+            status_code:
+              const: 500
+  responses:
+    Validation:
+      description: Dados inválidos ou duplicados.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationError"
+    Unauthorized:
+      description: Sessão inválida ou credenciais incorretas.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UnauthorizedError"
+    Forbidden:
+      description: Usuário não possui a feature necessária.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ForbiddenError"
+    UserNotFound:
+      description: Usuário não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotFoundError"
+    MethodNotAllowed:
+      description: Método HTTP não aceito.
+      headers:
+        Allow:
+          description: Métodos aceitos, separados por vírgula.
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/MethodNotAllowedError"
+    InternalServerError:
+      description: Erro interno genérico; detalhes são registrados no servidor.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/InternalServerError"
+
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 15
+          maxLength: 64
+          description: >
+            Frase-senha de 15 a 64 caracteres, sem regras artificiais de composição.
     UserUpdate:
       type: object
       properties:

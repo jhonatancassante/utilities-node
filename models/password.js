@@ -16,7 +16,9 @@ function injectPepper(password) {
     });
   }
 
-  return createHmac("sha256", pepper).update(password).digest("base64");
+  return createHmac("sha256", pepper)
+    .update(password.normalize("NFC"))
+    .digest("base64");
 }
 
 async function hash(password) {
