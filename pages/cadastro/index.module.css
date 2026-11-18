@@ -138,6 +138,15 @@
   font-size: 14px;
 }
 
+.loginPrompt a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.loginPrompt a:hover {
+  text-decoration: underline;
+}
+
 .loginPrompt span {
   color: var(--text-faint);
 }

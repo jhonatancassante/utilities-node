@@ -191,7 +191,7 @@ A autorização de saída também é centralizada em `authorization.filterOutput
 ## Cuidados e limitações conhecidas
 
 - Não há _rate limiting_ para tentativas de login.
-- O código não implementa política de complexidade ou tamanho mínimo de senha.
+- As senhas devem ter de 12 a 64 caracteres, com pelo menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns conhecidos também são rejeitados.
 - Campos obrigatórios ausentes não possuem validação de entrada uniforme e podem resultar em erro 500.
 - O valor de e-mail é validado após `trim()`, mas o valor armazenado não é normalizado; a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
 - O corpo de `POST /api/v1/sessions` e de `DELETE /api/v1/sessions` inclui o token da sessão. Embora o cookie seja `HttpOnly`, devolver o token no JSON reduz o benefício dessa proteção e deve ser revisto antes de considerar o fluxo endurecido para produção.

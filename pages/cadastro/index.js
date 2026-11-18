@@ -240,7 +240,7 @@ function RegistrationPage() {
                         name="password"
                         type={showPassword ? "text" : "password"}
                         autoComplete="new-password"
-                        placeholder="Crie uma senha com pelo menos 15 caracteres"
+                        placeholder="Crie uma senha com pelo menos 12 caracteres"
                         value={form.password}
                         onChange={handleChange}
                         onBlur={() => handleBlur("password")}
@@ -273,9 +273,8 @@ function RegistrationPage() {
                     </div>
                     {renderFieldError("password")}
                     <small className={styles.fieldHint} id="password-hint">
-                      De 15 a 64 caracteres. Prefira uma frase-senha longa e
-                      exclusiva. Não exigimos combinações artificiais de
-                      caracteres.
+                      De 12 a 64 caracteres, com pelo menos 2 letras minúsculas,
+                      2 maiúsculas, 2 números e 2 caracteres especiais.
                     </small>
                   </div>
 
@@ -356,8 +355,7 @@ function RegistrationPage() {
                 </form>
 
                 <p className={styles.loginPrompt}>
-                  Já possui uma conta?{" "}
-                  <span>O acesso será disponibilizado em breve.</span>
+                  Já possui uma conta? <Link href="/login">Entrar</Link>
                 </p>
               </>
             )}

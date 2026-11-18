@@ -41,26 +41,38 @@ describe("Validação dos dados de usuário", () => {
   });
 
   describe("validatePassword()", () => {
-    test("Aceita uma frase-senha longa sem exigir composição artificial", () => {
-      expect(
-        validatePassword("esta e uma frase senha bastante longa"),
-      ).toBeNull();
+    test("Aceita senha com 12 caracteres e a composição exigida", () => {
+      const password = ["AaBb", "12!!", "xyZz"].join("");
+      expect(validatePassword(password)).toBeNull();
     });
 
-    test("Conta caracteres Unicode corretamente", () => {
-      expect(validatePassword("😀".repeat(15))).toBeNull();
+    test("Conta letras Unicode corretamente", () => {
+      expect(validatePassword("ÁáÉéÜü12!@ab")).toBeNull();
     });
 
-    test("Rejeita senhas menores que 15 caracteres", () => {
-      expect(validatePassword("curta")).not.toBeNull();
+    test("Rejeita senha menor que 12 caracteres", () => {
+      const password = ["AaBb", "12!!", "xyZ"].join("");
+      expect(validatePassword(password)).not.toBeNull();
     });
 
-    test("Rejeita senhas maiores que 64 caracteres", () => {
-      expect(validatePassword("a".repeat(65))).not.toBeNull();
+    test("Rejeita senha maior que 64 caracteres", () => {
+      const password = ["AaBb12!!", "x".repeat(57)].join("");
+      expect(validatePassword(password)).not.toBeNull();
+    });
+
+    test.each([
+      [["aabb", "12!!", "xyzz", "C"].join(""), "sem duas maiúsculas"],
+      [["AABB", "12!!", "XYZZ"].join(""), "sem duas minúsculas"],
+      [["AaBb", "!!", "xyZz", "CD"].join(""), "sem dois números"],
+      [["AaBb", "12", "xyZz", "CD"].join(""), "sem dois caracteres especiais"],
+      [["123456", "789012", "345"].join(""), "composta somente por números"],
+    ])("Rejeita senha %s (%s)", (password) => {
+      expect(validatePassword(password)).not.toBeNull();
     });
 
     test("Rejeita senhas comuns conhecidas", () => {
-      expect(validatePassword("passwordpassword")).not.toBeNull();
+      const password = ["Password", "Password", "12!!"].join("");
+      expect(validatePassword(password)).not.toBeNull();
     });
   });
 });

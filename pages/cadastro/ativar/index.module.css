@@ -60,6 +60,10 @@
   transition: background-color var(--transition-fast);
 }
 
+.backLink + .backLink {
+  margin-left: 12px;
+}
+
 .backLink:hover {
   background: var(--border-color);
 }
@@ -67,6 +71,17 @@
 .backLink:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .backLink {
+    width: 100%;
+  }
+
+  .backLink + .backLink {
+    margin-left: 0;
+    margin-top: 10px;
+  }
 }
 
 @media (max-width: 600px) {

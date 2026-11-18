@@ -1,23 +1,35 @@
-// components/Header/index.js
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import useSWR, { useSWRConfig } from "swr";
+
 import ThemeToggle from "@/components/ThemeToggle";
 import headConfigs from "@/configs/head.js";
 import { tools, TOOLS_BASE_PATH } from "@/configs/tools.js";
+import session from "@/lib/session.js";
 import styles from "./index.module.css";
 
-const MENU = Object.freeze({ mobile: "mobile", tools: "tools" });
+const MENU = Object.freeze({
+  mobile: "mobile",
+  tools: "tools",
+  account: "account",
+});
 
 function Header() {
   const router = useRouter();
   const headerRef = useRef(null);
-  // Qual menu está aberto: o painel mobile, o submenu de ferramentas ou nenhum.
   const [openMenu, setOpenMenu] = useState(null);
+  const [logoutError, setLogoutError] = useState("");
+  const { mutate } = useSWRConfig();
+  const { data: user } = useSWR("/api/v1/user", session.getCurrentUser, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
 
   const closeMenus = () => setOpenMenu(null);
   const isMobileOpen = openMenu === MENU.mobile;
   const isToolsOpen = openMenu === MENU.tools;
+  const isAccountOpen = openMenu === MENU.account;
   const isToolsRoute = router.pathname.startsWith(TOOLS_BASE_PATH);
 
   useEffect(() => {
@@ -39,6 +51,7 @@ function Header() {
 
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("pointerdown", handlePointerDown);
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("pointerdown", handlePointerDown);
@@ -47,6 +60,18 @@ function Header() {
 
   function toggleMenu(menu) {
     setOpenMenu((current) => (current === menu ? null : menu));
+    setLogoutError("");
+  }
+
+  async function handleLogout() {
+    try {
+      await session.logout();
+      await mutate("/api/v1/user", null, { revalidate: false });
+      closeMenus();
+      router.push("/");
+    } catch (error) {
+      setLogoutError(error.message);
+    }
   }
 
   return (
@@ -101,9 +126,7 @@ function Header() {
 
               <ul
                 id="tools-menu"
-                className={`${styles.dropdown} ${
-                  isToolsOpen ? styles.dropdownOpen : ""
-                }`}
+                className={`${styles.dropdown} ${isToolsOpen ? styles.dropdownOpen : ""}`}
               >
                 {tools.map((tool) => (
                   <li key={tool.slug}>
@@ -142,46 +165,102 @@ function Header() {
 
             {router.pathname === "/status" && (
               <li>
-                <NavLink
-                  href="/status"
-                  active={router.pathname === "/status"}
-                  onNavigate={closeMenus}
-                >
+                <NavLink href="/status" active onNavigate={closeMenus}>
                   Status
                 </NavLink>
               </li>
             )}
 
-            <li className={styles.mobileSignup}>
+            {user === null && (
+              <>
+                <li className={styles.mobileSignup}>
+                  <Link
+                    href="/cadastro"
+                    className={styles.signupLink}
+                    onClick={closeMenus}
+                  >
+                    <i className="fas fa-user-plus" aria-hidden="true"></i>
+                    Criar conta
+                  </Link>
+                </li>
+                <li className={styles.mobileSignup}>
+                  <Link
+                    href="/login"
+                    className={styles.loginLink}
+                    onClick={closeMenus}
+                  >
+                    <i className="fas fa-sign-in-alt" aria-hidden="true"></i>
+                    Entrar
+                  </Link>
+                </li>
+              </>
+            )}
+          </ul>
+        </nav>
+
+        <div className={styles.actions}>
+          {user === null && (
+            <div className={styles.accountActions}>
               <Link
                 href="/cadastro"
                 className={styles.signupLink}
-                aria-current={
-                  router.pathname === "/cadastro" ? "page" : undefined
-                }
                 onClick={closeMenus}
               >
                 <i className="fas fa-user-plus" aria-hidden="true"></i>
                 Criar conta
               </Link>
-            </li>
-          </ul>
-        </nav>
+              <Link
+                href="/login"
+                className={styles.loginLink}
+                onClick={closeMenus}
+              >
+                <i className="fas fa-sign-in-alt" aria-hidden="true"></i>
+                Entrar
+              </Link>
+            </div>
+          )}
 
-        <div className={styles.actions}>
-          <div className={styles.accountActions}>
-            <Link
-              href="/cadastro"
-              className={styles.signupLink}
-              aria-current={
-                router.pathname === "/cadastro" ? "page" : undefined
-              }
-              onClick={closeMenus}
-            >
-              <i className="fas fa-user-plus" aria-hidden="true"></i>
-              Criar conta
-            </Link>
-          </div>
+          {user && (
+            <div className={styles.accountMenu}>
+              <button
+                type="button"
+                className={styles.avatar}
+                aria-label={`Abrir menu da conta de ${user.username}`}
+                aria-expanded={isAccountOpen}
+                aria-controls="account-menu"
+                onClick={() => toggleMenu(MENU.account)}
+              >
+                {getInitials(user.username)}
+              </button>
+              <div
+                id="account-menu"
+                className={`${styles.accountDropdown} ${isAccountOpen ? styles.accountDropdownOpen : ""}`}
+              >
+                <span className={styles.accountName}>{user.username}</span>
+                <Link
+                  href="/perfil"
+                  className={styles.accountItem}
+                  onClick={closeMenus}
+                >
+                  <i className="fas fa-user" aria-hidden="true"></i>
+                  Meu perfil
+                </Link>
+                <button
+                  type="button"
+                  className={styles.accountItem}
+                  onClick={handleLogout}
+                >
+                  <i className="fas fa-sign-out-alt" aria-hidden="true"></i>
+                  Sair
+                </button>
+                {logoutError && (
+                  <span className={styles.logoutError} role="alert">
+                    {logoutError}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
 
           <ThemeToggle />
 
@@ -202,6 +281,15 @@ function Header() {
       </div>
     </header>
   );
+}
+
+function getInitials(username) {
+  const parts = username.split(/[-_]+/).filter(Boolean);
+  const initials = parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("");
+  return (initials || username.slice(0, 2)).toUpperCase();
 }
 
 function NavLink({ href, active, onNavigate, children }) {

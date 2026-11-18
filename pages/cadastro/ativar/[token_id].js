@@ -148,8 +148,8 @@ function AccountActivationPage() {
                     Utilities foi ativada com sucesso.
                   </p>
                   <p className={styles.hint}>
-                    A ativação foi concluída. A tela de acesso à conta será
-                    disponibilizada em uma próxima etapa.
+                    Sua conta está pronta para uso. Você já pode entrar no
+                    Utilities.
                   </p>
                 </>
               )}
@@ -161,8 +161,7 @@ function AccountActivationPage() {
                     utilizar este link novamente.
                   </p>
                   <p className={styles.hint}>
-                    A tela de acesso à conta será disponibilizada em uma próxima
-                    etapa.
+                    Você já pode entrar no Utilities e continuar de onde parou.
                   </p>
                 </>
               )}
@@ -178,6 +177,14 @@ function AccountActivationPage() {
                 </>
               )}
             </div>
+
+            {(displayedResult.status === "success" ||
+              displayedResult.status === "already-active") && (
+              <Link href="/login" className={styles.backLink}>
+                <i className="fas fa-sign-in-alt" aria-hidden="true"></i>
+                Entrar na conta
+              </Link>
+            )}
 
             {displayedResult.status !== "loading" && (
               <Link href="/" className={styles.backLink}>

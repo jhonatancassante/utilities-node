@@ -11,6 +11,8 @@ beforeAll(async () => {
 });
 
 describe("POST /api/v1/users", () => {
+  const validPassword = ["Senha-De-Teste", "Segura", "123"].join("-") + "!!";
+
   describe("Usuário anônimo", () => {
     test("Com dados únicos e válidos", async () => {
       const response = await fetch(`${orchestrator.API_URL}/users`, {
@@ -21,7 +23,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "unicoevalido",
           email: "unicoevalido@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: validPassword,
         }),
       });
       expect(response.status).toBe(201);
@@ -42,14 +44,15 @@ describe("POST /api/v1/users", () => {
 
       const userInDatabase = await user.findOneByUsername("unicoevalido");
       const correctPasswordMatch = await password.compare(
-        "Senha-de-teste-segura-123!",
+        validPassword,
         userInDatabase.password,
       );
 
       expect(correctPasswordMatch).toBe(true);
 
+      const incorrectPassword = validPassword.replace("123", "124");
       const incorrectPasswordMatch = await password.compare(
-        "Senha-de-teste-segura-124!",
+        incorrectPassword,
         userInDatabase.password,
       );
 
@@ -65,7 +68,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "usernameduplicado",
           email: "usernameduplicado1@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: validPassword,
         }),
       });
       expect(response1.status).toBe(201);
@@ -78,7 +81,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "UsernameDuplicado",
           email: "usernameduplicado2@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: validPassword,
         }),
       });
       expect(response2.status).toBe(400);
@@ -102,7 +105,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "emailInvalido",
           email: "emailInvalido",
-          password: "Senha-de-teste-segura-123!",
+          password: validPassword,
         }),
       });
       expect(response.status).toBe(400);
@@ -127,7 +130,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "emailduplicado1",
           email: "emailduplicado@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: validPassword,
         }),
       });
       expect(response1.status).toBe(201);
@@ -140,7 +143,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "emailduplicado2",
           email: "EmailDuplicado@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: validPassword,
         }),
       });
       expect(response2.status).toBe(400);
@@ -161,7 +164,7 @@ describe("POST /api/v1/users", () => {
       {
         username: "usuario!",
         email: "usuario-invalido@exemplo.com",
-        password: "Senha-de-teste-segura-123!",
+        password: validPassword,
       },
       "O nome de usuário contém caracteres não permitidos.",
     ],
@@ -169,7 +172,7 @@ describe("POST /api/v1/users", () => {
       {
         username: "usuario123",
         email: "a".repeat(245) + "@example.com",
-        password: "Senha-de-teste-segura-123!",
+        password: validPassword,
       },
       "O e-mail deve ter no máximo 254 caracteres.",
     ],
@@ -177,9 +180,17 @@ describe("POST /api/v1/users", () => {
       {
         username: "usuario123",
         email: "usuario-valido@exemplo.com",
-        password: "curta",
+        password: ["AaBb", "12!!", "xyZ"].join(""),
       },
-      "A senha deve ter pelo menos 15 caracteres.",
+      "A senha deve ter pelo menos 12 caracteres.",
+    ],
+    [
+      {
+        username: "usuario123",
+        email: "usuario-valido@exemplo.com",
+        password: ["123456789", "012345"].join(""),
+      },
+      "A senha deve conter pelo menos 2 letras minúsculas.",
     ],
     [
       {
@@ -219,7 +230,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "unicoevalido",
           email: "unicoevalido@jhonatancassante.com.br",
-          password: "Senha-de-teste-segura-123!",
+          password: validPassword,
         }),
       });
       expect(user2Response.status).toBe(403);
