@@ -109,13 +109,16 @@ function ProfileForm({ user, onUpdated }) {
     setTouched((current) => ({ ...current, [name]: true }));
   }
 
-  function handleEdit() {
+  function handleEdit(event) {
+    event.preventDefault();
+
     setForm({
       username: user.username,
       email: user.email,
       password: "",
       passwordConfirmation: "",
     });
+
     setTouched({});
     setFeedback(null);
     setIsEditing(true);
@@ -391,10 +394,17 @@ function ProfileForm({ user, onUpdated }) {
         <div className={styles.formActions}>
           {isEditing ? (
             <>
-              <Button type="submit" icon="fa-save" disabled={isSubmitting}>
+              <Button
+                key="save"
+                type="submit"
+                icon="fa-save"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? "Salvando..." : "Salvar alterações"}
               </Button>
+
               <Button
+                key="cancel"
                 type="button"
                 variant="outline"
                 icon="fa-times"
@@ -405,7 +415,12 @@ function ProfileForm({ user, onUpdated }) {
               </Button>
             </>
           ) : (
-            <Button type="button" icon="fa-edit" onClick={handleEdit}>
+            <Button
+              key="edit"
+              type="button"
+              icon="fa-edit"
+              onClick={handleEdit}
+            >
               Editar informações
             </Button>
           )}
