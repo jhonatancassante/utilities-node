@@ -146,7 +146,7 @@ async function update(username, userInputValues) {
   if ("username" in userInputValues) {
     validateUsernameFormat(userInputValues.username);
     userInputValues.username = userInputValues.username.trim();
-    if (currentUser.username.toLowerCase() !== userInputValues.username.toLowerCase()) {
+    if (\n      currentUser.username.toLowerCase() !==\n      userInputValues.username.toLowerCase()\n    ) {
       await validateUniqueUsername(userInputValues.username);
     }
   }
@@ -154,7 +154,7 @@ async function update(username, userInputValues) {
   if ("email" in userInputValues) {
     validateEmailFormat(userInputValues.email);
     userInputValues.email = userInputValues.email.trim();
-    if (currentUser.email.toLowerCase() !== userInputValues.email.toLowerCase()) {
+    if (\n      currentUser.email.toLowerCase() !== userInputValues.email.toLowerCase()\n    ) {
       await validateUniqueEmail(userInputValues.email);
     }
   }
