@@ -1,12 +1,17 @@
 import database from "@/infra/database.js";
 import password from "@/models/password.js";
 import { ValidationError, NotFoundError } from "@/infra/errors.js";
-import { validateUsername, validateEmail, validatePassword } from "@/lib/user-validation.js";
+import {
+  validateUsername,
+  validateEmail,
+  validatePassword,
+} from "@/lib/user-validation.js";
 
 async function create(userInputValues) {
   validateUsernameFormat(userInputValues.username);
   validateEmailFormat(userInputValues.email);
   validatePasswordFormat(userInputValues.password);
+  userInputValues.username = userInputValues.username.trim();
   userInputValues.email = userInputValues.email.trim();
   await validateUniqueUsername(userInputValues.username);
   await validateUniqueEmail(userInputValues.email);
@@ -140,6 +145,7 @@ async function update(username, userInputValues) {
 
   if ("username" in userInputValues) {
     validateUsernameFormat(userInputValues.username);
+    userInputValues.username = userInputValues.username.trim();
     if (currentUser.username !== userInputValues.username) {
       await validateUniqueUsername(userInputValues.username);
     }

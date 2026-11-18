@@ -156,47 +156,53 @@ describe("POST /api/v1/users", () => {
     });
   });
 
-    test.each([
-      [
-        {
-          username: "usuario!",
-          email: "usuario-invalido@exemplo.com",
-          password: "Senha-de-teste-segura-123!",
-        },
-        "O nome de usuário contém caracteres não permitidos.",
-      ],
-      [
-        {
-          username: "usuario123",
-          email: "a".repeat(245) + "@example.com",
-          password: "Senha-de-teste-segura-123!",
-        },
-        "O e-mail deve ter no máximo 254 caracteres.",
-      ],
-      [
-        {
-          username: "usuario123",
-          email: "usuario-valido@exemplo.com",
-          password: "curta",
-        },
-        "A senha deve ter pelo menos 15 caracteres.",
-      ],
-      [
-        {
-          username: "usuario123",
-          email: "usuario-valido@exemplo.com",
-          password: "S".repeat(65),
-        },
-        "A senha deve ter no máximo 64 caracteres.",
-      ],
-    ])("Rejeita dados inválidos", async (userInput, expectedMessage) => {
-      const response = await fetch(`${orchestrator.API_URL}/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userInput),
-      });
+  test.each([
+    [
+      {
+        username: "usuario!",
+        email: "usuario-invalido@exemplo.com",
+        password: "Senha-de-teste-segura-123!",
+      },
+      "O nome de usuário contém caracteres não permitidos.",
+    ],
+    [
+      {
+        username: "usuario123",
+        email: "a".repeat(245) + "@example.com",
+        password: "Senha-de-teste-segura-123!",
+      },
+      "O e-mail deve ter no máximo 254 caracteres.",
+    ],
+    [
+      {
+        username: "usuario123",
+        email: "usuario-valido@exemplo.com",
+        password: "curta",
+      },
+      "A senha deve ter pelo menos 15 caracteres.",
+    ],
+    [
+      {
+        username: "usuario123",
+        email: "usuario-valido@exemplo.com",
+        password: "S".repeat(65),
+      },
+      "A senha deve ter no máximo 64 caracteres.",
+    ],
+  ])("Rejeita dados inválidos", async (userInput, expectedMessage) => {
+    const response = await fetch(`${orchestrator.API_URL}/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userInput),
+    });
+
+    expect(response.status).toBe(400);
+    const responseBody = await response.json();
+    expect(responseBody.name).toBe("ValidationError");
+    expect(responseBody.message).toBe(expectedMessage);
+  });
 
       expect(response.status).toBe(400);
       const responseBody = await response.json();

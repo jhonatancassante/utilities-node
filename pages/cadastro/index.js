@@ -7,7 +7,11 @@ import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import requestAPI from "@/lib/api.js";
-import { validateUsername, validateEmail, validatePassword } from "@/lib/user-validation.js";
+import {
+  validateUsername,
+  validateEmail,
+  validatePassword,
+} from "@/lib/user-validation.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -132,7 +136,8 @@ function RegistrationPage() {
                       disabled={isSubmitting}
                     />
                     <small className={styles.fieldHint}>
-                      De 3 a 30 caracteres. Letras, números, hífen (-) e sublinhado (_).
+                      De 3 a 30 caracteres. Letras, números, hífen (-) e
+                      sublinhado (_).
                     </small>
                   </div>
 
@@ -179,8 +184,9 @@ function RegistrationPage() {
                       disabled={isSubmitting}
                     />
                     <small className={styles.fieldHint}>
-                      De 15 a 64 caracteres. Prefira uma frase-senha longa e exclusiva.
-                      Não exigimos combinações artificiais de caracteres.
+                      De 15 a 64 caracteres. Prefira uma frase-senha longa e
+                      exclusiva. Não exigimos combinações artificiais de
+                      caracteres.
                     </small>
                   </div>
 
