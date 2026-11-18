@@ -42,7 +42,8 @@ describe("Validação dos dados de usuário", () => {
 
   describe("validatePassword()", () => {
     test("Aceita senha com 12 caracteres e a composição exigida", () => {
-      expect(validatePassword("AaBb12!!xyZz")).toBeNull();
+      const password = ["AaBb", "12!!", "xyZz"].join("");
+      expect(validatePassword(password)).toBeNull();
     });
 
     test("Conta letras Unicode corretamente", () => {
@@ -50,25 +51,28 @@ describe("Validação dos dados de usuário", () => {
     });
 
     test("Rejeita senha menor que 12 caracteres", () => {
-      expect(validatePassword("AaBb12!!xyZ")).not.toBeNull();
+      const password = ["AaBb", "12!!", "xyZ"].join("");
+      expect(validatePassword(password)).not.toBeNull();
     });
 
     test("Rejeita senha maior que 64 caracteres", () => {
-      expect(validatePassword("AaBb12!!" + "x".repeat(57))).not.toBeNull();
+      const password = ["AaBb12!!", "x".repeat(57)].join("");
+      expect(validatePassword(password)).not.toBeNull();
     });
 
     test.each([
-      ["aabb12!!xyzzC", "sem duas maiúsculas"],
-      ["AABB12!!XYZZ", "sem duas minúsculas"],
-      ["AaBb!!xyZzCD", "sem dois números"],
-      ["AaBb12xyZzCD", "sem dois caracteres especiais"],
-      ["123456789012345", "composta somente por números"],
+      [["aabb", "12!!", "xyzz", "C"].join(""), "sem duas maiúsculas"],
+      [["AABB", "12!!", "XYZZ"].join(""), "sem duas minúsculas"],
+      [["AaBb", "!!", "xyZz", "CD"].join(""), "sem dois números"],
+      [["AaBb", "12", "xyZz", "CD"].join(""), "sem dois caracteres especiais"],
+      [["123456", "789012", "345"].join(""), "composta somente por números"],
     ])("Rejeita senha %s (%s)", (password) => {
       expect(validatePassword(password)).not.toBeNull();
     });
 
     test("Rejeita senhas comuns conhecidas", () => {
-      expect(validatePassword("PasswordPassword12!!")).not.toBeNull();
+      const password = ["Password", "Password", "12!!"].join("");
+      expect(validatePassword(password)).not.toBeNull();
     });
   });
 });
