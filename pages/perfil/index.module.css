@@ -25,6 +25,13 @@
   margin-bottom: 20px;
 }
 
+.form input:disabled {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  opacity: 1;
+  cursor: default;
+}
+
 .invalidInput,
 .invalidInput:focus-visible {
   border-color: var(--danger);
@@ -159,10 +166,15 @@
 
 .formActions button {
   flex: 1;
+  min-width: 0;
 }
 
 @media (max-width: 480px) {
   .formActions {
     flex-direction: column;
+  }
+
+  .formActions button {
+    width: 100%;
   }
 }
