@@ -152,7 +152,7 @@ paths:
             example:
               username: jhow
               email: jhow@example.com
-              password: uma-senha
+              password: uma frase-senha longa e exclusiva
       responses:
         "201":
           description: Usuário criado e e-mail de ativação enviado.

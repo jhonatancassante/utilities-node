@@ -204,12 +204,6 @@ describe("POST /api/v1/users", () => {
     expect(responseBody.message).toBe(expectedMessage);
   });
 
-      expect(response.status).toBe(400);
-      const responseBody = await response.json();
-      expect(responseBody.name).toBe("ValidationError");
-      expect(responseBody.message).toBe(expectedMessage);
-    });
-
   describe("Usuário autenticado", () => {
     test("Com dados únicos e válidos", async () => {
       const user1 = await orchestrator.createUser();
