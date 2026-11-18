@@ -149,3 +149,20 @@
     font-size: 28px;
   }
 }
+
+
+.formActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.formActions button {
+  flex: 1;
+}
+
+@media (max-width: 480px) {
+  .formActions {
+    flex-direction: column;
+  }
+}
