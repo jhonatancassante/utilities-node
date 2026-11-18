@@ -87,7 +87,7 @@ export class NotFoundError extends Error {
     this.name = "NotFoundError";
     this.action =
       action ||
-      "Verifique se os valores informado está correto e tente novamente.";
+      "Verifique se os valores informados estão corretos e tente novamente.";
     this.statusCode = 404;
   }
 
@@ -107,7 +107,7 @@ export class ServiceError extends Error {
       cause,
     });
     this.name = "ServiceError";
-    this.action = action || "Verificque se o serviço está disponível.";
+    this.action = action || "Verifique se o serviço está disponível.";
     this.statusCode = 503;
     this.context = context;
   }

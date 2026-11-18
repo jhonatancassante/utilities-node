@@ -140,41 +140,44 @@ async function findOneByEmail(email) {
   }
 }
 
+const UPDATABLE_FIELDS = ["username", "email", "password"];
+
 async function update(username, userInputValues) {
   const currentUser = await findOneByUsername(username);
+  const allowedInputValues = pickUpdatableFields(userInputValues);
 
-  if ("username" in userInputValues) {
-    validateUsernameFormat(userInputValues.username);
-    userInputValues.username = userInputValues.username.trim();
+  if ("username" in allowedInputValues) {
+    validateUsernameFormat(allowedInputValues.username);
+    allowedInputValues.username = allowedInputValues.username.trim();
     if (
       currentUser.username.toLowerCase() !==
-      userInputValues.username.toLowerCase()
+      allowedInputValues.username.toLowerCase()
     ) {
-      await validateUniqueUsername(userInputValues.username);
+      await validateUniqueUsername(allowedInputValues.username);
     }
   }
 
-  if ("email" in userInputValues) {
-    validateEmailFormat(userInputValues.email);
-    userInputValues.email = userInputValues.email.trim();
+  if ("email" in allowedInputValues) {
+    validateEmailFormat(allowedInputValues.email);
+    allowedInputValues.email = allowedInputValues.email.trim();
     if (
-      currentUser.email.toLowerCase() !== userInputValues.email.toLowerCase()
+      currentUser.email.toLowerCase() !== allowedInputValues.email.toLowerCase()
     ) {
-      await validateUniqueEmail(userInputValues.email);
+      await validateUniqueEmail(allowedInputValues.email);
     }
   }
 
-  if ("password" in userInputValues) {
-    validatePasswordFormat(userInputValues.password);
-    await hashPasswordInObject(userInputValues);
+  if ("password" in allowedInputValues) {
+    validatePasswordFormat(allowedInputValues.password);
+    await hashPasswordInObject(allowedInputValues);
   }
 
-  const userWithNewValues = { ...currentUser, ...userInputValues };
+  const userWithNewValues = { ...currentUser, ...allowedInputValues };
 
-  const updatedUser = await runUpdateQuery(userWithNewValues);
+  const updatedUser = await runUpdateQuery(currentUser.id, userWithNewValues);
   return updatedUser;
 
-  async function runUpdateQuery(userWithNewValues) {
+  async function runUpdateQuery(userId, userWithNewValues) {
     const results = await database.query({
       text: `
         UPDATE
@@ -190,7 +193,7 @@ async function update(username, userInputValues) {
           *
       ;`,
       values: [
-        userWithNewValues.id,
+        userId,
         userWithNewValues.username,
         userWithNewValues.email,
         userWithNewValues.password,
@@ -199,6 +202,23 @@ async function update(username, userInputValues) {
 
     return results.rows[0];
   }
+}
+
+function pickUpdatableFields(userInputValues) {
+  const isPlainObject =
+    userInputValues !== null &&
+    typeof userInputValues === "object" &&
+    !Array.isArray(userInputValues);
+
+  if (!isPlainObject) return {};
+
+  const picked = {};
+  for (const field of UPDATABLE_FIELDS) {
+    if (Object.hasOwn(userInputValues, field)) {
+      picked[field] = userInputValues[field];
+    }
+  }
+  return picked;
 }
 
 async function setFeatures(userId, userFeatures) {

@@ -335,6 +335,75 @@ describe("PATCH /api/v1/users/[username]", () => {
         status_code: 403,
       });
     });
+
+    test("Enviando `id` de outro usuário no body", async () => {
+      const user1 = await orchestrator.createUser();
+      await orchestrator.activateUser(user1);
+      const user1SessionObject = await orchestrator.createSession(user1);
+
+      const user2 = await orchestrator.createUser();
+
+      const response = await fetch(
+        `${orchestrator.API_URL}/users/${user1.username}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${user1SessionObject.token}`,
+          },
+          body: JSON.stringify({
+            id: user2.id,
+            username: "usernameSomenteDoUsuario1",
+          }),
+        },
+      );
+      expect(response.status).toBe(200);
+
+      const responseBody = await response.json();
+      expect(responseBody.id).toBe(user1.id);
+      expect(responseBody.username).toBe("usernameSomenteDoUsuario1");
+
+      const user1InDatabase = await user.findOneById(user1.id);
+      expect(user1InDatabase.username).toBe("usernameSomenteDoUsuario1");
+
+      const user2InDatabase = await user.findOneById(user2.id);
+      expect(user2InDatabase.username).toBe(user2.username);
+      expect(user2InDatabase.email).toBe(user2.email);
+      expect(user2InDatabase.password).toBe(user2.password);
+    });
+
+    test("Enviando campos que não podem ser alterados", async () => {
+      const createdUser = await orchestrator.createUser();
+      await orchestrator.activateUser(createdUser);
+      const createdUserSessionObject =
+        await orchestrator.createSession(createdUser);
+
+      const response = await fetch(
+        `${orchestrator.API_URL}/users/${createdUser.username}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: `session_id=${createdUserSessionObject.token}`,
+          },
+          body: JSON.stringify({
+            id: "00000000-0000-4000-8000-000000000000",
+            features: ["update:user:others", "read:migration"],
+            created_at: "2000-01-01T00:00:00.000Z",
+          }),
+        },
+      );
+      expect(response.status).toBe(200);
+
+      const userInDatabase = await user.findOneById(createdUser.id);
+      expect(userInDatabase.id).toBe(createdUser.id);
+      expect(userInDatabase.features).toEqual([
+        "create:session",
+        "read:session",
+        "update:user",
+      ]);
+      expect(userInDatabase.created_at).toEqual(createdUser.created_at);
+    });
   });
 
   describe("Usuário privilegiado", () => {
