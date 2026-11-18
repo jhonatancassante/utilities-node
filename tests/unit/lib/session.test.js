@@ -1,52 +1,63 @@
 import { jest } from "@jest/globals";
-import requestAPI from "@/lib/api.js";
 import session from "@/lib/session.js";
-
-jest.mock("@/lib/api.js", () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
 
 describe("lib/session.js", () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   test("Recupera os dados da pessoa autenticada", async () => {
     const currentUser = { id: "user-id", username: "jhow" };
-    requestAPI.mockResolvedValue(currentUser);
+    jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue(currentUser),
+    });
 
     await expect(session.getCurrentUser()).resolves.toEqual(currentUser);
-    expect(requestAPI).toHaveBeenCalledWith("/api/v1/user");
+    expect(fetch).toHaveBeenCalledWith("/api/v1/user", {
+      headers: { Accept: "application/json" },
+    });
   });
 
   test("Retorna null quando não existe uma sessão autenticada", async () => {
-    requestAPI.mockRejectedValue({ statusCode: 403 });
+    jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: jest.fn().mockResolvedValue({ message: "Acesso negado." }),
+    });
 
     await expect(session.getCurrentUser()).resolves.toBeNull();
   });
 
   test("Cria uma sessão enviando e-mail e senha", async () => {
-    requestAPI.mockResolvedValue({ id: "session-id" });
+    jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({ id: "session-id" }),
+    });
 
     await session.login("jhow@example.com", "senha-segura");
 
-    expect(requestAPI).toHaveBeenCalledWith("/api/v1/sessions", {
+    expect(fetch).toHaveBeenCalledWith("/api/v1/sessions", {
       method: "POST",
-      body: JSON.stringify({
-        email: "jhow@example.com",
-        password: "senha-segura",
-      }),
+      body: JSON.stringify({ email: "jhow@example.com", password: "senha-segura" }),
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
     });
   });
 
   test("Encerra a sessão atual", async () => {
-    requestAPI.mockResolvedValue({});
+    jest.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({}),
+    });
 
     await session.logout();
 
-    expect(requestAPI).toHaveBeenCalledWith("/api/v1/sessions", {
+    expect(fetch).toHaveBeenCalledWith("/api/v1/sessions", {
       method: "DELETE",
+      headers: { Accept: "application/json" },
     });
   });
 });
