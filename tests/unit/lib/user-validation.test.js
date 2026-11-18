@@ -42,7 +42,9 @@ describe("Validação dos dados de usuário", () => {
 
   describe("validatePassword()", () => {
     test("Aceita uma frase-senha longa sem exigir composição artificial", () => {
-      expect(validatePassword("esta e uma frase senha bastante longa")).toBeNull();
+      expect(
+        validatePassword("esta e uma frase senha bastante longa"),
+      ).toBeNull();
     });
 
     test("Conta caracteres Unicode corretamente", () => {
