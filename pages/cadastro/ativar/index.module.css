@@ -60,7 +60,7 @@
   transition: background-color var(--transition-fast);
 }
 
-.backLink:hover {
+.backLink + .backLink {\n  margin-left: 12px;\n}\n\n.backLink:hover {
   background: var(--border-color);
 }
 
@@ -69,7 +69,7 @@
   outline-offset: 3px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 480px) {\n  .backLink {\n    width: 100%;\n  }\n\n  .backLink + .backLink {\n    margin-left: 0;\n    margin-top: 10px;\n  }\n}\n\n@media (max-width: 600px) {
   .card h1 {
     font-size: 28px;
   }
