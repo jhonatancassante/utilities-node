@@ -34,12 +34,11 @@ function getFieldErrors(form) {
     username: validateUsername(form.username.trim())?.message ?? "",
     email: validateEmail(form.email.trim())?.message ?? "",
     password: validatePassword(form.password)?.message ?? "",
-    passwordConfirmation:
-      !form.passwordConfirmation
-        ? "A confirmação da senha é obrigatória."
-        : form.password !== form.passwordConfirmation
-          ? "As senhas informadas não coincidem."
-          : "",
+    passwordConfirmation: !form.passwordConfirmation
+      ? "A confirmação da senha é obrigatória."
+      : form.password !== form.passwordConfirmation
+        ? "As senhas informadas não coincidem."
+        : "",
   };
 }
 
@@ -181,8 +180,14 @@ function RegistrationPage() {
                       value={form.username}
                       onChange={handleChange}
                       onBlur={() => handleBlur("username")}
-                      aria-invalid={Boolean(touched.username && fieldErrors.username)}
-                      aria-describedby={touched.username && fieldErrors.username ? "username-error" : "username-hint"}
+                      aria-invalid={Boolean(
+                        touched.username && fieldErrors.username,
+                      )}
+                      aria-describedby={
+                        touched.username && fieldErrors.username
+                          ? "username-error"
+                          : "username-hint"
+                      }
                       autoCapitalize="none"
                       spellCheck={false}
                       disabled={isSubmitting}
@@ -209,7 +214,11 @@ function RegistrationPage() {
                       onChange={handleChange}
                       onBlur={() => handleBlur("email")}
                       aria-invalid={Boolean(touched.email && fieldErrors.email)}
-                      aria-describedby={touched.email && fieldErrors.email ? "email-error" : "email-hint"}
+                      aria-describedby={
+                        touched.email && fieldErrors.email
+                          ? "email-error"
+                          : "email-hint"
+                      }
                       autoCapitalize="none"
                       spellCheck={false}
                       disabled={isSubmitting}
@@ -235,20 +244,31 @@ function RegistrationPage() {
                         value={form.password}
                         onChange={handleChange}
                         onBlur={() => handleBlur("password")}
-                        aria-invalid={Boolean(touched.password && fieldErrors.password)}
-                        aria-describedby={touched.password && fieldErrors.password ? "password-error" : "password-hint"}
+                        aria-invalid={Boolean(
+                          touched.password && fieldErrors.password,
+                        )}
+                        aria-describedby={
+                          touched.password && fieldErrors.password
+                            ? "password-error"
+                            : "password-hint"
+                        }
                         disabled={isSubmitting}
                       />
                       <button
                         className={styles.passwordToggle}
                         type="button"
-                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                        aria-label={
+                          showPassword ? "Ocultar senha" : "Mostrar senha"
+                        }
                         aria-pressed={showPassword}
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => setShowPassword((visible) => !visible)}
                         disabled={isSubmitting}
                       >
-                        <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`} aria-hidden="true"></i>
+                        <i
+                          className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}
+                          aria-hidden="true"
+                        ></i>
                       </button>
                     </div>
                     {renderFieldError("password")}
@@ -277,14 +297,26 @@ function RegistrationPage() {
                         value={form.passwordConfirmation}
                         onChange={handleChange}
                         onBlur={() => handleBlur("passwordConfirmation")}
-                        aria-invalid={Boolean(touched.passwordConfirmation && fieldErrors.passwordConfirmation)}
-                        aria-describedby={touched.passwordConfirmation && fieldErrors.passwordConfirmation ? "passwordConfirmation-error" : undefined}
+                        aria-invalid={Boolean(
+                          touched.passwordConfirmation &&
+                          fieldErrors.passwordConfirmation,
+                        )}
+                        aria-describedby={
+                          touched.passwordConfirmation &&
+                          fieldErrors.passwordConfirmation
+                            ? "passwordConfirmation-error"
+                            : undefined
+                        }
                         disabled={isSubmitting}
                       />
                       <button
                         className={styles.passwordToggle}
                         type="button"
-                        aria-label={showPasswordConfirmation ? "Ocultar confirmação da senha" : "Mostrar confirmação da senha"}
+                        aria-label={
+                          showPasswordConfirmation
+                            ? "Ocultar confirmação da senha"
+                            : "Mostrar confirmação da senha"
+                        }
                         aria-pressed={showPasswordConfirmation}
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() =>
@@ -292,7 +324,10 @@ function RegistrationPage() {
                         }
                         disabled={isSubmitting}
                       >
-                        <i className={`fas ${showPasswordConfirmation ? "fa-eye-slash" : "fa-eye"}`} aria-hidden="true"></i>
+                        <i
+                          className={`fas ${showPasswordConfirmation ? "fa-eye-slash" : "fa-eye"}`}
+                          aria-hidden="true"
+                        ></i>
                       </button>
                     </div>
                     {renderFieldError("passwordConfirmation")}
