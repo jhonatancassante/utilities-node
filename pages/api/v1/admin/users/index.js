@@ -12,9 +12,7 @@ async function getHandler(request, response) {
   const searchTerm = request.query.search;
   const users = await user.search(searchTerm);
 
-  const safeUsers = users
-    .filter((userObject) => userObject.id !== request.context.user.id)
-    .map((userObject) => ({
+  const safeUsers = users.map((userObject) => ({
       id: userObject.id,
       username: userObject.username,
       email: userObject.email,
