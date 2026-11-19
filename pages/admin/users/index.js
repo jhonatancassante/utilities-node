@@ -16,7 +16,7 @@ import {
 import { featureCatalog } from "@/configs/features.js";
 import { hasAdminAccess, hasAdminSectionAccess } from "@/configs/admin.js";
 import shared from "@/styles/shared.module.css";
-import styles from "./usuarios.module.css";
+import styles from "./index.module.css";
 
 const featureGroups = [
   ...new Set(featureCatalog.map((feature) => feature.group)),
@@ -115,7 +115,7 @@ function AdminUsersPage() {
       <>
         <AppHead title="Gerenciar usuários" />
         <Layout>
-          <main className={shared.container}>
+          <main className={shared.container} wide>
             <section className={`${shared.card} ${styles.card}`}>
               <p>Carregando permissões...</p>
             </section>
@@ -130,7 +130,7 @@ function AdminUsersPage() {
       <>
         <AppHead title="Gerenciar usuários" />
         <Layout>
-          <main className={shared.container}>
+          <main className={shared.container} wide>
             <section className={`${shared.card} ${styles.card}`}>
               <StatusMessage type="error">
                 Não foi possível verificar suas permissões.
@@ -153,7 +153,7 @@ function AdminUsersPage() {
         description="Pesquise e gerencie contas e permissões de usuários."
       />
       <Layout>
-        <main className={shared.container}>
+        <main className={shared.container} wide>
           <section className={`${shared.card} ${styles.card}`}>
             <Link href="/admin" className={styles.backLink}>
               <i className="fas fa-arrow-left" aria-hidden="true"></i>

@@ -36,7 +36,7 @@ function AdminPage() {
         description="Gerencie os recursos administrativos do Utilities."
       />
       <Layout>
-        <main className={shared.container}>
+        <main className={shared.container} wide>
           {isLoading || (!user && !error) ? (
             <section
               className={`${shared.card} ${styles.card}`}
