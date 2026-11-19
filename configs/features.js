@@ -28,7 +28,7 @@ export const featureCatalog = [
     label: "Administrar outros usuários",
     group: "Privilégios",
     description:
-      "Permite pesquisar, alterar e remover outras contas e suas permissões.",
+      "Permite pesquisar e alterar os dados e as permissões de outras contas.",
   },
   {
     name: "create:session",
