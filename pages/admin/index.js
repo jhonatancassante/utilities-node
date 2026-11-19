@@ -25,7 +25,9 @@ function AdminPage() {
     ) {
       router.replace("/login");
     }
-    if (!isLoading && user && !hasAdminAccess(user)) router.replace("/perfil");
+    if (!isLoading && user && !hasAdminAccess(user)) {
+      router.replace("/perfil");
+    }
   }, [error, isLoading, router, user]);
 
   const sections = getAvailableAdminSections(user);
@@ -39,7 +41,10 @@ function AdminPage() {
       <Layout>
         <main className={shared.container}>
           {isLoading || (!user && !error) ? (
-            <section className={`${shared.card} ${styles.card}`} aria-live="polite">
+            <section
+              className={`${shared.card} ${styles.card}`}
+              aria-live="polite"
+            >
               <p>Carregando painel administrativo...</p>
             </section>
           ) : error ? (
