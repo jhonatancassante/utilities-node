@@ -543,6 +543,11 @@ function UserEditor({ user, onUpdated, onCancel }) {
                           : ""
                       }`}
                       key={feature.name}
+                      title={
+                        feature.editable === false
+                          ? "Permissão protegida — não pode ser alterada"
+                          : undefined
+                      }
                     >
                       <span className={styles.featureBadges}>
                         {feature.privileged && (
@@ -558,7 +563,7 @@ function UserEditor({ user, onUpdated, onCancel }) {
                         {feature.editable === false && (
                           <span
                             className={`${styles.featureBadge} ${styles.protectedBadge}`}
-                            title="Permissão protegida"
+                            title="Permissão protegida — não pode ser alterada"
                             role="img"
                             aria-label="Permissão protegida"
                           >
