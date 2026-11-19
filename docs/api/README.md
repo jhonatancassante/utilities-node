@@ -45,7 +45,7 @@ Os erros seguem o formato:
 | Código | Erro                    | Significado                                                   |
 | ------ | ----------------------- | ------------------------------------------------------------- |
 | `400`  | `ValidationError`       | Dados inválidos ou duplicados                                 |
-| `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão ausente, inválida ou expirada |
+| `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão inválida/expirada              |
 | `403`  | `ForbiddenError`        | Feature necessária não concedida                              |
 | `404`  | `NotFoundError`         | Usuário ou token não encontrado, expirado ou já utilizado     |
 | `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`                 |
