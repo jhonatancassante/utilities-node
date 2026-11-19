@@ -552,7 +552,6 @@ function UserEditor({ user, onUpdated, onCancel }) {
           </Button>
         </div>
       </form>
-
     </section>
   );
 }

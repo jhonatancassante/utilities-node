@@ -25,10 +25,7 @@ describe("configs/admin.js", () => {
 
     test("Usuário com a feature exigida para a seção", () => {
       expect(
-        hasAdminSectionAccess(
-          { features: ["update:user:others"] },
-          "users",
-        ),
+        hasAdminSectionAccess({ features: ["update:user:others"] }, "users"),
       ).toBe(true);
     });
 
