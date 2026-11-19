@@ -318,27 +318,62 @@ function AdminFeaturesPage() {
               </div>
             )}
 
-            {creating && (
-              <FeatureForm
-                key="new-feature"
-                onSubmit={(values) => handleSaveFeature(values, null)}
-                onCancel={() => setCreating(false)}
-                isSaving={isSaving}
-                title="Nova feature"
-              />
+            {(creating || editingFeature) && (
+              <Modal
+                title={creating ? "Nova feature" : "Editar feature"}
+                onClose={() => {
+                  if (!isSaving) {
+                    setCreating(false);
+                    setEditingFeature(null);
+                  }
+                }}
+                wide
+              >
+                <FeatureForm
+                  key={creating ? "new-feature" : editingFeature.id}
+                  feature={editingFeature}
+                  onSubmit={(values) =>
+                    handleSaveFeature(values, editingFeature ? editingFeature.id : null)
+                  }
+                  onCancel={() => {
+                    setCreating(false);
+                    setEditingFeature(null);
+                  }}
+                  isSaving={isSaving}
+                  title={creating ? "Nova feature" : "Editar feature"}
+                />
+              </Modal>
             )}
 
-            {editingFeature && (
-              <FeatureForm
-                key={editingFeature.id}
-                feature={editingFeature}
-                onSubmit={(values) =>
-                  handleSaveFeature(values, editingFeature.id)
-                }
-                onCancel={() => setEditingFeature(null)}
-                isSaving={isSaving}
-                title="Editar feature"
-              />
+            {deleteCandidate && (
+              <Modal
+                title="Confirmar exclusão"
+                onClose={() => setDeleteCandidate(null)}
+              >
+                <p className={styles.confirmText}>
+                  Deseja realmente excluir a feature{" "}
+                  <strong>{deleteCandidate.name}</strong>? Essa ação não poderá
+                  ser desfeita pela interface.
+                </p>
+                <div className={styles.formActions}>
+                  <Button
+                    type="button"
+                    variant="danger"
+                    icon="fa-trash-alt"
+                    onClick={confirmDeleteFeature}
+                  >
+                    Excluir feature
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    icon="fa-times"
+                    onClick={() => setDeleteCandidate(null)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </Modal>
             )}
 
             <section
@@ -445,7 +480,7 @@ function AdminFeaturesPage() {
                                     className={`${styles.iconButton} ${styles.deleteButton}`}
                                     title="Excluir feature"
                                     aria-label={`Excluir feature ${feature.name}`}
-                                    disabled={isSaving || creating}
+                                    disabled={isSaving}
                                     onClick={() => handleDeleteFeature(feature)}
                                   >
                                     <i
