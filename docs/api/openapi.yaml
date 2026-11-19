@@ -324,7 +324,7 @@ paths:
       tags: [Admin]
       operationId: updateAdminUser
       summary: Atualiza dados e permissões de um usuário
-      description: Exige update:user:others e permite alterar qualquer conta, inclusive a própria conta do administrador. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
+      description: Exige update:user:others e permite alterar somente outras contas; tentativas de alterar a própria conta são rejeitadas. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
       x-required-feature: update:user:others
       security:
         - SessionCookie: []
