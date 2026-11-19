@@ -532,14 +532,24 @@ function UserEditor({ user, onUpdated, onCancel }) {
                 <h4>{group}</h4>
                 <div className={styles.featureList}>
                   {groupFeatures.map((feature) => (
-                    <label className={styles.featureOption} key={feature.name}>
+                    <label
+                      className={`${styles.featureOption} ${
+                        feature.editable === false ? styles.featureOptionLocked : ""
+                      }`}
+                      key={feature.name}
+                    >
                       <input
                         type="checkbox"
                         checked={form.features.includes(feature.name)}
                         onChange={() => toggleFeature(feature.name)}
                         disabled={isSaving || feature.editable === false}
                       />
-                      <span className={styles.switch} aria-hidden="true"></span>
+                      <span
+                        className={`${styles.switch} ${
+                          feature.editable === false ? styles.switchLocked : ""
+                        }`}
+                        aria-hidden="true"
+                      ></span>
                       <span className={styles.featureText}>
                         <strong>{feature.label}</strong>
                         <small>{feature.description}</small>

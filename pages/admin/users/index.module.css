@@ -3,6 +3,13 @@
   max-width: 1040px;
 }
 
+.badge {
+  display: table;
+  margin-right: auto;
+  margin-bottom: 18px;
+  margin-left: auto;
+}
+
 .card h1 {
   margin-bottom: 10px;
   color: var(--text-primary);
@@ -277,6 +284,21 @@
   background: var(--accent-soft);
 }
 
+.featureOptionLocked {
+  cursor: not-allowed;
+  border-style: dashed;
+  background: var(--bg-card);
+}
+
+.featureOptionLocked:has(input:checked) {
+  border-color: var(--border-color);
+  background: var(--bg-card);
+}
+
+.featureOptionLocked .featureText strong {
+  color: var(--text-secondary);
+}
+
 .featureOption > input {
   position: absolute;
   width: 1px;
@@ -307,8 +329,41 @@
   transition: transform var(--transition-fast);
 }
 
+.switchLocked {
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  opacity: 0.8;
+}
+
+.switchLocked::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  width: 6px;
+  height: 5px;
+  border: 1.5px solid var(--text-faint);
+  border-bottom: 0;
+  border-radius: 5px 5px 0 0;
+}
+
+.switchLocked::after {
+  top: 8px;
+  right: 4px;
+  left: auto;
+  width: 8px;
+  height: 7px;
+  border-radius: 1px;
+  background: var(--text-faint);
+  transform: none;
+}
+
 .featureOption input:checked + .switch {
   background: var(--accent);
+}
+
+.featureOptionLocked input:checked + .switchLocked {
+  background: var(--bg-card);
 }
 
 .featureOption input:checked + .switch::after {
