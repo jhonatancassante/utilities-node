@@ -93,7 +93,7 @@ Assim, a conta pode iniciar sessões, consultar a própria sessão autenticada e
 
 ## Login
 
-`POST /api/v1/sessions` recebe um objeto JSON com `email` e `password`, ambos como strings não vazias. Corpo ausente, `null`, array, valor primitivo, campos ausentes, vazios ou com tipo diferente de string retornam `400 ValidationError`.
+`POST /api/v1/sessions` recebe um objeto JSON com `email` e `password`, ambos como strings não vazias. Corpo ausente, `null`, array, valor primitivo, campos ausentes, vazios ou com tipo diferente de string retornam `400 ValidationError`. Espaços no início e no fim do e-mail são removidos antes da consulta.
 
 1. `models/authentication.js` procura o usuário pelo e-mail, sem diferenciar maiúsculas de minúsculas.
 2. A senha é comparada com o hash armazenado.
