@@ -6,10 +6,7 @@ import AppHead from "@/components/AppHead";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
-import {
-  getAvailableAdminSections,
-  hasAdminAccess,
-} from "@/configs/admin.js";
+import { getAvailableAdminSections, hasAdminAccess } from "@/configs/admin.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -61,8 +58,8 @@ function AdminPage() {
               <span className={shared.badge}>ÁREA RESTRITA</span>
               <h1>Administração</h1>
               <p className={styles.description}>
-                Selecione uma área para administrar os recursos disponíveis
-                de acordo com suas permissões.
+                Selecione uma área para administrar os recursos disponíveis de
+                acordo com suas permissões.
               </p>
 
               <div className={styles.sections}>
