@@ -402,9 +402,11 @@ function UserEditor({
   }
 
   async function handleDelete() {
-    const confirmed = window.confirm(
-      `Tem certeza de que deseja remover o usuário "${user.username}"? Essa ação não poderá ser desfeita.`,
-    );
+    const confirmationMessage = [
+      `Tem certeza de que deseja remover o usuário "${user.username}"?`,
+      "Essa ação não poderá ser desfeita.",
+    ].join(" ");
+    const confirmed = window.confirm(confirmationMessage);
     if (!confirmed) return;
 
     setIsDeleting(true);
