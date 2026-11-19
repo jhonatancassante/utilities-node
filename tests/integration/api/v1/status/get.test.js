@@ -26,7 +26,7 @@ describe("GET /api/v1/status", () => {
     });
   });
 
-  describe("Usuário autenticado", () => {
+  describe("Usuário padrão", () => {
     test("Obtendo o status atual do sistema", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);

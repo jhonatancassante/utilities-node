@@ -5,13 +5,13 @@ import session from "@/models/session.js";
 import user from "@/models/user.js";
 import authorization from "@/models/authorization.js";
 import {
+  ConfigurationError,
+  ForbiddenError,
   InternalServerError,
   MethodNotAllowedError,
   NotFoundError,
   UnauthorizedError,
   ValidationError,
-  ConfigurationError,
-  ForbiddenError,
 } from "@/infra/errors.js";
 
 function createController(handlers, { middlewares = [] } = {}) {
@@ -124,9 +124,6 @@ async function injectAnonymousOrUser(request, response, next) {
   return next();
 }
 
-// Para rotas públicas que não devem falhar por causa de um cookie antigo
-// (ex.: login). Se a sessão do cookie for inválida ou expirada, a requisição
-// segue como anônima e o cookie inválido é removido.
 async function injectUserOrAnonymousOnInvalidSession(request, response, next) {
   if (!request.cookies?.session_id) {
     injectAnonymousUser(request);

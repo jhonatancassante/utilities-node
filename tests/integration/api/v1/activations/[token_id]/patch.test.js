@@ -236,7 +236,7 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
     });
   });
 
-  describe("Usuário autenticado", () => {
+  describe("Usuário padrão", () => {
     test("Com um token válido mas de um usuário já logado", async () => {
       const user1 = await orchestrator.createUser();
       await orchestrator.activateUser(user1);

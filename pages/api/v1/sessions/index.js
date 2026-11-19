@@ -3,7 +3,7 @@ import authentication from "@/models/authentication.js";
 import session from "@/models/session.js";
 import authorization from "@/models/authorization.js";
 
-import { ForbiddenError } from "@/infra/errors.js";
+import { ForbiddenError, ValidationError } from "@/infra/errors.js";
 
 export default controller.createController(
   {
@@ -15,6 +15,14 @@ export default controller.createController(
 
 async function postHandler(request, response) {
   const userInputValues = request.body;
+
+  if (!userInputValues.email || !userInputValues.password) {
+    throw new ValidationError({
+      message: "Email e senha são obrigatórios para fazer login.",
+      action:
+        "Verifique se você enviou os campos corretamente e tente novamente.",
+    });
+  }
 
   const authenticatedUser = await authentication.getUser(
     userInputValues.email,
