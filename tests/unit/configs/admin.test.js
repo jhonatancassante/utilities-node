@@ -1,7 +1,4 @@
-import {
-  getAvailableAdminSections,
-  hasAdminAccess,
-} from "@/configs/admin.js";
+import { getAvailableAdminSections, hasAdminAccess } from "@/configs/admin.js";
 
 describe("configs/admin.js", () => {
   describe(".hasAdminAccess()", () => {
