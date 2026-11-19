@@ -69,7 +69,7 @@ As rotas que usam `injectAnonymousOrUser` recebem um usuário em `request.contex
 - Um token inválido ou expirado gera `UnauthorizedError` nas rotas que usam esse middleware. O middleware `injectUserOrAnonymousOnInvalidSession` (usado em `POST /api/v1/sessions`, `POST /api/v1/users`, `PATCH /api/v1/activations/{token_id}` e `GET /api/v1/status`) trata sessões inexistentes ou expiradas como visitante anônimo e remove o cookie antigo. `DELETE /api/v1/sessions` também usa esse middleware, mas o próprio handler ainda exige uma sessão válida para concluir o logout.
 - `canRequest(feature)` verifica a feature necessária e gera `ForbiddenError` quando não há permissão.
 
-O model `authorization.js` mantém o catálogo de features e a função `can(user, feature, resource)`. Para atualização de usuário, a autorização considera o recurso: o próprio usuário pode ser atualizado com `update:user`; outro usuário exige `update:user:others`.
+O catálogo de permissões fica em `configs/features.js` e é importado por `models/authorization.js`, que implementa a função `can(user, feature, resource)`. Para atualização de usuário, a autorização considera o recurso: o próprio usuário pode ser atualizado com `update:user`; outro usuário exige `update:user:others`.
 
 A função `filterOutput(user, feature, resource)` controla os campos que podem ser enviados em cada resposta. A representação pública de usuário não inclui e-mail ou hash de senha; a representação privada do próprio usuário inclui e-mail, mas não senha. A representação de sessão não inclui o token: ele é enviado exclusivamente no cookie `session_id`, configurado como `HttpOnly`.
 
@@ -77,7 +77,7 @@ A função `filterOutput(user, feature, resource)` controla os campos que podem 
 
 A interface fica em `pages/admin/`. O menu do avatar exibe o acesso à administração quando o usuário possui ao menos uma feature listada como privilegiada em `configs/features.js`. As opções disponíveis são registradas em `configs/admin.js`, cada uma com sua própria `requiredFeature`; adicionar uma nova seção exige incluir seu registro e sua página/endpoint correspondente.
 
-A área de gerenciamento de usuários exige `update:user:others` tanto na interface quanto nos endpoints `pages/api/v1/admin/users`. A pesquisa retorna até dez contas por trecho de username ou e-mail. O editor permite alterar username, e-mail, senha e a lista completa de features. O catálogo de permissões é compartilhado entre o backend e a interface. A remoção é transacional e elimina sessões e tokens de ativação associados; a própria conta não pode ser removida pelo painel.
+A área de gerenciamento de usuários exige `update:user:others` tanto na interface quanto nos endpoints `pages/api/v1/admin/users`. A pesquisa retorna até dez contas por trecho de username ou e-mail. O editor permite alterar username, e-mail, senha e a lista completa de features. O catálogo de permissões é compartilhado entre o backend e a interface. A remoção é transacional e elimina sessões e tokens de ativação associados. A própria conta não aparece na pesquisa e não pode ser alterada ou removida pelo painel.
 
 ### Features conhecidas
 
