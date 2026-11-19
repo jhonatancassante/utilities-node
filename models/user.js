@@ -227,7 +227,9 @@ async function update(
 
     if (unknownFeatures.length > 0) {
       throw new ValidationError({
-        message: `As features a seguir não são reconhecidas: ${unknownFeatures.join(", ")}.`,
+        message: `As features a seguir não são reconhecidas: ${unknownFeatures.join(
+          ", ",
+        )}.`,
         action: "Selecione apenas features disponíveis no sistema.",
       });
     }
@@ -302,7 +304,9 @@ function pickUpdatableFields(
 
   if (unknownFields.length > 0) {
     throw new ValidationError({
-      message: `Os campos a seguir não podem ser alterados: ${unknownFields.join(", ")}.`,
+      message: `Os campos a seguir não podem ser alterados: ${unknownFields.join(
+        ", ",
+      )}.`,
       action: allowFeatures
         ? "Envie apenas username, email, password e features."
         : "Envie apenas username, email e password.",
