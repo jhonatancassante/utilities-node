@@ -18,7 +18,9 @@ import { hasAdminAccess } from "@/configs/admin.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./usuarios.module.css";
 
-const featureGroups = [...new Set(featureCatalog.map((feature) => feature.group))];
+const featureGroups = [
+  ...new Set(featureCatalog.map((feature) => feature.group)),
+];
 
 function AdminUsersPage() {
   const router = useRouter();
@@ -38,8 +40,11 @@ function AdminUsersPage() {
       router.replace("/login");
     }
     if (!isLoading && user && !user.features.includes("update:user:others")) {
-      if (hasAdminAccess(user)) router.replace("/admin");
-      else router.replace("/perfil");
+      if (hasAdminAccess(user)) {
+        router.replace("/admin");
+      } else {
+        router.replace("/perfil");
+      }
     }
   }, [error, isLoading, router, user]);
 
@@ -137,7 +142,9 @@ function AdminUsersPage() {
     );
   }
 
-  if (!user || !user.features.includes("update:user:others")) return null;
+  if (!user || !user.features.includes("update:user:others")) {
+    return null;
+  }
 
   return (
     <>
@@ -199,7 +206,10 @@ function AdminUsersPage() {
             )}
 
             {results.length > 0 && (
-              <section className={styles.results} aria-label="Resultados da pesquisa">
+              <section
+                className={styles.results}
+                aria-label="Resultados da pesquisa"
+              >
                 <div className={styles.sectionHeading}>
                   <h2>Resultados</h2>
                   <span>{results.length} usuário(s)</span>
@@ -209,7 +219,11 @@ function AdminUsersPage() {
                     <li key={result.id}>
                       <button
                         type="button"
-                        className={`${styles.userResult} ${selectedUser?.id === result.id ? styles.userResultActive : ""}`}
+                        className={`${styles.userResult} ${
+                          selectedUser?.id === result.id
+                            ? styles.userResultActive
+                            : ""
+                        }`}
                         onClick={() => handleSelectUser(result.username)}
                       >
                         <span className={styles.userAvatar} aria-hidden="true">
@@ -219,7 +233,10 @@ function AdminUsersPage() {
                           <strong>{result.username}</strong>
                           <small>{result.email}</small>
                         </span>
-                        <i className="fas fa-chevron-right" aria-hidden="true"></i>
+                        <i
+                          className="fas fa-chevron-right"
+                          aria-hidden="true"
+                        ></i>
                       </button>
                     </li>
                   ))}
@@ -253,7 +270,13 @@ function AdminUsersPage() {
   );
 }
 
-function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
+function UserEditor({
+  user,
+  currentUserId,
+  onUpdated,
+  onDeleted,
+  onCancel,
+}) {
   const [form, setForm] = useState({
     username: user.username,
     email: user.email,
@@ -363,7 +386,10 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
         features: [...updatedUser.features],
       });
       onUpdated(updatedUser);
-      setFeedback({ type: "success", message: "Alterações salvas com sucesso." });
+      setFeedback({
+        type: "success",
+        message: "Alterações salvas com sucesso.",
+      });
     } catch (requestError) {
       setFeedback({
         type: "error",
@@ -454,12 +480,17 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
                 type="password"
                 autoComplete="new-password"
                 value={form.password}
-                onChange={(event) => updateField("password", event.target.value)}
+                onChange={(event) =>
+                  updateField("password", event.target.value)
+                }
                 disabled={isSaving || isDeleting}
               />
             </div>
             <div className={styles.field}>
-              <label className={shared.label} htmlFor="edit-password-confirmation">
+              <label
+                className={shared.label}
+                htmlFor="edit-password-confirmation"
+              >
                 Confirmar nova senha
               </label>
               <input
@@ -516,7 +547,10 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
                         onChange={() => toggleFeature(feature.name)}
                         disabled={isSaving || isDeleting}
                       />
-                      <span className={styles.switch} aria-hidden="true"></span>
+                      <span
+                        className={styles.switch}
+                        aria-hidden="true"
+                      ></span>
                       <span className={styles.featureText}>
                         <strong>{feature.label}</strong>
                         <small>{feature.description}</small>
@@ -548,7 +582,11 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
         )}
 
         <div className={styles.formActions}>
-          <Button type="submit" icon="fa-save" disabled={isSaving || isDeleting}>
+          <Button
+            type="submit"
+            icon="fa-save"
+            disabled={isSaving || isDeleting}
+          >
             {isSaving ? "Salvando..." : "Salvar alterações"}
           </Button>
           <Button
@@ -566,7 +604,10 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
       <div className={styles.dangerZone}>
         <div>
           <strong>Remover usuário</strong>
-          <small>Remove a conta e encerra todas as sessões e tokens de ativação associados.</small>
+          <small>
+            Remove a conta e encerra todas as sessões e tokens de ativação
+            associados.
+          </small>
         </div>
         <Button
           type="button"
