@@ -72,11 +72,17 @@ As páginas de ferramentas seguem a estrutura `pages/tools/<slug>/index.js`, com
 
 O Gerador de QR Code executa a validação da URL e a renderização no navegador. A captura para PNG usa `html2canvas`, importado dinamicamente para não incluir a dependência no carregamento inicial.
 
-O Unificador de PDF combina dois ou mais arquivos com `pdf-lib`, ordena os nomes com comparação numérica natural e oferece a inclusão de uma página em branco ao final de cada arquivo com quantidade ímpar de páginas. O processamento também ocorre no navegador.\n\nO Divisor de PDF processa os arquivos no navegador com `pdf-lib` (extração das páginas) e `jszip` (ZIP quando há mais de um arquivo), ambos importados dinamicamente.
+O Unificador de PDF combina dois ou mais arquivos com `pdf-lib`, ordena os nomes com comparação numérica natural e oferece a inclusão de uma página em branco ao final de cada arquivo com quantidade ímpar de páginas. O processamento também ocorre no navegador.
+
+O Divisor de PDF processa os arquivos no navegador com `pdf-lib` (extração das páginas) e `jszip` (ZIP quando há mais de um arquivo), ambos importados dinamicamente.
 
 Os conversores de CSV e JSON processam os arquivos no navegador com Papa Parse. O Conversor de JSON para CSV aceita listas de objetos, listas de valores simples, objetos únicos e objetos que contenham uma única propriedade array. A seleção de colunas, o delimitador e a codificação do arquivo de saída são controlados na interface.
 
-O Conversor de TXT para CSV interpreta relatórios de largura fixa: identifica o cabeçalho na primeira ou segunda linha, usa as posições das colunas para separar os registros e detecta UTF-8 ou Windows-1252. A interface permite escolher o separador do CSV, incluir BOM UTF-8, remover a hora de datas e trocar a vírgula decimal por ponto. A prévia mostra até 15 linhas e sinaliza registros possivelmente desalinhados.\n\nO Gerador de AR e Etiquetas consulta CEP pelo ViaCEP e listas de UFs e municípios pela API do IBGE. Os dados são organizados na interface e convertidos em PDF no navegador, com ARs e etiquetas de endereçamento. Como o resultado é destinado à impressão, confira alinhamento e dimensões em escala real. A página do Diário Oficial exibe o PDF estático por meio do leitor do navegador e disponibiliza o download; ela usa `noindex, nofollow`.\n\n
+O Conversor de TXT para CSV interpreta relatórios de largura fixa: identifica o cabeçalho na primeira ou segunda linha, usa as posições das colunas para separar os registros e detecta UTF-8 ou Windows-1252. A interface permite escolher o separador do CSV, incluir BOM UTF-8, remover a hora de datas e trocar a vírgula decimal por ponto. A prévia mostra até 15 linhas e sinaliza registros possivelmente desalinhados.
+
+O Gerador de AR e Etiquetas consulta CEP pelo ViaCEP e listas de UFs e municípios pela API do IBGE. Os dados são organizados na interface e convertidos em PDF no navegador, com ARs e etiquetas de endereçamento. Como o resultado é destinado à impressão, confira alinhamento e dimensões em escala real. A página do Diário Oficial exibe o PDF estático por meio do leitor do navegador e disponibiliza o download; ela usa `noindex, nofollow`.
+
+
 
 ## Scripts npm
 
@@ -151,7 +157,9 @@ Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm 
 - `tests/unit/infra/`: testes unitários de `errors`, `database` e `controller`. Os testes de integração de `database.transaction()` e `activation.activate()` ficam em `tests/integration/infra/` e `tests/integration/models/`.
 - `tests/unit/lib/client/` e `tests/unit/lib/shared/`: testes unitários do cliente HTTP, sessão, ativação, arquivos e validação de usuário.
 - `tests/unit/features/qr-code/lib/`: testes unitários da normalização de URLs e da formatação do timestamp usado nos downloads.
-- `tests/unit/features/pdf-splitter/lib/`: testes unitários das regras de validação, seleção de arquivos, extração de páginas e geração dos arquivos PDF e ZIP.\n- `tests/unit/features/pdf-merger/lib/`: testes unitários para seleção, ordenação e unificação de PDFs, incluindo a inclusão opcional de páginas em branco.\n- `tests/unit/features/ar-generator/lib/`: testes unitários para os códigos de barras Code 128 e a geração de ARs e etiquetas em PDF.
+- `tests/unit/features/pdf-splitter/lib/`: testes unitários das regras de validação, seleção de arquivos, extração de páginas e geração dos arquivos PDF e ZIP.
+- `tests/unit/features/pdf-merger/lib/`: testes unitários para seleção, ordenação e unificação de PDFs, incluindo a inclusão opcional de páginas em branco.
+- `tests/unit/features/ar-generator/lib/`: testes unitários para os códigos de barras Code 128 e a geração de ARs e etiquetas em PDF.
 - `tests/unit/features/csv-to-json/lib/`: testes unitários da interpretação de CSV e geração de JSON.
 - `tests/unit/features/json-to-csv/lib/`: testes unitários da normalização do JSON, coleta de colunas, conversão de valores, geração do CSV e codificação Latin1.
 - `tests/unit/features/txt-to-csv/lib/`: testes unitários da detecção de codificação, interpretação de colunas de largura fixa, formatação de valores e geração do CSV.
