@@ -177,7 +177,11 @@ async function search(searchTerm) {
   return results.rows;
 }
 
-async function update(username, userInputValues, { allowFeatures = false } = {}) {
+async function update(
+  username,
+  userInputValues,
+  { allowFeatures = false } = {},
+) {
   const currentUser = await findOneByUsername(username);
   const allowedInputValues = pickUpdatableFields(userInputValues, {
     allowFeatures,
@@ -273,7 +277,10 @@ async function update(username, userInputValues, { allowFeatures = false } = {})
   }
 }
 
-function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
+function pickUpdatableFields(
+  userInputValues,
+  { allowFeatures = false } = {},
+) {
   const isPlainObject =
     userInputValues !== null &&
     typeof userInputValues === "object" &&
