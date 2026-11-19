@@ -1,0 +1,150 @@
+/* styles/shared.module.css */
+
+/* Área central da página (entre cabeçalho e rodapé) */
+.container {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+}
+
+.containerUltraWide {
+  max-width: 1280px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.card.cardUltraWide {
+  max-width: 1120px;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  padding: 56px 48px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* Marcas de canto em "esquadro de prancheta": assinatura visual do site */
+.card::before,
+.card::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--accent);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.card::before {
+  top: 12px;
+  left: 12px;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 4px 0 0 0;
+}
+
+.card::after {
+  right: 12px;
+  bottom: 12px;
+  border-left: none;
+  border-top: none;
+  border-radius: 0 0 4px 0;
+}
+
+.card strong {
+  color: var(--accent);
+}
+
+.icon {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  font-size: 38px;
+}
+
+.badge {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 20px 16px;
+  }
+  .card {
+    padding: 40px 24px;
+  }
+}
+
+/* ---------- Elementos de formulário reutilizáveis pelas ferramentas ---------- */
+.label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 16px;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.input:focus-visible {
+  border-color: var(--accent);
+}
+
+.inputInvalid {
+  border-color: var(--danger);
+}
+
+.errorText {
+  margin-top: 8px;
+  color: var(--danger-fg);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.infoBox {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background-color: var(--info-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+}

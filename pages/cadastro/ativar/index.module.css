@@ -1,0 +1,91 @@
+/* pages/cadastro/ativar/index.module.css */
+.card {
+  max-width: 540px;
+  text-align: center;
+}
+
+.card h1 {
+  margin-bottom: 16px;
+  color: var(--text-primary);
+  font-size: 32px;
+  line-height: 1.2;
+}
+
+.successIcon {
+  color: var(--success-fg);
+}
+
+.errorIcon {
+  color: var(--danger-fg);
+}
+
+.loadingIcon {
+  color: var(--accent);
+}
+
+.message {
+  margin: 0 auto;
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.message p {
+  margin-bottom: 14px;
+}
+
+.hint {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.errorMessage {
+  color: var(--danger-fg);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color var(--transition-fast);
+}
+
+.backLink + .backLink {
+  margin-left: 12px;
+}
+
+.backLink:hover {
+  background: var(--border-color);
+}
+
+.backLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .backLink {
+    width: 100%;
+  }
+
+  .backLink + .backLink {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .card h1 {
+    font-size: 28px;
+  }
+}

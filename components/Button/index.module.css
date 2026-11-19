@@ -1,0 +1,69 @@
+/* components/Button/index.module.css */
+.button {
+  min-height: 44px;
+  padding: 12px 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.primary {
+  background-color: var(--accent);
+}
+
+.primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.danger {
+  background-color: var(--danger);
+}
+
+.danger:hover {
+  background-color: #b92e32;
+}
+
+.success {
+  background-color: var(--success);
+}
+
+.success:hover {
+  filter: brightness(0.92);
+}
+
+.outline {
+  border: 2px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+}
+
+.outline:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* No tema escuro o acento é claro: texto escuro mantém o contraste. */
+:global([data-theme="dark"]) .primary {
+  color: #0b1526;
+}

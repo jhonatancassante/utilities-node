@@ -1,0 +1,193 @@
+/* pages/status/index.module.css */
+.card {
+  text-align: left;
+}
+
+.card h1 {
+  margin: 0 0 20px;
+  color: var(--text-primary);
+  font-size: 32px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.card p {
+  margin: 0 0 12px;
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.secondaryText {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.card small {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  display: block;
+  text-align: center;
+  margin-top: 24px;
+}
+
+/* Barra de carregamento */
+
+@keyframes loadingSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.progress {
+  width: 100%;
+  height: 8px;
+  margin: 24px 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border-color);
+  position: relative;
+}
+
+.progressBar {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  animation: loadingSlide 1.5s infinite ease-in-out;
+}
+
+/* Variantes do badge principal (base em shared.module.css) */
+
+.badgeSuccess {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.badgeWarning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.badgeError {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+/* Caixa de métricas */
+
+.metricsBox {
+  background: var(--box-bg);
+  border: 1px solid var(--box-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.metricsBoxTitle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+
+.metricsBoxError {
+  background: var(--danger-box-bg);
+  border: 1px solid var(--danger-box-border);
+  color: var(--danger-fg);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin: 24px 0;
+  text-align: center;
+}
+
+.metricsBoxError p {
+  margin: 0;
+  color: var(--danger-fg);
+}
+
+.metricRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.metricRow span {
+  display: flex;
+  align-items: center;
+}
+
+/* Tags (OK / CARGA ALTA / ERROR) */
+
+.tagSuccess,
+.tagWarning,
+.tagError {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 8px;
+  letter-spacing: 0.5px;
+}
+
+.tagSuccess {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.tagWarning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.tagError {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+/* Badges de valor: base + variantes só com cor */
+
+.valueBadge {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.valueBadgeSuccess {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+.valueBadgeWarning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.valueBadgeError {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+
+@media (max-width: 600px) {
+  .card h1 {
+    font-size: 26px;
+  }
+}
