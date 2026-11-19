@@ -39,14 +39,18 @@ function StatusMessage({ type = "info", children, action }) {
   if (type === "error") {
     return (
       <Modal
-        title="Não foi possível concluir"
+        title={
+          <span className={styles.errorTitle}>
+            <i className="fas fa-exclamation-circle" aria-hidden="true"></i>
+            <span>Não foi possível concluir</span>
+          </span>
+        }
         onClose={() => setVisible(false)}
         closeOnBackdrop={false}
         closeOnEscape={false}
         showCloseButton={false}
       >
         <div className={styles.errorDialog} role="alert">
-          <i className="fas fa-times-circle" aria-hidden="true"></i>
           <p>{children}</p>
           {action && <small>{action}</small>}
         </div>

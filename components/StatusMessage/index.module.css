@@ -82,31 +82,51 @@
   animation-duration: 6s;
 }
 
+.errorTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.errorTitle > i {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  font-size: 17px;
+}
+
 .errorDialog {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-align: center;
+  align-items: stretch;
+  gap: 10px;
+  text-align: left;
 }
-.errorDialog > i {
-  color: var(--danger-fg);
-  font-size: 38px;
-}
+
 .errorDialog p {
+  margin: 0;
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.65;
   overflow-wrap: anywhere;
 }
+
 .errorDialog small {
   color: var(--text-secondary);
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
+
 .errorActions {
   display: flex;
-  justify-content: center;
-  margin-top: 24px;
+  justify-content: flex-end;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-color);
 }
 
 @keyframes toast-progress {
