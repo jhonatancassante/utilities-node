@@ -12,15 +12,14 @@ async function getHandler(request, response) {
   const searchTerm = request.query.search;
   const users = await user.search(searchTerm);
 
-  const safeUsers = users
-    .map((userObject) => ({
-      id: userObject.id,
-      username: userObject.username,
-      email: userObject.email,
-      features: userObject.features,
-      created_at: userObject.created_at,
-      updated_at: userObject.updated_at,
-    }));
+  const safeUsers = users.map((userObject) => ({
+    id: userObject.id,
+    username: userObject.username,
+    email: userObject.email,
+    features: userObject.features,
+    created_at: userObject.created_at,
+    updated_at: userObject.updated_at,
+  }));
 
   return response.status(200).json(safeUsers);
 }
