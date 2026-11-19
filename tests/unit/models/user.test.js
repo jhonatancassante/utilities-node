@@ -165,11 +165,7 @@ describe("models/user.js", () => {
       ]);
       const features = ["update:user:others", "read:status:all"];
 
-      await user.update(
-        "UsuarioAtual",
-        { features },
-        { allowFeatures: true },
-      );
+      await user.update("UsuarioAtual", { features }, { allowFeatures: true });
 
       const [updateQuery] = getCallsContaining(querySpy, "UPDATE");
       expect(updateQuery.text).toContain("features = $5");
