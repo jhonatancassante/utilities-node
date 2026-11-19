@@ -27,7 +27,6 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 | `PATCH`  | `/api/v1/users/{username}`       | Feature `update:user`; próprio usuário ou `update:user:others`    |
 | `PATCH`  | `/api/v1/activations/{token_id}` | Feature `read:activation_token`                                   |
 | `POST`   | `/api/v1/sessions`               | Feature `create:session`                                          |
-| `DELETE` | `/api/v1/sessions`               | Sessão válida                                                     |
 | `GET`    | `/api/v1/user`                   | Sessão válida e feature `read:session`                            |
 
 ## Autorização e erros
@@ -124,7 +123,7 @@ Os endpoints administrativos exigem uma sessão válida e a feature `update:user
 
 ### `GET /api/v1/admin/users?search=...`
 
-Pesquisa usuários por trecho do nome de usuário ou do e-mail, sem diferenciar maiúsculas de minúsculas. O parâmetro `search` é obrigatório e deve conter ao menos dois caracteres. Retorna até 10 resultados com `id`, `username`, `email`, `features`, `created_at` e `updated_at`; o hash de senha nunca é enviado.
+Pesquisa usuários por trecho do nome de usuário ou do e-mail, sem diferenciar maiúsculas de minúsculas. O parâmetro `search` é obrigatório e deve conter ao menos dois caracteres. Retorna até 10 resultados com `id`, `username`, `email`, `features`, `created_at` e `updated_at`; não inclui a própria conta do administrador nem o hash de senha.
 
 ### `GET /api/v1/admin/users/{username}`
 
@@ -132,7 +131,7 @@ Consulta os dados administrativos de uma conta, incluindo e-mail e features, mas
 
 ### `PATCH /api/v1/admin/users/{username}`
 
-Permite alterar `username`, `email`, `password` e `features` de qualquer conta, inclusive a própria conta do administrador. A senha segue as mesmas regras de validação e hash do fluxo de edição do perfil. A lista de features é validada contra o catálogo central em `configs/features.js`; valores desconhecidos são rejeitados com `400 ValidationError`. A lista enviada substitui integralmente as permissões atuais, inclusive quando vazia. Campos omitidos permanecem inalterados.
+Permite alterar `username`, `email`, `password` e `features` de outras contas. A própria conta não pode ser alterada por esse endpoint; para isso, utilize o perfil. A senha segue as mesmas regras de validação e hash do fluxo de edição do perfil. A lista de features é validada contra o catálogo central em `configs/features.js`; valores desconhecidos são rejeitados com `400 ValidationError`. A lista enviada substitui integralmente as permissões atuais, inclusive quando vazia. Campos omitidos permanecem inalterados.
 
 Os endpoints administrativos retornam `403` quando a sessão não possui `update:user:others`, `404` quando o usuário alvo não existe e `400` quando a pesquisa ou os dados enviados são inválidos.
 
