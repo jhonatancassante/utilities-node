@@ -188,14 +188,14 @@ Sessão inexistente ou expirada resulta em `401`.
 
 Exige sessão válida e `read:session`. Retorna os dados privados do próprio usuário (`id`, `username`, `email`, `features`, `created_at`, `updated_at`), sem senha.
 
-A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica cabeçalho `Cache-Control` para impedir armazenamento em cache. Sessão inválida ou expirada resulta em `401`.
+A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica cabeçalho `Cache-Control` para impedir armazenamento em cache. Sem cookie, o visitante anônimo não possui `read:session` e recebe `403`; com cookie inválido ou sessão expirada, recebe `401`.
 
 ## Limitações conhecidas e observações de segurança
 
 - Não há _rate limiting_ para tentativas de login.
 - A validação de senha já exige de 12 a 64 caracteres, ao menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais, além de rejeitar os termos comuns listados em `lib/shared/user-validation.js`; não há verificação de vazamento em bases de senhas comprometidas.
 - A validação do corpo ainda não é uniforme em todos os endpoints. O login e a atualização de usuário verificam o formato do objeto, mas `POST /api/v1/users` não valida explicitamente um corpo de nível superior `null` ou ausente antes de acessar suas propriedades, o que pode resultar em `500`.
-- No cadastro, o e-mail é validado após `trim()`, mas o valor armazenado não é normalizado; a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
+- No cadastro, o e-mail é armazenado com a capitalização enviada (após `trim()`); a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
 - Um JSON sintaticamente inválido pode ser rejeitado pelo parser de corpo do Next.js antes de chegar ao controller; nesse caso, a resposta `400` pode não usar o envelope JSON padronizado da API.
 - A feature `read:status` consta no catálogo e é usada nos testes, mas a rota de status não possui middleware `canRequest`; o acesso ao endpoint permanece público. A feature `read:status:all` controla apenas a inclusão da versão do banco.
 - Não existe endpoint público para administração das features. A atribuição de permissões privilegiadas é feita internamente.
