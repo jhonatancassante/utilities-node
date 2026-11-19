@@ -27,7 +27,8 @@ export const featureCatalog = [
     name: "update:user:others",
     label: "Administrar outros usuários",
     group: "Privilégios",
-    description: "Permite pesquisar, alterar e remover outras contas e suas permissões.",
+    description:
+      "Permite pesquisar, alterar e remover outras contas e suas permissões.",
   },
   {
     name: "create:session",
@@ -69,10 +70,14 @@ export const featureCatalog = [
     name: "read:status:all",
     label: "Consultar status completo",
     group: "Privilégios",
-    description: "Permite visualizar informações completas, incluindo a versão do banco de dados.",
+    description:
+      "Permite visualizar informações completas, incluindo a versão do banco de dados.",
   },
 ];
 
 export const availableFeatures = featureCatalog.map((feature) => feature.name);
 
-export const privilegedFeatures = ["update:user:others", "read:status:all"];
+export const privilegedFeatures = [
+  "update:user:others",
+  "read:status:all",
+];
