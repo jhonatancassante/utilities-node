@@ -484,7 +484,6 @@ a.toolItem[aria-current="page"] {
   }
 }
 
-
 /* No tema claro, separa o acesso ao login do gradiente do cabeçalho. */
 @media (min-width: 861px) {
   :global(html:not([data-theme="dark"])) .loginLink {
