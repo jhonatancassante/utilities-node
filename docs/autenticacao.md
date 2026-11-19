@@ -151,7 +151,7 @@ O model `models/authorization.js` centraliza as permissões conhecidas. As featu
 | ----------------------- | ----------------------------------------------------------------------------------------------- |
 | `create:user`           | Permite iniciar um cadastro                                                                     |
 | `read:user`             | Permite obter a representação pública de um usuário                                             |
-| `read:user:self`        | Seleciona a representação privada do próprio usuário; não é concedida como feature independente |
+| `read:user:self`        | Seleciona a representação privada do próprio usuário em `filterOutput`; não é exigida por middleware de rota |
 | `update:user`           | Permite atualizar o próprio usuário                                                             |
 | `update:user:others`    | Permite atualizar usuários diferentes do próprio                                                |
 | `create:session`        | Permite criar uma sessão                                                                        |
