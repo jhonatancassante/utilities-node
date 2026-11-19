@@ -282,10 +282,7 @@ async function update(
   }
 }
 
-function pickUpdatableFields(
-  userInputValues,
-  { allowFeatures = false } = {},
-) {
+function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
   const isPlainObject =
     userInputValues !== null &&
     typeof userInputValues === "object" &&
