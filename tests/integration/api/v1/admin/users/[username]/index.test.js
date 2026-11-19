@@ -7,6 +7,10 @@ beforeAll(async () => {
   await orchestrator.runPendingMigrations();
 });
 
+function adminUserUrl(username) {
+  return `${orchestrator.API_URL}/admin/users/${username}`;
+}
+
 async function createPrivilegedSession() {
   const privilegedUser = await orchestrator.createUser();
   await orchestrator.activateUser(privilegedUser);
@@ -19,7 +23,7 @@ describe("GET /api/v1/admin/users/[username]", () => {
   describe("Usuário anônimo", () => {
     test("Consultando um usuário", async () => {
       const targetUser = await orchestrator.createUser();
-      const response = await fetch(`${orchestrator.API_URL}/admin/users/${targetUser.username}`);
+      const response = await fetch(adminUserUrl(targetUser.username));
       expect(response.status).toBe(403);
     });
   });
@@ -31,7 +35,7 @@ describe("GET /api/v1/admin/users/[username]", () => {
       const sessionObject = await orchestrator.createSession(standardUser);
       const targetUser = await orchestrator.createUser();
 
-      const response = await fetch(`${orchestrator.API_URL}/admin/users/${targetUser.username}`, {
+      const response = await fetch(adminUserUrl(targetUser.username), {
         headers: { Cookie: `session_id=${sessionObject.token}` },
       });
       expect(response.status).toBe(403);
@@ -39,11 +43,11 @@ describe("GET /api/v1/admin/users/[username]", () => {
   });
 
   describe("Usuário privilegiado", () => {
-    test("Consultando os dados de outro usuário sem expor a senha", async () => {
+    test("Consultando outro usuário sem expor a senha", async () => {
       const { sessionObject } = await createPrivilegedSession();
       const targetUser = await orchestrator.createUser();
 
-      const response = await fetch(`${orchestrator.API_URL}/admin/users/${targetUser.username}`, {
+      const response = await fetch(adminUserUrl(targetUser.username), {
         headers: { Cookie: `session_id=${sessionObject.token}` },
       });
       expect(response.status).toBe(200);
@@ -64,7 +68,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
   describe("Usuário anônimo", () => {
     test("Alterando os dados e as permissões de um usuário", async () => {
       const targetUser = await orchestrator.createUser();
-      const response = await fetch(`${orchestrator.API_URL}/admin/users/${targetUser.username}`, {
+      const response = await fetch(adminUserUrl(targetUser.username), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: "changedByAnonymous" }),
@@ -80,7 +84,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       const sessionObject = await orchestrator.createSession(standardUser);
       const targetUser = await orchestrator.createUser();
 
-      const response = await fetch(`${orchestrator.API_URL}/admin/users/${targetUser.username}`, {
+      const response = await fetch(adminUserUrl(targetUser.username), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +101,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       const { sessionObject } = await createPrivilegedSession();
       const targetUser = await orchestrator.createUser();
 
-      const response = await fetch(`${orchestrator.API_URL}/admin/users/${targetUser.username}`, {
+      const response = await fetch(adminUserUrl(targetUser.username), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -114,7 +118,10 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       const responseBody = await response.json();
       expect(responseBody.username).toBe("adminUpdatedUsername");
       expect(responseBody.email).toBe("admin-updated@example.com");
-      expect(responseBody.features).toEqual(["update:user:others", "read:status:all"]);
+      expect(responseBody.features).toEqual([
+        "update:user:others",
+        "read:status:all",
+      ]);
       expect(responseBody).not.toHaveProperty("password");
 
       const updatedUser = await user.findOneById(targetUser.id);
@@ -126,7 +133,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       const { privilegedUser, sessionObject } = await createPrivilegedSession();
 
       const response = await fetch(
-        `${orchestrator.API_URL}/admin/users/${privilegedUser.username}`,
+        adminUserUrl(privilegedUser.username),
         {
           method: "PATCH",
           headers: {
@@ -142,7 +149,8 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({
         name: "ValidationError",
-        message: "Não é permitido alterar a própria conta pelo painel administrativo.",
+        message:
+          "Não é permitido alterar a própria conta pelo painel administrativo.",
         action: "Utilize a página Meu perfil para alterar seus próprios dados.",
         status_code: 400,
       });
@@ -152,7 +160,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       const { sessionObject } = await createPrivilegedSession();
       const targetUser = await orchestrator.createUser();
 
-      const response = await fetch(`${orchestrator.API_URL}/admin/users/${targetUser.username}`, {
+      const response = await fetch(adminUserUrl(targetUser.username), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -174,7 +182,7 @@ describe("DELETE /api/v1/admin/users/[username]", () => {
   describe("Usuário anônimo", () => {
     test("Removendo um usuário", async () => {
       const targetUser = await orchestrator.createUser();
-      const response = await fetch(`${orchestrator.API_URL}/admin/users/${targetUser.username}`, {
+      const response = await fetch(adminUserUrl(targetUser.username), {
         method: "DELETE",
       });
       expect(response.status).toBe(403);
@@ -188,7 +196,7 @@ describe("DELETE /api/v1/admin/users/[username]", () => {
       const sessionObject = await orchestrator.createSession(standardUser);
       const targetUser = await orchestrator.createUser();
 
-      const response = await fetch(`${orchestrator.API_URL}/admin/users/${targetUser.username}`, {
+      const response = await fetch(adminUserUrl(targetUser.username), {
         method: "DELETE",
         headers: { Cookie: `session_id=${sessionObject.token}` },
       });
@@ -202,7 +210,7 @@ describe("DELETE /api/v1/admin/users/[username]", () => {
       const targetUser = await orchestrator.createUser();
       await orchestrator.createSession(targetUser);
 
-      const response = await fetch(`${orchestrator.API_URL}/admin/users/${targetUser.username}`, {
+      const response = await fetch(adminUserUrl(targetUser.username), {
         method: "DELETE",
         headers: { Cookie: `session_id=${sessionObject.token}` },
       });
@@ -212,14 +220,15 @@ describe("DELETE /api/v1/admin/users/[username]", () => {
 
     test("Tentando remover a própria conta", async () => {
       const { privilegedUser, sessionObject } = await createPrivilegedSession();
-      const response = await fetch(`${orchestrator.API_URL}/admin/users/${privilegedUser.username}`, {
+      const response = await fetch(adminUserUrl(privilegedUser.username), {
         method: "DELETE",
         headers: { Cookie: `session_id=${sessionObject.token}` },
       });
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({
         name: "ValidationError",
-        message: "Não é permitido remover a própria conta pelo painel administrativo.",
+        message:
+          "Não é permitido remover a própria conta pelo painel administrativo.",
         action: "Utilize outra conta privilegiada para remover este usuário.",
         status_code: 400,
       });
