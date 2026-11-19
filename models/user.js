@@ -276,7 +276,6 @@ async function update(
           "Uma feature não removível pode ser atribuída, mas não pode ser retirada depois.",
       });
     }
-
   }
 
   const userWithNewValues = { ...currentUser, ...allowedInputValues };
