@@ -226,10 +226,13 @@ async function update(
     );
 
     if (unknownFeatures.length > 0) {
+      const message = [
+        "As features a seguir não são reconhecidas:",
+        unknownFeatures.join(", "),
+      ].join(" ");
+
       throw new ValidationError({
-        message: `As features a seguir não são reconhecidas: ${unknownFeatures.join(
-          ", ",
-        )}.`,
+        message: `${message}.`,
         action: "Selecione apenas features disponíveis no sistema.",
       });
     }
@@ -303,10 +306,13 @@ function pickUpdatableFields(
   );
 
   if (unknownFields.length > 0) {
+    const message = [
+      "Os campos a seguir não podem ser alterados:",
+      unknownFields.join(", "),
+    ].join(" ");
+
     throw new ValidationError({
-      message: `Os campos a seguir não podem ser alterados: ${unknownFields.join(
-        ", ",
-      )}.`,
+      message: `${message}.`,
       action: allowFeatures
         ? "Envie apenas username, email, password e features."
         : "Envie apenas username, email e password.",
