@@ -151,7 +151,7 @@ O model `models/authorization.js` centraliza as permissões conhecidas. As featu
 | ----------------------- | ------------------------------------------------------- |
 | `create:user`           | Permite iniciar um cadastro                             |
 | `read:user`             | Permite obter a representação pública de um usuário     |
-| `read:user:self`        | Permite obter dados privados do próprio usuário         |
+| `read:user:self`        | Seleciona a representação privada do próprio usuário; não é concedida como feature independente |
 | `update:user`           | Permite atualizar o próprio usuário                     |
 | `update:user:others`    | Permite atualizar usuários diferentes do próprio        |
 | `create:session`        | Permite criar uma sessão                                |
@@ -159,7 +159,7 @@ O model `models/authorization.js` centraliza as permissões conhecidas. As featu
 | `read:activation_token` | Permite utilizar o fluxo de ativação                    |
 | `create:migration`      | Permite aplicar migrations                              |
 | `read:migration`        | Permite consultar migrations pendentes                  |
-| `read:status`           | Identifica acesso de usuário ao status                  |
+| `read:status`           | Seleciona a representação do status; não restringe o endpoint público                          |
 | `read:status:all`       | Permite incluir a versão do banco na resposta de status |
 
 ### Perfis iniciais
