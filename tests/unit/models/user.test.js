@@ -158,6 +158,30 @@ describe("models/user.js", () => {
       ]);
     });
 
+    test("Com permissão administrativa, atualiza as features do usuário", async () => {
+      const querySpy = mockQueries([
+        ["SELECT", [existingUser]],
+        ["UPDATE", [existingUser]],
+      ]);
+      const features = ["update:user:others", "read:status:all"];
+
+      await user.update(
+        "UsuarioAtual",
+        { features },
+        { allowFeatures: true },
+      );
+
+      const [updateQuery] = getCallsContaining(querySpy, "UPDATE");
+      expect(updateQuery.text).toContain("features = $5");
+      expect(updateQuery.values).toEqual([
+        existingUser.id,
+        existingUser.username,
+        existingUser.email,
+        existingUser.password,
+        features,
+      ]);
+    });
+
     test("Com nome de usuário inválido", async () => {
       mockQueries([["SELECT", [existingUser]]]);
 
@@ -223,6 +247,25 @@ describe("models/user.js", () => {
       mockQueries([["SELECT", []]]);
 
       await expect(user.update("NaoExiste", {})).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe(".search()", () => {
+    test("Pesquisa por nome de usuário ou e-mail", async () => {
+      const querySpy = mockQueries([["SELECT", [existingUser]]]);
+
+      const results = await user.search("usuario");
+
+      expect(results).toEqual([existingUser]);
+      const [searchQuery] = querySpy.mock.calls.map(([query]) => query);
+      expect(searchQuery.values).toEqual(["%usuario%"]);
+      expect(searchQuery.text).toContain("username ILIKE $1");
+      expect(searchQuery.text).toContain("email ILIKE $1");
+      expect(searchQuery.text).toContain("LIMIT 10");
+    });
+
+    test("Com termo de pesquisa menor que dois caracteres", async () => {
+      await expect(user.search("a")).rejects.toThrow(ValidationError);
     });
   });
 

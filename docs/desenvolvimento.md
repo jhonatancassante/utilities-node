@@ -66,6 +66,8 @@ Durante o desenvolvimento, a interface fica disponível em `http://localhost:300
 - `/tools/cpf-tester`: Testador de CPF.
 - `/tools/ar-generator`: Gerador de AR e Etiquetas.
 - `/status`: painel de monitoramento da conexão com o banco de dados.
+- `/admin`: painel administrativo, visível para usuários com ao menos uma feature privilegiada.
+- `/admin/usuarios`: pesquisa, edição de dados, gerenciamento de features e remoção de usuários; exige `update:user:others`.
 - `/diario-oficial/edicao-0012026`: página de leitura e download da edição 001/2026 do Diário Oficial.
 
 As páginas de ferramentas seguem a estrutura `pages/tools/<slug>/index.js`, com componentes e lógica isolados em `features/<slug>/`. Para adicionar uma ferramenta, atualizar seu status ou conhecer os componentes compartilhados, consulte o [guia Adicionando uma nova ferramenta](adicionando-ferramentas.md).
@@ -148,7 +150,7 @@ Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm 
 
 ### Organização dos testes
 
-- `tests/integration/api/v1/`: testes dos endpoints.
+- `tests/integration/api/v1/`: testes dos endpoints, incluindo pesquisa, consulta, atualização e remoção administrativa de usuários.
 - `tests/integration/infra/email.test.js`: integração do serviço de e-mail.
 - `tests/integration/_use-cases/registration-flow.test.js`: fluxo completo de cadastro, recebimento do e-mail, ativação, login e consulta do usuário.
 - `tests/unit/models/`: testes unitários de `user`, `password`, `session`, `activation`, `authentication` (hash falso contra timing attack) e `authorization`, sem banco de dados (as consultas são simuladas).

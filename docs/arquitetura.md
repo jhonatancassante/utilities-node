@@ -35,13 +35,17 @@ Os endpoints usam `next-connect` por meio de `infra/controller.js`. Cada rota de
 | `pages/api/v1/migrations`             | Consulta e aplicação de migrations                                                   |
 | `pages/api/v1/users`                  | Cadastro de usuários                                                                 |
 | `pages/api/v1/users/[username]`       | Consulta pública e atualização autorizada                                            |
+| `pages/api/v1/admin/users`            | Pesquisa administrativa de usuários por nome ou e-mail                               |
+| `pages/api/v1/admin/users/[username]` | Consulta, atualização de dados/features e remoção administrativa                     |
 | `pages/api/v1/activations/[token_id]` | Ativação de contas                                                                   |
 | `pages/api/v1/sessions`               | Criação e encerramento de sessões                                                    |
 | `pages/api/v1/user`                   | Consulta do usuário autenticado e renovação da sessão                                |
 | `models/user.js`                      | Cadastro, consulta, atualização e gerenciamento interno de features                  |
 | `models/password.js`                  | HMAC-SHA256 com pepper e bcrypt                                                      |
 | `models/authentication.js`            | Validação das credenciais                                                            |
-| `models/authorization.js`             | Catálogo de features, verificação de acesso e filtragem de saída                     |
+| `models/authorization.js`             | Verificação de acesso, identificação de privilégios e filtragem de saída              |
+| `configs/features.js`                 | Catálogo único de features e lista de privilégios administrativos                    |
+| `configs/admin.js`                    | Registro extensível das seções e permissões do painel administrativo                 |
 | `models/session.js`                   | Criação, validação, renovação e expiração de sessões                                 |
 | `models/activation.js`                | Tokens de ativação, e-mail e ativação da conta                                       |
 | `models/migrator.js`                  | Execução e listagem de migrations                                                    |
@@ -69,9 +73,15 @@ O model `authorization.js` mantém o catálogo de features e a função `can(use
 
 A função `filterOutput(user, feature, resource)` controla os campos que podem ser enviados em cada resposta. A representação pública de usuário não inclui e-mail ou hash de senha; a representação privada do próprio usuário inclui e-mail, mas não senha. A representação de sessão não inclui o token: ele é enviado exclusivamente no cookie `session_id`, configurado como `HttpOnly`.
 
+### Painel administrativo
+
+A interface fica em `pages/admin/`. O menu do avatar exibe o acesso à administração quando o usuário possui ao menos uma feature listada como privilegiada em `configs/features.js`. As opções disponíveis são registradas em `configs/admin.js`, cada uma com sua própria `requiredFeature`; adicionar uma nova seção exige incluir seu registro e sua página/endpoint correspondente.
+
+A área de gerenciamento de usuários exige `update:user:others` tanto na interface quanto nos endpoints `pages/api/v1/admin/users`. A pesquisa retorna até dez contas por trecho de username ou e-mail. O editor permite alterar username, e-mail, senha e a lista completa de features. O catálogo de permissões é compartilhado entre o backend e a interface. A remoção é transacional e elimina sessões e tokens de ativação associados; a própria conta não pode ser removida pelo painel.
+
 ### Features conhecidas
 
-`create:user`, `read:user`, `read:user:self`, `update:user`, `update:user:others`, `create:session`, `read:session`, `read:activation_token`, `create:migration`, `read:migration`, `read:status` e `read:status:all`.
+`create:user`, `read:user`, `read:user:self`, `update:user`, `update:user:others`, `create:session`, `read:session`, `read:activation_token`, `create:migration`, `read:migration`, `read:status` e `read:status:all`. As features `update:user:others` e `read:status:all` compõem atualmente o conjunto de privilégios administrativos.
 
 O cadastro recebe `read:activation_token`; após ativação, recebe `create:session`, `read:session` e `update:user`. Features administrativas não são concedidas automaticamente.
 

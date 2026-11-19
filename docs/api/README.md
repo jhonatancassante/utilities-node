@@ -21,6 +21,10 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 | `POST`   | `/api/v1/migrations`             | Feature `create:migration`                                     |
 | `POST`   | `/api/v1/users`                  | Feature `create:user` (visitante padrão)                       |
 | `GET`    | `/api/v1/users/{username}`       | Público; saída filtrada                                        |
+| `GET`    | `/api/v1/admin/users?search=...` | Feature `update:user:others`                                   |
+| `GET`    | `/api/v1/admin/users/{username}` | Feature `update:user:others`                                   |
+| `PATCH`  | `/api/v1/admin/users/{username}` | Feature `update:user:others`; inclui alteração de features     |
+| `DELETE` | `/api/v1/admin/users/{username}` | Feature `update:user:others`; não permite remover a própria conta |
 | `PATCH`  | `/api/v1/users/{username}`       | Feature `update:user`; próprio usuário ou `update:user:others` |
 | `PATCH`  | `/api/v1/activations/{token_id}` | Feature `read:activation_token`                                |
 | `POST`   | `/api/v1/sessions`               | Feature `create:session`                                       |
@@ -115,6 +119,28 @@ O cadastro cria um token de ativação e envia um e-mail com o link corresponden
 
 Respostas relevantes: `201` criado; `400` dados obrigatórios ausentes, username/e-mail/senha inválidos ou duplicados; `500` falha inesperada, inclusive falha no envio do e-mail.
 
+## Administração de usuários
+
+Os endpoints administrativos exigem uma sessão válida e a feature `update:user:others`. A autorização é verificada no servidor; ocultar o acesso na interface não substitui essa validação.
+
+### `GET /api/v1/admin/users?search=...`
+
+Pesquisa usuários por trecho do nome de usuário ou do e-mail, sem diferenciar maiúsculas de minúsculas. O parâmetro `search` é obrigatório e deve conter ao menos dois caracteres. Retorna até 10 resultados com `id`, `username`, `email`, `features`, `created_at` e `updated_at`; o hash de senha nunca é enviado.
+
+### `GET /api/v1/admin/users/{username}`
+
+Consulta os dados administrativos de uma conta, incluindo e-mail e features, mas sem expor o hash da senha.
+
+### `PATCH /api/v1/admin/users/{username}`
+
+Permite alterar `username`, `email`, `password` e `features` de outras contas. A própria conta não aparece na pesquisa e não pode ser alterada por esse endpoint; para isso, utilize o perfil. A senha segue as mesmas regras de validação e hash do fluxo de edição do perfil. A lista de features é validada contra o catálogo central em `configs/features.js`; valores desconhecidos são rejeitados com `400 ValidationError`. A lista enviada substitui integralmente as permissões atuais, inclusive quando vazia. Campos omitidos permanecem inalterados.
+
+### `DELETE /api/v1/admin/users/{username}`
+
+Remove a conta e, na mesma transação, remove suas sessões e tokens de ativação associados. A própria conta do administrador não pode ser removida por esse endpoint. A operação responde `204` sem corpo.
+
+Os endpoints administrativos retornam `403` quando a sessão não possui `update:user:others`, `404` quando o usuário alvo não existe e `400` quando a pesquisa ou os dados enviados são inválidos.
+
 ## `PATCH /api/v1/activations/{token_id}`
 
 Exige `read:activation_token`. O identificador é o UUID enviado no link por e-mail.
@@ -198,7 +224,7 @@ A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica c
 - No cadastro, o e-mail é armazenado com a capitalização enviada (após `trim()`); a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
 - Um JSON sintaticamente inválido pode ser rejeitado pelo parser de corpo do Next.js antes de chegar ao controller; nesse caso, a resposta `400` pode não usar o envelope JSON padronizado da API.
 - A feature `read:status` consta no catálogo e é usada nos testes, mas a rota de status não possui middleware `canRequest`; o acesso ao endpoint permanece público. A feature `read:status:all` controla apenas a inclusão da versão do banco.
-- Não existe endpoint público para administração das features. A atribuição de permissões privilegiadas é feita internamente.
+- A administração de features é restrita aos endpoints administrativos e à feature `update:user:others`. O catálogo central em `configs/features.js` alimenta a validação do backend e a interface de seleção.
 
 ## Visualizar e validar o OpenAPI
 

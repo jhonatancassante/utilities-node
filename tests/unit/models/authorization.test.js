@@ -119,4 +119,6 @@ describe("models/authorization.js", () => {
       expect(result).not.toHaveProperty("token");
     });
   });
+
+
 });

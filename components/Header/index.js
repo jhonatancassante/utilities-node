@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import ThemeToggle from "@/components/ThemeToggle";
 import headConfigs from "@/configs/head.js";
 import { tools, TOOLS_BASE_PATH } from "@/configs/tools.js";
+import { hasAdminAccess } from "@/configs/admin.js";
 import useUser from "@/hooks/use-user.js";
 import session from "@/lib/client/session.js";
 import styles from "./index.module.css";
@@ -241,6 +242,16 @@ function Header() {
                   <i className="fas fa-user" aria-hidden="true"></i>
                   Meu perfil
                 </Link>
+                {hasAdminAccess(user) && (
+                  <Link
+                    href="/admin"
+                    className={styles.accountItem}
+                    onClick={closeMenus}
+                  >
+                    <i className="fas fa-shield-alt" aria-hidden="true"></i>
+                    Administração
+                  </Link>
+                )}
                 <button
                   type="button"
                   className={styles.accountItem}

@@ -1,28 +1,5 @@
 import { InternalServerError } from "@/infra/errors.js";
-
-const availableFeatures = [
-  // USER
-  "create:user",
-  "read:user",
-  "read:user:self",
-  "update:user",
-  "update:user:others",
-
-  // SESSION
-  "create:session",
-  "read:session",
-
-  // ACTIVATION_TOKEN
-  "read:activation_token",
-
-  // MIGRATION
-  "create:migration",
-  "read:migration",
-
-  // STATUS
-  "read:status",
-  "read:status:all",
-];
+import { availableFeatures } from "@/configs/features.js";
 
 function can(user, feature, resource) {
   validateUser(user);
@@ -97,13 +74,11 @@ function filterOutput(user, feature, resource) {
   }
 
   if (feature === "read:migration") {
-    return resource.map((migration) => {
-      return {
-        path: migration.path,
-        name: migration.name,
-        timestamp: migration.timestamp,
-      };
-    });
+    return resource.map((migration) => ({
+      path: migration.path,
+      name: migration.name,
+      timestamp: migration.timestamp,
+    }));
   }
 
   if (feature === "read:status") {
@@ -154,6 +129,7 @@ function validateResource(resource) {
 const authorization = {
   can,
   filterOutput,
+  availableFeatures,
 };
 
 export default authorization;

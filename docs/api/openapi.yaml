@@ -30,6 +30,8 @@ tags:
     description: Consulta e aplicação de migrations; exige permissões administrativas.
   - name: Users
     description: Cadastro, consulta pública e atualização autorizada de usuários.
+  - name: Admin
+    description: Administração de usuários e permissões; exige privilégios administrativos.
   - name: Activations
     description: Ativação de cadastro por token enviado por e-mail.
   - name: Sessions
@@ -236,6 +238,132 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PublicUser"
+        "400":
+          $ref: "#/components/responses/Validation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/admin/users:
+    get:
+      tags: [Admin]
+      operationId: searchAdminUsers
+      summary: Pesquisa usuários para administração
+      description: |
+        Exige sessão válida e a feature update:user:others.
+        Pesquisa por trecho de username ou e-mail, sem diferenciar maiúsculas
+        de minúsculas. Retorna até dez resultados e nunca inclui hash de senha.
+      x-required-feature: update:user:others
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: search
+          in: query
+          required: true
+          description: Trecho do nome de usuário ou e-mail; mínimo de dois caracteres.
+          schema:
+            type: string
+            minLength: 2
+      responses:
+        "200":
+          description: Usuários encontrados.
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 10
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+        "400":
+          $ref: "#/components/responses/Validation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/admin/users/{username}:
+    parameters:
+      - $ref: "#/components/parameters/Username"
+    get:
+      tags: [Admin]
+      operationId: getAdminUser
+      summary: Consulta os dados administrativos de um usuário
+      description: Exige sessão válida e update:user:others. Inclui e-mail e features, mas nunca o hash da senha.
+      x-required-feature: update:user:others
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Dados administrativos do usuário.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags: [Admin]
+      operationId: updateAdminUser
+      summary: Atualiza dados e permissões de um usuário
+      description: Exige update:user:others e permite alterar somente outras contas. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
+      x-required-feature: update:user:others
+      security:
+        - SessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserUpdate"
+      responses:
+        "200":
+          description: Usuário atualizado, sem hash de senha.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "400":
+          $ref: "#/components/responses/Validation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: [Admin]
+      operationId: deleteAdminUser
+      summary: Remove um usuário
+      description: Exige update:user:others. Remove também as sessões e tokens de ativação associados. Não permite remover a própria conta.
+      x-required-feature: update:user:others
+      security:
+        - SessionCookie: []
+      responses:
+        "204":
+          description: Usuário removido.
         "400":
           $ref: "#/components/responses/Validation"
         "401":
