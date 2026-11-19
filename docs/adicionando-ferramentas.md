@@ -107,6 +107,17 @@ O Divisor de PDF demonstra uma ferramenta que processa arquivos no navegador:
 
 A ferramenta extrai um intervalo de páginas de um ou mais PDFs: com um arquivo, o resultado é um PDF; com vários, um ZIP. Arquivos com menos páginas que o intervalo pedido não geram erro: são extraídos da página inicial até a última e listados em um aviso; arquivos que não chegam à página inicial são ignorados e também listados. Só há erro quando nenhum arquivo tem a página inicial. As bibliotecas `pdf-lib` e `jszip` são importadas dinamicamente. As funções de `lib/pdf.js` retornam objetos `{ ok, ... }` para situações esperadas (intervalo inválido, arquivo que não é PDF, nenhum arquivo com a página inicial), de modo que a interface exiba a mensagem sem depender de exceções.
 
+## Referência: Conversor de CSV para JSON
+
+O Conversor de CSV para JSON interpreta arquivos CSV e permite escolher quais dados entram no resultado:
+
+- Rota: `pages/tools/csv-to-json/index.js`.
+- Interface: `features/csv-to-json/components/CsvToJson/`.
+- Lógica auxiliar: `features/csv-to-json/lib/csv.js`.
+- Testes: `tests/unit/features/csv-to-json/lib/csv.test.js`.
+
+A ferramenta permite escolher entre ISO-8859-1 / Latin1 e UTF-8, detectar automaticamente o delimitador ou selecionar ponto e vírgula, vírgula ou tabulação, e indicar a linha que contém o cabeçalho. Cabeçalhos repetidos recebem sufixos para preservar todas as colunas. O usuário seleciona as colunas desejadas e pode copiar ou baixar o JSON gerado. O processamento do arquivo é realizado inteiramente no navegador.
+
 ## Referência: Unificador de PDF
 
 O Unificador de PDF combina dois ou mais arquivos em um único documento:
