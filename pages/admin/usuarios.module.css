@@ -351,42 +351,6 @@
   flex: 1;
 }
 
-.dangerZone {
-  margin-top: 30px;
-  padding: 18px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  border: 1px solid var(--danger);
-  border-radius: var(--radius-md);
-  background: var(--bg-elevated);
-}
-
-.dangerZone > div {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.dangerZone strong {
-  color: var(--danger-fg);
-  font-size: 14px;
-}
-
-.dangerZone small {
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.dangerZone .hint {
-  flex-basis: 100%;
-  margin: 0;
-}
 
 @media (max-width: 700px) {
   .card {
@@ -411,12 +375,4 @@
     display: none;
   }
 
-  .dangerZone {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .dangerZone button {
-    width: 100%;
-  }
 }
