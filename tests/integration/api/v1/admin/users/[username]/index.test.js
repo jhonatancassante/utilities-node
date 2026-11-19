@@ -129,7 +129,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       expect(updatedUser.email).toBe("admin-updated@example.com");
     });
 
-    test("Alterando as próprias permissões", async () => {
+    test("Tentando alterar a própria conta", async () => {
       const { privilegedUser, sessionObject } = await createPrivilegedSession();
 
       const response = await fetch(adminUserUrl(privilegedUser.username), {
@@ -143,20 +143,14 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
         }),
       });
 
-      expect(response.status).toBe(200);
-      const responseBody = await response.json();
-      expect(responseBody.id).toBe(privilegedUser.id);
-      expect(responseBody.features).toEqual([
-        "update:user:others",
-        "read:status:all",
-      ]);
-      expect(responseBody).not.toHaveProperty("password");
-
-      const updatedUser = await user.findOneById(privilegedUser.id);
-      expect(updatedUser.features).toEqual([
-        "update:user:others",
-        "read:status:all",
-      ]);
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        name: "ValidationError",
+        message:
+          "Não é permitido alterar a própria conta pelo painel administrativo.",
+        action: "Utilize a página Meu perfil para alterar seus próprios dados.",
+        status_code: 400,
+      });
     });
 
     test("Enviando uma feature desconhecida", async () => {
