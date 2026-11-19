@@ -303,7 +303,6 @@ function AdminUsersPage() {
               <UserEditor
                 key={selectedUser.id}
                 user={selectedUser}
-                currentUser={user}
                 onUpdated={handleUserUpdated}
                 onCancel={() => setSelectedUser(null)}
               />
@@ -315,7 +314,7 @@ function AdminUsersPage() {
   );
 }
 
-function UserEditor({ user, currentUser, onUpdated, onCancel }) {
+function UserEditor({ user, onUpdated, onCancel }) {
   const [form, setForm] = useState({
     username: user.username,
     email: user.email,
@@ -559,10 +558,7 @@ function UserEditor({ user, currentUser, onUpdated, onCancel }) {
                         feature.editable === false &&
                         form.features.includes(feature.name)
                           ? "Esta feature não pode ser removida deste usuário"
-                          : feature.privileged &&
-                              !currentUser.features.includes(feature.name)
-                            ? "Somente quem já possui esta feature pode concedê-la"
-                            : undefined
+                          : undefined
                       }
                     >
                       <span className={styles.featureBadges}>
@@ -594,9 +590,7 @@ function UserEditor({ user, currentUser, onUpdated, onCancel }) {
                         disabled={
                           isSaving ||
                           (feature.editable === false &&
-                            form.features.includes(feature.name)) ||
-                          (feature.privileged &&
-                            !currentUser.features.includes(feature.name))
+                            form.features.includes(feature.name))
                         }
                       />
                       <span

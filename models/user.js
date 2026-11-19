@@ -179,7 +179,7 @@ async function search(searchTerm) {
 async function update(
   username,
   userInputValues,
-  { allowFeatures = false, actor } = {},
+  { allowFeatures = false } = {},
 ) {
   const currentUser = await findOneByUsername(username);
   const allowedInputValues = pickUpdatableFields(userInputValues, {
@@ -227,7 +227,6 @@ async function update(
         SELECT
           name,
           is_removable,
-          is_privileged,
           deleted_at
         FROM
           features
@@ -278,24 +277,6 @@ async function update(
       });
     }
 
-    const newlyGrantedPrivilegedFeatures = allowedInputValues.features.filter(
-      (featureName) =>
-        !currentUser.features.includes(featureName) &&
-        featureMetadata.get(featureName)?.is_privileged === true &&
-        !actor?.features?.includes(featureName),
-    );
-
-    if (newlyGrantedPrivilegedFeatures.length > 0) {
-      throw new ValidationError({
-        message:
-          [
-            "Você não possui autorização para conceder as seguintes features privilegiadas:",
-            newlyGrantedPrivilegedFeatures.join(", "),
-          ].join(" ") + ".",
-        action:
-          "Somente um usuário que já possui a feature privilegiada pode concedê-la a outra conta.",
-      });
-    }
   }
 
   const userWithNewValues = { ...currentUser, ...allowedInputValues };

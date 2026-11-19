@@ -17,7 +17,6 @@ async function getHandler(request, response) {
 async function patchHandler(request, response) {
   const updatedUser = await user.update(request.query.username, request.body, {
     allowFeatures: true,
-    actor: request.context.user,
   });
 
   return response.status(200).json(filterUserOutput(updatedUser));
