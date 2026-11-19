@@ -243,18 +243,20 @@ async function update(
       (feature) => feature.editable === false,
     );
     const changedImmutableFeatures = immutableFeatures
-      .filter((feature) =>
-        currentUser.features.includes(feature.name) !==
-        allowedInputValues.features.includes(feature.name),
+      .filter(
+        (feature) =>
+          currentUser.features.includes(feature.name) !==
+          allowedInputValues.features.includes(feature.name),
       )
       .map((feature) => feature.name);
 
     if (changedImmutableFeatures.length > 0) {
       throw new ValidationError({
-        message: [
-          "As seguintes features não podem ser alteradas:",
-          changedImmutableFeatures.join(", "),
-        ].join(" ") + ".",
+        message:
+          [
+            "As seguintes features não podem ser alteradas:",
+            changedImmutableFeatures.join(", "),
+          ].join(" ") + ".",
         action: "Mantenha as features protegidas com o valor atual do usuário.",
       });
     }

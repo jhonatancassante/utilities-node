@@ -100,4 +100,3 @@ export const featureCatalog = [
 ];
 
 export const availableFeatures = featureCatalog.map((feature) => feature.name);
-

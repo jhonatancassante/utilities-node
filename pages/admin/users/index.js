@@ -14,7 +14,10 @@ import {
   validateUsername,
 } from "@/lib/shared/user-validation.js";
 import { featureCatalog } from "@/configs/features.js";
-import { hasAdminAccess, hasAdminSectionAccess } from "@/models/authorization.js";
+import {
+  hasAdminAccess,
+  hasAdminSectionAccess,
+} from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -155,7 +158,9 @@ function AdminUsersPage() {
         <AppHead title="Gerenciar usuários" />
         <Layout>
           <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}>
+            <section
+              className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
+            >
               <p>Carregando permissões...</p>
             </section>
           </main>
@@ -170,7 +175,9 @@ function AdminUsersPage() {
         <AppHead title="Gerenciar usuários" />
         <Layout>
           <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}>
+            <section
+              className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
+            >
               <StatusMessage type="error">
                 Não foi possível verificar suas permissões.
               </StatusMessage>
@@ -193,7 +200,9 @@ function AdminUsersPage() {
       />
       <Layout>
         <main className={`${shared.container} ${shared.containerUltraWide}`}>
-          <section className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}>
+          <section
+            className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
+          >
             <Link href="/admin" className={styles.backLink}>
               <i className="fas fa-arrow-left" aria-hidden="true"></i>
               Painel administrativo
@@ -536,7 +545,9 @@ function UserEditor({ user, onUpdated, onCancel }) {
                   {groupFeatures.map((feature) => (
                     <label
                       className={`${styles.featureOption} ${
-                        feature.editable === false ? styles.featureOptionLocked : ""
+                        feature.editable === false
+                          ? styles.featureOptionLocked
+                          : ""
                       } ${
                         feature.privileged || feature.editable === false
                           ? styles.featureOptionBadged

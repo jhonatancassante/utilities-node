@@ -198,5 +198,4 @@ describe("models/authorization.js", () => {
       );
     });
   });
-
 });

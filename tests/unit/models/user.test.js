@@ -163,7 +163,11 @@ describe("models/user.js", () => {
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
-      const features = ["update:user:others", "read:status:all", "read:session"];
+      const features = [
+        "update:user:others",
+        "read:status:all",
+        "read:session",
+      ];
 
       await user.update("UsuarioAtual", { features }, { allowFeatures: true });
 

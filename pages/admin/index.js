@@ -6,7 +6,10 @@ import AppHead from "@/components/AppHead";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
-import { getAvailableAdminSections, hasAdminAccess } from "@/models/authorization.js";
+import {
+  getAvailableAdminSections,
+  hasAdminAccess,
+} from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -45,13 +48,17 @@ function AdminPage() {
               <p>Carregando painel administrativo...</p>
             </section>
           ) : error ? (
-            <section className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}>
+            <section
+              className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
+            >
               <StatusMessage type="error">
                 Não foi possível verificar suas permissões.
               </StatusMessage>
             </section>
           ) : user && hasAdminAccess(user) ? (
-            <section className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}>
+            <section
+              className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
+            >
               <div className={shared.icon} aria-hidden="true">
                 <i className="fas fa-shield-alt"></i>
               </div>
