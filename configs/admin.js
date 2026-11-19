@@ -25,8 +25,13 @@ export function hasAdminAccess(user) {
   );
 }
 
+export function hasAdminSectionAccess(user, sectionId) {
+  const section = adminSections.find((item) => item.id === sectionId);
+  return Boolean(section && user?.features?.includes(section.requiredFeature));
+}
+
 export function getAvailableAdminSections(user) {
   return adminSections.filter((section) =>
-    user?.features?.includes(section.requiredFeature),
+    hasAdminSectionAccess(user, section.id),
   );
 }
