@@ -97,6 +97,40 @@ export const featureCatalog = [
     editable: true,
     privileged: true,
   },
+  {
+    name: "create:feature",
+    label: "Criar feature",
+    group: "Privilégios",
+    description: "Permite cadastrar novas features no sistema.",
+    editable: true,
+    privileged: true,
+  },
+  {
+    name: "read:feature",
+    label: "Consultar features",
+    group: "Privilégios",
+    description: "Permite consultar as features cadastradas no sistema.",
+    editable: true,
+    privileged: true,
+  },
+  {
+    name: "update:feature",
+    label: "Alterar feature",
+    group: "Privilégios",
+    description:
+      "Permite alterar as informações das features cadastradas no sistema.",
+    editable: true,
+    privileged: true,
+  },
+  {
+    name: "delete:feature",
+    label: "Excluir feature",
+    group: "Privilégios",
+    description:
+      "Permite excluir logicamente as features cadastradas no sistema.",
+    editable: true,
+    privileged: true,
+  },
 ];
 
 export const availableFeatures = featureCatalog.map((feature) => feature.name);

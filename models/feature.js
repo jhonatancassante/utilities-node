@@ -157,7 +157,8 @@ async function update(id, featureInputValues) {
     if (currentFeature.is_protected) {
       throw new ValidationError({
         message: "Esta feature está protegida e não pode ser alterada.",
-        action: "As informações de features protegidas não podem ser modificadas.",
+        action:
+          "As informações de features protegidas não podem ser modificadas.",
       });
     }
 
