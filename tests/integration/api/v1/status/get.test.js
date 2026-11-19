@@ -1,4 +1,7 @@
+import { jest } from "@jest/globals";
+
 import orchestrator from "tests/orchestrator.js";
+import session from "@/models/session.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -46,6 +49,50 @@ describe("GET /api/v1/status", () => {
       expect(responseBody.dependencies.database.opened_connections).toEqual(1);
       expect(responseBody.dependencies.database).not.toHaveProperty("version");
     });
+
+    test("Com uma sessão expirada", async () => {
+      const createdUser = await orchestrator.createUser();
+      await orchestrator.activateUser(createdUser);
+
+      jest.useFakeTimers({
+        now: new Date(Date.now() - session.EXPIRATION_IN_MILLISECONDS),
+        // Falsifica só o Date. Os demais continuam reais.
+        doNotFake: [
+          "nextTick",
+          "setImmediate",
+          "clearImmediate",
+          "setTimeout",
+          "clearTimeout",
+          "setInterval",
+          "clearInterval",
+          "queueMicrotask",
+          "performance",
+          "hrtime",
+        ],
+      });
+
+      const sessionObject = await orchestrator.createSession(createdUser);
+
+      jest.useRealTimers();
+
+      await orchestrator.addFeaturesToUser(createdUser, ["read:status"]);
+
+      const response = await fetch(`${orchestrator.API_URL}/status`, {
+        headers: {
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+      });
+      expect(response.status).toBe(200);
+
+      const responseBody = await response.json();
+
+      const parsedUpdatedAt = new Date(responseBody.updated_at).toISOString();
+      expect(parsedUpdatedAt).toEqual(responseBody.updated_at);
+
+      expect(responseBody.dependencies.database.max_connections).toEqual(100);
+      expect(responseBody.dependencies.database.opened_connections).toEqual(1);
+      expect(responseBody.dependencies.database).not.toHaveProperty("version");
+    });
   });
 
   describe("Usuário privilegiado", () => {
@@ -73,6 +120,52 @@ describe("GET /api/v1/status", () => {
       expect(responseBody.dependencies.database.max_connections).toEqual(100);
       expect(responseBody.dependencies.database.opened_connections).toEqual(1);
       expect(responseBody.dependencies.database.version).toEqual("16.0");
+    });
+
+    test("Com uma sessão expirada", async () => {
+      const createdUser = await orchestrator.createUser();
+      await orchestrator.activateUser(createdUser);
+
+      jest.useFakeTimers({
+        now: new Date(Date.now() - session.EXPIRATION_IN_MILLISECONDS),
+        // Falsifica só o Date. Os demais continuam reais.
+        doNotFake: [
+          "nextTick",
+          "setImmediate",
+          "clearImmediate",
+          "setTimeout",
+          "clearTimeout",
+          "setInterval",
+          "clearInterval",
+          "queueMicrotask",
+          "performance",
+          "hrtime",
+        ],
+      });
+
+      const sessionObject = await orchestrator.createSession(createdUser);
+
+      jest.useRealTimers();
+
+      await orchestrator.addFeaturesToUser(createdUser, [
+        "read:status",
+        "read:status:all",
+      ]);
+
+      const response = await fetch(`${orchestrator.API_URL}/status`, {
+        headers: {
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+      });
+      expect(response.status).toBe(200);
+
+      const responseBody = await response.json();
+
+      const parsedUpdatedAt = new Date(responseBody.updated_at).toISOString();
+      expect(parsedUpdatedAt).toEqual(responseBody.updated_at);
+
+      expect(responseBody.dependencies.database.max_connections).toEqual(100);
+      expect(responseBody.dependencies.database.opened_connections).toEqual(1);
     });
   });
 });
