@@ -36,7 +36,7 @@ Os endpoints usam `next-connect` por meio de `infra/controller.js`. Cada rota de
 | `pages/api/v1/users`                  | Cadastro de usuários                                                                 |
 | `pages/api/v1/users/[username]`       | Consulta pública e atualização autorizada                                            |
 | `pages/api/v1/admin/users`            | Pesquisa administrativa de usuários por nome ou e-mail                               |
-| `pages/api/v1/admin/users/[username]` | Consulta e atualização de dados/features de outras contas                     |
+| `pages/api/v1/admin/users/[username]` | Consulta e atualização de dados/features de outras contas                            |
 | `pages/api/v1/activations/[token_id]` | Ativação de contas                                                                   |
 | `pages/api/v1/sessions`               | Criação e encerramento de sessões                                                    |
 | `pages/api/v1/user`                   | Consulta do usuário autenticado e renovação da sessão                                |
