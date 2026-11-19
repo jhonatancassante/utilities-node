@@ -162,7 +162,7 @@ Exige `create:session`, portanto contas ainda não ativadas não podem iniciar s
 }
 ```
 
-Corpo ausente, `null`, array, valor primitivo, campos ausentes, vazios ou com tipo diferente de string retornam `400 ValidationError`.
+Corpo ausente, `null`, array, valor primitivo, campos ausentes, vazios ou com tipo diferente de string retornam `400 ValidationError`. O e-mail é consultado após a remoção de espaços no início e no fim.
 
 Com sucesso, responde `201`, cria uma sessão de 30 dias e define o cookie `session_id`:
 
