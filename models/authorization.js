@@ -23,7 +23,7 @@ function can(user, feature, resource) {
   return authorized;
 }
 
-function hasAdminAccess(user) {
+export function hasAdminAccess(user) {
   return Boolean(
     user?.features?.some((name) =>
       featureCatalog.some(
@@ -33,12 +33,12 @@ function hasAdminAccess(user) {
   );
 }
 
-function hasAdminSectionAccess(user, sectionId) {
+export function hasAdminSectionAccess(user, sectionId) {
   const section = adminSections.find((item) => item.id === sectionId);
   return Boolean(section && user?.features?.includes(section.requiredFeature));
 }
 
-function getAvailableAdminSections(user) {
+export function getAvailableAdminSections(user) {
   return adminSections.filter((section) =>
     hasAdminSectionAccess(user, section.id),
   );
