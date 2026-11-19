@@ -160,7 +160,7 @@ O model `models/authorization.js` centraliza as permissões conhecidas. As featu
 | `create:migration`      | Permite aplicar migrations                                                                      |
 | `read:migration`        | Permite consultar migrations pendentes                                                          |
 | `read:status`           | Seleciona a representação do status; não restringe o endpoint público                           |
-| `read:status:all`       | Permite incluir a versão do banco na resposta de status |
+| `read:status:all`       | Permite incluir a versão do banco na resposta de status                                         |
 
 ### Perfis iniciais
 
