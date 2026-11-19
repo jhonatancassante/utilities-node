@@ -90,7 +90,7 @@ describe("models/user.js", () => {
       expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
     });
 
-    test("Rejeita campos fora da lista permitida e lista todos eles", async () => {
+    test("Rejeita campos não permitidos e lista todos eles", async () => {
       const querySpy = mockQueries([
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
@@ -158,6 +158,51 @@ describe("models/user.js", () => {
       ]);
     });
 
+    test("Com permissão administrativa, atualiza as features", async () => {
+      const querySpy = mockQueries([
+        ["SELECT", [existingUser]],
+        ["UPDATE", [existingUser]],
+      ]);
+      const features = [
+        "update:user:others",
+        "read:status:all",
+        "read:session",
+      ];
+
+      await user.update("UsuarioAtual", { features }, { allowFeatures: true });
+
+      const [updateQuery] = getCallsContaining(querySpy, "UPDATE");
+      expect(updateQuery.text).toContain("features = $5");
+      expect(updateQuery.values).toEqual([
+        existingUser.id,
+        existingUser.username,
+        existingUser.email,
+        existingUser.password,
+        features,
+      ]);
+    });
+
+    test("Rejeita a alteração de uma feature não editável", async () => {
+      const querySpy = mockQueries([
+        ["SELECT", [existingUser]],
+        ["UPDATE", [existingUser]],
+      ]);
+
+      const error = await user
+        .update(
+          "UsuarioAtual",
+          { features: ["create:session", "update:user"] },
+          { allowFeatures: true },
+        )
+        .catch((e) => e);
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toBe(
+        "As seguintes features não podem ser alteradas: read:session.",
+      );
+      expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
+    });
+
     test("Com nome de usuário inválido", async () => {
       mockQueries([["SELECT", [existingUser]]]);
 
@@ -193,7 +238,7 @@ describe("models/user.js", () => {
       ).rejects.toThrow("O nome de usuário informado já está sendo utilizado.");
     });
 
-    test("Trocar só a caixa do próprio username não conta como duplicado", async () => {
+    test("Trocar a caixa do username não conta como duplicado", async () => {
       const querySpy = mockQueries([
         ["SELECT\n          *", [existingUser]],
         ["UPDATE", [existingUser]],
@@ -226,8 +271,27 @@ describe("models/user.js", () => {
     });
   });
 
+  describe(".search()", () => {
+    test("Pesquisa por nome de usuário ou e-mail", async () => {
+      const querySpy = mockQueries([["SELECT", [existingUser]]]);
+
+      const results = await user.search("usuario");
+
+      expect(results).toEqual([existingUser]);
+      const [searchQuery] = querySpy.mock.calls.map(([query]) => query);
+      expect(searchQuery.values).toEqual(["%usuario%"]);
+      expect(searchQuery.text).toContain("username ILIKE $1");
+      expect(searchQuery.text).toContain("email ILIKE $1");
+      expect(searchQuery.text).toContain("LIMIT 10");
+    });
+
+    test("Com termo de pesquisa menor que dois caracteres", async () => {
+      await expect(user.search("a")).rejects.toThrow(ValidationError);
+    });
+  });
+
   describe(".create()", () => {
-    test("Define apenas a feature `read:activation_token` e guarda senha com hash", async () => {
+    test("Define a feature inicial e guarda hash da senha", async () => {
       const querySpy = mockQueries([
         ["SELECT", []],
         ["INSERT", [existingUser]],

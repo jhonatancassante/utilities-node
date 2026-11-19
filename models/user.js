@@ -1,4 +1,5 @@
 import database from "@/infra/database.js";
+import { availableFeatures, featureCatalog } from "@/configs/features.js";
 import password from "@/models/password.js";
 import { ValidationError, NotFoundError } from "@/infra/errors.js";
 import {
@@ -142,9 +143,49 @@ async function findOneByEmail(email) {
 
 const UPDATABLE_FIELDS = ["username", "email", "password"];
 
-async function update(username, userInputValues) {
+async function search(searchTerm) {
+  if (typeof searchTerm !== "string" || searchTerm.trim().length < 2) {
+    throw new ValidationError({
+      message: "Informe ao menos dois caracteres para pesquisar um usuário.",
+      action: "Pesquise pelo nome de usuário ou pelo e-mail.",
+    });
+  }
+
+  const normalizedSearch = `%${searchTerm.trim()}%`;
+  const results = await database.query({
+    text: `
+      SELECT
+        id,
+        username,
+        email,
+        features,
+        created_at,
+        updated_at
+      FROM
+        users
+      WHERE
+        username ILIKE $1
+        OR email ILIKE $1
+      ORDER BY
+        username
+      LIMIT 10
+      ;
+    `,
+    values: [normalizedSearch],
+  });
+
+  return results.rows;
+}
+
+async function update(
+  username,
+  userInputValues,
+  { allowFeatures = false } = {},
+) {
   const currentUser = await findOneByUsername(username);
-  const allowedInputValues = pickUpdatableFields(userInputValues);
+  const allowedInputValues = pickUpdatableFields(userInputValues, {
+    allowFeatures,
+  });
 
   if ("username" in allowedInputValues) {
     validateUsernameFormat(allowedInputValues.username);
@@ -172,12 +213,75 @@ async function update(username, userInputValues) {
     await hashPasswordInObject(allowedInputValues);
   }
 
+  if ("features" in allowedInputValues) {
+    if (!Array.isArray(allowedInputValues.features)) {
+      throw new ValidationError({
+        message: "O campo features deve ser uma lista de permissões.",
+        action: "Envie uma lista de features válidas.",
+      });
+    }
+
+    const unknownFeatures = allowedInputValues.features.filter(
+      (feature) => !availableFeatures.includes(feature),
+    );
+
+    if (unknownFeatures.length > 0) {
+      const message = [
+        "As features a seguir não são reconhecidas:",
+        unknownFeatures.join(", "),
+      ].join(" ");
+
+      throw new ValidationError({
+        message: `${message}.`,
+        action: "Selecione apenas features disponíveis no sistema.",
+      });
+    }
+
+    allowedInputValues.features = [...new Set(allowedInputValues.features)];
+
+    const immutableFeatures = featureCatalog.filter(
+      (feature) => feature.editable === false,
+    );
+    const changedImmutableFeatures = immutableFeatures
+      .filter(
+        (feature) =>
+          currentUser.features.includes(feature.name) !==
+          allowedInputValues.features.includes(feature.name),
+      )
+      .map((feature) => feature.name);
+
+    if (changedImmutableFeatures.length > 0) {
+      throw new ValidationError({
+        message:
+          [
+            "As seguintes features não podem ser alteradas:",
+            changedImmutableFeatures.join(", "),
+          ].join(" ") + ".",
+        action: "Mantenha as features protegidas com o valor atual do usuário.",
+      });
+    }
+  }
+
   const userWithNewValues = { ...currentUser, ...allowedInputValues };
 
-  const updatedUser = await runUpdateQuery(currentUser.id, userWithNewValues);
+  const updatedUser = await runUpdateQuery(
+    currentUser.id,
+    userWithNewValues,
+    allowFeatures,
+  );
   return updatedUser;
 
-  async function runUpdateQuery(userId, userWithNewValues) {
+  async function runUpdateQuery(userId, userWithNewValues, allowFeatures) {
+    const featuresUpdate = allowFeatures ? "features = $5," : "";
+    const values = [
+      userId,
+      userWithNewValues.username,
+      userWithNewValues.email,
+      userWithNewValues.password,
+    ];
+
+    if (allowFeatures) values.push(userWithNewValues.features);
+
     const results = await database.query({
       text: `
         UPDATE
@@ -186,25 +290,21 @@ async function update(username, userInputValues) {
           username = $2,
           email = $3,
           password = $4,
+          ${featuresUpdate}
           updated_at = timezone('utc', now())
         WHERE
           id = $1
         RETURNING
           *
       ;`,
-      values: [
-        userId,
-        userWithNewValues.username,
-        userWithNewValues.email,
-        userWithNewValues.password,
-      ],
+      values,
     });
 
     return results.rows[0];
   }
 }
 
-function pickUpdatableFields(userInputValues) {
+function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
   const isPlainObject =
     userInputValues !== null &&
     typeof userInputValues === "object" &&
@@ -217,19 +317,29 @@ function pickUpdatableFields(userInputValues) {
     });
   }
 
+  const updatableFields = allowFeatures
+    ? [...UPDATABLE_FIELDS, "features"]
+    : UPDATABLE_FIELDS;
   const unknownFields = Object.keys(userInputValues).filter(
-    (field) => !UPDATABLE_FIELDS.includes(field),
+    (field) => !updatableFields.includes(field),
   );
 
   if (unknownFields.length > 0) {
+    const message = [
+      "Os campos a seguir não podem ser alterados:",
+      unknownFields.join(", "),
+    ].join(" ");
+
     throw new ValidationError({
-      message: `Os campos a seguir não podem ser alterados: ${unknownFields.join(", ")}.`,
-      action: "Envie apenas username, email e password.",
+      message: `${message}.`,
+      action: allowFeatures
+        ? "Envie apenas username, email, password e features."
+        : "Envie apenas username, email e password.",
     });
   }
 
   const picked = {};
-  for (const field of UPDATABLE_FIELDS) {
+  for (const field of updatableFields) {
     if (Object.hasOwn(userInputValues, field)) {
       picked[field] = userInputValues[field];
     }
@@ -351,6 +461,7 @@ async function hashPasswordInObject(userInputValues) {
 
 const user = {
   create,
+  search,
   findOneById,
   findOneByUsername,
   findOneByEmail,

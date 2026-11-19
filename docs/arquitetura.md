@@ -35,13 +35,17 @@ Os endpoints usam `next-connect` por meio de `infra/controller.js`. Cada rota de
 | `pages/api/v1/migrations`             | Consulta e aplicação de migrations                                                   |
 | `pages/api/v1/users`                  | Cadastro de usuários                                                                 |
 | `pages/api/v1/users/[username]`       | Consulta pública e atualização autorizada                                            |
+| `pages/api/v1/admin/users`            | Pesquisa administrativa de usuários por nome ou e-mail                               |
+| `pages/api/v1/admin/users/[username]` | Consulta e atualização de dados/features de outras contas                            |
 | `pages/api/v1/activations/[token_id]` | Ativação de contas                                                                   |
 | `pages/api/v1/sessions`               | Criação e encerramento de sessões                                                    |
 | `pages/api/v1/user`                   | Consulta do usuário autenticado e renovação da sessão                                |
 | `models/user.js`                      | Cadastro, consulta, atualização e gerenciamento interno de features                  |
 | `models/password.js`                  | HMAC-SHA256 com pepper e bcrypt                                                      |
 | `models/authentication.js`            | Validação das credenciais                                                            |
-| `models/authorization.js`             | Catálogo de features, verificação de acesso e filtragem de saída                     |
+| `models/authorization.js`             | Verificação de permissões, acesso administrativo e filtragem de saída                |
+| `configs/features.js`                 | Catálogo único de features e seus metadados, incluindo privilégios e edição          |
+| `configs/admin.js`                    | Registro declarativo das seções e features exigidas pelo painel administrativo       |
 | `models/session.js`                   | Criação, validação, renovação e expiração de sessões                                 |
 | `models/activation.js`                | Tokens de ativação, e-mail e ativação da conta                                       |
 | `models/migrator.js`                  | Execução e listagem de migrations                                                    |
@@ -56,6 +60,26 @@ Os endpoints usam `next-connect` por meio de `infra/controller.js`. Cada rota de
 
 A API é versionada no caminho `/api/v1`.
 
+## Convenções de organização
+
+As pastas principais representam responsabilidades diferentes. Ao adicionar um módulo, escolha sua localização pela responsabilidade que ele exerce, não apenas pelo tipo de arquivo ou por quem o utiliza.
+
+| Pasta      | Responsabilidade                                 | Deve conter                                                                                                                                                                                       | Evite colocar aqui                                                                                         |
+| ---------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `configs/` | Configurações estáticas e catálogos declarativos | Valores, opções e metadados que orientam o comportamento da aplicação, como catálogo de features, ferramentas e seções administrativas                                                            | Regras de negócio, consultas ao banco, acesso à requisição ou decisões dependentes de um usuário           |
+| `lib/`     | Funções auxiliares reutilizáveis                 | Utilitários que não pertencem a um domínio específico. `lib/client/` contém código exclusivo do navegador; `lib/shared/` contém código que pode ser utilizado tanto no cliente quanto no servidor | Regras centrais de domínio, persistência ou integrações de infraestrutura                                  |
+| `models/`  | Regras de negócio e acesso aos dados do domínio  | Operações e validações de entidades, autenticação, autorização e coordenação das consultas persistentes                                                                                           | Detalhes de HTTP, componentes de interface, manipulação direta do DOM ou configuração de serviços externos |
+| `infra/`   | Detalhes técnicos e integrações                  | Banco de dados, transporte de e-mail, configuração do servidor, classes de erro, middlewares e migrations                                                                                         | Decisões de negócio, como definir se um usuário pode administrar outra conta                               |
+
+### Diretrizes de dependência
+
+- As páginas e os componentes apresentam a interface e chamam os módulos responsáveis pelas operações; não devem duplicar regras de negócio.
+- Os models concentram as regras do domínio e utilizam os módulos de infraestrutura quando precisam de recursos técnicos, como persistência.
+- As configurações fornecem dados declarativos aos módulos que precisam deles. Por exemplo, `configs/features.js` define o catálogo de permissões e `models/authorization.js` interpreta esses metadados nas verificações de acesso.
+- Os utilitários de `lib/shared/` não devem depender de APIs exclusivas do navegador ou de serviços exclusivos do servidor. Código que depende do DOM, de `window` ou de `document` deve permanecer em `lib/client/` ou na funcionalidade de interface correspondente.
+- Não crie uma nova pasta ou camada apenas para acomodar poucas funções. Extraia um módulo quando houver uma responsabilidade coesa, reutilização real ou crescimento que torne a manutenção difícil.
+- Quando uma regra depender de identidade, permissões ou estado de uma entidade, ela pertence ao domínio correspondente — não a `configs/` nem a `infra/`.
+
 ## Contexto de requisição e autorização
 
 As rotas que usam `injectAnonymousOrUser` recebem um usuário em `request.context.user`.
@@ -65,13 +89,19 @@ As rotas que usam `injectAnonymousOrUser` recebem um usuário em `request.contex
 - Um token inválido ou expirado gera `UnauthorizedError` nas rotas que usam esse middleware. O middleware `injectUserOrAnonymousOnInvalidSession` (usado em `POST /api/v1/sessions`, `POST /api/v1/users`, `PATCH /api/v1/activations/{token_id}` e `GET /api/v1/status`) trata sessões inexistentes ou expiradas como visitante anônimo e remove o cookie antigo. `DELETE /api/v1/sessions` também usa esse middleware, mas o próprio handler ainda exige uma sessão válida para concluir o logout.
 - `canRequest(feature)` verifica a feature necessária e gera `ForbiddenError` quando não há permissão.
 
-O model `authorization.js` mantém o catálogo de features e a função `can(user, feature, resource)`. Para atualização de usuário, a autorização considera o recurso: o próprio usuário pode ser atualizado com `update:user`; outro usuário exige `update:user:others`.
+O catálogo de permissões fica em `configs/features.js` e é importado por `models/authorization.js`, que implementa a função `can(user, feature, resource)`. Para atualização de usuário, a autorização considera o recurso: o próprio usuário pode ser atualizado com `update:user`; outro usuário exige `update:user:others`.
 
 A função `filterOutput(user, feature, resource)` controla os campos que podem ser enviados em cada resposta. A representação pública de usuário não inclui e-mail ou hash de senha; a representação privada do próprio usuário inclui e-mail, mas não senha. A representação de sessão não inclui o token: ele é enviado exclusivamente no cookie `session_id`, configurado como `HttpOnly`.
 
+### Painel administrativo
+
+A interface fica em `pages/admin/`. O menu do avatar exibe o acesso à administração quando `models/authorization.js` identifica ao menos uma feature privilegiada no usuário, conforme os metadados de `configs/features.js`. As opções disponíveis são registradas declarativamente em `configs/admin.js`, cada uma com sua própria `requiredFeature`; `models/authorization.js` concentra as verificações de acesso e filtra as seções disponíveis. Adicionar uma nova seção exige incluir seu registro e sua página/endpoint correspondente.
+
+A área de gerenciamento de usuários exige `update:user:others` tanto na interface quanto nos endpoints `pages/api/v1/admin/users`. A pesquisa retorna até dez contas por trecho de username ou e-mail. O editor permite alterar username, e-mail, senha e a lista completa de features. O catálogo de permissões é compartilhado entre o backend e a interface. A pesquisa pode apresentar a própria conta do administrador, que também pode alterar seus dados e suas permissões pelo painel.
+
 ### Features conhecidas
 
-`create:user`, `read:user`, `read:user:self`, `update:user`, `update:user:others`, `create:session`, `read:session`, `read:activation_token`, `create:migration`, `read:migration`, `read:status` e `read:status:all`.
+`create:user`, `read:user`, `read:user:self`, `update:user`, `update:user:others`, `create:session`, `read:session`, `read:activation_token`, `create:migration`, `read:migration`, `read:status` e `read:status:all`. As features `update:user:others` e `read:status:all` compõem atualmente o conjunto de privilégios administrativos.
 
 O cadastro recebe `read:activation_token`; após ativação, recebe `create:session`, `read:session` e `update:user`. Features administrativas não são concedidas automaticamente.
 

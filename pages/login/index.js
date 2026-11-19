@@ -13,7 +13,7 @@ import styles from "./index.module.css";
 
 function LoginPage() {
   const router = useRouter();
-  const { user: currentUser, isLoading, refreshUser } = useUser();
+  const { user: currentUser, isLoading, setUser } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -40,8 +40,17 @@ function LoginPage() {
 
     try {
       await session.login(email.trim(), password);
-      await refreshUser();
-      router.replace("/perfil");
+
+      const authenticatedUser = await session.getCurrentUser();
+
+      if (!authenticatedUser) {
+        throw new Error(
+          "Sua sessão foi criada, mas não foi possível carregar os dados da sua conta. Tente entrar novamente.",
+        );
+      }
+
+      await setUser(authenticatedUser);
+      await router.replace("/perfil");
     } catch (error) {
       setFeedback({
         type: "error",

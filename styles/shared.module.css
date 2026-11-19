@@ -10,6 +10,16 @@
   padding: 32px 24px;
 }
 
+.containerUltraWide {
+  max-width: 1280px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.card.cardUltraWide {
+  max-width: 1120px;
+}
+
 .card {
   position: relative;
   width: 100%;
