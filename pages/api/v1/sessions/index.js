@@ -33,7 +33,7 @@ async function postHandler(request, response) {
   }
 
   const authenticatedUser = await authentication.getUser(
-    userInputValues.email,
+    userInputValues.email.trim(),
     userInputValues.password,
   );
 
