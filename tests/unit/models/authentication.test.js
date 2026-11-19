@@ -25,44 +25,46 @@ describe("models/authentication.js", () => {
     jest.restoreAllMocks();
   });
 
-  test("Não gera o hash falso ao carregar o módulo", () => {
-    expect(hashSpy).not.toHaveBeenCalled();
-  });
+  describe(".getUser()", () => {
+    test("Não gera o hash falso ao carregar o módulo", () => {
+      expect(hashSpy).not.toHaveBeenCalled();
+    });
 
-  test("Com email inexistente, gera o hash falso uma única vez", async () => {
-    await expect(
-      authentication.getUser("naoexiste@example.com", "Senha_Qualquer_123"),
-    ).rejects.toThrow(UnauthorizedError);
+    test("Com email inexistente, gera o hash falso uma única vez", async () => {
+      await expect(
+        authentication.getUser("naoexiste@example.com", "Senha_Qualquer_123"),
+      ).rejects.toThrow(UnauthorizedError);
 
-    await expect(
-      authentication.getUser("outro@example.com", "Senha_Qualquer_123"),
-    ).rejects.toThrow(UnauthorizedError);
+      await expect(
+        authentication.getUser("outro@example.com", "Senha_Qualquer_123"),
+      ).rejects.toThrow(UnauthorizedError);
 
-    expect(hashSpy).toHaveBeenCalledTimes(1);
-  });
+      expect(hashSpy).toHaveBeenCalledTimes(1);
+    });
 
-  test("Com email inexistente, devolve a mensagem genérica de autenticação", async () => {
-    const error = await authentication
-      .getUser("naoexiste@example.com", "Senha_Qualquer_123")
-      .catch((e) => e);
+    test("Com email inexistente, devolve a mensagem genérica de autenticação", async () => {
+      const error = await authentication
+        .getUser("naoexiste@example.com", "Senha_Qualquer_123")
+        .catch((e) => e);
 
-    expect(error).toBeInstanceOf(UnauthorizedError);
-    expect(error.message).toBe(
-      "Não foi possível autenticar seu usuário no sistema.",
-    );
-  });
+      expect(error).toBeInstanceOf(UnauthorizedError);
+      expect(error.message).toBe(
+        "Não foi possível autenticar seu usuário no sistema.",
+      );
+    });
 
-  test("Se a geração do hash falso falhar, tenta de novo na chamada seguinte", async () => {
-    hashSpy.mockRejectedValueOnce(new Error("falha"));
+    test("Se a geração do hash falso falhar, tenta de novo na chamada seguinte", async () => {
+      hashSpy.mockRejectedValueOnce(new Error("falha"));
 
-    await expect(
-      authentication.getUser("a@example.com", "Senha_Qualquer_123"),
-    ).rejects.toThrow(UnauthorizedError);
+      await expect(
+        authentication.getUser("a@example.com", "Senha_Qualquer_123"),
+      ).rejects.toThrow(UnauthorizedError);
 
-    await expect(
-      authentication.getUser("b@example.com", "Senha_Qualquer_123"),
-    ).rejects.toThrow(UnauthorizedError);
+      await expect(
+        authentication.getUser("b@example.com", "Senha_Qualquer_123"),
+      ).rejects.toThrow(UnauthorizedError);
 
-    expect(hashSpy).toHaveBeenCalledTimes(2);
+      expect(hashSpy).toHaveBeenCalledTimes(2);
+    });
   });
 });

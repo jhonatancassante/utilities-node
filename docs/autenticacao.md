@@ -93,14 +93,14 @@ Assim, a conta pode iniciar sessões, consultar a própria sessão autenticada e
 
 ## Login
 
-`POST /api/v1/sessions` recebe `email` e `password`.
+`POST /api/v1/sessions` recebe um objeto JSON com `email` e `password`, ambos como strings não vazias. Corpo ausente, `null`, array, valor primitivo, campos ausentes, vazios ou com tipo diferente de string retornam `400 ValidationError`. Espaços no início e no fim do e-mail são removidos antes da consulta.
 
 1. `models/authentication.js` procura o usuário pelo e-mail, sem diferenciar maiúsculas de minúsculas.
 2. A senha é comparada com o hash armazenado.
 3. O usuário precisa possuir `create:session`; contas ainda não ativadas não recebem essa permissão.
 4. Uma sessão é criada e o token é enviado **somente** no cookie `session_id` (`HttpOnly`); o corpo da resposta não inclui o token.
 
-Se a requisição trouxer um cookie `session_id` inválido ou expirado, o login o trata como visitante anônimo, segue para a verificação de e-mail e senha e remove o cookie antigo. Assim, ninguém precisa tentar entrar duas vezes.
+Se a requisição trouxer um cookie `session_id` inválido ou expirado, o login o trata como visitante anônimo, segue para a verificação de e-mail e senha e remove o cookie antigo. Assim, ninguém precisa tentar entrar duas vezes. O mesmo comportamento de tolerância a cookies antigos é aplicado ao cadastro (`POST /api/v1/users`), à ativação (`PATCH /api/v1/activations/{token_id}`) e à consulta de status (`GET /api/v1/status`). No status, o usuário anônimo recebe a resposta pública sem a versão do PostgreSQL.
 
 Credenciais incorretas retornam `401 UnauthorizedError` com a mesma mensagem, independentemente de o e-mail não existir ou de a senha estar errada. Quando o e-mail não é encontrado, o fluxo executa uma comparação contra um hash descartável para aproximar o tempo de resposta.
 
@@ -133,7 +133,7 @@ Cache-Control: no-store, no-cache, max-age=0, must-revalidate
 
 ### Consulta e renovação da sessão
 
-`GET /api/v1/user` exige uma sessão válida e a feature `read:session`. O endpoint renova a expiração no banco, reenvia o cookie e retorna os dados do próprio usuário: `id`, `username`, `email`, `features`, `created_at` e `updated_at`.
+`GET /api/v1/user` exige uma sessão válida e a feature `read:session`. Sem cookie, o visitante anônimo não possui essa feature e recebe `403`; com cookie inválido ou sessão expirada, recebe `401`. O endpoint renova a expiração no banco, reenvia o cookie e retorna os dados do próprio usuário: `id`, `username`, `email`, `features`, `created_at` e `updated_at`.
 
 ### Logout
 
@@ -147,20 +147,20 @@ O tratamento central de erros limpa o cookie sempre que uma requisição termina
 
 O model `models/authorization.js` centraliza as permissões conhecidas. As features atualmente declaradas são:
 
-| Feature                 | Finalidade                                              |
-| ----------------------- | ------------------------------------------------------- |
-| `create:user`           | Permite iniciar um cadastro                             |
-| `read:user`             | Permite obter a representação pública de um usuário     |
-| `read:user:self`        | Permite obter dados privados do próprio usuário         |
-| `update:user`           | Permite atualizar o próprio usuário                     |
-| `update:user:others`    | Permite atualizar usuários diferentes do próprio        |
-| `create:session`        | Permite criar uma sessão                                |
-| `read:session`          | Permite consultar a própria sessão                      |
-| `read:activation_token` | Permite utilizar o fluxo de ativação                    |
-| `create:migration`      | Permite aplicar migrations                              |
-| `read:migration`        | Permite consultar migrations pendentes                  |
-| `read:status`           | Identifica acesso de usuário ao status                  |
-| `read:status:all`       | Permite incluir a versão do banco na resposta de status |
+| Feature                 | Finalidade                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `create:user`           | Permite iniciar um cadastro                                                                                  |
+| `read:user`             | Permite obter a representação pública de um usuário                                                          |
+| `read:user:self`        | Seleciona a representação privada do próprio usuário em `filterOutput`; não é exigida por middleware de rota |
+| `update:user`           | Permite atualizar o próprio usuário                                                                          |
+| `update:user:others`    | Permite atualizar usuários diferentes do próprio                                                             |
+| `create:session`        | Permite criar uma sessão                                                                                     |
+| `read:session`          | Permite consultar a própria sessão                                                                           |
+| `read:activation_token` | Permite utilizar o fluxo de ativação                                                                         |
+| `create:migration`      | Permite aplicar migrations                                                                                   |
+| `read:migration`        | Permite consultar migrations pendentes                                                                       |
+| `read:status`           | Seleciona a representação do status; não restringe o endpoint público                                        |
+| `read:status:all`       | Permite incluir a versão do banco na resposta de status                                                      |
 
 ### Perfis iniciais
 
@@ -194,10 +194,11 @@ A autorização de saída também é centralizada em `authorization.filterOutput
 
 - Não há _rate limiting_ para tentativas de login.
 - As senhas devem ter de 12 a 64 caracteres, com pelo menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns conhecidos também são rejeitados.
-- Campos obrigatórios ausentes não possuem validação de entrada uniforme e podem resultar em erro 500.
-- O valor de e-mail é validado após `trim()`, mas o valor armazenado não é normalizado; a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
-- Cookie `session_id` inválido ou expirado é tolerado apenas nas rotas públicas (login, cadastro e ativação), onde a requisição segue como visitante anônimo. Nas demais rotas, que dependem do usuário logado, o resultado continua sendo `401`.
-- O controller limpa o cookie em qualquer erro 401, inclusive login inválido.
+- A validação estrutural do corpo ainda não é uniforme em todos os endpoints. O login e a atualização de usuário retornam `400 ValidationError` para corpo ausente ou que não seja objeto; já `POST /api/v1/users` não verifica explicitamente um corpo de nível superior `null` ou ausente antes de acessar suas propriedades, o que pode resultar em `500`.
+- O e-mail é armazenado com a capitalização enviada (após `trim()`); a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
+- Cookie `session_id` inválido ou expirado é tolerado em login, cadastro, ativação e consulta de status, onde a requisição segue como visitante anônimo e o cookie é removido. Nas demais rotas, um cookie inválido resulta em `401`; o logout (`DELETE /api/v1/sessions`) também exige sessão válida.
+- O controller limpa o cookie `session_id` em qualquer resposta `401`, inclusive em um login com credenciais inválidas: quem já está logado e erra a senha ao tentar entrar de novo perde o cookie no navegador (a sessão continua válida no banco, mas deixa de ser enviada).
+- Um JSON sintaticamente inválido pode ser rejeitado pelo parser de corpo do Next.js antes de chegar ao controller; nesse caso, a resposta `400` pode não seguir o envelope JSON padronizado da API.
 - As sessões encerradas permanecem no banco com data de expiração antecipada; não há rotina de limpeza física documentada ou implementada.
 
 Consulte também o [guia da API](api/README.md) para exemplos de requisições e respostas.

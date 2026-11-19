@@ -62,12 +62,12 @@ As rotas que usam `injectAnonymousOrUser` recebem um usuário em `request.contex
 
 - Sem cookie `session_id`, o controller injeta o perfil anônimo com `create:session`, `create:user` e `read:activation_token`.
 - Com cookie, o controller procura uma sessão não expirada e carrega o usuário correspondente.
-- Um token inválido ou expirado gera `UnauthorizedError`. Exceção: `injectUserOrAnonymousOnInvalidSession` (usado em `/api/v1/sessions`, `POST /api/v1/users` e `PATCH /api/v1/activations/{token_id}`) trata a sessão inválida como visitante anônimo e remove o cookie.
+- Um token inválido ou expirado gera `UnauthorizedError` nas rotas que usam esse middleware. O middleware `injectUserOrAnonymousOnInvalidSession` (usado em `POST /api/v1/sessions`, `POST /api/v1/users`, `PATCH /api/v1/activations/{token_id}` e `GET /api/v1/status`) trata sessões inexistentes ou expiradas como visitante anônimo e remove o cookie antigo. `DELETE /api/v1/sessions` também usa esse middleware, mas o próprio handler ainda exige uma sessão válida para concluir o logout.
 - `canRequest(feature)` verifica a feature necessária e gera `ForbiddenError` quando não há permissão.
 
 O model `authorization.js` mantém o catálogo de features e a função `can(user, feature, resource)`. Para atualização de usuário, a autorização considera o recurso: o próprio usuário pode ser atualizado com `update:user`; outro usuário exige `update:user:others`.
 
-A função `filterOutput(user, feature, resource)` controla os campos que podem ser enviados em cada resposta. A representação pública de usuário não inclui e-mail ou hash de senha; a representação privada do próprio usuário inclui e-mail, mas não senha. A representação de sessão atualmente inclui o token.
+A função `filterOutput(user, feature, resource)` controla os campos que podem ser enviados em cada resposta. A representação pública de usuário não inclui e-mail ou hash de senha; a representação privada do próprio usuário inclui e-mail, mas não senha. A representação de sessão não inclui o token: ele é enviado exclusivamente no cookie `session_id`, configurado como `HttpOnly`.
 
 ### Features conhecidas
 
@@ -86,6 +86,7 @@ O cadastro recebe `read:activation_token`; após ativação, recebe `create:sess
 - `components/AppHead` define título e descrição.
 - `components/Header` reúne a navegação principal, o submenu de ferramentas e o seletor de tema; `components/Footer` apresenta os links externos e os créditos.
 - `pages/status` apresenta o painel alimentado por SWR, com atualização a cada cinco segundos.
+- `pages/diario-oficial/edicao-0012026` apresenta a edição 001/2026 do Diário Oficial em um leitor PDF do navegador, com opção de download e metadados `noindex, nofollow`.
 
 ### Catálogo e ferramentas
 
@@ -96,6 +97,10 @@ As páginas individuais ficam em `pages/tools/<slug>/index.js` e utilizam `compo
 O Gerador de QR Code está em `features/qr-code/components/`; a validação e normalização de URLs ficam em `lib/url.js`, e a captura para PNG em `lib/download.js`. O QR Code é renderizado com `qrcode.react`; o download utiliza `html2canvas`, carregado dinamicamente porque depende do DOM. O processamento ocorre no navegador, sem envio do link a um endpoint da aplicação.
 
 O Divisor de PDF está em `features/pdf-splitter/`: a interface fica em `components/PdfSplitter/` e as regras (validação do intervalo, seleção de arquivos, extração de páginas e geração do ZIP) em `lib/pdf.js`. Utiliza `pdf-lib` e `jszip`, carregados dinamicamente, e os arquivos não são enviados a nenhum endpoint. Arquivos com menos páginas que o intervalo pedido são extraídos até a última página, ou ignorados quando não chegam à página inicial, e aparecem em um aviso ao final do processamento.
+
+O Unificador de PDF fica em `features/pdf-merger/`: `lib/pdf.js` valida e ordena os arquivos por nome com comparação numérica natural e os combina com `pdf-lib`, carregado sob demanda. Há uma opção para inserir uma página em branco após cada PDF com número ímpar de páginas, mantendo a paridade individual dos documentos. O processamento ocorre no navegador.
+
+O Gerador de AR e Etiquetas fica em `features/ar-generator/`: a interface mantém os cadastros de destinatários e remetente, consulta CEP pelo ViaCEP e localidades pela API do IBGE, e usa `lib/pdf.js` para gerar ARs e etiquetas em PDF A4 com códigos de barras Code 128. A geração ocorre no navegador; a conferência de alinhamento e impressão em escala real deve ser feita manualmente.
 
 Os conversores de arquivos também ficam isolados em `features/`. O Conversor de CSV para JSON utiliza `features/csv-to-json/`, com interpretação e geração do JSON em `lib/csv.js`. O Conversor de JSON para CSV utiliza `features/json-to-csv/`: `lib/json.js` normaliza objetos e listas em registros, coleta as colunas na ordem de primeira ocorrência, converte valores aninhados em texto e gera o CSV com Papa Parse. O Conversor de TXT para CSV utiliza `features/txt-to-csv/`: `lib/txt.js` detecta a codificação UTF-8 ou Windows-1252, identifica as posições das colunas pelo cabeçalho e converte os registros de largura fixa em CSV. As três ferramentas utilizam componentes compartilhados e processam os arquivos inteiramente no navegador. O Testador de CPF fica em `features/cpf-tester/`: `lib/cpf.js` concentra a formatação, o cálculo dos dígitos verificadores, a validação e a geração de variações por alteração de uma posição. A interface usa componentes compartilhados e executa todo o processamento localmente.
 
@@ -108,6 +113,7 @@ Para incluir novas ferramentas, consulte o [guia Adicionando uma nova ferramenta
 `infra/database.js` exporta:
 
 - `query(queryObject)`: abre um cliente PostgreSQL, executa a consulta e fecha a conexão no `finally`. Erros são encapsulados em `ServiceError`.
+- `transaction(callback)`: abre um cliente, inicia uma transação com `BEGIN`, executa o callback, confirma com `COMMIT` ou desfaz com `ROLLBACK` em caso de erro e encerra a conexão. Erros que já possuem `statusCode` são repassados; falhas do banco são encapsuladas em `ServiceError`.
 - `getNewClient()`: retorna um cliente conectado; quem chama deve executar `client.end()`. É utilizado pelo migrador.
 
 Não há pool de conexões: cada chamada a `query` abre e fecha uma conexão. Consultas que recebem valores externos devem utilizar parâmetros (`$1`, `$2` etc.).

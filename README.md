@@ -4,7 +4,7 @@ Nova implementação dos meus utilitários de trabalho, originalmente desenvolvi
 
 **Aplicação publicada:** <https://utilities-node.vercel.app>
 
-> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, um catálogo de ferramentas em `/tools`, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em _features_, consulta e execução de migrations. O Gerador de QR Code, o Divisor de PDF e os conversores de CSV, JSON e TXT já estão disponíveis. O Unificador de PDF e o Gerador de AR e Etiquetas foram implementados e aguardam validação prática; os demais utilitários serão implementados gradualmente.
+> **Status do projeto: em construção.** A aplicação possui uma página inicial provisória, um catálogo de ferramentas em `/tools`, uma página de status e uma API com cadastro e ativação de usuários, autenticação por sessões, autorização baseada em _features_, consulta e execução de migrations. As oito ferramentas atualmente registradas no catálogo estão disponíveis: Gerador de QR Code, Divisor e Unificador de PDF, conversores de CSV para JSON, JSON para CSV e TXT para CSV, Testador de CPF e Gerador de AR e Etiquetas. Outros utilitários serão implementados gradualmente.
 
 ## Sumário
 
@@ -33,9 +33,12 @@ O que existe hoje:
 - Gerador de QR Code em `/tools/qr-code`, com personalização de cores e download em PNG. A geração e a captura da imagem são realizadas no navegador.
 - Divisor de PDF em `/tools/pdf-splitter`, que extrai um intervalo de páginas de um ou mais PDFs (resultado em PDF ou ZIP). O processamento é realizado no navegador.
 - Unificador de PDF em `/tools/pdf-merger`, que combina dois ou mais PDFs em um único documento, com ordenação natural dos nomes e opção de inserir páginas em branco para manter a paridade de cada arquivo. O processamento é realizado no navegador.
+- Conversor de CSV para JSON em `/tools/csv-to-json`, com seleção da linha de cabeçalho, escolha de codificação e delimitador e seleção das colunas que entram no resultado. O processamento é realizado no navegador.
+- Conversor de JSON para CSV em `/tools/json-to-csv`, com normalização de objetos e listas, seleção de colunas, delimitador e codificação do arquivo de saída. O processamento é realizado no navegador.
 - Conversor de TXT para CSV em `/tools/txt-to-csv`, que interpreta relatórios de largura fixa, detecta o cabeçalho e permite configurar separador, BOM UTF-8, exibição de datas e separador decimal. O processamento é realizado no navegador.
 - Testador de CPF em `/tools/cpf-tester`, que valida o número informado, calcula os dígitos verificadores da base e encontra combinações válidas ao substituir um dígito por vez. O processamento é realizado no navegador, sem envio dos dados ao servidor.
-- Gerador de AR e Etiquetas em `/tools/ar-generator`, que cadastra destinatários e remetente, consulta CEP e localidades, e gera ARs e etiquetas em PDF A4 com código de barras Code 128. O processamento do PDF é realizado no navegador; a conferência visual e a impressão em escala real ainda precisam ser validadas.
+- Gerador de AR e Etiquetas em `/tools/ar-generator`, que cadastra destinatários e remetente, consulta CEP e localidades, e gera ARs e etiquetas em PDF A4 com código de barras Code 128. O processamento do PDF é realizado no navegador; a conferência visual e a impressão em escala real continuam sendo verificações práticas recomendadas.
+- Página `/diario-oficial/edicao-0012026`, com visualização no navegador e opção para baixar a edição 001/2026 do Diário Oficial. A página utiliza `noindex, nofollow`.
 - Página `/status`, com painel de monitoramento do banco de dados e atualização automática a cada 5 segundos.
 - `GET /api/v1/status`: consulta a saúde do banco. A versão do PostgreSQL só é incluída para usuários com a feature `read:status:all`.
 - `GET` e `POST /api/v1/migrations`: lista e aplica migrations, mediante as features `read:migration` e `create:migration`.

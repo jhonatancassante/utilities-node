@@ -115,6 +115,42 @@ describe("POST /api/v1/sessions", () => {
       });
     });
 
+    test.each([
+      ["sem corpo", undefined],
+      ["null", null],
+      ["array", []],
+      ["texto", "texto"],
+      ["número", 123],
+      ["email ausente", { password: "Senha-De-Teste-123!!" }],
+      ["senha ausente", { email: "jhow@example.com" }],
+      [
+        "email que não é string",
+        { email: 123, password: "Senha-De-Teste-123!!" },
+      ],
+      ["senha que não é string", { email: "jhow@example.com", password: 123 }],
+      ["email vazio", { email: "   ", password: "Senha-De-Teste-123!!" }],
+      ["senha vazia", { email: "jhow@example.com", password: "" }],
+    ])("Com corpo inválido (%s)", async (_, body) => {
+      const response = await fetch(`${orchestrator.API_URL}/sessions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      expect(response.status).toBe(400);
+
+      const responseBody = await response.json();
+
+      expect(responseBody).toEqual({
+        name: "ValidationError",
+        message: "Email e senha são obrigatórios para fazer login.",
+        action:
+          "Verifique se você enviou os campos corretamente e tente novamente.",
+        status_code: 400,
+      });
+    });
+
     test("Com o email e a senha corretos", async () => {
       const newUser = await orchestrator.createUser({
         email: "email.e.senha@correto.com.br",
@@ -129,7 +165,7 @@ describe("POST /api/v1/sessions", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: "email.e.senha@correto.com.br",
+          email: "  email.e.senha@correto.com.br  ",
           password: "Email.E.Senha12!!",
         }),
       });
@@ -175,10 +211,8 @@ describe("POST /api/v1/sessions", () => {
         maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
       });
     });
-  });
 
-  describe("Com um cookie `session_id` antigo", () => {
-    test("Sessão expirada, com credenciais corretas", async () => {
+    test("Com um cookie `session_id` expirado e credenciais corretas", async () => {
       const newUser = await orchestrator.createUser({
         password: "Email.E.Senha12!!",
       });
@@ -259,7 +293,7 @@ describe("POST /api/v1/sessions", () => {
       });
     });
 
-    test("Token inexistente, com credenciais corretas", async () => {
+    test("Com um cookie `session_id` inexistente e credenciais corretas", async () => {
       const newUser = await orchestrator.createUser({
         password: "Email.E.Senha12!!",
       });
@@ -319,7 +353,7 @@ describe("POST /api/v1/sessions", () => {
       });
     });
 
-    test("Sessão expirada, com credenciais incorretas", async () => {
+    test("Com um cookie `session_id` expirado e credenciais incorretas", async () => {
       const newUser = await orchestrator.createUser({
         email: "cookie.expirado@incorreto.com.br",
       });

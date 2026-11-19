@@ -44,10 +44,20 @@ paths:
       description: |
         Rota pública. Retorna informações de conexão do banco.
         A versão do PostgreSQL só é incluída quando o usuário autenticado
-        possui a feature read:status:all.
+        possui a feature read:status:all. A feature read:status não é exigida
+        pelo endpoint. Quando a requisição traz um cookie session_id inválido
+        ou expirado, ele é removido e a consulta continua como visitante anônimo.
       responses:
         "200":
           description: Aplicação conseguiu consultar o banco.
+          headers:
+            Set-Cookie:
+              description: Se o cookie recebido for inválido ou expirado, limpa session_id.
+              schema:
+                type: string
+              example: session_id=invalid; Max-Age=-1; Path=/; HttpOnly; SameSite=Lax
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
           content:
             application/json:
               schema:
@@ -140,8 +150,11 @@ paths:
       description: |
         Exige create:user, concedida ao visitante padrão. Cria a conta com
         read:activation_token, gera um token de ativação e envia um e-mail.
-        A senha é armazenada com HMAC-SHA256 e bcrypt. O e-mail enviado é um
-        efeito colateral necessário para concluir o cadastro.
+        Username, e-mail e senha são validados antes da criação. A senha tem
+        de 12 a 64 caracteres, exige pelo menos 2 letras minúsculas, 2 maiúsculas,
+        2 números e 2 caracteres especiais e rejeita termos comuns conhecidos.
+        Ela é armazenada com HMAC-SHA256 e bcrypt. O e-mail enviado é um efeito
+        colateral necessário para concluir o cadastro.
       x-required-feature: create:user
       requestBody:
         required: true
@@ -203,8 +216,10 @@ paths:
       description: |
         Exige update:user. O usuário pode alterar a própria conta; para
         atualizar outra conta também é necessária a feature update:user:others.
-        Apenas os campos enviados são alterados. A resposta é a representação
-        pública do usuário.
+        O corpo deve ser um objeto JSON e pode conter somente username, email
+        e password. Campos adicionais/protegidos e corpos que não sejam
+        objetos retornam ValidationError (400). Apenas os campos enviados
+        são alterados. A resposta é a representação pública do usuário.
       x-required-feature: update:user
       requestBody:
         required: true
@@ -282,7 +297,11 @@ paths:
         Exige create:session. A conta precisa estar ativada. A sessão dura
         30 dias. O token é enviado somente no cookie HttpOnly session_id e não
         aparece no corpo da resposta. Um cookie session_id inválido ou expirado
-        na requisição é ignorado (visitante anônimo). Credenciais incorretas retornam uma
+        na requisição é ignorado (visitante anônimo). O corpo deve ser um objeto
+        JSON com email e password como strings não vazias; corpo ausente, null,
+        array, valor primitivo, campo ausente, vazio ou com tipo incorreto
+        retorna ValidationError (400). Espaços no início e no fim do e-mail
+        são removidos antes da consulta. Credenciais incorretas retornam uma
         mensagem genérica, sem distinguir e-mail inexistente de senha errada.
       x-required-feature: create:session
       requestBody:
@@ -306,6 +325,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Session"
+        "400":
+          $ref: "#/components/responses/Validation"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -353,9 +374,11 @@ paths:
       operationId: getAuthenticatedUser
       summary: Consulta o usuário autenticado
       description: |
-        Exige uma sessão válida e a feature read:session. Renova a validade
-        da sessão para mais 30 dias, atualiza o cookie e retorna os dados
-        privados do próprio usuário, sem senha.
+        Exige uma sessão válida e a feature read:session. Sem cookie, o
+        visitante anônimo não possui a feature e recebe 403. Com sessão
+        inválida ou expirada, recebe 401. Renova a validade da sessão para
+        mais 30 dias, atualiza o cookie e retorna os dados privados do próprio
+        usuário, sem senha.
       x-required-feature: read:session
       security:
         - SessionCookie: []
@@ -451,6 +474,7 @@ components:
         email:
           type: string
           format: email
+          minLength: 1
           maxLength: 254
         password:
           type: string
@@ -458,9 +482,12 @@ components:
           maxLength: 64
           description: >
             Senha de 12 a 64 caracteres, com pelo menos 2 letras minúsculas,
-            2 maiúsculas, 2 números e 2 caracteres especiais.
+            2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns
+            conhecidos como password, admin, qwerty, letmein e welcome são
+            rejeitados.
     UserUpdate:
       type: object
+      additionalProperties: false
       properties:
         username:
           type: string
@@ -470,6 +497,7 @@ components:
         email:
           type: string
           format: email
+          minLength: 1
           maxLength: 254
         password:
           type: string
@@ -477,7 +505,9 @@ components:
           maxLength: 64
           description: >
             Senha de 12 a 64 caracteres, com pelo menos 2 letras minúsculas,
-            2 maiúsculas, 2 números e 2 caracteres especiais.
+            2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns
+            conhecidos como password, admin, qwerty, letmein e welcome são
+            rejeitados.
     PublicUser:
       type: object
       required: [id, username, features, created_at, updated_at]
@@ -512,9 +542,10 @@ components:
       properties:
         email:
           type: string
-          format: email
+          minLength: 1
         password:
           type: string
+          minLength: 1
     Session:
       type: object
       required: [id, user_id, expires_at, created_at, updated_at]

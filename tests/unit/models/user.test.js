@@ -262,7 +262,7 @@ describe("models/user.js", () => {
     });
   });
 
-  describe("Consultas", () => {
+  describe(".findOneById(), .findOneByUsername() e .findOneByEmail()", () => {
     test.each([
       [
         "findOneById",
@@ -273,7 +273,7 @@ describe("models/user.js", () => {
         "O nome de usuário informado não foi encontrado no sistema.",
       ],
       ["findOneByEmail", "O email informado não foi encontrado no sistema."],
-    ])("%s sem resultado lança NotFoundError", async (method, message) => {
+    ])(".%s() sem resultado lança NotFoundError", async (method, message) => {
       mockQueries([["SELECT", []]]);
 
       const error = await user[method]("qualquer").catch((e) => e);
@@ -283,8 +283,8 @@ describe("models/user.js", () => {
     });
   });
 
-  describe(".setFeatures() e .addFeatures()", () => {
-    test("setFeatures substitui as features do usuário informado", async () => {
+  describe(".setFeatures()", () => {
+    test("Substitui as features do usuário informado", async () => {
       const querySpy = mockQueries([["UPDATE", [existingUser]]]);
 
       await user.setFeatures(existingUser.id, ["read:session"]);
@@ -293,8 +293,10 @@ describe("models/user.js", () => {
       expect(updateQuery.text).toContain("features = $2");
       expect(updateQuery.values).toEqual([existingUser.id, ["read:session"]]);
     });
+  });
 
-    test("addFeatures concatena as features do usuário informado", async () => {
+  describe(".addFeatures()", () => {
+    test("Concatena as features do usuário informado", async () => {
       const querySpy = mockQueries([["UPDATE", [existingUser]]]);
 
       await user.addFeatures(existingUser.id, ["read:migration"]);

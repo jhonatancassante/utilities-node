@@ -12,10 +12,12 @@ const defaultStatusCodes = {
 };
 
 describe("infra/errors.js", () => {
-  test("Exporta todos os erros esperados", () => {
-    expect(Object.keys(errors).sort()).toEqual(
-      Object.keys(defaultStatusCodes).sort(),
-    );
+  describe("Exportações", () => {
+    test("Exporta todos os erros esperados", () => {
+      expect(Object.keys(errors).sort()).toEqual(
+        Object.keys(defaultStatusCodes).sort(),
+      );
+    });
   });
 
   describe.each(Object.entries(defaultStatusCodes))("%s", (name, status) => {
@@ -49,30 +51,34 @@ describe("infra/errors.js", () => {
     });
   });
 
-  test("ServiceError inclui o contexto no JSON (o controller nunca o devolve ao cliente, pois o troca por InternalServerError)", () => {
-    const json = new errors.ServiceError({ context: { to: "a@b.com" } });
+  describe("ServiceError com `context`", () => {
+    test("Inclui o contexto no JSON (o controller nunca o devolve ao cliente, pois o troca por InternalServerError)", () => {
+      const json = new errors.ServiceError({ context: { to: "a@b.com" } });
 
-    expect(json.toJSON().context).toEqual({ to: "a@b.com" });
+      expect(json.toJSON().context).toEqual({ to: "a@b.com" });
+    });
   });
 
-  test("Mensagens e ações customizadas substituem as padrão", () => {
-    const error = new errors.ValidationError({
-      message: "Mensagem própria.",
-      action: "Ação própria.",
+  describe("Parâmetros do construtor", () => {
+    test("Mensagens e ações customizadas substituem as padrão", () => {
+      const error = new errors.ValidationError({
+        message: "Mensagem própria.",
+        action: "Ação própria.",
+      });
+
+      expect(error.message).toBe("Mensagem própria.");
+      expect(error.action).toBe("Ação própria.");
     });
 
-    expect(error.message).toBe("Mensagem própria.");
-    expect(error.action).toBe("Ação própria.");
-  });
+    test("Guarda a causa original", () => {
+      const cause = new Error("original");
 
-  test("Guarda a causa original", () => {
-    const cause = new Error("original");
+      expect(new errors.ServiceError({ cause }).cause).toBe(cause);
+    });
 
-    expect(new errors.ServiceError({ cause }).cause).toBe(cause);
-  });
-
-  test("Mensagens padrão não têm os typos corrigidos", () => {
-    expect(new errors.ServiceError({}).action).toContain("Verifique");
-    expect(new errors.ServiceError({}).action).not.toContain("Verificque");
+    test("Mensagens padrão não têm os typos corrigidos", () => {
+      expect(new errors.ServiceError({}).action).toContain("Verifique");
+      expect(new errors.ServiceError({}).action).not.toContain("Verificque");
+    });
   });
 });

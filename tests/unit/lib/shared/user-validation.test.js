@@ -4,7 +4,7 @@ import {
   validatePassword,
 } from "@/lib/shared/user-validation.js";
 
-describe("Validação dos dados de usuário", () => {
+describe("lib/shared/user-validation.js", () => {
   describe("validateUsername()", () => {
     test.each(["Jhow", "jhow_01", "jhow-brito", "JHOW_01"])(
       "Aceita o nome de usuário %s",
