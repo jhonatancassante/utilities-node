@@ -166,8 +166,8 @@ function AdminUsersPage() {
             <span className={shared.badge}>ADMINISTRAÇÃO</span>
             <h1>Gerenciar usuários</h1>
             <p className={styles.description}>
-              Pesquise por nome de usuário ou e-mail para consultar e alterar
-              os dados e as permissões de uma conta.
+              Pesquise por nome de usuário ou e-mail para consultar e alterar os
+              dados e as permissões de uma conta.
             </p>
 
             <form className={styles.searchForm} onSubmit={handleSearch}>
@@ -270,13 +270,7 @@ function AdminUsersPage() {
   );
 }
 
-function UserEditor({
-  user,
-  currentUserId,
-  onUpdated,
-  onDeleted,
-  onCancel,
-}) {
+function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
   const [form, setForm] = useState({
     username: user.username,
     email: user.email,
@@ -291,11 +285,12 @@ function UserEditor({
 
   const filteredFeatures = useMemo(() => {
     const term = featureSearch.trim().toLowerCase();
-    return featureCatalog.filter((feature) =>
-      !term ||
-      feature.name.toLowerCase().includes(term) ||
-      feature.label.toLowerCase().includes(term) ||
-      feature.description.toLowerCase().includes(term),
+    return featureCatalog.filter(
+      (feature) =>
+        !term ||
+        feature.name.toLowerCase().includes(term) ||
+        feature.label.toLowerCase().includes(term) ||
+        feature.description.toLowerCase().includes(term),
     );
   }, [featureSearch]);
 
@@ -551,10 +546,7 @@ function UserEditor({
                         onChange={() => toggleFeature(feature.name)}
                         disabled={isSaving || isDeleting}
                       />
-                      <span
-                        className={styles.switch}
-                        aria-hidden="true"
-                      ></span>
+                      <span className={styles.switch} aria-hidden="true"></span>
                       <span className={styles.featureText}>
                         <strong>{feature.label}</strong>
                         <small>{feature.description}</small>
