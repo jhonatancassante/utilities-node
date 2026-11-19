@@ -165,7 +165,7 @@ describe("POST /api/v1/sessions", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: "email.e.senha@correto.com.br",
+          email: "  email.e.senha@correto.com.br  ",
           password: "Email.E.Senha12!!",
         }),
       });
