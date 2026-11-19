@@ -24,7 +24,6 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 | `GET`    | `/api/v1/admin/users?search=...` | Feature `update:user:others`                                      |
 | `GET`    | `/api/v1/admin/users/{username}` | Feature `update:user:others`                                      |
 | `PATCH`  | `/api/v1/admin/users/{username}` | Feature `update:user:others`; inclui alteração de features        |
-| `DELETE` | `/api/v1/admin/users/{username}` | Feature `update:user:others`; não permite remover a própria conta |
 | `PATCH`  | `/api/v1/users/{username}`       | Feature `update:user`; próprio usuário ou `update:user:others`    |
 | `PATCH`  | `/api/v1/activations/{token_id}` | Feature `read:activation_token`                                   |
 | `POST`   | `/api/v1/sessions`               | Feature `create:session`                                          |
@@ -133,11 +132,7 @@ Consulta os dados administrativos de uma conta, incluindo e-mail e features, mas
 
 ### `PATCH /api/v1/admin/users/{username}`
 
-Permite alterar `username`, `email`, `password` e `features` de outras contas. A própria conta não aparece na pesquisa e não pode ser alterada por esse endpoint; para isso, utilize o perfil. A senha segue as mesmas regras de validação e hash do fluxo de edição do perfil. A lista de features é validada contra o catálogo central em `configs/features.js`; valores desconhecidos são rejeitados com `400 ValidationError`. A lista enviada substitui integralmente as permissões atuais, inclusive quando vazia. Campos omitidos permanecem inalterados.
-
-### `DELETE /api/v1/admin/users/{username}`
-
-Remove a conta e, na mesma transação, remove suas sessões e tokens de ativação associados. A própria conta do administrador não pode ser removida por esse endpoint. A operação responde `204` sem corpo.
+Permite alterar `username`, `email`, `password` e `features` de qualquer conta, inclusive a própria conta do administrador. A senha segue as mesmas regras de validação e hash do fluxo de edição do perfil. A lista de features é validada contra o catálogo central em `configs/features.js`; valores desconhecidos são rejeitados com `400 ValidationError`. A lista enviada substitui integralmente as permissões atuais, inclusive quando vazia. Campos omitidos permanecem inalterados.
 
 Os endpoints administrativos retornam `403` quando a sessão não possui `update:user:others`, `404` quando o usuário alvo não existe e `400` quando a pesquisa ou os dados enviados são inválidos.
 
