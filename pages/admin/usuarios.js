@@ -512,7 +512,9 @@ function UserEditor({
           <div className={styles.sectionHeading}>
             <div>
               <h3>Permissões e features</h3>
-              <span>Selecione as permissões que esta conta poderá utilizar.</span>
+              <span>
+                Selecione as permissões que esta conta poderá utilizar.
+              </span>
             </div>
             <span className={styles.featureCount}>
               {form.features.length} selecionada(s)
