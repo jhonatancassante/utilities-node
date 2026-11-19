@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import ThemeToggle from "@/components/ThemeToggle";
 import headConfigs from "@/configs/head.js";
 import { tools, TOOLS_BASE_PATH } from "@/configs/tools.js";
-import { hasAdminAccess } from "@/configs/admin.js";
+import { hasAdminAccess } from "@/models/authorization.js";
 import useUser from "@/hooks/use-user.js";
 import session from "@/lib/client/session.js";
 import styles from "./index.module.css";

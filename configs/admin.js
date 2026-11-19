@@ -1,5 +1,3 @@
-import { featureCatalog } from "@/configs/features.js";
-
 export const adminSections = [
   {
     id: "users",
@@ -18,24 +16,3 @@ export const adminSections = [
     requiredFeature: "read:status:all",
   },
 ];
-
-export function hasAdminAccess(user) {
-  return Boolean(
-    user?.features?.some((name) =>
-      featureCatalog.some(
-        (feature) => feature.name === name && feature.privileged,
-      ),
-    ),
-  );
-}
-
-export function hasAdminSectionAccess(user, sectionId) {
-  const section = adminSections.find((item) => item.id === sectionId);
-  return Boolean(section && user?.features?.includes(section.requiredFeature));
-}
-
-export function getAvailableAdminSections(user) {
-  return adminSections.filter((section) =>
-    hasAdminSectionAccess(user, section.id),
-  );
-}

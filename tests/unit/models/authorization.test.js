@@ -119,4 +119,84 @@ describe("models/authorization.js", () => {
       expect(result).not.toHaveProperty("token");
     });
   });
+  describe(".hasAdminAccess()", () => {
+    test("Usuário sem features privilegiadas", () => {
+      expect(authorization.hasAdminAccess({ features: ["read:user"] })).toBe(
+        false,
+      );
+    });
+
+    test("Usuário com qualquer feature privilegiada", () => {
+      expect(
+        authorization.hasAdminAccess({ features: ["read:status:all"] }),
+      ).toBe(true);
+      expect(
+        authorization.hasAdminAccess({ features: ["update:user:others"] }),
+      ).toBe(true);
+    });
+
+    test("Usuário ausente ou sem features", () => {
+      expect(authorization.hasAdminAccess()).toBe(false);
+      expect(authorization.hasAdminAccess({})).toBe(false);
+    });
+  });
+
+  describe(".hasAdminSectionAccess()", () => {
+    test("Usuário sem a feature exigida para a seção", () => {
+      expect(
+        authorization.hasAdminSectionAccess(
+          { features: ["read:status:all"] },
+          "users",
+        ),
+      ).toBe(false);
+    });
+
+    test("Usuário com a feature exigida para a seção", () => {
+      expect(
+        authorization.hasAdminSectionAccess(
+          { features: ["update:user:others"] },
+          "users",
+        ),
+      ).toBe(true);
+    });
+
+    test("Seção inexistente", () => {
+      expect(
+        authorization.hasAdminSectionAccess({ features: [] }, "unknown"),
+      ).toBe(false);
+    });
+  });
+
+  describe(".getAvailableAdminSections()", () => {
+    test("Disponibiliza somente as seções autorizadas", () => {
+      expect(
+        authorization
+          .getAvailableAdminSections({ features: ["update:user:others"] })
+          .map((section) => section.id),
+      ).toEqual(["users"]);
+
+      expect(
+        authorization
+          .getAvailableAdminSections({ features: ["read:status:all"] })
+          .map((section) => section.id),
+      ).toEqual(["status"]);
+    });
+
+    test("Disponibiliza todas as seções quando o usuário possui as permissões", () => {
+      expect(
+        authorization
+          .getAvailableAdminSections({
+            features: ["update:user:others", "read:status:all"],
+          })
+          .map((section) => section.id),
+      ).toEqual(["users", "status"]);
+    });
+
+    test("Não disponibiliza seções para usuário sem permissões", () => {
+      expect(authorization.getAvailableAdminSections({ features: [] })).toEqual(
+        [],
+      );
+    });
+  });
+
 });

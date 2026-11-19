@@ -1,5 +1,6 @@
 import { InternalServerError } from "@/infra/errors.js";
-import { availableFeatures } from "@/configs/features.js";
+import { availableFeatures, featureCatalog } from "@/configs/features.js";
+import { adminSections } from "@/configs/admin.js";
 
 function can(user, feature, resource) {
   validateUser(user);
@@ -20,6 +21,27 @@ function can(user, feature, resource) {
   }
 
   return authorized;
+}
+
+function hasAdminAccess(user) {
+  return Boolean(
+    user?.features?.some((name) =>
+      featureCatalog.some(
+        (feature) => feature.name === name && feature.privileged,
+      ),
+    ),
+  );
+}
+
+function hasAdminSectionAccess(user, sectionId) {
+  const section = adminSections.find((item) => item.id === sectionId);
+  return Boolean(section && user?.features?.includes(section.requiredFeature));
+}
+
+function getAvailableAdminSections(user) {
+  return adminSections.filter((section) =>
+    hasAdminSectionAccess(user, section.id),
+  );
 }
 
 function filterOutput(user, feature, resource) {
@@ -130,6 +152,9 @@ const authorization = {
   can,
   filterOutput,
   availableFeatures,
+  hasAdminAccess,
+  hasAdminSectionAccess,
+  getAvailableAdminSections,
 };
 
 export default authorization;

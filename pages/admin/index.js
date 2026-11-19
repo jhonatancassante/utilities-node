@@ -6,7 +6,7 @@ import AppHead from "@/components/AppHead";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
-import { getAvailableAdminSections, hasAdminAccess } from "@/configs/admin.js";
+import { getAvailableAdminSections, hasAdminAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
