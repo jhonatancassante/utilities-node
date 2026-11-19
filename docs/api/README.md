@@ -42,14 +42,14 @@ Os erros seguem o formato:
 }
 ```
 
-| Código | Erro                    | Significado                                                   |
-| ------ | ----------------------- | ------------------------------------------------------------- |
-| `400`  | `ValidationError`       | Dados inválidos ou duplicados                                 |
-| `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão inválida/expirada             |
-| `403`  | `ForbiddenError`        | Feature necessária não concedida                              |
-| `404`  | `NotFoundError`         | Usuário ou token não encontrado, expirado ou já utilizado     |
-| `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`                 |
-| `500`  | `InternalServerError`   | Falha inesperada; detalhes ficam no log                       |
+| Código | Erro                    | Significado                                               |
+| ------ | ----------------------- | --------------------------------------------------------- |
+| `400`  | `ValidationError`       | Dados inválidos ou duplicados                             |
+| `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão inválida/expirada         |
+| `403`  | `ForbiddenError`        | Feature necessária não concedida                          |
+| `404`  | `NotFoundError`         | Usuário ou token não encontrado, expirado ou já utilizado |
+| `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`             |
+| `500`  | `InternalServerError`   | Falha inesperada; detalhes ficam no log                   |
 
 O controller limpa o cookie `session_id` em qualquer resposta `401`. O cookie inválido ou expirado é tolerado e removido em `POST /api/v1/sessions`, `POST /api/v1/users`, `PATCH /api/v1/activations/{token_id}` e `GET /api/v1/status`; nessas operações, a requisição continua como visitante anônimo. Nas demais rotas, um cookie inválido pode resultar em `401`. Em particular, `DELETE /api/v1/sessions` continua exigindo uma sessão válida, mesmo que use o middleware tolerante antes de executar o handler. As respostas que definem ou removem o cookie também usam `Cache-Control: no-store, no-cache, max-age=0, must-revalidate`.
 
