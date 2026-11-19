@@ -132,19 +132,16 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
     test("Tentando alterar a própria conta", async () => {
       const { privilegedUser, sessionObject } = await createPrivilegedSession();
 
-      const response = await fetch(
-        adminUserUrl(privilegedUser.username),
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Cookie: `session_id=${sessionObject.token}`,
-          },
-          body: JSON.stringify({
-            features: ["update:user:others", "read:status:all"],
-          }),
+      const response = await fetch(adminUserUrl(privilegedUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
         },
-      );
+        body: JSON.stringify({
+          features: ["update:user:others", "read:status:all"],
+        }),
+      });
 
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({
