@@ -235,8 +235,6 @@ paths:
                 $ref: "#/components/schemas/PublicUser"
         "400":
           $ref: "#/components/responses/Validation"
-        "400":
-          $ref: "#/components/responses/Validation"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -323,6 +321,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Session"
+        "400":
+          $ref: "#/components/responses/Validation"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
