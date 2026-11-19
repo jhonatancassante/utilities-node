@@ -20,7 +20,7 @@ function AdminFeaturesPage() {
   const { user, error, isLoading } = useUser();
   const [features, setFeatures] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoadingFeatures, setIsLoadingFeatures] = useState(true);
+  const [isLoadingFeatures, setIsLoadingFeatures] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editingFeature, setEditingFeature] = useState(null);
@@ -29,6 +29,8 @@ function AdminFeaturesPage() {
   const canCreate = user?.features?.includes("create:feature") ?? false;
   const canUpdate = user?.features?.includes("update:feature") ?? false;
   const canDelete = user?.features?.includes("delete:feature") ?? false;
+  const hasFeaturesAccess =
+    !isLoading && Boolean(user) && hasAdminSectionAccess(user, "features");
 
   useEffect(() => {
     if (
@@ -45,6 +47,7 @@ function AdminFeaturesPage() {
   }, [error, isLoading, router, user]);
 
   const loadFeatures = useCallback(async ({ showFeedback = true } = {}) => {
+    setIsLoadingFeatures(true);
     try {
       const loadedFeatures = await requestAPI("/api/v1/admin/features");
       setFeatures(loadedFeatures);
@@ -64,10 +67,38 @@ function AdminFeaturesPage() {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && user && hasAdminSectionAccess(user, "features")) {
-      loadFeatures();
+    if (!hasFeaturesAccess) {
+      return undefined;
     }
-  }, [isLoading, loadFeatures, user]);
+
+    let active = true;
+
+    async function fetchInitialFeatures() {
+      setIsLoadingFeatures(true);
+      try {
+        const loadedFeatures = await requestAPI("/api/v1/admin/features");
+        if (!active) return;
+        setFeatures(loadedFeatures);
+      } catch (requestError) {
+        if (!active) return;
+        setFeedback({
+          type: "error",
+          message: requestError.message,
+          action: requestError.action,
+        });
+      } finally {
+        if (active) {
+          setIsLoadingFeatures(false);
+        }
+      }
+    }
+
+    fetchInitialFeatures();
+
+    return () => {
+      active = false;
+    };
+  }, [hasFeaturesAccess]);
 
   useEffect(() => {
     if (feedback?.type !== "success") return undefined;
@@ -128,7 +159,6 @@ function AdminFeaturesPage() {
 
       setCreating(false);
       setEditingFeature(null);
-      setIsLoadingFeatures(true);
       const refreshed = await loadFeatures({ showFeedback: false });
 
       setFeedback({
@@ -165,7 +195,6 @@ function AdminFeaturesPage() {
         { method: "DELETE" },
       );
 
-      setIsLoadingFeatures(true);
       const refreshed = await loadFeatures({ showFeedback: false });
       setFeedback({
         type: refreshed ? "success" : "error",
