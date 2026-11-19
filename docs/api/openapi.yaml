@@ -259,7 +259,7 @@ paths:
       description: |
         Exige sessão válida e a feature update:user:others.
         Pesquisa por trecho de username ou e-mail, sem diferenciar maiúsculas
-        de minúsculas. Retorna até dez resultados, não inclui a própria conta do administrador e nunca inclui hash de senha.
+        de minúsculas. Retorna até dez resultados, pode incluir a própria conta do administrador e nunca inclui hash de senha.
       x-required-feature: update:user:others
       security:
         - SessionCookie: []
@@ -324,7 +324,7 @@ paths:
       tags: [Admin]
       operationId: updateAdminUser
       summary: Atualiza dados e permissões de um usuário
-      description: Exige update:user:others e permite alterar somente outras contas; tentativas de alterar a própria conta são rejeitadas. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
+      description: Exige update:user:others e permite alterar qualquer conta, inclusive a própria conta do administrador. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
       x-required-feature: update:user:others
       security:
         - SessionCookie: []
