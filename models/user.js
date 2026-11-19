@@ -437,34 +437,9 @@ async function hashPasswordInObject(userInputValues) {
   userInputValues.password = hashedPassword;
 }
 
-async function deleteById(userId) {
-  return await database.transaction(async (client) => {
-    await client.query("DELETE FROM sessions WHERE user_id = $1;", [userId]);
-    await client.query(
-      "DELETE FROM user_activation_tokens WHERE user_id = $1;",
-      [userId],
-    );
-
-    const results = await client.query(
-      "DELETE FROM users WHERE id = $1 RETURNING id;",
-      [userId],
-    );
-
-    if (results.rowCount === 0) {
-      throw new NotFoundError({
-        message: "O usuário informado não foi encontrado no sistema.",
-        action: "Atualize a pesquisa e tente novamente.",
-      });
-    }
-
-    return results.rows[0];
-  });
-}
-
 const user = {
   create,
   search,
-  deleteById,
   findOneById,
   findOneByUsername,
   findOneByEmail,
