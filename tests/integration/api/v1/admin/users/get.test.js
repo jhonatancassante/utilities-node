@@ -122,7 +122,8 @@ describe("GET /api/v1/admin/users", () => {
 
       expect(response.status).toBe(200);
       const responseBody = await response.json();
-      expect(responseBody).toEqual([]);
+      expect(responseBody).toHaveLength(1);
+      expect(responseBody[0].id).toBe(privilegedUser.id);
     });
 
     test("Com termo de pesquisa menor que dois caracteres", async () => {
