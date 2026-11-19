@@ -142,7 +142,7 @@ function AdminUsersPage() {
     );
   }
 
-  if (!user || !user.features.includes("update:user:others")) {
+  if (!user || !hasAdminSectionAccess(user, "users")) {
     return null;
   }
 
