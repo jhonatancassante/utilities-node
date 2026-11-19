@@ -251,12 +251,7 @@ function AdminUsersPage() {
                 }`}
                 role="status"
               >
-                <StatusMessage type={feedback.type}>
-                  {feedback.message}
-                </StatusMessage>
-                {feedback.action && (
-                  <p className={styles.errorAction}>{feedback.action}</p>
-                )}
+                <StatusMessage type={feedback.type} action={feedback.action}>{feedback.message}</StatusMessage>
               </div>
             )}
 
@@ -620,12 +615,7 @@ function UserEditor({ user, onUpdated, onCancel }) {
 
         {feedback && (
           <div className={styles.feedback} role="status">
-            <StatusMessage type={feedback.type}>
-              {feedback.message}
-            </StatusMessage>
-            {feedback.action && (
-              <p className={styles.errorAction}>{feedback.action}</p>
-            )}
+            <StatusMessage type={feedback.type} action={feedback.action}>{feedback.message}</StatusMessage>
           </div>
         )}
 
