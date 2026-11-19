@@ -361,7 +361,7 @@ function AdminFeaturesPage() {
                   </Button>
                   <Button
                     type="button"
-                    variant="secondary"
+                    variant="outline"
                     icon="fa-times"
                     onClick={() => setDeleteCandidate(null)}
                   >
