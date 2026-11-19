@@ -99,7 +99,7 @@ Exige `create:user`, concedida ao visitante padrão. Recebe:
 }
 ```
 
-O nome de usuário e o e-mail precisam ser únicos, sem diferenciar maiúsculas de minúsculas. O e-mail passa por validação estrutural e a senha é armazenada com HMAC-SHA256 e bcrypt.
+O nome de usuário deve ter de 3 a 30 caracteres e aceitar somente letras sem acento, números, hífen e sublinhado. O e-mail deve ter formato válido e até 254 caracteres. Nome de usuário e e-mail precisam ser únicos, sem diferenciar maiúsculas de minúsculas. A senha deve ter de 12 a 64 caracteres, incluir pelo menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais, e não pode conter termos comuns conhecidos (`password`, `admin`, `qwerty`, `letmein` ou `welcome`). Antes de armazená-la, a senha é normalizada em NFC, processada com HMAC-SHA256 e bcrypt.
 
 O cadastro cria um token de ativação e envia um e-mail com o link correspondente. A resposta `201` contém apenas os campos públicos:
 
@@ -113,7 +113,7 @@ O cadastro cria um token de ativação e envia um e-mail com o link corresponden
 }
 ```
 
-Respostas relevantes: `201` criado; `400` nome/email duplicado ou e-mail inválido; `500` falha inesperada, inclusive falha no envio do e-mail.
+Respostas relevantes: `201` criado; `400` dados obrigatórios ausentes, username/e-mail/senha inválidos ou duplicados; `500` falha inesperada, inclusive falha no envio do e-mail.
 
 ## `PATCH /api/v1/activations/{token_id}`
 
@@ -193,7 +193,7 @@ A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica c
 ## Limitações conhecidas e observações de segurança
 
 - Não há _rate limiting_ para tentativas de login.
-- Não há política de complexidade ou tamanho mínimo de senha implementada.
+- A validação de senha já exige de 12 a 64 caracteres, ao menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais, além de rejeitar os termos comuns listados em `lib/shared/user-validation.js`; não há verificação de vazamento em bases de senhas comprometidas.
 - A validação do corpo ainda não é uniforme em todos os endpoints. O login e a atualização de usuário verificam o formato do objeto, mas `POST /api/v1/users` não valida explicitamente um corpo de nível superior `null` ou ausente antes de acessar suas propriedades, o que pode resultar em `500`.
 - No cadastro, o e-mail é validado após `trim()`, mas o valor armazenado não é normalizado; a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
 - Um JSON sintaticamente inválido pode ser rejeitado pelo parser de corpo do Next.js antes de chegar ao controller; nesse caso, a resposta `400` pode não usar o envelope JSON padronizado da API.
