@@ -139,7 +139,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
           Cookie: `session_id=${sessionObject.token}`,
         },
         body: JSON.stringify({
-          features: ["update:user:others", "read:status:all"],
+          features: ["update:user:others", "read:status:all", "read:session"],
         }),
       });
 
@@ -149,6 +149,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       expect(responseBody.features).toEqual([
         "update:user:others",
         "read:status:all",
+        "read:session",
       ]);
       expect(responseBody).not.toHaveProperty("password");
 
@@ -156,7 +157,30 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       expect(updatedUser.features).toEqual([
         "update:user:others",
         "read:status:all",
+        "read:session",
       ]);
+    });
+
+    test("Rejeitando a remoção de uma feature protegida", async () => {
+      const { privilegedUser, sessionObject } = await createPrivilegedSession();
+
+      const response = await fetch(adminUserUrl(privilegedUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({
+          features: ["update:user:others", "read:status:all"],
+        }),
+      });
+
+      expect(response.status).toBe(400);
+      const responseBody = await response.json();
+      expect(responseBody.name).toBe("ValidationError");
+      expect(responseBody.message).toBe(
+        "As seguintes features não podem ser alteradas: read:session.",
+      );
     });
 
     test("Enviando uma feature desconhecida", async () => {

@@ -163,7 +163,7 @@ describe("models/user.js", () => {
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
-      const features = ["update:user:others", "read:status:all"];
+      const features = ["update:user:others", "read:status:all", "read:session"];
 
       await user.update("UsuarioAtual", { features }, { allowFeatures: true });
 
@@ -176,6 +176,27 @@ describe("models/user.js", () => {
         existingUser.password,
         features,
       ]);
+    });
+
+    test("Rejeita a alteração de uma feature não editável", async () => {
+      const querySpy = mockQueries([
+        ["SELECT", [existingUser]],
+        ["UPDATE", [existingUser]],
+      ]);
+
+      const error = await user
+        .update(
+          "UsuarioAtual",
+          { features: ["create:session", "update:user"] },
+          { allowFeatures: true },
+        )
+        .catch((e) => e);
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toBe(
+        "As seguintes features não podem ser alteradas: read:session.",
+      );
+      expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
     });
 
     test("Com nome de usuário inválido", async () => {

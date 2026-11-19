@@ -537,13 +537,16 @@ function UserEditor({ user, onUpdated, onCancel }) {
                         type="checkbox"
                         checked={form.features.includes(feature.name)}
                         onChange={() => toggleFeature(feature.name)}
-                        disabled={isSaving}
+                        disabled={isSaving || feature.editable === false}
                       />
                       <span className={styles.switch} aria-hidden="true"></span>
                       <span className={styles.featureText}>
                         <strong>{feature.label}</strong>
                         <small>{feature.description}</small>
                         <code>{feature.name}</code>
+                        {feature.editable === false && (
+                          <small>Permissão protegida — não pode ser alterada.</small>
+                        )}
                       </span>
                     </label>
                   ))}

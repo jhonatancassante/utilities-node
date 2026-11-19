@@ -1,5 +1,5 @@
 import database from "@/infra/database.js";
-import { availableFeatures } from "@/configs/features.js";
+import { availableFeatures, featureCatalog } from "@/configs/features.js";
 import password from "@/models/password.js";
 import { ValidationError, NotFoundError } from "@/infra/errors.js";
 import {
@@ -238,6 +238,26 @@ async function update(
     }
 
     allowedInputValues.features = [...new Set(allowedInputValues.features)];
+
+    const immutableFeatures = featureCatalog.filter(
+      (feature) => feature.editable === false,
+    );
+    const changedImmutableFeatures = immutableFeatures
+      .filter((feature) =>
+        currentUser.features.includes(feature.name) !==
+        allowedInputValues.features.includes(feature.name),
+      )
+      .map((feature) => feature.name);
+
+    if (changedImmutableFeatures.length > 0) {
+      throw new ValidationError({
+        message: [
+          "As seguintes features não podem ser alteradas:",
+          changedImmutableFeatures.join(", "),
+        ].join(" ") + ".",
+        action: "Mantenha as features protegidas com o valor atual do usuário.",
+      });
+    }
   }
 
   const userWithNewValues = { ...currentUser, ...allowedInputValues };

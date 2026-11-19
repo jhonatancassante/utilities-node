@@ -1,4 +1,4 @@
-import { privilegedFeatures } from "@/configs/features.js";
+import { featureCatalog } from "@/configs/features.js";
 
 export const adminSections = [
   {
@@ -21,7 +21,11 @@ export const adminSections = [
 
 export function hasAdminAccess(user) {
   return Boolean(
-    user?.features?.some((feature) => privilegedFeatures.includes(feature)),
+    user?.features?.some((name) =>
+      featureCatalog.some(
+        (feature) => feature.name === name && feature.privileged,
+      ),
+    ),
   );
 }
 
