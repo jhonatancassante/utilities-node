@@ -15,8 +15,16 @@ export default controller.createController(
 
 async function postHandler(request, response) {
   const userInputValues = request.body;
+  const hasRequiredCredentials =
+    userInputValues !== null &&
+    typeof userInputValues === "object" &&
+    !Array.isArray(userInputValues) &&
+    typeof userInputValues.email === "string" &&
+    userInputValues.email.trim().length > 0 &&
+    typeof userInputValues.password === "string" &&
+    userInputValues.password.length > 0;
 
-  if (!userInputValues.email || !userInputValues.password) {
+  if (!hasRequiredCredentials) {
     throw new ValidationError({
       message: "Email e senha são obrigatórios para fazer login.",
       action:
