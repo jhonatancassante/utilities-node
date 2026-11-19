@@ -93,14 +93,14 @@ Assim, a conta pode iniciar sessões, consultar a própria sessão autenticada e
 
 ## Login
 
-`POST /api/v1/sessions` recebe `email` e `password`.
+`POST /api/v1/sessions` recebe um objeto JSON com `email` e `password`, ambos como strings não vazias. Corpo ausente, `null`, array, valor primitivo, campos ausentes, vazios ou com tipo diferente de string retornam `400 ValidationError`.
 
 1. `models/authentication.js` procura o usuário pelo e-mail, sem diferenciar maiúsculas de minúsculas.
 2. A senha é comparada com o hash armazenado.
 3. O usuário precisa possuir `create:session`; contas ainda não ativadas não recebem essa permissão.
 4. Uma sessão é criada e o token é enviado **somente** no cookie `session_id` (`HttpOnly`); o corpo da resposta não inclui o token.
 
-Se a requisição trouxer um cookie `session_id` inválido ou expirado, o login o trata como visitante anônimo, segue para a verificação de e-mail e senha e remove o cookie antigo. Assim, ninguém precisa tentar entrar duas vezes.
+Se a requisição trouxer um cookie `session_id` inválido ou expirado, o login o trata como visitante anônimo, segue para a verificação de e-mail e senha e remove o cookie antigo. Assim, ninguém precisa tentar entrar duas vezes. O mesmo comportamento de tolerância a cookies antigos é aplicado ao cadastro (`POST /api/v1/users`), à ativação (`PATCH /api/v1/activations/{token_id}`) e à consulta de status (`GET /api/v1/status`). No status, o usuário anônimo recebe a resposta pública sem a versão do PostgreSQL.
 
 Credenciais incorretas retornam `401 UnauthorizedError` com a mesma mensagem, independentemente de o e-mail não existir ou de a senha estar errada. Quando o e-mail não é encontrado, o fluxo executa uma comparação contra um hash descartável para aproximar o tempo de resposta.
 
@@ -194,10 +194,10 @@ A autorização de saída também é centralizada em `authorization.filterOutput
 
 - Não há _rate limiting_ para tentativas de login.
 - As senhas devem ter de 12 a 64 caracteres, com pelo menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns conhecidos também são rejeitados.
-- Campos obrigatórios ausentes não possuem validação de entrada uniforme e podem resultar em erro 500.
+- A validação estrutural do corpo ainda não é uniforme em todos os endpoints. O login e a atualização de usuário retornam `400 ValidationError` para corpo ausente ou que não seja objeto; já `POST /api/v1/users` não verifica explicitamente um corpo de nível superior `null` ou ausente antes de acessar suas propriedades, o que pode resultar em `500`.
 - O valor de e-mail é validado após `trim()`, mas o valor armazenado não é normalizado; a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
-- Cookie `session_id` inválido ou expirado é tolerado apenas nas rotas públicas (login, cadastro e ativação), onde a requisição segue como visitante anônimo. Nas demais rotas, que dependem do usuário logado, o resultado continua sendo `401`.
-- O controller limpa o cookie em qualquer erro 401, inclusive login inválido.
+- Cookie `session_id` inválido ou expirado é tolerado em login, cadastro, ativação e consulta de status, onde a requisição segue como visitante anônimo e o cookie é removido. Nas demais rotas, um cookie inválido resulta em `401`; o logout (`DELETE /api/v1/sessions`) também exige sessão válida.
+- Um JSON sintaticamente inválido pode ser rejeitado pelo parser de corpo do Next.js antes de chegar ao controller; nesse caso, a resposta `400` pode não seguir o envelope JSON padronizado da API.
 - As sessões encerradas permanecem no banco com data de expiração antecipada; não há rotina de limpeza física documentada ou implementada.
 
 Consulte também o [guia da API](api/README.md) para exemplos de requisições e respostas.
