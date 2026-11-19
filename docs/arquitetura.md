@@ -77,7 +77,7 @@ A função `filterOutput(user, feature, resource)` controla os campos que podem 
 
 A interface fica em `pages/admin/`. O menu do avatar exibe o acesso à administração quando o usuário possui ao menos uma feature listada como privilegiada em `configs/features.js`. As opções disponíveis são registradas em `configs/admin.js`, cada uma com sua própria `requiredFeature`; adicionar uma nova seção exige incluir seu registro e sua página/endpoint correspondente.
 
-A área de gerenciamento de usuários exige `update:user:others` tanto na interface quanto nos endpoints `pages/api/v1/admin/users`. A pesquisa retorna até dez contas por trecho de username ou e-mail. O editor permite alterar username, e-mail, senha e a lista completa de features. O catálogo de permissões é compartilhado entre o backend e a interface. A remoção é transacional e elimina sessões e tokens de ativação associados. A própria conta não aparece na pesquisa e não pode ser alterada ou removida pelo painel.
+A área de gerenciamento de usuários exige `update:user:others` tanto na interface quanto nos endpoints `pages/api/v1/admin/users`. A pesquisa retorna até dez contas por trecho de username ou e-mail. O editor permite alterar username, e-mail, senha e a lista completa de features. O catálogo de permissões é compartilhado entre o backend e a interface. A pesquisa também permite localizar a própria conta do administrador, que pode alterar seus dados e suas permissões pelo painel. O painel não oferece funcionalidade de exclusão de contas.
 
 ### Features conhecidas
 
