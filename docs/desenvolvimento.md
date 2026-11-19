@@ -150,7 +150,7 @@ Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm 
 
 ### Organização dos testes
 
-- `tests/integration/api/v1/`: testes dos endpoints, incluindo pesquisa, consulta, atualização e remoção administrativa de usuários.
+- `tests/integration/api/v1/`: testes dos endpoints, incluindo pesquisa, consulta e atualização administrativa de usuários.
 - `tests/integration/infra/email.test.js`: integração do serviço de e-mail.
 - `tests/integration/_use-cases/registration-flow.test.js`: fluxo completo de cadastro, recebimento do e-mail, ativação, login e consulta do usuário.
 - `tests/unit/models/`: testes unitários de `user`, `password`, `session`, `activation`, `authentication` (hash falso contra timing attack) e `authorization`, sem banco de dados (as consultas são simuladas).
