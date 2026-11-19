@@ -37,7 +37,10 @@ describe("configs/admin.js", () => {
         features: ["update:user:others", "read:status:all"],
       });
 
-      expect(sections.map((section) => section.id)).toEqual(["users", "status"]);
+      expect(sections.map((section) => section.id)).toEqual([
+        "users",
+        "status",
+      ]);
     });
 
     test("Não disponibiliza seções sem permissões", () => {
