@@ -259,7 +259,7 @@ function AdminUsersPage() {
   );
 }
 
-function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
+function UserEditor({ user, onUpdated, onCancel }) {
   const [form, setForm] = useState({
     username: user.username,
     email: user.email,
