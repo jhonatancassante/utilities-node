@@ -77,7 +77,4 @@ export const featureCatalog = [
 
 export const availableFeatures = featureCatalog.map((feature) => feature.name);
 
-export const privilegedFeatures = [
-  "update:user:others",
-  "read:status:all",
-];
+export const privilegedFeatures = ["update:user:others", "read:status:all"];
