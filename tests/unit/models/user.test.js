@@ -27,6 +27,14 @@ function mockQueries(handlers) {
   });
 }
 
+const existingFeatureMetadata = [
+  { name: "create:session", is_removable: false, deleted_at: null },
+  { name: "read:session", is_removable: false, deleted_at: null },
+  { name: "update:user", is_removable: false, deleted_at: null },
+  { name: "update:user:others", is_removable: true, deleted_at: null },
+  { name: "read:status:all", is_removable: true, deleted_at: null },
+];
+
 function getCallsContaining(querySpy, pattern) {
   return querySpy.mock.calls
     .map(([query]) => query)
@@ -160,13 +168,16 @@ describe("models/user.js", () => {
 
     test("Com permissão administrativa, atualiza as features", async () => {
       const querySpy = mockQueries([
+        ["FROM\n          features", existingFeatureMetadata],
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
       const features = [
+        "create:session",
+        "read:session",
+        "update:user",
         "update:user:others",
         "read:status:all",
-        "read:session",
       ];
 
       await user.update("UsuarioAtual", { features }, { allowFeatures: true });
@@ -184,6 +195,7 @@ describe("models/user.js", () => {
 
     test("Rejeita a alteração de uma feature não editável", async () => {
       const querySpy = mockQueries([
+        ["FROM\n          features", existingFeatureMetadata],
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
@@ -198,7 +210,7 @@ describe("models/user.js", () => {
 
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.message).toBe(
-        "As seguintes features não podem ser alteradas: read:session.",
+        "As seguintes features não podem ser removidas deste usuário: read:session.",
       );
       expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
     });
