@@ -3,11 +3,8 @@
   max-width: 1040px;
 }
 
-.badge {
-  display: table;
-  margin-right: auto;
-  margin-bottom: 18px;
-  margin-left: auto;
+.pageHeader {
+  text-align: center;
 }
 
 .card h1 {
@@ -286,17 +283,6 @@
 
 .featureOptionLocked {
   cursor: not-allowed;
-  border-style: dashed;
-  background: var(--bg-card);
-}
-
-.featureOptionLocked:has(input:checked) {
-  border-color: var(--border-color);
-  background: var(--bg-card);
-}
-
-.featureOptionLocked .featureText strong {
-  color: var(--text-secondary);
 }
 
 .featureOption > input {
@@ -330,40 +316,34 @@
 }
 
 .switchLocked {
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
-  opacity: 0.8;
+  background: var(--border-color);
 }
 
-.switchLocked::before {
+.switchLocked:hover::before {
   content: "";
   position: absolute;
-  top: 4px;
-  right: 5px;
-  width: 6px;
-  height: 5px;
-  border: 1.5px solid var(--text-faint);
+  top: 3px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--text-secondary);
   border-bottom: 0;
-  border-radius: 5px 5px 0 0;
+  border-radius: 6px 6px 0 0;
 }
 
-.switchLocked::after {
-  top: 8px;
-  right: 4px;
+.switchLocked:hover::after {
+  top: 9px;
+  right: 5px;
   left: auto;
-  width: 8px;
-  height: 7px;
-  border-radius: 1px;
-  background: var(--text-faint);
+  width: 11px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--text-secondary);
   transform: none;
 }
 
 .featureOption input:checked + .switch {
   background: var(--accent);
-}
-
-.featureOptionLocked input:checked + .switchLocked {
-  background: var(--bg-card);
 }
 
 .featureOption input:checked + .switch::after {

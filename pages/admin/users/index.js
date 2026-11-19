@@ -199,15 +199,17 @@ function AdminUsersPage() {
               Painel administrativo
             </Link>
 
-            <div className={shared.icon} aria-hidden="true">
-              <i className="fas fa-users-cog"></i>
-            </div>
-            <span className={shared.badge}>ADMINISTRAÇÃO</span>
-            <h1>Gerenciar usuários</h1>
-            <p className={styles.description}>
-              Pesquise por nome de usuário ou e-mail para consultar e alterar os
-              dados e as permissões de uma conta.
-            </p>
+            <header className={styles.pageHeader}>
+              <div className={shared.icon} aria-hidden="true">
+                <i className="fas fa-users-cog"></i>
+              </div>
+              <span className={shared.badge}>ADMINISTRAÇÃO</span>
+              <h1>Gerenciar usuários</h1>
+              <p className={styles.description}>
+                Pesquise por nome de usuário ou e-mail para consultar e alterar
+                os dados e as permissões de uma conta.
+              </p>
+            </header>
 
             <form className={styles.searchForm} onSubmit={handleSearch}>
               <label className={shared.label} htmlFor="user-search">
