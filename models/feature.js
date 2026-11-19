@@ -242,10 +242,26 @@ async function deleteFeature(id) {
     }
 
     if (!currentFeature.is_removable) {
-      throw new ValidationError({
-        message: "Esta feature não permite exclusão.",
-        action: "A exclusão desta feature está desabilitada.",
+      const assignedUsers = await client.query({
+        text: `
+          SELECT
+            id
+          FROM
+            users
+          WHERE
+            $1 = ANY(features)
+          LIMIT 1
+        ;`,
+        values: [currentFeature.name],
       });
+
+      if (assignedUsers.rowCount > 0) {
+        throw new ValidationError({
+          message: "Esta feature não pode ser excluída enquanto estiver atribuída a usuários.",
+          action:
+            "A feature não pode ser retirada de usuários que já a possuem.",
+        });
+      }
     }
 
     await client.query({

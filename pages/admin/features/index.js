@@ -373,9 +373,9 @@ function AdminFeaturesPage() {
                                     {!feature.is_removable && (
                                       <span
                                         className={`${styles.badgeIcon} ${styles.nonRemovableBadge}`}
-                                        title="Feature não removível"
+                                        title="Não pode ser removida de usuários"
                                         role="img"
-                                        aria-label="Feature não removível"
+                                        aria-label="Não pode ser removida de usuários"
                                       >
                                         <i
                                           className="fas fa-ban"
@@ -403,21 +403,13 @@ function AdminFeaturesPage() {
                               </div>
 
                               <div className={styles.actions}>
-                                {canUpdate && (
+                                {canUpdate && !feature.is_protected && (
                                   <button
                                     type="button"
                                     className={styles.iconButton}
-                                    title={
-                                      feature.is_protected
-                                        ? "Feature protegida — não pode ser alterada"
-                                        : "Alterar feature"
-                                    }
+                                    title="Alterar feature"
                                     aria-label={`Alterar feature ${feature.name}`}
-                                    disabled={
-                                      feature.is_protected ||
-                                      isSaving ||
-                                      creating
-                                    }
+                                    disabled={isSaving || creating}
                                     onClick={() => handleStartEdit(feature)}
                                   >
                                     <i
@@ -426,24 +418,13 @@ function AdminFeaturesPage() {
                                     ></i>
                                   </button>
                                 )}
-                                {canDelete && (
+                                {canDelete && !feature.is_protected && (
                                   <button
                                     type="button"
                                     className={`${styles.iconButton} ${styles.deleteButton}`}
-                                    title={
-                                      feature.is_protected
-                                        ? "Feature protegida — não pode ser excluída"
-                                        : !feature.is_removable
-                                          ? "Feature não removível"
-                                          : "Excluir feature"
-                                    }
+                                    title="Excluir feature"
                                     aria-label={`Excluir feature ${feature.name}`}
-                                    disabled={
-                                      feature.is_protected ||
-                                      !feature.is_removable ||
-                                      isSaving ||
-                                      creating
-                                    }
+                                    disabled={isSaving || creating}
                                     onClick={() =>
                                       handleDeleteFeature(feature)
                                     }
@@ -584,7 +565,7 @@ function FeatureForm({
               }
               disabled={isSaving}
             />
-            <span>Permite exclusão</span>
+            <span>Permite retirar de usuários</span>
           </label>
           <label>
             <input

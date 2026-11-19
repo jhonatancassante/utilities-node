@@ -303,6 +303,7 @@ function AdminUsersPage() {
               <UserEditor
                 key={selectedUser.id}
                 user={selectedUser}
+                currentUser={user}
                 onUpdated={handleUserUpdated}
                 onCancel={() => setSelectedUser(null)}
               />
@@ -314,7 +315,7 @@ function AdminUsersPage() {
   );
 }
 
-function UserEditor({ user, onUpdated, onCancel }) {
+function UserEditor({ user, currentUser, onUpdated, onCancel }) {
   const [form, setForm] = useState({
     username: user.username,
     email: user.email,
@@ -555,9 +556,13 @@ function UserEditor({ user, onUpdated, onCancel }) {
                       }`}
                       key={feature.name}
                       title={
-                        feature.editable === false
-                          ? "Permissão protegida — não pode ser alterada"
-                          : undefined
+                        feature.editable === false &&
+                        form.features.includes(feature.name)
+                          ? "Esta feature não pode ser removida deste usuário"
+                          : feature.privileged &&
+                              !currentUser.features.includes(feature.name)
+                            ? "Somente quem já possui esta feature pode concedê-la"
+                            : undefined
                       }
                     >
                       <span className={styles.featureBadges}>
@@ -574,9 +579,9 @@ function UserEditor({ user, onUpdated, onCancel }) {
                         {feature.editable === false && (
                           <span
                             className={`${styles.featureBadge} ${styles.protectedBadge}`}
-                            title="Permissão protegida — não pode ser alterada"
+                            title="Não pode ser removida deste usuário"
                             role="img"
-                            aria-label="Permissão protegida"
+                            aria-label="Não pode ser removida deste usuário"
                           >
                             <i className="fas fa-ban" aria-hidden="true"></i>
                           </span>
@@ -586,7 +591,13 @@ function UserEditor({ user, onUpdated, onCancel }) {
                         type="checkbox"
                         checked={form.features.includes(feature.name)}
                         onChange={() => toggleFeature(feature.name)}
-                        disabled={isSaving || feature.editable === false}
+                        disabled={
+                          isSaving ||
+                          (feature.editable === false &&
+                            form.features.includes(feature.name)) ||
+                          (feature.privileged &&
+                            !currentUser.features.includes(feature.name))
+                        }
                       />
                       <span
                         className={`${styles.switch} ${

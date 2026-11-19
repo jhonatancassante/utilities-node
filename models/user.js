@@ -1,5 +1,4 @@
 import database from "@/infra/database.js";
-import { availableFeatures, featureCatalog } from "@/configs/features.js";
 import password from "@/models/password.js";
 import { ValidationError, NotFoundError } from "@/infra/errors.js";
 import {
@@ -180,7 +179,7 @@ async function search(searchTerm) {
 async function update(
   username,
   userInputValues,
-  { allowFeatures = false } = {},
+  { allowFeatures = false, actor } = {},
 ) {
   const currentUser = await findOneByUsername(username);
   const allowedInputValues = pickUpdatableFields(userInputValues, {
@@ -221,43 +220,76 @@ async function update(
       });
     }
 
+    allowedInputValues.features = [...new Set(allowedInputValues.features)];
+
+    const featureResults = await database.query({
+      text: `
+        SELECT
+          name,
+          is_removable,
+          is_privileged,
+          deleted_at
+        FROM
+          features
+        WHERE
+          name = ANY($1)
+      ;`,
+      values: [[...new Set([...currentUser.features, ...allowedInputValues.features])]],
+    });
+    const featureMetadata = new Map(
+      featureResults.rows.map((feature) => [feature.name, feature]),
+    );
     const unknownFeatures = allowedInputValues.features.filter(
-      (feature) => !availableFeatures.includes(feature),
+      (featureName) => {
+        const feature = featureMetadata.get(featureName);
+        return !feature || feature.deleted_at !== null;
+      },
     );
 
     if (unknownFeatures.length > 0) {
       const message = [
-        "As features a seguir não são reconhecidas:",
+        "As features a seguir não são reconhecidas ou estão excluídas:",
         unknownFeatures.join(", "),
       ].join(" ");
 
       throw new ValidationError({
         message: `${message}.`,
-        action: "Selecione apenas features disponíveis no sistema.",
+        action: "Selecione apenas features ativas no sistema.",
       });
     }
 
-    allowedInputValues.features = [...new Set(allowedInputValues.features)];
-
-    const immutableFeatures = featureCatalog.filter(
-      (feature) => feature.editable === false,
+    const removedNonRemovableFeatures = currentUser.features.filter(
+      (featureName) =>
+        !allowedInputValues.features.includes(featureName) &&
+        featureMetadata.get(featureName)?.is_removable === false,
     );
-    const changedImmutableFeatures = immutableFeatures
-      .filter(
-        (feature) =>
-          currentUser.features.includes(feature.name) !==
-          allowedInputValues.features.includes(feature.name),
-      )
-      .map((feature) => feature.name);
 
-    if (changedImmutableFeatures.length > 0) {
+    if (removedNonRemovableFeatures.length > 0) {
       throw new ValidationError({
-        message:
-          [
-            "As seguintes features não podem ser alteradas:",
-            changedImmutableFeatures.join(", "),
-          ].join(" ") + ".",
-        action: "Mantenha as features protegidas com o valor atual do usuário.",
+        message: [
+          "As seguintes features não podem ser removidas deste usuário:",
+          removedNonRemovableFeatures.join(", "),
+        ].join(" ") + ".",
+        action:
+          "Uma feature não removível pode ser atribuída, mas não pode ser retirada depois.",
+      });
+    }
+
+    const newlyGrantedPrivilegedFeatures = allowedInputValues.features.filter(
+      (featureName) =>
+        !currentUser.features.includes(featureName) &&
+        featureMetadata.get(featureName)?.is_privileged === true &&
+        !actor?.features?.includes(featureName),
+    );
+
+    if (newlyGrantedPrivilegedFeatures.length > 0) {
+      throw new ValidationError({
+        message: [
+          "Você não possui autorização para conceder as seguintes features privilegiadas:",
+          newlyGrantedPrivilegedFeatures.join(", "),
+        ].join(" ") + ".",
+        action:
+          "Somente um usuário que já possui a feature privilegiada pode concedê-la a outra conta.",
       });
     }
   }
