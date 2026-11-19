@@ -64,7 +64,7 @@ function Header() {
       await session.logout();
       await clearUser();
       closeMenus();
-      router.push("/");
+      router.push("/login");
     } catch (error) {
       setLogoutError(error.message);
     }

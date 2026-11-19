@@ -483,3 +483,20 @@ a.toolItem[aria-current="page"] {
     height: 38px;
   }
 }
+
+/* No tema claro, separa o acesso ao login do gradiente do cabeçalho. */
+@media (min-width: 861px) {
+  :global(html:not([data-theme="dark"])) .loginLink {
+    border-color: #ffffff;
+    background: #ffffff;
+    color: #16305a;
+    box-shadow: var(--shadow-sm);
+  }
+
+  :global(html:not([data-theme="dark"])) .loginLink:hover {
+    border-color: #edf3ff;
+    background: #edf3ff;
+    color: #16305a;
+    box-shadow: var(--shadow-md);
+  }
+}
