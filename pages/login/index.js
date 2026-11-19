@@ -40,7 +40,9 @@ function LoginPage() {
 
     try {
       await session.login(email.trim(), password);
-      await refreshUser();
+      void refreshUser().catch((error) => {
+        console.error("Não foi possível atualizar os dados após o login:", error);
+      });
       router.replace("/perfil");
     } catch (error) {
       setFeedback({

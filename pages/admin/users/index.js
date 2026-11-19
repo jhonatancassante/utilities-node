@@ -24,7 +24,7 @@ const featureGroups = [
 
 function AdminUsersPage() {
   const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const { user, error, isLoading, setUser } = useUser();
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -47,6 +47,18 @@ function AdminUsersPage() {
       }
     }
   }, [error, isLoading, router, user]);
+
+  useEffect(() => {
+    if (feedback?.type !== "success") return undefined;
+
+    const timeoutId = setTimeout(() => {
+      setFeedback((currentFeedback) =>
+        currentFeedback?.type === "success" ? null : currentFeedback,
+      );
+    }, 10000);
+
+    return () => clearTimeout(timeoutId);
+  }, [feedback]);
 
   async function handleSearch(event) {
     event.preventDefault();
@@ -103,11 +115,38 @@ function AdminUsersPage() {
     }
   }
 
-  function handleUserUpdated(updatedUser) {
-    setSelectedUser(updatedUser);
-    setResults((current) =>
-      current.map((item) => (item.id === updatedUser.id ? updatedUser : item)),
-    );
+  async function handleUserUpdated(updatedUser) {
+    setSelectedUser(null);
+    setIsSearching(true);
+    setFeedback(null);
+
+    try {
+      if (updatedUser.id === user.id) {
+        setUser(updatedUser);
+
+        if (!hasAdminSectionAccess(updatedUser, "users")) {
+          router.replace(hasAdminAccess(updatedUser) ? "/admin" : "/perfil");
+          return;
+        }
+      }
+
+      const refreshedUsers = await requestAPI(
+        `/api/v1/admin/users?search=${encodeURIComponent(searchTerm.trim())}`,
+      );
+      setResults(refreshedUsers);
+      setFeedback({
+        type: "success",
+        message: "Alterações salvas e lista de usuários atualizada.",
+      });
+    } catch (requestError) {
+      setFeedback({
+        type: "error",
+        message: `Alterações salvas, mas não foi possível atualizar a lista: ${requestError.message}`,
+        action: requestError.action,
+      });
+    } finally {
+      setIsSearching(false);
+    }
   }
 
   if (isLoading || (!user && !error)) {
@@ -115,8 +154,8 @@ function AdminUsersPage() {
       <>
         <AppHead title="Gerenciar usuários" />
         <Layout>
-          <main className={shared.container} wide>
-            <section className={`${shared.card} ${styles.card}`}>
+          <main className={`${shared.container} ${shared.containerUltraWide}`}>
+            <section className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}>
               <p>Carregando permissões...</p>
             </section>
           </main>
@@ -130,8 +169,8 @@ function AdminUsersPage() {
       <>
         <AppHead title="Gerenciar usuários" />
         <Layout>
-          <main className={shared.container} wide>
-            <section className={`${shared.card} ${styles.card}`}>
+          <main className={`${shared.container} ${shared.containerUltraWide}`}>
+            <section className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}>
               <StatusMessage type="error">
                 Não foi possível verificar suas permissões.
               </StatusMessage>
@@ -153,8 +192,8 @@ function AdminUsersPage() {
         description="Pesquise e gerencie contas e permissões de usuários."
       />
       <Layout>
-        <main className={shared.container} wide>
-          <section className={`${shared.card} ${styles.card}`}>
+        <main className={`${shared.container} ${shared.containerUltraWide}`}>
+          <section className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}>
             <Link href="/admin" className={styles.backLink}>
               <i className="fas fa-arrow-left" aria-hidden="true"></i>
               Painel administrativo
@@ -195,7 +234,12 @@ function AdminUsersPage() {
             </form>
 
             {feedback && (
-              <div className={styles.feedback} role="status">
+              <div
+                className={`${styles.feedback} ${
+                  feedback.type === "success" ? styles.successFeedback : ""
+                }`}
+                role="status"
+              >
                 <StatusMessage type={feedback.type}>
                   {feedback.message}
                 </StatusMessage>
@@ -361,18 +405,7 @@ function UserEditor({ user, onUpdated, onCancel }) {
           body: JSON.stringify(payload),
         },
       );
-      setForm({
-        username: updatedUser.username,
-        email: updatedUser.email,
-        password: "",
-        passwordConfirmation: "",
-        features: [...updatedUser.features],
-      });
-      onUpdated(updatedUser);
-      setFeedback({
-        type: "success",
-        message: "Alterações salvas com sucesso.",
-      });
+      await onUpdated(updatedUser);
     } catch (requestError) {
       setFeedback({
         type: "error",
