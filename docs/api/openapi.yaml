@@ -44,10 +44,20 @@ paths:
       description: |
         Rota pública. Retorna informações de conexão do banco.
         A versão do PostgreSQL só é incluída quando o usuário autenticado
-        possui a feature read:status:all.
+        possui a feature read:status:all. A feature read:status não é exigida
+        pelo endpoint. Quando a requisição traz um cookie session_id inválido
+        ou expirado, ele é removido e a consulta continua como visitante anônimo.
       responses:
         "200":
           description: Aplicação conseguiu consultar o banco.
+          headers:
+            Set-Cookie:
+              description: Se o cookie recebido for inválido ou expirado, limpa session_id.
+              schema:
+                type: string
+              example: session_id=invalid; Max-Age=-1; Path=/; HttpOnly; SameSite=Lax
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
           content:
             application/json:
               schema:
@@ -203,8 +213,10 @@ paths:
       description: |
         Exige update:user. O usuário pode alterar a própria conta; para
         atualizar outra conta também é necessária a feature update:user:others.
-        Apenas os campos enviados são alterados. A resposta é a representação
-        pública do usuário.
+        O corpo deve ser um objeto JSON e pode conter somente username, email
+        e password. Campos adicionais/protegidos e corpos que não sejam
+        objetos retornam ValidationError (400). Apenas os campos enviados
+        são alterados. A resposta é a representação pública do usuário.
       x-required-feature: update:user
       requestBody:
         required: true
@@ -221,6 +233,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PublicUser"
+        "400":
+          $ref: "#/components/responses/Validation"
         "400":
           $ref: "#/components/responses/Validation"
         "401":
@@ -282,7 +296,10 @@ paths:
         Exige create:session. A conta precisa estar ativada. A sessão dura
         30 dias. O token é enviado somente no cookie HttpOnly session_id e não
         aparece no corpo da resposta. Um cookie session_id inválido ou expirado
-        na requisição é ignorado (visitante anônimo). Credenciais incorretas retornam uma
+        na requisição é ignorado (visitante anônimo). O corpo deve ser um objeto
+        JSON com email e password como strings não vazias; corpo ausente, null,
+        array, valor primitivo, campo ausente, vazio ou com tipo incorreto
+        retorna ValidationError (400). Credenciais incorretas retornam uma
         mensagem genérica, sem distinguir e-mail inexistente de senha errada.
       x-required-feature: create:session
       requestBody:
@@ -461,6 +478,7 @@ components:
             2 maiúsculas, 2 números e 2 caracteres especiais.
     UserUpdate:
       type: object
+      additionalProperties: false
       properties:
         username:
           type: string
@@ -513,8 +531,10 @@ components:
         email:
           type: string
           format: email
+          minLength: 1
         password:
           type: string
+          minLength: 1
     Session:
       type: object
       required: [id, user_id, expires_at, created_at, updated_at]
