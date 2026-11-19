@@ -1,6 +1,5 @@
 import controller from "@/infra/controller.js";
 import user from "@/models/user.js";
-import { ValidationError } from "@/infra/errors.js";
 
 export default controller.createController(
   {
@@ -16,17 +15,6 @@ async function getHandler(request, response) {
 }
 
 async function patchHandler(request, response) {
-  const userTryingToPatch = request.context.user;
-  const targetUser = await user.findOneByUsername(request.query.username);
-
-  if (userTryingToPatch.id === targetUser.id) {
-    throw new ValidationError({
-      message:
-        "Não é permitido alterar a própria conta pelo painel administrativo.",
-      action: "Utilize a página Meu perfil para alterar seus próprios dados.",
-    });
-  }
-
   const updatedUser = await user.update(request.query.username, request.body, {
     allowFeatures: true,
   });
