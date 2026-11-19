@@ -29,7 +29,7 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 
 ## Autorização e erros
 
-O middleware `injectAnonymousOrUser` identifica o visitante ou carrega o usuário associado a uma sessão válida. O middleware `canRequest(feature)` verifica a permissão exigida pelo endpoint. A autorização de atualização também compara o identificador do usuário autenticado com o recurso solicitado.
+O middleware `injectAnonymousOrUser` injeta o visitante quando não há cookie ou carrega o usuário associado a uma sessão válida; se um cookie for inválido ou expirado, a requisição termina em `401`. O middleware `injectUserOrAnonymousOnInvalidSession` é mais tolerante: em `POST /api/v1/sessions`, `POST /api/v1/users`, `PATCH /api/v1/activations/{token_id}` e `GET /api/v1/status`, limpa o cookie inválido e continua como visitante anônimo. Essa tolerância não transforma o logout em operação pública: `DELETE /api/v1/sessions` ainda exige uma sessão válida. O middleware `canRequest(feature)` verifica a permissão exigida pelo endpoint. A autorização de atualização também compara o identificador do usuário autenticado com o recurso solicitado.
 
 Os erros seguem o formato:
 
@@ -51,7 +51,7 @@ Os erros seguem o formato:
 | `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`                 |
 | `500`  | `InternalServerError`   | Falha inesperada; detalhes ficam no log                       |
 
-O controller limpa o cookie `session_id` em qualquer resposta `401`. Nas rotas que injetam o usuário a partir do cookie, um token inválido enviado pelo cliente também resulta em `401`, mesmo quando a operação é pública para visitantes sem cookie. As exceções são as rotas públicas `/api/v1/sessions`, `POST /api/v1/users` e `PATCH /api/v1/activations/{token_id}`, que tratam cookie inválido ou expirado como visitante anônimo e removem o cookie antigo. As respostas que definem ou removem o cookie também usam `Cache-Control: no-store, no-cache, max-age=0, must-revalidate`.
+O controller limpa o cookie `session_id` em qualquer resposta `401`. O cookie inválido ou expirado é tolerado e removido em `POST /api/v1/sessions`, `POST /api/v1/users`, `PATCH /api/v1/activations/{token_id}` e `GET /api/v1/status`; nessas operações, a requisição continua como visitante anônimo. Nas demais rotas, um cookie inválido pode resultar em `401`. Em particular, `DELETE /api/v1/sessions` continua exigindo uma sessão válida, mesmo que use o middleware tolerante antes de executar o handler. As respostas que definem ou removem o cookie também usam `Cache-Control: no-store, no-cache, max-age=0, must-revalidate`.
 
 ## `GET /api/v1/status`
 
@@ -71,7 +71,7 @@ Verifica a conectividade com o banco de dados. A página `/status` consulta o en
 }
 ```
 
-Com `read:status:all`, a resposta inclui também `dependencies.database.version`. Se a consulta ao banco falhar, a API responde `500`.
+Com `read:status:all`, a resposta inclui também `dependencies.database.version`. A rota é pública e não exige a feature `read:status`; essa feature consta no catálogo, mas não é verificada por middleware. Se a requisição trouxer um cookie `session_id` inválido ou expirado, a API o remove e continua como visitante anônimo. Se a consulta ao banco falhar, a API responde `500`.
 
 ## `GET /api/v1/migrations`
 
@@ -137,7 +137,7 @@ Respostas: `200` encontrado; `404` usuário inexistente.
 
 Exige `update:user`. O usuário pode atualizar a própria conta; para alterar outra conta, precisa também de `update:user:others`.
 
-O corpo aceita um ou mais campos:
+O corpo deve ser um objeto JSON e aceita somente os campos `username`, `email` e `password`:
 
 ```json
 {
@@ -147,13 +147,13 @@ O corpo aceita um ou mais campos:
 }
 ```
 
-Os campos não enviados permanecem inalterados. A senha, quando enviada, é novamente processada com HMAC e bcrypt. A resposta `200` usa a representação pública do usuário e não expõe e-mail nem hash.
+Campos protegidos ou desconhecidos (como `id`, `features` e `created_at`) fazem a requisição inteira ser rejeitada com `400 ValidationError`; eles não são ignorados. Corpos que não sejam objetos JSON também retornam `400`. Os campos não enviados permanecem inalterados. A senha, quando enviada, é novamente processada com HMAC e bcrypt. A resposta `200` usa a representação pública do usuário e não expõe e-mail nem hash.
 
 Respostas: `200` atualizado; `400` validação ou duplicidade; `403` permissão insuficiente; `404` usuário inexistente.
 
 ## `POST /api/v1/sessions`
 
-Exige `create:session`, portanto contas ainda não ativadas não podem iniciar sessão. Recebe:
+Exige `create:session`, portanto contas ainda não ativadas não podem iniciar sessão. Recebe um objeto JSON com `email` e `password`, ambos como strings não vazias:
 
 ```json
 {
@@ -162,13 +162,15 @@ Exige `create:session`, portanto contas ainda não ativadas não podem iniciar s
 }
 ```
 
+Corpo ausente, `null`, array, valor primitivo, campos ausentes, vazios ou com tipo diferente de string retornam `400 ValidationError`.
+
 Com sucesso, responde `201`, cria uma sessão de 30 dias e define o cookie `session_id`:
 
 ```http
 Set-Cookie: session_id=<token>; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax
 ```
 
-Em produção, inclui `Secure`. O corpo inclui os dados da sessão, sem o token, que só existe no cookie `HttpOnly`. Credenciais incorretas respondem `401` com mensagem genérica. A tentativa de login inválida também limpa eventual cookie enviado na requisição.
+Em produção, inclui `Secure`. O corpo inclui os dados da sessão, sem o token, que só existe no cookie `HttpOnly`. Credenciais incorretas respondem `401` com mensagem genérica; dados de entrada ausentes ou com formato/tipo inválido respondem `400`. Se a requisição trouxer um cookie antigo inválido ou expirado, ele é ignorado durante o login e substituído pelo novo cookie quando a autenticação tem sucesso.
 
 ## `DELETE /api/v1/sessions`
 
@@ -192,9 +194,9 @@ A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica c
 
 - Não há _rate limiting_ para tentativas de login.
 - Não há política de complexidade ou tamanho mínimo de senha implementada.
-- Campos obrigatórios ausentes não possuem validação uniforme e podem resultar em `500`.
-- O e-mail é validado após `trim()`, mas o valor armazenado não é normalizado.
-- O controller limpa o cookie em qualquer erro `401`, inclusive login inválido.
+- A validação do corpo ainda não é uniforme em todos os endpoints. O login e a atualização de usuário verificam o formato do objeto, mas `POST /api/v1/users` não valida explicitamente um corpo de nível superior `null` ou ausente antes de acessar suas propriedades, o que pode resultar em `500`.
+- No cadastro, o e-mail é validado após `trim()`, mas o valor armazenado não é normalizado; a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
+- Um JSON sintaticamente inválido pode ser rejeitado pelo parser de corpo do Next.js antes de chegar ao controller; nesse caso, a resposta `400` pode não usar o envelope JSON padronizado da API.
 - A feature `read:status` consta no catálogo e é usada nos testes, mas a rota de status não possui middleware `canRequest`; o acesso ao endpoint permanece público. A feature `read:status:all` controla apenas a inclusão da versão do banco.
 - Não existe endpoint público para administração das features. A atribuição de permissões privilegiadas é feita internamente.
 
