@@ -14,7 +14,7 @@ import {
   validateUsername,
 } from "@/lib/shared/user-validation.js";
 import { featureCatalog } from "@/configs/features.js";
-import { hasAdminAccess, hasAdminSectionAccess } from "@/configs/admin.js";
+import { hasAdminAccess, hasAdminSectionAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 

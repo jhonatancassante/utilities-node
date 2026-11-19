@@ -1,7 +1,0 @@
-/* components/Layout/index.module.css */
-.page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
