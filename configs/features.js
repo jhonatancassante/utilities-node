@@ -5,6 +5,7 @@ export const featureCatalog = [
     group: "Usuários",
     description: "Permite criar novas contas.",
     editable: true,
+    privileged: false,
   },
   {
     name: "read:user",
@@ -12,6 +13,7 @@ export const featureCatalog = [
     group: "Usuários",
     description: "Permite consultar informações públicas de usuários.",
     editable: true,
+    privileged: false,
   },
   {
     name: "read:user:self",
@@ -19,6 +21,7 @@ export const featureCatalog = [
     group: "Usuários",
     description: "Permite consultar os dados da própria conta.",
     editable: true,
+    privileged: false,
   },
   {
     name: "update:user",
@@ -26,6 +29,7 @@ export const featureCatalog = [
     group: "Usuários",
     description: "Permite alterar os dados da própria conta.",
     editable: true,
+    privileged: false,
   },
   {
     name: "update:user:others",
@@ -42,6 +46,7 @@ export const featureCatalog = [
     group: "Sessões",
     description: "Permite iniciar uma sessão autenticada.",
     editable: true,
+    privileged: false,
   },
   {
     name: "read:session",
@@ -49,6 +54,7 @@ export const featureCatalog = [
     group: "Sessões",
     description: "Permite consultar os dados da própria sessão.",
     editable: false,
+    privileged: false,
   },
   {
     name: "read:activation_token",
@@ -56,6 +62,7 @@ export const featureCatalog = [
     group: "Ativação",
     description: "Permite consultar o token de ativação da própria conta.",
     editable: true,
+    privileged: false,
   },
   {
     name: "create:migration",
@@ -63,6 +70,7 @@ export const featureCatalog = [
     group: "Banco de dados",
     description: "Permite executar migrations do banco de dados.",
     editable: true,
+    privileged: false,
   },
   {
     name: "read:migration",
@@ -70,6 +78,7 @@ export const featureCatalog = [
     group: "Banco de dados",
     description: "Permite consultar o histórico de migrations.",
     editable: true,
+    privileged: false,
   },
   {
     name: "read:status",
@@ -77,6 +86,7 @@ export const featureCatalog = [
     group: "Sistema",
     description: "Permite consultar as métricas públicas do sistema.",
     editable: true,
+    privileged: false,
   },
   {
     name: "read:status:all",
