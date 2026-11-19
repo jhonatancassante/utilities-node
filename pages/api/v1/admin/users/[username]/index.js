@@ -22,7 +22,8 @@ async function patchHandler(request, response) {
 
   if (userTryingToPatch.id === targetUser.id) {
     throw new ValidationError({
-      message: "Não é permitido alterar a própria conta pelo painel administrativo.",
+      message:
+        "Não é permitido alterar a própria conta pelo painel administrativo.",
       action: "Utilize a página Meu perfil para alterar seus próprios dados.",
     });
   }
@@ -40,7 +41,8 @@ async function deleteHandler(request, response) {
 
   if (userTryingToDelete.id === userFound.id) {
     throw new ValidationError({
-      message: "Não é permitido remover a própria conta pelo painel administrativo.",
+      message:
+        "Não é permitido remover a própria conta pelo painel administrativo.",
       action: "Utilize outra conta privilegiada para remover este usuário.",
     });
   }
