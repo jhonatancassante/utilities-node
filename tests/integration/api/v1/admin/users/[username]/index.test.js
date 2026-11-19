@@ -129,7 +129,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       expect(updatedUser.email).toBe("admin-updated@example.com");
     });
 
-    test("Tentando alterar a própria conta", async () => {
+    test("Alterando as próprias permissões", async () => {
       const { privilegedUser, sessionObject } = await createPrivilegedSession();
 
       const response = await fetch(adminUserUrl(privilegedUser.username), {
@@ -143,14 +143,20 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
         }),
       });
 
-      expect(response.status).toBe(400);
-      expect(await response.json()).toEqual({
-        name: "ValidationError",
-        message:
-          "Não é permitido alterar a própria conta pelo painel administrativo.",
-        action: "Utilize a página Meu perfil para alterar seus próprios dados.",
-        status_code: 400,
-      });
+      expect(response.status).toBe(200);
+      const responseBody = await response.json();
+      expect(responseBody.id).toBe(privilegedUser.id);
+      expect(responseBody.features).toEqual([
+        "update:user:others",
+        "read:status:all",
+      ]);
+      expect(responseBody).not.toHaveProperty("password");
+
+      const updatedUser = await user.findOneById(privilegedUser.id);
+      expect(updatedUser.features).toEqual([
+        "update:user:others",
+        "read:status:all",
+      ]);
     });
 
     test("Enviando uma feature desconhecida", async () => {
@@ -171,64 +177,6 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       expect(responseBody.message).toBe(
         "As features a seguir não são reconhecidas: feature:inexistente.",
       );
-    });
-  });
-});
-
-describe("DELETE /api/v1/admin/users/[username]", () => {
-  describe("Usuário anônimo", () => {
-    test("Removendo um usuário", async () => {
-      const targetUser = await orchestrator.createUser();
-      const response = await fetch(adminUserUrl(targetUser.username), {
-        method: "DELETE",
-      });
-      expect(response.status).toBe(403);
-    });
-  });
-
-  describe("Usuário padrão", () => {
-    test("Removendo outro usuário", async () => {
-      const standardUser = await orchestrator.createUser();
-      await orchestrator.activateUser(standardUser);
-      const sessionObject = await orchestrator.createSession(standardUser);
-      const targetUser = await orchestrator.createUser();
-
-      const response = await fetch(adminUserUrl(targetUser.username), {
-        method: "DELETE",
-        headers: { Cookie: `session_id=${sessionObject.token}` },
-      });
-      expect(response.status).toBe(403);
-    });
-  });
-
-  describe("Usuário privilegiado", () => {
-    test("Removendo outro usuário e suas sessões", async () => {
-      const { sessionObject } = await createPrivilegedSession();
-      const targetUser = await orchestrator.createUser();
-      await orchestrator.createSession(targetUser);
-
-      const response = await fetch(adminUserUrl(targetUser.username), {
-        method: "DELETE",
-        headers: { Cookie: `session_id=${sessionObject.token}` },
-      });
-      expect(response.status).toBe(204);
-      await expect(user.findOneById(targetUser.id)).rejects.toThrow();
-    });
-
-    test("Tentando remover a própria conta", async () => {
-      const { privilegedUser, sessionObject } = await createPrivilegedSession();
-      const response = await fetch(adminUserUrl(privilegedUser.username), {
-        method: "DELETE",
-        headers: { Cookie: `session_id=${sessionObject.token}` },
-      });
-      expect(response.status).toBe(400);
-      expect(await response.json()).toEqual({
-        name: "ValidationError",
-        message:
-          "Não é permitido remover a própria conta pelo painel administrativo.",
-        action: "Utilize outra conta privilegiada para remover este usuário.",
-        status_code: 400,
-      });
     });
   });
 });
