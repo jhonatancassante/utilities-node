@@ -217,7 +217,7 @@ describe("models/user.js", () => {
       ).rejects.toThrow("O nome de usuário informado já está sendo utilizado.");
     });
 
-    test("Trocar a caixa do próprio username não conta como duplicado", async () => {
+    test("Trocar a caixa do username não conta como duplicado", async () => {
       const querySpy = mockQueries([
         ["SELECT\n          *", [existingUser]],
         ["UPDATE", [existingUser]],
@@ -270,7 +270,7 @@ describe("models/user.js", () => {
   });
 
   describe(".create()", () => {
-    test("Define somente `read:activation_token` e guarda hash da senha", async () => {
+    test("Define a feature inicial e guarda hash da senha", async () => {
       const querySpy = mockQueries([
         ["SELECT", []],
         ["INSERT", [existingUser]],
