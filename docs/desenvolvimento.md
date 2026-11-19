@@ -153,7 +153,7 @@ Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm 
 - `tests/unit/features/txt-to-csv/lib/`: testes unitários da detecção de codificação, interpretação de colunas de largura fixa, formatação de valores e geração do CSV.
 - `tests/orchestrator.js`: utilitários compartilhados.
 
-Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão. Os testes unitários cobrem a validação/normalização de URLs do Gerador de QR Code, a formatação do nome dos arquivos baixados (`lib/files.js`), as regras do Divisor de PDF, a conversão de CSV para JSON, a conversão de JSON para CSV e a conversão de TXT para CSV.
+Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão. Os testes unitários cobrem a validação/normalização de URLs do Gerador de QR Code, a formatação do nome dos arquivos baixados (`lib/client/files.js`), as regras do Divisor de PDF, a conversão de CSV para JSON, a conversão de JSON para CSV e a conversão de TXT para CSV.
 
 ### Orchestrator
 

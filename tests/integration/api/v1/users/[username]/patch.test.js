@@ -357,14 +357,18 @@ describe("PATCH /api/v1/users/[username]", () => {
           }),
         },
       );
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(400);
 
       const responseBody = await response.json();
-      expect(responseBody.id).toBe(user1.id);
-      expect(responseBody.username).toBe("usernameSomenteDoUsuario1");
+      expect(responseBody).toEqual({
+        name: "ValidationError",
+        message: "Os campos a seguir não podem ser alterados: id.",
+        action: "Envie apenas username, email e password.",
+        status_code: 400,
+      });
 
       const user1InDatabase = await user.findOneById(user1.id);
-      expect(user1InDatabase.username).toBe("usernameSomenteDoUsuario1");
+      expect(user1InDatabase.username).toBe(user1.username);
 
       const user2InDatabase = await user.findOneById(user2.id);
       expect(user2InDatabase.username).toBe(user2.username);
@@ -393,7 +397,12 @@ describe("PATCH /api/v1/users/[username]", () => {
           }),
         },
       );
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(400);
+
+      const responseBody = await response.json();
+      expect(responseBody.message).toBe(
+        "Os campos a seguir não podem ser alterados: id, features, created_at.",
+      );
 
       const userInDatabase = await user.findOneById(createdUser.id);
       expect(userInDatabase.id).toBe(createdUser.id);
@@ -404,6 +413,38 @@ describe("PATCH /api/v1/users/[username]", () => {
       ]);
       expect(userInDatabase.created_at).toEqual(createdUser.created_at);
     });
+
+    test.each([[[]], [null], ["texto"]])(
+      "Enviando body que não é objeto (%p)",
+      async (body) => {
+        const createdUser = await orchestrator.createUser();
+        await orchestrator.activateUser(createdUser);
+        const createdUserSessionObject =
+          await orchestrator.createSession(createdUser);
+        const userBefore = await user.findOneById(createdUser.id);
+
+        const response = await fetch(
+          `${orchestrator.API_URL}/users/${createdUser.username}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `session_id=${createdUserSessionObject.token}`,
+            },
+            body: JSON.stringify(body),
+          },
+        );
+        expect(response.status).toBe(400);
+
+        const responseBody = await response.json();
+        expect(responseBody.message).toBe(
+          "O corpo da requisição deve ser um objeto JSON.",
+        );
+
+        const userAfter = await user.findOneById(createdUser.id);
+        expect(userAfter).toEqual(userBefore);
+      },
+    );
   });
 
   describe("Usuário privilegiado", () => {

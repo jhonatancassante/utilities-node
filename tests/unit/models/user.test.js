@@ -39,32 +39,25 @@ afterEach(() => {
 
 describe("models/user.js", () => {
   describe(".update()", () => {
-    test("Usa o id do usuário encontrado no WHERE, ignorando `id` enviado", async () => {
+    test("Usa o id do usuário encontrado no WHERE", async () => {
       const querySpy = mockQueries([
         ["LOWER(username) = LOWER($1)\n        LIMIT 1", [existingUser]],
         ["UPDATE", (query) => [{ ...existingUser, username: query.values[1] }]],
       ]);
 
-      await user.update("UsuarioAtual", {
-        id: "99999999-9999-4999-8999-999999999999",
-        username: "UsuarioAtual",
-      });
+      await user.update("UsuarioAtual", { username: "UsuarioAtual" });
 
       const [updateQuery] = getCallsContaining(querySpy, "UPDATE");
       expect(updateQuery.values[0]).toBe(existingUser.id);
     });
 
-    test("Ignora campos fora da lista permitida", async () => {
+    test("Só altera os campos enviados e mantém os demais", async () => {
       const querySpy = mockQueries([
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
 
-      await user.update("UsuarioAtual", {
-        features: ["update:user:others"],
-        created_at: "2000-01-01",
-        email: "atual@example.com",
-      });
+      await user.update("UsuarioAtual", { email: "atual@example.com" });
 
       const [updateQuery] = getCallsContaining(querySpy, "UPDATE");
       expect(updateQuery.values).toEqual([
@@ -76,37 +69,94 @@ describe("models/user.js", () => {
       expect(updateQuery.text).not.toContain("features");
     });
 
+    test("Rejeita `id` no body e não executa nenhum UPDATE", async () => {
+      const querySpy = mockQueries([
+        ["SELECT", [existingUser]],
+        ["UPDATE", [existingUser]],
+      ]);
+
+      const error = await user
+        .update("UsuarioAtual", {
+          id: "99999999-9999-4999-8999-999999999999",
+          username: "UsuarioAtual",
+        })
+        .catch((e) => e);
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toBe(
+        "Os campos a seguir não podem ser alterados: id.",
+      );
+      expect(error.action).toBe("Envie apenas username, email e password.");
+      expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
+    });
+
+    test("Rejeita campos fora da lista permitida e lista todos eles", async () => {
+      const querySpy = mockQueries([
+        ["SELECT", [existingUser]],
+        ["UPDATE", [existingUser]],
+      ]);
+
+      const error = await user
+        .update("UsuarioAtual", {
+          features: ["update:user:others"],
+          created_at: "2000-01-01",
+          email: "atual@example.com",
+        })
+        .catch((e) => e);
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect(error.message).toBe(
+        "Os campos a seguir não podem ser alterados: features, created_at.",
+      );
+      expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
+    });
+
     test("Não altera o objeto recebido", async () => {
       mockQueries([
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
 
-      const input = { id: "outro-id", email: "  atual@example.com  " };
+      const input = { email: "  atual@example.com  " };
       await user.update("UsuarioAtual", input);
 
-      expect(input).toEqual({ id: "outro-id", email: "  atual@example.com  " });
+      expect(input).toEqual({ email: "  atual@example.com  " });
     });
 
     test.each([undefined, null, "texto", 42, ["username"]])(
-      "Com body inválido (%p), não altera nenhum campo",
+      "Com body que não é objeto (%p), rejeita e não executa nenhum UPDATE",
       async (body) => {
         const querySpy = mockQueries([
           ["SELECT", [existingUser]],
           ["UPDATE", [existingUser]],
         ]);
 
-        await user.update("UsuarioAtual", body);
+        const error = await user.update("UsuarioAtual", body).catch((e) => e);
 
-        const [updateQuery] = getCallsContaining(querySpy, "UPDATE");
-        expect(updateQuery.values).toEqual([
-          existingUser.id,
-          existingUser.username,
-          existingUser.email,
-          existingUser.password,
-        ]);
+        expect(error).toBeInstanceOf(ValidationError);
+        expect(error.message).toBe(
+          "O corpo da requisição deve ser um objeto JSON.",
+        );
+        expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
       },
     );
+
+    test("Com objeto vazio, mantém todos os campos", async () => {
+      const querySpy = mockQueries([
+        ["SELECT", [existingUser]],
+        ["UPDATE", [existingUser]],
+      ]);
+
+      await user.update("UsuarioAtual", {});
+
+      const [updateQuery] = getCallsContaining(querySpy, "UPDATE");
+      expect(updateQuery.values).toEqual([
+        existingUser.id,
+        existingUser.username,
+        existingUser.email,
+        existingUser.password,
+      ]);
+    });
 
     test("Com nome de usuário inválido", async () => {
       mockQueries([["SELECT", [existingUser]]]);

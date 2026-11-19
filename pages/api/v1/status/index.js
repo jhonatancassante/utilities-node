@@ -4,7 +4,7 @@ import authorization from "@/models/authorization.js";
 
 export default controller.createController(
   { GET: getHandler },
-  { middlewares: [controller.injectAnonymousOrUser] },
+  { middlewares: [controller.injectUserOrAnonymousOnInvalidSession] },
 );
 
 async function getHandler(request, response) {

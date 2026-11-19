@@ -11,7 +11,7 @@ beforeAll(async () => {
 });
 
 describe("DELETE /api/v1/sessions", () => {
-  describe("Usuário autenticado", () => {
+  describe("Usuário padrão", () => {
     test("Como uma sessão inexistente", async () => {
       const nonexistentToken = "EsseTokenNaoExisteEhApenasUmPlaceHolder";
 
@@ -33,7 +33,7 @@ describe("DELETE /api/v1/sessions", () => {
       });
     });
 
-    test("Com um sessão expirada", async () => {
+    test("Com uma sessão expirada", async () => {
       const createdUser = await orchestrator.createUser();
 
       jest.useFakeTimers({

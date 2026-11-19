@@ -23,7 +23,7 @@ describe("GET /api/v1/migrations", () => {
     });
   });
 
-  describe("Usuário autenticado", () => {
+  describe("Usuário padrão", () => {
     test("Visualizando as migrações pendentes", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);

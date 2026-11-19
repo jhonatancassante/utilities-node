@@ -26,7 +26,7 @@ describe("POST /api/v1/migrations", () => {
     });
   });
 
-  describe("Usuário autenticado", () => {
+  describe("Usuário padrão", () => {
     test("Rodar as migrações pendentes", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);

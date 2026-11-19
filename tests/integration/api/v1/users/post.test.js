@@ -266,7 +266,7 @@ describe("POST /api/v1/users", () => {
     });
   });
 
-  describe("Usuário autenticado", () => {
+  describe("Usuário padrão", () => {
     test("Com dados únicos e válidos", async () => {
       const user1 = await orchestrator.createUser();
       await orchestrator.activateUser(user1);

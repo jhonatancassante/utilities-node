@@ -114,9 +114,6 @@ async function markTokenAsUsed(activationTokenId) {
   }
 }
 
-// Consome o token e ativa o usuário na mesma transação: ou acontecem as duas
-// coisas, ou nenhuma. O UPDATE do token bloqueia a linha, então duas
-// requisições simultâneas com o mesmo token não conseguem ativar duas vezes.
 async function activate(activationTokenId) {
   return await database.transaction(async (client) => {
     const tokenResults = await client.query({

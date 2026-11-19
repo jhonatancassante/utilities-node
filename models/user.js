@@ -210,7 +210,23 @@ function pickUpdatableFields(userInputValues) {
     typeof userInputValues === "object" &&
     !Array.isArray(userInputValues);
 
-  if (!isPlainObject) return {};
+  if (!isPlainObject) {
+    throw new ValidationError({
+      message: "O corpo da requisição deve ser um objeto JSON.",
+      action: "Envie um objeto com os campos a serem alterados.",
+    });
+  }
+
+  const unknownFields = Object.keys(userInputValues).filter(
+    (field) => !UPDATABLE_FIELDS.includes(field),
+  );
+
+  if (unknownFields.length > 0) {
+    throw new ValidationError({
+      message: `Os campos a seguir não podem ser alterados: ${unknownFields.join(", ")}.`,
+      action: "Envie apenas username, email e password.",
+    });
+  }
 
   const picked = {};
   for (const field of UPDATABLE_FIELDS) {
