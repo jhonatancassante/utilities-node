@@ -173,6 +173,6 @@ O Gerador de AR e Etiquetas migra o utilitário legado para a aplicação:
 
 A interface mantém cadastros separados para destinatário e remetente. O CEP é consultado pelo ViaCEP e as listas de UFs e municípios são obtidas da API do IBGE. Cada destinatário guarda uma cópia dos dados do remetente no momento da inclusão, para que alterações posteriores não modifiquem registros já cadastrados.
 
-A geração utiliza `pdf-lib` no navegador. O documento mantém dois ARs por página A4 (140 × 94 mm) e etiquetas de 98 × 47 mm, organizadas em duas colunas e quatro linhas. As etiquetas incluem código de barras Code 128 no conjunto C para CEPs numéricos. O logo GIF dos Correios é convertido em PNG no navegador antes de ser incorporado ao PDF.
+A geração utiliza `pdf-lib` no navegador. O documento mantém dois ARs por página A4 (140 × 94 mm) e organiza as etiquetas em duas colunas e quatro linhas, com células espaçadas em 98 × 47 mm. Cada etiqueta desenhada mede 96 × 45 mm e inclui código de barras Code 128 no conjunto C para CEPs numéricos. O logo GIF dos Correios é convertido em PNG no navegador antes de ser incorporado ao PDF.
 
 Como a ferramenta produz material destinado à impressão física, além dos testes automatizados é necessário conferir o PDF em escala real, especialmente alinhamento, margens, legibilidade e compatibilidade com as folhas de etiquetas utilizadas.
