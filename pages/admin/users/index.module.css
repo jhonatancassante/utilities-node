@@ -316,34 +316,15 @@
 }
 
 .switchLocked {
-  background: var(--border-color);
-}
-
-.switchLocked:hover::before {
-  content: "";
-  position: absolute;
-  top: 3px;
-  right: 7px;
-  width: 7px;
-  height: 7px;
-  border: 1.5px solid var(--text-secondary);
-  border-bottom: 0;
-  border-radius: 6px 6px 0 0;
-}
-
-.switchLocked:hover::after {
-  top: 9px;
-  right: 5px;
-  left: auto;
-  width: 11px;
-  height: 8px;
-  border-radius: 2px;
-  background: var(--text-secondary);
-  transform: none;
+  background: #9ca3af;
 }
 
 .featureOption input:checked + .switch {
   background: var(--accent);
+}
+
+.featureOption input:checked + .switchLocked {
+  background: #9ca3af;
 }
 
 .featureOption input:checked + .switch::after {
