@@ -133,7 +133,7 @@ Cache-Control: no-store, no-cache, max-age=0, must-revalidate
 
 ### Consulta e renovação da sessão
 
-`GET /api/v1/user` exige uma sessão válida e a feature `read:session`. O endpoint renova a expiração no banco, reenvia o cookie e retorna os dados do próprio usuário: `id`, `username`, `email`, `features`, `created_at` e `updated_at`.
+`GET /api/v1/user` exige uma sessão válida e a feature `read:session`. Sem cookie, o visitante anônimo não possui essa feature e recebe `403`; com cookie inválido ou sessão expirada, recebe `401`. O endpoint renova a expiração no banco, reenvia o cookie e retorna os dados do próprio usuário: `id`, `username`, `email`, `features`, `created_at` e `updated_at`.
 
 ### Logout
 
@@ -195,7 +195,7 @@ A autorização de saída também é centralizada em `authorization.filterOutput
 - Não há _rate limiting_ para tentativas de login.
 - As senhas devem ter de 12 a 64 caracteres, com pelo menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns conhecidos também são rejeitados.
 - A validação estrutural do corpo ainda não é uniforme em todos os endpoints. O login e a atualização de usuário retornam `400 ValidationError` para corpo ausente ou que não seja objeto; já `POST /api/v1/users` não verifica explicitamente um corpo de nível superior `null` ou ausente antes de acessar suas propriedades, o que pode resultar em `500`.
-- O valor de e-mail é validado após `trim()`, mas o valor armazenado não é normalizado; a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
+- O e-mail é armazenado com a capitalização enviada (após `trim()`); a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
 - Cookie `session_id` inválido ou expirado é tolerado em login, cadastro, ativação e consulta de status, onde a requisição segue como visitante anônimo e o cookie é removido. Nas demais rotas, um cookie inválido resulta em `401`; o logout (`DELETE /api/v1/sessions`) também exige sessão válida.
 - Um JSON sintaticamente inválido pode ser rejeitado pelo parser de corpo do Next.js antes de chegar ao controller; nesse caso, a resposta `400` pode não seguir o envelope JSON padronizado da API.
 - As sessões encerradas permanecem no banco com data de expiração antecipada; não há rotina de limpeza física documentada ou implementada.
