@@ -90,7 +90,7 @@ describe("models/user.js", () => {
       expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
     });
 
-    test("Rejeita campos fora da lista permitida e lista todos eles", async () => {
+    test("Rejeita campos não permitidos e lista todos eles", async () => {
       const querySpy = mockQueries([
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
@@ -158,7 +158,7 @@ describe("models/user.js", () => {
       ]);
     });
 
-    test("Com permissão administrativa, atualiza as features do usuário", async () => {
+    test("Com permissão administrativa, atualiza as features", async () => {
       const querySpy = mockQueries([
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
@@ -217,7 +217,7 @@ describe("models/user.js", () => {
       ).rejects.toThrow("O nome de usuário informado já está sendo utilizado.");
     });
 
-    test("Trocar só a caixa do próprio username não conta como duplicado", async () => {
+    test("Trocar a caixa do próprio username não conta como duplicado", async () => {
       const querySpy = mockQueries([
         ["SELECT\n          *", [existingUser]],
         ["UPDATE", [existingUser]],
@@ -270,7 +270,7 @@ describe("models/user.js", () => {
   });
 
   describe(".create()", () => {
-    test("Define apenas a feature `read:activation_token` e guarda senha com hash", async () => {
+    test("Define somente `read:activation_token` e guarda hash da senha", async () => {
       const querySpy = mockQueries([
         ["SELECT", []],
         ["INSERT", [existingUser]],
