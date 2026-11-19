@@ -47,7 +47,6 @@ function StatusMessage({ type = "info", children, action }) {
         }
         onClose={() => setVisible(false)}
         closeOnBackdrop={false}
-        closeOnEscape={false}
         showCloseButton={false}
       >
         <div className={styles.errorDialog} role="alert">
