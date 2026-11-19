@@ -14,7 +14,7 @@ import {
   validateUsername,
 } from "@/lib/shared/user-validation.js";
 import { featureCatalog } from "@/configs/features.js";
-import { hasAdminAccess } from "@/configs/admin.js";
+import { hasAdminSectionAccess } from "@/configs/admin.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./usuarios.module.css";
 
@@ -39,7 +39,7 @@ function AdminUsersPage() {
     ) {
       router.replace("/login");
     }
-    if (!isLoading && user && !user.features.includes("update:user:others")) {
+    if (!isLoading && user && !hasAdminSectionAccess(user, "users")) {
       if (hasAdminAccess(user)) {
         router.replace("/admin");
       } else {
