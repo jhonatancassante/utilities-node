@@ -262,6 +262,7 @@
 }
 
 .featureOption {
+  position: relative;
   min-width: 0;
   padding: 12px;
   display: flex;
@@ -283,6 +284,38 @@
 
 .featureOptionLocked {
   cursor: not-allowed;
+}
+
+.featureOptionBadged {
+  padding-right: 76px;
+}
+
+.featureBadges {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.featureBadge {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-size: 11px;
+}
+
+.privilegedBadge {
+  background: rgba(212, 160, 23, 0.15);
+  color: #b8860b;
+}
+
+.protectedBadge {
+  background: rgba(220, 53, 69, 0.12);
+  color: #dc3545;
 }
 
 .featureOption > input {

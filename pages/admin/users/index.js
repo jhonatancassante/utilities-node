@@ -20,7 +20,7 @@ import styles from "./index.module.css";
 
 const featureGroups = [
   ...new Set(featureCatalog.map((feature) => feature.group)),
-];
+].sort((a, b) => a.localeCompare(b, "pt-BR"));
 
 function AdminUsersPage() {
   const router = useRouter();
@@ -537,9 +537,35 @@ function UserEditor({ user, onUpdated, onCancel }) {
                     <label
                       className={`${styles.featureOption} ${
                         feature.editable === false ? styles.featureOptionLocked : ""
+                      } ${
+                        feature.privileged || feature.editable === false
+                          ? styles.featureOptionBadged
+                          : ""
                       }`}
                       key={feature.name}
                     >
+                      <span className={styles.featureBadges}>
+                        {feature.privileged && (
+                          <span
+                            className={`${styles.featureBadge} ${styles.privilegedBadge}`}
+                            title="Permissão privilegiada"
+                            role="img"
+                            aria-label="Permissão privilegiada"
+                          >
+                            <i className="fas fa-crown" aria-hidden="true"></i>
+                          </span>
+                        )}
+                        {feature.editable === false && (
+                          <span
+                            className={`${styles.featureBadge} ${styles.protectedBadge}`}
+                            title="Permissão protegida"
+                            role="img"
+                            aria-label="Permissão protegida"
+                          >
+                            <i className="fas fa-ban" aria-hidden="true"></i>
+                          </span>
+                        )}
+                      </span>
                       <input
                         type="checkbox"
                         checked={form.features.includes(feature.name)}
@@ -556,9 +582,6 @@ function UserEditor({ user, onUpdated, onCancel }) {
                         <strong>{feature.label}</strong>
                         <small>{feature.description}</small>
                         <code>{feature.name}</code>
-                        {feature.editable === false && (
-                          <small>Permissão protegida — não pode ser alterada.</small>
-                        )}
                       </span>
                     </label>
                   ))}
