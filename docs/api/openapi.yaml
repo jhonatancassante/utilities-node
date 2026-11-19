@@ -150,8 +150,11 @@ paths:
       description: |
         Exige create:user, concedida ao visitante padrão. Cria a conta com
         read:activation_token, gera um token de ativação e envia um e-mail.
-        A senha é armazenada com HMAC-SHA256 e bcrypt. O e-mail enviado é um
-        efeito colateral necessário para concluir o cadastro.
+        Username, e-mail e senha são validados antes da criação. A senha tem
+        de 12 a 64 caracteres, exige pelo menos 2 letras minúsculas, 2 maiúsculas,
+        2 números e 2 caracteres especiais e rejeita termos comuns conhecidos.
+        Ela é armazenada com HMAC-SHA256 e bcrypt. O e-mail enviado é um efeito
+        colateral necessário para concluir o cadastro.
       x-required-feature: create:user
       requestBody:
         required: true
@@ -468,6 +471,7 @@ components:
         email:
           type: string
           format: email
+          minLength: 1
           maxLength: 254
         password:
           type: string
@@ -475,7 +479,9 @@ components:
           maxLength: 64
           description: >
             Senha de 12 a 64 caracteres, com pelo menos 2 letras minúsculas,
-            2 maiúsculas, 2 números e 2 caracteres especiais.
+            2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns
+            conhecidos como password, admin, qwerty, letmein e welcome são
+            rejeitados.
     UserUpdate:
       type: object
       additionalProperties: false
@@ -488,6 +494,7 @@ components:
         email:
           type: string
           format: email
+          minLength: 1
           maxLength: 254
         password:
           type: string
@@ -495,7 +502,9 @@ components:
           maxLength: 64
           description: >
             Senha de 12 a 64 caracteres, com pelo menos 2 letras minúsculas,
-            2 maiúsculas, 2 números e 2 caracteres especiais.
+            2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns
+            conhecidos como password, admin, qwerty, letmein e welcome são
+            rejeitados.
     PublicUser:
       type: object
       required: [id, username, features, created_at, updated_at]
