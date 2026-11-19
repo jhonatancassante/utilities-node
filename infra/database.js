@@ -35,19 +35,15 @@ async function query(queryObject) {
     client = await getNewClient();
     return await client.query(queryObject);
   } catch (error) {
-    const publicErrorObject = new ServiceError({
+    throw new ServiceError({
       message: "Erro na conexão com o banco de dados ou na query.",
       cause: error,
     });
-    throw publicErrorObject;
   } finally {
     await client?.end();
   }
 }
 
-// Executa `callback(client)` dentro de uma transação: COMMIT se terminar sem
-// erro, ROLLBACK se lançar. Erros da aplicação (NotFoundError, ForbiddenError
-// etc.) são repassados como estão; falhas do banco viram ServiceError.
 async function transaction(callback) {
   let client;
   try {
@@ -58,8 +54,6 @@ async function transaction(callback) {
     return result;
   } catch (error) {
     await client?.query("ROLLBACK").catch(() => {});
-
-    if (error?.statusCode) throw error;
 
     throw new ServiceError({
       message: "Erro na conexão com o banco de dados ou na transação.",
