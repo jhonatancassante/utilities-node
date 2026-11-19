@@ -36,7 +36,7 @@ Os endpoints usam `next-connect` por meio de `infra/controller.js`. Cada rota de
 | `pages/api/v1/users`                  | Cadastro de usuários                                                                 |
 | `pages/api/v1/users/[username]`       | Consulta pública e atualização autorizada                                            |
 | `pages/api/v1/admin/users`            | Pesquisa administrativa de usuários por nome ou e-mail                               |
-| `pages/api/v1/admin/users/[username]` | Consulta, atualização de dados/features e remoção administrativa                     |
+| `pages/api/v1/admin/users/[username]` | Consulta e atualização de dados/features de outras contas                     |
 | `pages/api/v1/activations/[token_id]` | Ativação de contas                                                                   |
 | `pages/api/v1/sessions`               | Criação e encerramento de sessões                                                    |
 | `pages/api/v1/user`                   | Consulta do usuário autenticado e renovação da sessão                                |
@@ -77,7 +77,7 @@ A função `filterOutput(user, feature, resource)` controla os campos que podem 
 
 A interface fica em `pages/admin/`. O menu do avatar exibe o acesso à administração quando o usuário possui ao menos uma feature listada como privilegiada em `configs/features.js`. As opções disponíveis são registradas em `configs/admin.js`, cada uma com sua própria `requiredFeature`; adicionar uma nova seção exige incluir seu registro e sua página/endpoint correspondente.
 
-A área de gerenciamento de usuários exige `update:user:others` tanto na interface quanto nos endpoints `pages/api/v1/admin/users`. A pesquisa retorna até dez contas por trecho de username ou e-mail. O editor permite alterar username, e-mail, senha e a lista completa de features. O catálogo de permissões é compartilhado entre o backend e a interface. A pesquisa também permite localizar a própria conta do administrador, que pode alterar seus dados e suas permissões pelo painel. O painel não oferece funcionalidade de exclusão de contas.
+A área de gerenciamento de usuários exige `update:user:others` tanto na interface quanto nos endpoints `pages/api/v1/admin/users`. A pesquisa retorna até dez contas por trecho de username ou e-mail. O editor permite alterar username, e-mail, senha e a lista completa de features. O catálogo de permissões é compartilhado entre o backend e a interface. A pesquisa não apresenta a própria conta do administrador, e a API também bloqueia tentativas de alterá-la. Para modificar os próprios dados, o usuário deve utilizar a página de perfil.
 
 ### Features conhecidas
 
