@@ -234,7 +234,9 @@ async function update(
         WHERE
           name = ANY($1)
       ;`,
-      values: [[...new Set([...currentUser.features, ...allowedInputValues.features])]],
+      values: [
+        [...new Set([...currentUser.features, ...allowedInputValues.features])],
+      ],
     });
     const featureMetadata = new Map(
       featureResults.rows.map((feature) => [feature.name, feature]),
@@ -266,10 +268,11 @@ async function update(
 
     if (removedNonRemovableFeatures.length > 0) {
       throw new ValidationError({
-        message: [
-          "As seguintes features não podem ser removidas deste usuário:",
-          removedNonRemovableFeatures.join(", "),
-        ].join(" ") + ".",
+        message:
+          [
+            "As seguintes features não podem ser removidas deste usuário:",
+            removedNonRemovableFeatures.join(", "),
+          ].join(" ") + ".",
         action:
           "Uma feature não removível pode ser atribuída, mas não pode ser retirada depois.",
       });
@@ -284,10 +287,11 @@ async function update(
 
     if (newlyGrantedPrivilegedFeatures.length > 0) {
       throw new ValidationError({
-        message: [
-          "Você não possui autorização para conceder as seguintes features privilegiadas:",
-          newlyGrantedPrivilegedFeatures.join(", "),
-        ].join(" ") + ".",
+        message:
+          [
+            "Você não possui autorização para conceder as seguintes features privilegiadas:",
+            newlyGrantedPrivilegedFeatures.join(", "),
+          ].join(" ") + ".",
         action:
           "Somente um usuário que já possui a feature privilegiada pode concedê-la a outra conta.",
       });

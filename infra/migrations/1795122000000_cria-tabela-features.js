@@ -96,7 +96,7 @@ export const up = (pgm) => {
         'Alterar próprio usuário',
         'Usuários',
         'Permite alterar os dados da própria conta.',
-        true,
+        false,
         false,
         false
       ),
@@ -114,7 +114,7 @@ export const up = (pgm) => {
         'Criar sessão',
         'Sessões',
         'Permite iniciar uma sessão autenticada.',
-        true,
+        false,
         false,
         false
       ),

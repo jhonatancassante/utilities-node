@@ -257,7 +257,8 @@ async function deleteFeature(id) {
 
       if (assignedUsers.rowCount > 0) {
         throw new ValidationError({
-          message: "Esta feature não pode ser excluída enquanto estiver atribuída a usuários.",
+          message:
+            "Esta feature não pode ser excluída enquanto estiver atribuída a usuários.",
           action:
             "A feature não pode ser retirada de usuários que já a possuem.",
         });
@@ -375,11 +376,7 @@ function validateFeatureInput(
     }
   }
 
-  for (const field of [
-    "is_removable",
-    "is_privileged",
-    "is_protected",
-  ]) {
+  for (const field of ["is_removable", "is_privileged", "is_protected"]) {
     if (!Object.hasOwn(featureInputValues, field)) continue;
 
     if (typeof featureInputValues[field] !== "boolean") {

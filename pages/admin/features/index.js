@@ -425,9 +425,7 @@ function AdminFeaturesPage() {
                                     title="Excluir feature"
                                     aria-label={`Excluir feature ${feature.name}`}
                                     disabled={isSaving || creating}
-                                    onClick={() =>
-                                      handleDeleteFeature(feature)
-                                    }
+                                    onClick={() => handleDeleteFeature(feature)}
                                   >
                                     <i
                                       className="fas fa-trash-alt"
@@ -451,13 +449,7 @@ function AdminFeaturesPage() {
   );
 }
 
-function FeatureForm({
-  feature,
-  onSubmit,
-  onCancel,
-  isSaving,
-  title,
-}) {
+function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
   const [form, setForm] = useState({
     name: feature?.name ?? "",
     label: feature?.label ?? "",
