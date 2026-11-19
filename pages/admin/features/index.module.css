@@ -357,3 +357,6 @@
     flex-direction: column;
   }
 }
+
+.confirmText { margin: 4px 0 22px; color: var(--text-secondary); line-height: 1.6; overflow-wrap: anywhere; }
+.editor { margin-top: 0; padding: 0; border: 0; background: transparent; }

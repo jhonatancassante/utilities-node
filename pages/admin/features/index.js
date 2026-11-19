@@ -6,6 +6,7 @@ import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
+import Modal from "@/components/Modal";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
 import {
@@ -25,6 +26,7 @@ function AdminFeaturesPage() {
   const [creating, setCreating] = useState(false);
   const [editingFeature, setEditingFeature] = useState(null);
   const [feedback, setFeedback] = useState(null);
+  const [deleteCandidate, setDeleteCandidate] = useState(null);
 
   const canCreate = user?.features?.includes("create:feature") ?? false;
   const canUpdate = user?.features?.includes("update:feature") ?? false;
@@ -181,33 +183,23 @@ function AdminFeaturesPage() {
   }
 
   async function handleDeleteFeature(feature) {
-    const confirmed = window.confirm(
-      `Deseja realmente excluir a feature "${feature.name}"? Essa ação não poderá ser desfeita pela interface.`,
-    );
+    setDeleteCandidate(feature);
+  }
 
-    if (!confirmed) return;
-
+  async function confirmDeleteFeature() {
+    const feature = deleteCandidate;
+    if (!feature) return;
+    setDeleteCandidate(null);
     setFeedback(null);
-
     try {
-      await requestAPI(
-        `/api/v1/admin/features/${encodeURIComponent(feature.id)}`,
-        { method: "DELETE" },
-      );
-
+      await requestAPI("/api/v1/admin/features/" + encodeURIComponent(feature.id), { method: "DELETE" });
       const refreshed = await loadFeatures({ showFeedback: false });
       setFeedback({
         type: refreshed ? "success" : "error",
-        message: refreshed
-          ? "Feature excluída com sucesso."
-          : "A feature foi excluída, mas não foi possível atualizar a listagem.",
+        message: refreshed ? "Feature excluída com sucesso." : "A feature foi excluída, mas não foi possível atualizar a listagem.",
       });
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback({ type: "error", message: requestError.message, action: requestError.action });
     }
   }
 
@@ -308,7 +300,7 @@ function AdminFeaturesPage() {
                   type="button"
                   icon="fa-plus"
                   onClick={handleStartCreate}
-                  disabled={creating || isSaving}
+                  disabled={isSaving}
                 >
                   Nova feature
                 </Button>
@@ -438,7 +430,7 @@ function AdminFeaturesPage() {
                                     className={styles.iconButton}
                                     title="Alterar feature"
                                     aria-label={`Alterar feature ${feature.name}`}
-                                    disabled={isSaving || creating}
+                                    disabled={isSaving}
                                     onClick={() => handleStartEdit(feature)}
                                   >
                                     <i
