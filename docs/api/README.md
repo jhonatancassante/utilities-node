@@ -14,22 +14,22 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 
 ## Resumo dos endpoints
 
-| Método   | Caminho                          | Acesso                                                         |
-| -------- | -------------------------------- | -------------------------------------------------------------- |
-| `GET`    | `/api/v1/status`                 | Público; detalhes de versão condicionados a `read:status:all`  |
-| `GET`    | `/api/v1/migrations`             | Feature `read:migration`                                       |
-| `POST`   | `/api/v1/migrations`             | Feature `create:migration`                                     |
-| `POST`   | `/api/v1/users`                  | Feature `create:user` (visitante padrão)                       |
-| `GET`    | `/api/v1/users/{username}`       | Público; saída filtrada                                        |
-| `GET`    | `/api/v1/admin/users?search=...` | Feature `update:user:others`                                   |
-| `GET`    | `/api/v1/admin/users/{username}` | Feature `update:user:others`                                   |
-| `PATCH`  | `/api/v1/admin/users/{username}` | Feature `update:user:others`; inclui alteração de features     |
+| Método   | Caminho                          | Acesso                                                            |
+| -------- | -------------------------------- | ----------------------------------------------------------------- |
+| `GET`    | `/api/v1/status`                 | Público; detalhes de versão condicionados a `read:status:all`     |
+| `GET`    | `/api/v1/migrations`             | Feature `read:migration`                                          |
+| `POST`   | `/api/v1/migrations`             | Feature `create:migration`                                        |
+| `POST`   | `/api/v1/users`                  | Feature `create:user` (visitante padrão)                          |
+| `GET`    | `/api/v1/users/{username}`       | Público; saída filtrada                                           |
+| `GET`    | `/api/v1/admin/users?search=...` | Feature `update:user:others`                                      |
+| `GET`    | `/api/v1/admin/users/{username}` | Feature `update:user:others`                                      |
+| `PATCH`  | `/api/v1/admin/users/{username}` | Feature `update:user:others`; inclui alteração de features        |
 | `DELETE` | `/api/v1/admin/users/{username}` | Feature `update:user:others`; não permite remover a própria conta |
-| `PATCH`  | `/api/v1/users/{username}`       | Feature `update:user`; próprio usuário ou `update:user:others` |
-| `PATCH`  | `/api/v1/activations/{token_id}` | Feature `read:activation_token`                                |
-| `POST`   | `/api/v1/sessions`               | Feature `create:session`                                       |
-| `DELETE` | `/api/v1/sessions`               | Sessão válida                                                  |
-| `GET`    | `/api/v1/user`                   | Sessão válida e feature `read:session`                         |
+| `PATCH`  | `/api/v1/users/{username}`       | Feature `update:user`; próprio usuário ou `update:user:others`    |
+| `PATCH`  | `/api/v1/activations/{token_id}` | Feature `read:activation_token`                                   |
+| `POST`   | `/api/v1/sessions`               | Feature `create:session`                                          |
+| `DELETE` | `/api/v1/sessions`               | Sessão válida                                                     |
+| `GET`    | `/api/v1/user`                   | Sessão válida e feature `read:session`                            |
 
 ## Autorização e erros
 
