@@ -6,7 +6,7 @@ beforeAll(async () => {
 
 describe("POST /api/v1/status", () => {
   describe("Usuário anônimo", () => {
-    test("Obtendo o status atual do sistema", async () => {
+    test("Com método não permitido", async () => {
       const response = await fetch(`${orchestrator.API_URL}/status`, {
         method: "POST",
       });

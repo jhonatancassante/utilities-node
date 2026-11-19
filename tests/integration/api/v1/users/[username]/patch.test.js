@@ -40,7 +40,7 @@ describe("PATCH /api/v1/users/[username]", () => {
     });
   });
 
-  describe("Usuário autenticado", () => {
+  describe("Usuário padrão", () => {
     test("Com nome de usuário inexistente", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);

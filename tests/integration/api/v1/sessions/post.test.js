@@ -211,10 +211,8 @@ describe("POST /api/v1/sessions", () => {
         maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
       });
     });
-  });
 
-  describe("Com um cookie `session_id` antigo", () => {
-    test("Sessão expirada, com credenciais corretas", async () => {
+    test("Com um cookie `session_id` expirado e credenciais corretas", async () => {
       const newUser = await orchestrator.createUser({
         password: "Email.E.Senha12!!",
       });
@@ -295,7 +293,7 @@ describe("POST /api/v1/sessions", () => {
       });
     });
 
-    test("Token inexistente, com credenciais corretas", async () => {
+    test("Com um cookie `session_id` inexistente e credenciais corretas", async () => {
       const newUser = await orchestrator.createUser({
         password: "Email.E.Senha12!!",
       });
@@ -355,7 +353,7 @@ describe("POST /api/v1/sessions", () => {
       });
     });
 
-    test("Sessão expirada, com credenciais incorretas", async () => {
+    test("Com um cookie `session_id` expirado e credenciais incorretas", async () => {
       const newUser = await orchestrator.createUser({
         email: "cookie.expirado@incorreto.com.br",
       });

@@ -21,7 +21,7 @@ afterEach(() => {
 });
 
 describe("infra/controller.js", () => {
-  describe("createController()", () => {
+  describe(".createController()", () => {
     test("Middleware que não é função lança ConfigurationError", () => {
       expect(() =>
         controller.createController({ GET: () => {} }, { middlewares: ["x"] }),
@@ -29,8 +29,8 @@ describe("infra/controller.js", () => {
     });
   });
 
-  describe("cookies de sessão", () => {
-    test("setSessionCookie() define cookie HttpOnly e sem cache", () => {
+  describe(".setSessionCookie()", () => {
+    test("Define cookie HttpOnly e sem cache", () => {
       const response = createResponse();
 
       controller.setSessionCookie(response, "abc");
@@ -45,8 +45,10 @@ describe("infra/controller.js", () => {
       );
       expect(cacheControl).toContain("no-store");
     });
+  });
 
-    test("clearSessionCookie() invalida o cookie", () => {
+  describe(".clearSessionCookie()", () => {
+    test("Invalida o cookie", () => {
       const response = createResponse();
 
       controller.clearSessionCookie(response);
@@ -58,7 +60,7 @@ describe("infra/controller.js", () => {
     });
   });
 
-  describe("injectAnonymousOrUser()", () => {
+  describe(".injectAnonymousOrUser()", () => {
     test("Sem cookie, segue como usuário anônimo", async () => {
       const request = { cookies: {} };
       const next = jest.fn();
@@ -106,7 +108,7 @@ describe("infra/controller.js", () => {
     });
   });
 
-  describe("injectUserOrAnonymousOnInvalidSession()", () => {
+  describe(".injectUserOrAnonymousOnInvalidSession()", () => {
     test("Sem cookie, segue como anônimo sem mexer no cookie", async () => {
       const request = { cookies: {} };
       const response = createResponse();
@@ -180,7 +182,7 @@ describe("infra/controller.js", () => {
     });
   });
 
-  describe("canRequest()", () => {
+  describe(".canRequest()", () => {
     test("Com a feature, chama next()", () => {
       const next = jest.fn();
 

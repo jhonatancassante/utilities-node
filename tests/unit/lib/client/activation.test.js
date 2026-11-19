@@ -6,39 +6,41 @@ describe("lib/client/activation.js", () => {
     jest.restoreAllMocks();
   });
 
-  test("Ativa a conta utilizando o token recebido por parâmetro", async () => {
-    const responseBody = { id: "activation-token-id" };
-    jest.spyOn(globalThis, "fetch").mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue(responseBody),
+  describe("activateAccount()", () => {
+    test("Ativa a conta utilizando o token recebido por parâmetro", async () => {
+      const responseBody = { id: "activation-token-id" };
+      jest.spyOn(globalThis, "fetch").mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue(responseBody),
+      });
+
+      const response = await activateAccount("activation-token-id");
+
+      expect(response).toEqual(responseBody);
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/v1/activations/activation-token-id",
+        {
+          method: "PATCH",
+          headers: { Accept: "application/json" },
+        },
+      );
     });
 
-    const response = await activateAccount("activation-token-id");
+    test("Codifica o token antes de incluí-lo no caminho da API", async () => {
+      jest.spyOn(globalThis, "fetch").mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({}),
+      });
 
-    expect(response).toEqual(responseBody);
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/v1/activations/activation-token-id",
-      {
-        method: "PATCH",
-        headers: { Accept: "application/json" },
-      },
-    );
-  });
+      await activateAccount("token/com-caracteres");
 
-  test("Codifica o token antes de incluí-lo no caminho da API", async () => {
-    jest.spyOn(globalThis, "fetch").mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({}),
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/v1/activations/token%2Fcom-caracteres",
+        {
+          method: "PATCH",
+          headers: { Accept: "application/json" },
+        },
+      );
     });
-
-    await activateAccount("token/com-caracteres");
-
-    expect(fetch).toHaveBeenCalledWith(
-      "/api/v1/activations/token%2Fcom-caracteres",
-      {
-        method: "PATCH",
-        headers: { Accept: "application/json" },
-      },
-    );
   });
 });

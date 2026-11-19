@@ -158,65 +158,68 @@ describe("POST /api/v1/users", () => {
         status_code: 400,
       });
     });
-  });
 
-  test.each([
-    [
-      {
-        username: "usuario!",
-        email: "usuario-invalido@exemplo.com",
-        password: validPassword,
-      },
-      "O nome de usuário contém caracteres não permitidos.",
-    ],
-    [
-      {
-        username: "usuario123",
-        email: "a".repeat(245) + "@example.com",
-        password: validPassword,
-      },
-      "O e-mail deve ter no máximo 254 caracteres.",
-    ],
-    [
-      {
-        username: "usuario123",
-        email: "usuario-valido@exemplo.com",
-        password: ["AaBb", "12!!", "xyZ"].join(""),
-      },
-      "A senha deve ter pelo menos 12 caracteres.",
-    ],
-    [
-      {
-        username: "usuario123",
-        email: "usuario-valido@exemplo.com",
-        password: ["123456789", "012345"].join(""),
-      },
-      "A senha deve conter pelo menos 2 letras minúsculas.",
-    ],
-    [
-      {
-        username: "usuario123",
-        email: "usuario-valido@exemplo.com",
-        password: "S".repeat(65),
-      },
-      "A senha deve ter no máximo 64 caracteres.",
-    ],
-  ])("Rejeita dados inválidos", async (userInput, expectedMessage) => {
-    const response = await fetch(`${orchestrator.API_URL}/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(userInput),
+    test.each([
+      [
+        "nome de usuário com caracteres inválidos",
+        {
+          username: "usuario!",
+          email: "usuario-invalido@exemplo.com",
+          password: validPassword,
+        },
+        "O nome de usuário contém caracteres não permitidos.",
+      ],
+      [
+        "email com mais de 254 caracteres",
+        {
+          username: "usuario123",
+          email: "a".repeat(245) + "@example.com",
+          password: validPassword,
+        },
+        "O e-mail deve ter no máximo 254 caracteres.",
+      ],
+      [
+        "senha com menos de 12 caracteres",
+        {
+          username: "usuario123",
+          email: "usuario-valido@exemplo.com",
+          password: ["Aa", "Bb", "12", "!!", "xyZ"].join(""),
+        },
+        "A senha deve ter pelo menos 12 caracteres.",
+      ],
+      [
+        "senha sem letras minúsculas",
+        {
+          username: "usuario123",
+          email: "usuario-valido@exemplo.com",
+          password: ["123456789", "012345"].join(""),
+        },
+        "A senha deve conter pelo menos 2 letras minúsculas.",
+      ],
+      [
+        "senha com mais de 64 caracteres",
+        {
+          username: "usuario123",
+          email: "usuario-valido@exemplo.com",
+          password: "S".repeat(65),
+        },
+        "A senha deve ter no máximo 64 caracteres.",
+      ],
+    ])("Com %s", async (_descricao, userInput, expectedMessage) => {
+      const response = await fetch(`${orchestrator.API_URL}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userInput),
+      });
+
+      expect(response.status).toBe(400);
+      const responseBody = await response.json();
+      expect(responseBody.name).toBe("ValidationError");
+      expect(responseBody.message).toBe(expectedMessage);
     });
 
-    expect(response.status).toBe(400);
-    const responseBody = await response.json();
-    expect(responseBody.name).toBe("ValidationError");
-    expect(responseBody.message).toBe(expectedMessage);
-  });
-
-  describe("Usuário anônimo com cookie antigo", () => {
     test("Com um cookie `session_id` expirado", async () => {
       const oldUser = await orchestrator.createUser();
       await orchestrator.activateUser(oldUser);
