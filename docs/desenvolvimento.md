@@ -82,8 +82,6 @@ O Conversor de TXT para CSV interpreta relatórios de largura fixa: identifica o
 
 O Gerador de AR e Etiquetas consulta CEP pelo ViaCEP e listas de UFs e municípios pela API do IBGE. Os dados são organizados na interface e convertidos em PDF no navegador, com ARs e etiquetas de endereçamento. Como o resultado é destinado à impressão, confira alinhamento e dimensões em escala real. A página do Diário Oficial exibe o PDF estático por meio do leitor do navegador e disponibiliza o download; ela usa `noindex, nofollow`.
 
-
-
 ## Scripts npm
 
 | Script                              | Função                                                           |
