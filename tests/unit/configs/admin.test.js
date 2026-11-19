@@ -12,6 +12,27 @@ describe("configs/admin.js", () => {
     });
   });
 
+  describe(".hasAdminSectionAccess()", () => {
+    test("Usuário sem a feature exigida para a seção", () => {
+      expect(
+        hasAdminSectionAccess({ features: ["read:status:all"] }, "users"),
+      ).toBe(false);
+    });
+
+    test("Usuário com a feature exigida para a seção", () => {
+      expect(
+        hasAdminSectionAccess(
+          { features: ["update:user:others"] },
+          "users",
+        ),
+      ).toBe(true);
+    });
+
+    test("Seção inexistente", () => {
+      expect(hasAdminSectionAccess({ features: [] }, "unknown")).toBe(false);
+    });
+  });
+
   describe(".getAvailableAdminSections()", () => {
     test("Disponibiliza somente o gerenciamento de usuários", () => {
       const sections = getAvailableAdminSections({
