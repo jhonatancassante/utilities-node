@@ -248,18 +248,7 @@ function AdminUsersPage() {
               <UserEditor
                 key={selectedUser.id}
                 user={selectedUser}
-                currentUserId={user.id}
                 onUpdated={handleUserUpdated}
-                onDeleted={(deletedId) => {
-                  setResults((current) =>
-                    current.filter((item) => item.id !== deletedId),
-                  );
-                  setSelectedUser(null);
-                  setFeedback({
-                    type: "success",
-                    message: "Usuário removido com sucesso.",
-                  });
-                }}
                 onCancel={() => setSelectedUser(null)}
               />
             )}
@@ -280,7 +269,6 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
   });
   const [featureSearch, setFeatureSearch] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
   const filteredFeatures = useMemo(() => {
@@ -396,34 +384,6 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
     }
   }
 
-  async function handleDelete() {
-    const confirmationMessage = [
-      `Tem certeza de que deseja remover o usuário "${user.username}"?`,
-      "Essa ação não poderá ser desfeita.",
-    ].join(" ");
-    const confirmed = window.confirm(confirmationMessage);
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    setFeedback(null);
-
-    try {
-      await requestAPI(
-        `/api/v1/admin/users/${encodeURIComponent(user.username)}`,
-        { method: "DELETE" },
-      );
-      onDeleted(user.id);
-    } catch (requestError) {
-      setFeedback({
-        type: "error",
-        message: requestError.message,
-        action: requestError.action,
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  }
-
   return (
     <section className={styles.editor} aria-label="Editar usuário">
       <div className={styles.sectionHeading}>
@@ -445,7 +405,7 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
               id="edit-username"
               value={form.username}
               onChange={(event) => updateField("username", event.target.value)}
-              disabled={isSaving || isDeleting}
+              disabled={isSaving}
             />
           </div>
           <div className={styles.field}>
@@ -458,7 +418,7 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
               type="email"
               value={form.email}
               onChange={(event) => updateField("email", event.target.value)}
-              disabled={isSaving || isDeleting}
+              disabled={isSaving}
             />
           </div>
         </div>
@@ -480,7 +440,7 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
                 onChange={(event) =>
                   updateField("password", event.target.value)
                 }
-                disabled={isSaving || isDeleting}
+                disabled={isSaving}
               />
             </div>
             <div className={styles.field}>
@@ -499,7 +459,7 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
                 onChange={(event) =>
                   updateField("passwordConfirmation", event.target.value)
                 }
-                disabled={isSaving || isDeleting}
+                disabled={isSaving}
               />
             </div>
           </div>
@@ -525,7 +485,7 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
             placeholder="Pesquisar por nome ou descrição da feature"
             value={featureSearch}
             onChange={(event) => setFeatureSearch(event.target.value)}
-            disabled={isSaving || isDeleting}
+            disabled={isSaving}
           />
 
           {featureGroups.map((group) => {
@@ -544,7 +504,7 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
                         type="checkbox"
                         checked={form.features.includes(feature.name)}
                         onChange={() => toggleFeature(feature.name)}
-                        disabled={isSaving || isDeleting}
+                        disabled={isSaving}
                       />
                       <span className={styles.switch} aria-hidden="true"></span>
                       <span className={styles.featureText}>
@@ -581,7 +541,7 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
           <Button
             type="submit"
             icon="fa-save"
-            disabled={isSaving || isDeleting}
+            disabled={isSaving}
           >
             {isSaving ? "Salvando..." : "Salvar alterações"}
           </Button>
@@ -590,36 +550,13 @@ function UserEditor({ user, currentUserId, onUpdated, onDeleted, onCancel }) {
             variant="danger"
             icon="fa-times"
             onClick={handleCancel}
-            disabled={isSaving || isDeleting}
+            disabled={isSaving}
           >
             Cancelar
           </Button>
         </div>
       </form>
 
-      <div className={styles.dangerZone}>
-        <div>
-          <strong>Remover usuário</strong>
-          <small>
-            Remove a conta e encerra todas as sessões e tokens de ativação
-            associados.
-          </small>
-        </div>
-        <Button
-          type="button"
-          variant="danger"
-          icon="fa-trash"
-          onClick={handleDelete}
-          disabled={isSaving || isDeleting || user.id === currentUserId}
-        >
-          {isDeleting ? "Removendo..." : "Remover"}
-        </Button>
-        {user.id === currentUserId && (
-          <small className={styles.hint}>
-            Você não pode remover a própria conta por este painel.
-          </small>
-        )}
-      </div>
     </section>
   );
 }
