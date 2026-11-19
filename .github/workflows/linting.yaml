@@ -15,9 +15,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run lint:prettier:fix
-
-      - run: git diff -- .
+      - run: npm run lint:prettier:check
 
   eslint:
     name: ESLint
