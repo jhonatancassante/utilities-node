@@ -300,7 +300,8 @@ paths:
         na requisição é ignorado (visitante anônimo). O corpo deve ser um objeto
         JSON com email e password como strings não vazias; corpo ausente, null,
         array, valor primitivo, campo ausente, vazio ou com tipo incorreto
-        retorna ValidationError (400). Credenciais incorretas retornam uma
+        retorna ValidationError (400). Espaços no início e no fim do e-mail
+        são removidos antes da consulta. Credenciais incorretas retornam uma
         mensagem genérica, sem distinguir e-mail inexistente de senha errada.
       x-required-feature: create:session
       requestBody:
