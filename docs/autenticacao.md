@@ -197,6 +197,7 @@ A autorização de saída também é centralizada em `authorization.filterOutput
 - A validação estrutural do corpo ainda não é uniforme em todos os endpoints. O login e a atualização de usuário retornam `400 ValidationError` para corpo ausente ou que não seja objeto; já `POST /api/v1/users` não verifica explicitamente um corpo de nível superior `null` ou ausente antes de acessar suas propriedades, o que pode resultar em `500`.
 - O e-mail é armazenado com a capitalização enviada (após `trim()`); a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
 - Cookie `session_id` inválido ou expirado é tolerado em login, cadastro, ativação e consulta de status, onde a requisição segue como visitante anônimo e o cookie é removido. Nas demais rotas, um cookie inválido resulta em `401`; o logout (`DELETE /api/v1/sessions`) também exige sessão válida.
+- O controller limpa o cookie `session_id` em qualquer resposta `401`, inclusive em um login com credenciais inválidas: quem já está logado e erra a senha ao tentar entrar de novo perde o cookie no navegador (a sessão continua válida no banco, mas deixa de ser enviada).
 - Um JSON sintaticamente inválido pode ser rejeitado pelo parser de corpo do Next.js antes de chegar ao controller; nesse caso, a resposta `400` pode não seguir o envelope JSON padronizado da API.
 - As sessões encerradas permanecem no banco com data de expiração antecipada; não há rotina de limpeza física documentada ou implementada.
 
