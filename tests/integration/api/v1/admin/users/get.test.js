@@ -103,7 +103,7 @@ describe("GET /api/v1/admin/users", () => {
       expect(responseBody[0].email).toBe(targetUser.email);
     });
 
-    test("Não inclui a própria conta nos resultados", async () => {
+    test("Inclui a própria conta nos resultados", async () => {
       const privilegedUser = await orchestrator.createUser({
         username: "privilegedSearchSelf",
       });
