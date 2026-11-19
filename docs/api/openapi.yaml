@@ -373,9 +373,11 @@ paths:
       operationId: getAuthenticatedUser
       summary: Consulta o usuário autenticado
       description: |
-        Exige uma sessão válida e a feature read:session. Renova a validade
-        da sessão para mais 30 dias, atualiza o cookie e retorna os dados
-        privados do próprio usuário, sem senha.
+        Exige uma sessão válida e a feature read:session. Sem cookie, o
+        visitante anônimo não possui a feature e recebe 403. Com sessão
+        inválida ou expirada, recebe 401. Renova a validade da sessão para
+        mais 30 dias, atualiza o cookie e retorna os dados privados do próprio
+        usuário, sem senha.
       x-required-feature: read:session
       security:
         - SessionCookie: []
