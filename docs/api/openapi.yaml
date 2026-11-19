@@ -324,7 +324,7 @@ paths:
       tags: [Admin]
       operationId: updateAdminUser
       summary: Atualiza dados e permissões de um usuário
-      description: Exige update:user:others e permite alterar somente outras contas. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
+      description: Exige update:user:others e permite alterar qualquer conta, inclusive a própria conta do administrador. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
       x-required-feature: update:user:others
       security:
         - SessionCookie: []
@@ -353,29 +353,7 @@ paths:
           $ref: "#/components/responses/MethodNotAllowed"
         "500":
           $ref: "#/components/responses/InternalServerError"
-    delete:
-      tags: [Admin]
-      operationId: deleteAdminUser
-      summary: Remove um usuário
-      description: Exige update:user:others. Remove também as sessões e tokens de ativação associados. Não permite remover a própria conta.
-      x-required-feature: update:user:others
-      security:
-        - SessionCookie: []
-      responses:
-        "204":
-          description: Usuário removido.
-        "400":
-          $ref: "#/components/responses/Validation"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/UserNotFound"
-        "405":
-          $ref: "#/components/responses/MethodNotAllowed"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
+
 
   /api/v1/activations/{token_id}:
     parameters:
