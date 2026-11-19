@@ -43,7 +43,7 @@ Os endpoints usam `next-connect` por meio de `infra/controller.js`. Cada rota de
 | `models/user.js`                      | Cadastro, consulta, atualização e gerenciamento interno de features                  |
 | `models/password.js`                  | HMAC-SHA256 com pepper e bcrypt                                                      |
 | `models/authentication.js`            | Validação das credenciais                                                            |
-| `models/authorization.js`             | Verificação de acesso, identificação de privilégios e filtragem de saída              |
+| `models/authorization.js`             | Verificação de acesso, identificação de privilégios e filtragem de saída             |
 | `configs/features.js`                 | Catálogo único de features e lista de privilégios administrativos                    |
 | `configs/admin.js`                    | Registro extensível das seções e permissões do painel administrativo                 |
 | `models/session.js`                   | Criação, validação, renovação e expiração de sessões                                 |
