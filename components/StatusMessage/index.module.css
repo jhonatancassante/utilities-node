@@ -7,6 +7,12 @@
   pointer-events: none;
 }
 
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .toast {
   position: relative;
   display: flex;
@@ -81,11 +87,9 @@
 .success .progress { background: var(--success); }
 .warning .progress {
   background: #d99a19;
-  animation-duration: 6s;
 }
 .error .progress {
   background: var(--danger);
-  animation-duration: 8s;
 }
 
 .inlineError {

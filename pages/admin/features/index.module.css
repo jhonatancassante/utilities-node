@@ -274,11 +274,25 @@
   margin-bottom: 16px;
 }
 
-.fieldHint {
+.fieldHint,
+.fieldError {
   display: block;
   margin-top: 6px;
-  color: var(--text-faint);
   font-size: 11px;
+  line-height: 1.4;
+}
+
+.fieldHint {
+  color: var(--text-faint);
+}
+
+.fieldError {
+  color: var(--danger-fg);
+}
+
+.field input[aria-invalid="true"],
+.field textarea[aria-invalid="true"] {
+  border-color: var(--danger);
 }
 
 .descriptionField {

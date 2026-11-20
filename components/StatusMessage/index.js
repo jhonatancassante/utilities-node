@@ -24,20 +24,80 @@ const DISPLAY_DURATION = {
   error: 8000,
 };
 
+function ToastNotification({ item, onDismiss }) {
+  useEffect(() => {
+    const timeout = setTimeout(() => onDismiss(item.id), item.duration);
+    return () => clearTimeout(timeout);
+  }, [item, onDismiss]);
+
+  return (
+    <div
+      className={styles.toast + " " + (TYPE_CLASS[item.type] || styles.info)}
+      role={item.type === "error" ? "alert" : "status"}
+    >
+      <i
+        className={"fas " + (TYPE_ICON[item.type] || TYPE_ICON.info) + " " + styles.icon}
+        aria-hidden="true"
+      ></i>
+      <div className={styles.content}>
+        <strong>
+          {item.type === "success"
+            ? "Sucesso"
+            : item.type === "warning"
+              ? "Atenção"
+              : item.type === "error"
+                ? "Erro"
+                : "Informação"}
+        </strong>
+        <p>{item.children}</p>
+        {item.action && <small>{item.action}</small>}
+        <span
+          className={styles.progress}
+          style={{ animationDuration: `${item.duration}ms` }}
+        />
+      </div>
+      <button
+        type="button"
+        className={styles.close}
+        aria-label="Dispensar notificação"
+        onClick={() => onDismiss(item.id)}
+      >
+        <i className="fas fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
+  );
+}
+
 function StatusMessage({ type = "info", children, action, resetKey }) {
   const messageKey = resetKey ?? children;
   const [dismissedKey, setDismissedKey] = useState(null);
-  const visible = Boolean(children) && dismissedKey !== messageKey;
+  const [toastQueue, setToastQueue] = useState([]);
+  const [lastToastKey, setLastToastKey] = useState(null);
+  const isToast = !["inline-error", "critical"].includes(type);
 
-  useEffect(() => {
-    const duration = DISPLAY_DURATION[type];
-    if (!visible || !duration) return undefined;
+  if (isToast && children && messageKey !== lastToastKey) {
+    setLastToastKey(messageKey);
+    setToastQueue((currentQueue) =>
+      currentQueue.length >= 3
+        ? currentQueue
+        : [
+            ...currentQueue,
+            {
+              id: `${String(messageKey)}-${currentQueue.length}`,
+              type,
+              children,
+              action,
+              duration: DISPLAY_DURATION[type] ?? DISPLAY_DURATION.info,
+            },
+          ],
+    );
+  }
 
-    const timeout = setTimeout(() => setDismissedKey(messageKey), duration);
-    return () => clearTimeout(timeout);
-  }, [children, type, resetKey, visible, messageKey]);
-
-  if (!visible) return null;
+  function dismissToast(id) {
+    setToastQueue((currentQueue) =>
+      currentQueue.filter((item) => item.id !== id),
+    );
+  }
 
   if (type === "inline-error") {
     return (
@@ -49,6 +109,8 @@ function StatusMessage({ type = "info", children, action, resetKey }) {
   }
 
   if (type === "critical") {
+    if (!children || dismissedKey === messageKey) return null;
+
     return (
       <Modal
         title={
@@ -74,38 +136,18 @@ function StatusMessage({ type = "info", children, action, resetKey }) {
     );
   }
 
+  if (toastQueue.length === 0) return null;
+
   return (
     <div className={styles.viewport} aria-live="polite">
-      <div
-        className={styles.toast + " " + (TYPE_CLASS[type] || styles.info)}
-        role={type === "error" ? "alert" : "status"}
-      >
-        <i
-          className={"fas " + (TYPE_ICON[type] || TYPE_ICON.info) + " " + styles.icon}
-          aria-hidden="true"
-        ></i>
-        <div className={styles.content}>
-          <strong>
-            {type === "success"
-              ? "Sucesso"
-              : type === "warning"
-                ? "Atenção"
-                : type === "error"
-                  ? "Erro"
-                  : "Informação"}
-          </strong>
-          <p>{children}</p>
-          {action && <small>{action}</small>}
-          <span className={styles.progress} />
-        </div>
-        <button
-          type="button"
-          className={styles.close}
-          aria-label="Dispensar notificação"
-          onClick={() => setDismissedKey(messageKey)}
-        >
-          <i className="fas fa-times" aria-hidden="true"></i>
-        </button>
+      <div className={styles.stack}>
+        {toastQueue.map((item) => (
+          <ToastNotification
+            key={item.id}
+            item={item}
+            onDismiss={dismissToast}
+          />
+        ))}
       </div>
     </div>
   );

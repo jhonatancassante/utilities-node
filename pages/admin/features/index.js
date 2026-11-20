@@ -508,49 +508,48 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
     is_privileged: feature?.is_privileged ?? false,
     is_protected: feature?.is_protected ?? false,
   });
+  const [fieldErrors, setFieldErrors] = useState({});
   const [formError, setFormError] = useState(null);
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
+    setFieldErrors((current) => ({ ...current, [field]: null }));
     setFormError(null);
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
 
-    const requiredFields = [
-      ["name", "nome identificador"],
-      ["label", "título"],
-      ["group_name", "grupo"],
-      ["description", "descrição"],
-    ];
-    const missingField = requiredFields.find(([field]) => !form[field].trim());
+    const errors = {};
 
-    if (missingField) {
-      setFormError({
-        message: `O campo ${missingField[1]} é obrigatório.`,
-        action: "Preencha os campos obrigatórios para continuar.",
-      });
-      return;
+    if (!form.name.trim()) {
+      errors.name = "Informe o nome identificador.";
+    } else if (form.name.trim().length > 50) {
+      errors.name = "Utilize no máximo 50 caracteres.";
+    } else if (!/^[a-z][a-z0-9]*(?::[a-z][a-z0-9]*)*$/.test(form.name.trim())) {
+      errors.name = "Use letras minúsculas, números e dois-pontos (ex.: read:user).";
     }
 
-    if (
-      form.name.trim().length > 50 ||
-      form.label.trim().length > 50 ||
-      form.group_name.trim().length > 50
-    ) {
-      setFormError({
-        message: "Nome, título e grupo devem ter no máximo 50 caracteres.",
-        action: "Revise os campos e tente novamente.",
-      });
-      return;
+    if (!form.label.trim()) {
+      errors.label = "Informe o título.";
+    } else if (form.label.trim().length > 50) {
+      errors.label = "Utilize no máximo 50 caracteres.";
     }
 
-    if (!/^[a-z][a-z0-9]*(?::[a-z][a-z0-9]*)*$/.test(form.name.trim())) {
-      setFormError({
-        message: "O nome da feature possui um formato inválido.",
-        action: "Utilize letras minúsculas, números e dois-pontos para separar os níveis (ex.: read:user).",
-      });
+    if (!form.group_name.trim()) {
+      errors.group_name = "Informe o grupo.";
+    } else if (form.group_name.trim().length > 50) {
+      errors.group_name = "Utilize no máximo 50 caracteres.";
+    }
+
+    if (!form.description.trim()) {
+      errors.description = "Informe a descrição.";
+    }
+
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setFormError(null);
       return;
     }
 
@@ -592,10 +591,18 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               placeholder="read:report"
               maxLength={50}
               disabled={isSaving}
+              aria-invalid={Boolean(fieldErrors.name)}
+              aria-describedby={fieldErrors.name ? "feature-name-error" : undefined}
             />
-            <small className={styles.fieldHint}>
+            {fieldErrors.name ? (
+              <small className={styles.fieldError} id="feature-name-error" role="alert">
+                {fieldErrors.name}
+              </small>
+            ) : (
+              <small className={styles.fieldHint}>
               Use letras minúsculas, números e dois-pontos.
-            </small>
+              </small>
+            )}
           </div>
 
           <div className={styles.field}>
@@ -609,7 +616,14 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               onChange={(event) => updateField("label", event.target.value)}
               maxLength={50}
               disabled={isSaving}
+              aria-invalid={Boolean(fieldErrors.label)}
+              aria-describedby={fieldErrors.label ? "feature-label-error" : undefined}
             />
+            {fieldErrors.label && (
+              <small className={styles.fieldError} id="feature-label-error" role="alert">
+                {fieldErrors.label}
+              </small>
+            )}
           </div>
 
           <div className={styles.field}>
@@ -625,7 +639,14 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               }
               maxLength={50}
               disabled={isSaving}
+              aria-invalid={Boolean(fieldErrors.group_name)}
+              aria-describedby={fieldErrors.group_name ? "feature-group-error" : undefined}
             />
+            {fieldErrors.group_name && (
+              <small className={styles.fieldError} id="feature-group-error" role="alert">
+                {fieldErrors.group_name}
+              </small>
+            )}
           </div>
 
           <div className={`${styles.field} ${styles.descriptionField}`}>
@@ -641,7 +662,14 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               }
               rows={3}
               disabled={isSaving}
+              aria-invalid={Boolean(fieldErrors.description)}
+              aria-describedby={fieldErrors.description ? "feature-description-error" : undefined}
             />
+            {fieldErrors.description && (
+              <small className={styles.fieldError} id="feature-description-error" role="alert">
+                {fieldErrors.description}
+              </small>
+            )}
           </div>
         </div>
 
