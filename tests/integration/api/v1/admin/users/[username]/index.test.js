@@ -1,5 +1,6 @@
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
+import feature from "@/models/feature.js";
 import { protectedFeatures } from "@/configs/features.js";
 
 beforeAll(async () => {
@@ -217,6 +218,93 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       expect(responseBody.message).toBe(
         "As features a seguir não são reconhecidas ou estão excluídas: feature:inexistente.",
       );
+    });
+
+    test("Atribuindo uma feature criada dinamicamente", async () => {
+      const { sessionObject } = await createPrivilegedSession();
+      const targetUser = await orchestrator.createUser();
+      const dynamicFeature = await feature.create({
+        name: "read:dynamicreports",
+        label: "Consultar relatórios dinâmicos",
+        group_name: "Relatórios",
+        description: "Permite consultar relatórios criados dinamicamente.",
+      });
+
+      const response = await fetch(adminUserUrl(targetUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({
+          features: ["read:activation_token", dynamicFeature.name],
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      expect((await response.json()).features).toEqual([
+        "read:activation_token",
+        "read:dynamicreports",
+      ]);
+      const updatedUser = await user.findOneById(targetUser.id);
+      expect(updatedUser.features).toContain(dynamicFeature.name);
+    });
+
+    test("Rejeitando a atribuição de uma feature excluída", async () => {
+      const { sessionObject } = await createPrivilegedSession();
+      const targetUser = await orchestrator.createUser();
+      const deletedFeature = await feature.create({
+        name: "read:deletedreports",
+        label: "Consultar relatórios excluídos",
+        group_name: "Relatórios",
+        description: "Feature usada para validar exclusão lógica.",
+      });
+      await feature.delete(deletedFeature.id);
+
+      const response = await fetch(adminUserUrl(targetUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({
+          features: ["read:activation_token", deletedFeature.name],
+        }),
+      });
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({
+        name: "ValidationError",
+        message:
+          "As features a seguir não são reconhecidas ou estão excluídas: read:deletedreports.",
+      });
+    });
+
+    test("Impedindo a remoção do último conjunto de permissões protegidas", async () => {
+      const { privilegedUser, sessionObject } = await createPrivilegedSession();
+      const remainingFeatures = [
+        ...protectedFeatures.slice(1),
+        "read:session",
+      ];
+
+      const response = await fetch(adminUserUrl(privilegedUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({ features: remainingFeatures }),
+      });
+
+      expect(response.status).toBe(409);
+      expect(await response.json()).toEqual({
+        name: "ConflictError",
+        message:
+          "Esta alteração não pode ser realizada porque deixaria o sistema sem um administrador com todas as permissões protegidas.",
+        action:
+          "Atribua todas as permissões protegidas a outro usuário antes de tentar novamente.",
+        status_code: 409,
+      });
     });
   });
 });
