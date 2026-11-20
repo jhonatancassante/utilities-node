@@ -250,7 +250,7 @@
 
 .featureOption {
   position: relative;
-  flex: 1 1 calc(33.333% - 8px);
+  flex: 0 1 calc(33.333% - 8px);
   max-width: calc(33.333% - 6px);
   min-width: 0;
   padding: 12px;

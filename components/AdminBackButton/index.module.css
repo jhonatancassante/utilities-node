@@ -1,19 +1,18 @@
 .button {
-  position: fixed;
-  top: 50%;
-  left: 22px;
+  position: sticky;
+  top: 16px;
   z-index: 100;
   width: 46px;
   height: 46px;
   display: grid;
   place-items: center;
+  margin-bottom: -46px;
   border: 1px solid var(--border-color);
   border-radius: 50%;
   background: var(--bg-card);
   color: var(--accent);
   box-shadow: var(--shadow-md);
   font-size: 16px;
-  transform: translateY(-50%);
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -24,23 +23,10 @@
 .button:hover {
   border-color: var(--accent);
   background: var(--accent-soft);
-  transform: translateY(-50%) translateX(-2px);
+  transform: translateX(-2px);
 }
 
 .button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
-}
-
-@media (max-width: 700px) {
-  .button {
-    top: auto;
-    bottom: 18px;
-    left: 16px;
-    transform: none;
-  }
-
-  .button:hover {
-    transform: translateX(-2px);
-  }
 }
