@@ -1,7 +1,6 @@
 import orchestrator from "tests/orchestrator.js";
 import feature from "@/models/feature.js";
 import user from "@/models/user.js";
-import { protectedFeatures } from "@/configs/features.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -10,6 +9,9 @@ beforeAll(async () => {
 });
 
 async function createPrivilegedSession() {
+  const protectedFeatures = (await feature.findAll())
+    .filter((item) => item.is_protected)
+    .map((item) => item.name);
   const privilegedUser = await orchestrator.createUser();
   await orchestrator.activateUser(privilegedUser);
   await orchestrator.addFeaturesToUser(privilegedUser, [
