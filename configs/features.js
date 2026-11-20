@@ -151,4 +151,6 @@ export const featureCatalog = [
 
 export const availableFeatures = featureCatalog.map((feature) => feature.name);
 
-export const protectedFeatures = featureCatalog.filter((feature) => feature.is_protected).map((feature) => feature.name);
+export const protectedFeatures = featureCatalog
+  .filter((feature) => feature.is_protected)
+  .map((feature) => feature.name);

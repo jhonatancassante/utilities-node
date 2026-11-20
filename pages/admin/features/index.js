@@ -256,7 +256,9 @@ function AdminFeaturesPage() {
                 name={error.statusCode ? error.name : undefined}
                 action={error.action}
               >
-                {error.statusCode ? error.message : "Não foi possível verificar suas permissões."}
+                {error.statusCode
+                  ? error.message
+                  : "Não foi possível verificar suas permissões."}
               </StatusMessage>
             </section>
           </main>

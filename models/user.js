@@ -1,6 +1,10 @@
 import database from "@/infra/database.js";
 import password from "@/models/password.js";
-import { ConflictError, ValidationError, NotFoundError } from "@/infra/errors.js";
+import {
+  ConflictError,
+  ValidationError,
+  NotFoundError,
+} from "@/infra/errors.js";
 import { protectedFeatures } from "@/configs/features.js";
 import {
   validateUsername,
@@ -291,33 +295,47 @@ async function update(
   async function runUpdateQuery(userId, userWithNewValues, allowFeatures) {
     const updateUser = async (client) => {
       if (allowFeatures && Object.hasOwn(allowedInputValues, "features")) {
-        await client.query({ text: "SELECT pg_advisory_xact_lock(hashtext($1));", values: ["protected-features-coverage"] });
+        await client.query({
+          text: "SELECT pg_advisory_xact_lock(hashtext($1));",
+          values: ["protected-features-coverage"],
+        });
         const currentResults = await client.query({
           text: "SELECT id, features FROM users WHERE id = $1 FOR UPDATE;",
           values: [userId],
         });
-        if (currentResults.rowCount === 0) throw new NotFoundError({
-          message: "O usuário não foi encontrado.",
-          action: "Atualize a lista e tente novamente.",
-        });
+        if (currentResults.rowCount === 0)
+          throw new NotFoundError({
+            message: "O usuário não foi encontrado.",
+            action: "Atualize a lista e tente novamente.",
+          });
         const currentFeatures = currentResults.rows[0].features;
-        if (JSON.stringify([...currentFeatures].sort()) !== JSON.stringify([...currentUser.features].sort())) {
+        if (
+          JSON.stringify([...currentFeatures].sort()) !==
+          JSON.stringify([...currentUser.features].sort())
+        ) {
           throw new ValidationError({
-            message: "As permissões deste usuário foram alteradas por outra operação.",
+            message:
+              "As permissões deste usuário foram alteradas por outra operação.",
             action: "Atualize os dados do usuário antes de tentar novamente.",
           });
         }
-        const removedFeatures = currentFeatures.filter((name) => !userWithNewValues.features.includes(name));
+        const removedFeatures = currentFeatures.filter(
+          (name) => !userWithNewValues.features.includes(name),
+        );
         if (removedFeatures.length) {
           const metadata = await client.query({
             text: "SELECT name, is_removable FROM features WHERE name = ANY($1);",
             values: [removedFeatures],
           });
-          const locked = metadata.rows.filter((item) => !item.is_removable).map((item) => item.name);
-          if (locked.length) throw new ValidationError({
-            message: `As seguintes features não podem ser removidas deste usuário: ${locked.join(", ")}.`,
-            action: "Uma feature não removível pode ser atribuída, mas não pode ser retirada depois.",
-          });
+          const locked = metadata.rows
+            .filter((item) => !item.is_removable)
+            .map((item) => item.name);
+          if (locked.length)
+            throw new ValidationError({
+              message: `As seguintes features não podem ser removidas deste usuário: ${locked.join(", ")}.`,
+              action:
+                "Uma feature não removível pode ser atribuída, mas não pode ser retirada depois.",
+            });
         }
         if (protectedFeatures.length) {
           const coverage = await client.query({
@@ -329,14 +347,22 @@ async function update(
             ;`,
             values: [userId, userWithNewValues.features, protectedFeatures],
           });
-          if (!coverage.rowCount) throw new ConflictError({
-            message: "Esta alteração não pode ser realizada porque deixaria o sistema sem um administrador com todas as permissões protegidas.",
-            action: "Atribua todas as permissões protegidas a outro usuário antes de tentar novamente.",
-          });
+          if (!coverage.rowCount)
+            throw new ConflictError({
+              message:
+                "Esta alteração não pode ser realizada porque deixaria o sistema sem um administrador com todas as permissões protegidas.",
+              action:
+                "Atribua todas as permissões protegidas a outro usuário antes de tentar novamente.",
+            });
         }
       }
       const featuresUpdate = allowFeatures ? "features = $5," : "";
-      const values = [userId, userWithNewValues.username, userWithNewValues.email, userWithNewValues.password];
+      const values = [
+        userId,
+        userWithNewValues.username,
+        userWithNewValues.email,
+        userWithNewValues.password,
+      ];
       if (allowFeatures) values.push(userWithNewValues.features);
       const result = await client.query({
         text: `UPDATE users SET username = $2, email = $3, password = $4, ${featuresUpdate} updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
@@ -344,10 +370,16 @@ async function update(
       });
       return result.rows[0];
     };
-    if (allowFeatures && Object.hasOwn(allowedInputValues, "features")) return database.transaction(updateUser);
+    if (allowFeatures && Object.hasOwn(allowedInputValues, "features"))
+      return database.transaction(updateUser);
     const result = await database.query({
       text: "UPDATE users SET username = $2, email = $3, password = $4, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;",
-      values: [userId, userWithNewValues.username, userWithNewValues.email, userWithNewValues.password],
+      values: [
+        userId,
+        userWithNewValues.username,
+        userWithNewValues.email,
+        userWithNewValues.password,
+      ],
     });
     return result.rows[0];
   }

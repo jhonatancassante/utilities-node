@@ -45,7 +45,9 @@ function ProfilePage() {
                 name={error.statusCode ? error.name : undefined}
                 action={error.action}
               >
-                {error.statusCode ? error.message : "Não foi possível carregar os dados da sua conta."}
+                {error.statusCode
+                  ? error.message
+                  : "Não foi possível carregar os dados da sua conta."}
               </StatusMessage>
             </section>
           ) : user ? (
@@ -372,7 +374,11 @@ function ProfileForm({ user, onUpdated }) {
 
         {feedback && (
           <div className={styles.feedback} role="alert">
-            <StatusMessage type="inline-error" name={feedback.name} action={feedback.action}>
+            <StatusMessage
+              type="inline-error"
+              name={feedback.name}
+              action={feedback.action}
+            >
               {feedback.message}
             </StatusMessage>
           </div>

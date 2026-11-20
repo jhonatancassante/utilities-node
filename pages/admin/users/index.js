@@ -189,7 +189,9 @@ function AdminUsersPage() {
                 name={error.statusCode ? error.name : undefined}
                 action={error.action}
               >
-                {error.statusCode ? error.message : "Não foi possível verificar suas permissões."}
+                {error.statusCode
+                  ? error.message
+                  : "Não foi possível verificar suas permissões."}
               </StatusMessage>
             </section>
           </main>
@@ -538,92 +540,102 @@ function UserEditor({ user, onUpdated, onCancel }) {
 
           <div className={styles.featureGroups}>
             {featureGroups.map((group) => {
-            const groupFeatures = filteredFeatures.filter(
-              (feature) => feature.group_name === group,
-            );
-            if (groupFeatures.length === 0) return null;
+              const groupFeatures = filteredFeatures.filter(
+                (feature) => feature.group_name === group,
+              );
+              if (groupFeatures.length === 0) return null;
 
-            return (
-              <div className={styles.featureGroup} key={group}>
-                <h4>{group}</h4>
-                <div className={styles.featureList}>
-                  {groupFeatures.map((feature) => (
-                    <label
-                      className={`${styles.featureOption} ${
-                        feature.is_removable === false
-                          ? styles.featureOptionLocked
-                          : ""
-                      } ${
-                        feature.is_privileged || feature.is_protected || feature.is_removable === false
-                          ? styles.featureOptionBadged
-                          : ""
-                      }`}
-                      key={feature.name}
-                      title={
-                        feature.is_removable === false &&
-                        form.features.includes(feature.name)
-                          ? "Esta feature não pode ser removida deste usuário"
-                          : undefined
-                      }
-                    >
-                      <span className={styles.featureBadges}>
-                        {feature.is_privileged && (
-                          <span
-                            className={`${styles.featureBadge} ${styles.privilegedBadge}`}
-                            title="Permissão privilegiada"
-                            role="img"
-                            aria-label="Permissão privilegiada"
-                          >
-                            <i className="fas fa-crown" aria-hidden="true"></i>
-                          </span>
-                        )}
-                        {feature.is_protected && (
-                          <span
-                            className={`${styles.featureBadge} ${styles.protectedFeatureBadge}`}
-                            title="Feature protegida: não pode ser alterada ou excluída"
-                            role="img"
-                            aria-label="Feature protegida"
-                          >
-                            <i className="fas fa-shield-alt" aria-hidden="true"></i>
-                          </span>
-                        )}
-                        {feature.is_removable === false && (
-                          <span
-                            className={`${styles.featureBadge} ${styles.protectedBadge}`}
-                            title="Não pode ser removida deste usuário"
-                            role="img"
-                            aria-label="Não pode ser removida deste usuário"
-                          >
-                            <i className="fas fa-ban" aria-hidden="true"></i>
-                          </span>
-                        )}
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={form.features.includes(feature.name)}
-                        onChange={() => toggleFeature(feature.name)}
-                        disabled={
-                          isSaving ||
-                          (feature.is_removable === false &&
-                            form.features.includes(feature.name))
-                        }
-                      />
-                      <span
-                        className={`${styles.switch} ${
-                          feature.is_removable === false ? styles.switchLocked : ""
+              return (
+                <div className={styles.featureGroup} key={group}>
+                  <h4>{group}</h4>
+                  <div className={styles.featureList}>
+                    {groupFeatures.map((feature) => (
+                      <label
+                        className={`${styles.featureOption} ${
+                          feature.is_removable === false
+                            ? styles.featureOptionLocked
+                            : ""
+                        } ${
+                          feature.is_privileged ||
+                          feature.is_protected ||
+                          feature.is_removable === false
+                            ? styles.featureOptionBadged
+                            : ""
                         }`}
-                        aria-hidden="true"
-                      ></span>
-                      <span className={styles.featureText}>
-                        <strong>{feature.label}</strong>
-                        <small>{feature.description}</small>
-                        <code>{feature.name}</code>
-                      </span>
-                    </label>
-                  ))}
+                        key={feature.name}
+                        title={
+                          feature.is_removable === false &&
+                          form.features.includes(feature.name)
+                            ? "Esta feature não pode ser removida deste usuário"
+                            : undefined
+                        }
+                      >
+                        <span className={styles.featureBadges}>
+                          {feature.is_privileged && (
+                            <span
+                              className={`${styles.featureBadge} ${styles.privilegedBadge}`}
+                              title="Permissão privilegiada"
+                              role="img"
+                              aria-label="Permissão privilegiada"
+                            >
+                              <i
+                                className="fas fa-crown"
+                                aria-hidden="true"
+                              ></i>
+                            </span>
+                          )}
+                          {feature.is_protected && (
+                            <span
+                              className={`${styles.featureBadge} ${styles.protectedFeatureBadge}`}
+                              title="Feature protegida: não pode ser alterada ou excluída"
+                              role="img"
+                              aria-label="Feature protegida"
+                            >
+                              <i
+                                className="fas fa-shield-alt"
+                                aria-hidden="true"
+                              ></i>
+                            </span>
+                          )}
+                          {feature.is_removable === false && (
+                            <span
+                              className={`${styles.featureBadge} ${styles.protectedBadge}`}
+                              title="Não pode ser removida deste usuário"
+                              role="img"
+                              aria-label="Não pode ser removida deste usuário"
+                            >
+                              <i className="fas fa-ban" aria-hidden="true"></i>
+                            </span>
+                          )}
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={form.features.includes(feature.name)}
+                          onChange={() => toggleFeature(feature.name)}
+                          disabled={
+                            isSaving ||
+                            (feature.is_removable === false &&
+                              form.features.includes(feature.name))
+                          }
+                        />
+                        <span
+                          className={`${styles.switch} ${
+                            feature.is_removable === false
+                              ? styles.switchLocked
+                              : ""
+                          }`}
+                          aria-hidden="true"
+                        ></span>
+                        <span className={styles.featureText}>
+                          <strong>{feature.label}</strong>
+                          <small>{feature.description}</small>
+                          <code>{feature.name}</code>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
+              );
             })}
           </div>
 
@@ -636,12 +648,20 @@ function UserEditor({ user, onUpdated, onCancel }) {
 
         {feedback &&
           (feedback.type === "critical" ? (
-            <StatusMessage type="critical" name={feedback.name} action={feedback.action}>
+            <StatusMessage
+              type="critical"
+              name={feedback.name}
+              action={feedback.action}
+            >
               {feedback.message}
             </StatusMessage>
           ) : (
             <div className={styles.feedback} role="status">
-              <StatusMessage type="inline-error" name={feedback.name} action={feedback.action}>
+              <StatusMessage
+                type="inline-error"
+                name={feedback.name}
+                action={feedback.action}
+              >
                 {feedback.message}
               </StatusMessage>
             </div>
