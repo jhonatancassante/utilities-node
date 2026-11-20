@@ -59,6 +59,7 @@ function filterOutput(user, feature, resource) {
         username: resource.username,
         email: resource.email,
         features: resource.features,
+        privileged_features: resource.privileged_features ?? [],
         created_at: resource.created_at,
         updated_at: resource.updated_at,
       };
