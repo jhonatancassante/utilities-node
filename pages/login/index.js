@@ -54,6 +54,7 @@ function LoginPage() {
     } catch (error) {
       setFeedback({
         type: "error",
+        name: error.statusCode ? error.name : undefined,
         message: error.message,
         action: error.action,
       });
@@ -136,7 +137,7 @@ function LoginPage() {
 
               {feedback && (
                 <div className={styles.feedback} role="alert">
-                  <StatusMessage type="inline-error" action={feedback.action}>
+                  <StatusMessage type="inline-error" name={feedback.name} action={feedback.action}>
                     {feedback.message}
                   </StatusMessage>
                 </div>

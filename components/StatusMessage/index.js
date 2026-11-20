@@ -70,7 +70,7 @@ function ToastNotification({ item, onDismiss }) {
   );
 }
 
-function StatusMessage({ type = "info", children, action, resetKey }) {
+function StatusMessage({ type = "info", children, action, name, resetKey }) {
   const messageKey = resetKey ?? children;
   const [dismissedKey, setDismissedKey] = useState(null);
   const [toastState, setToastState] = useState({ items: [], nextId: 0 });
@@ -114,7 +114,7 @@ function StatusMessage({ type = "info", children, action, resetKey }) {
     );
   }
 
-  if (type === "critical") {
+  if (name || type === "critical") {
     if (!children || dismissedKey === messageKey) return null;
 
     return (
@@ -122,7 +122,7 @@ function StatusMessage({ type = "info", children, action, resetKey }) {
         title={
           <span className={styles.errorTitle}>
             <i className="fas fa-exclamation-circle" aria-hidden="true"></i>
-            <span>Não foi possível concluir</span>
+            <span>{name || "Não foi possível concluir"}</span>
           </span>
         }
         onClose={() => setDismissedKey(messageKey)}

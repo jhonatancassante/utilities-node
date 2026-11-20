@@ -59,6 +59,7 @@ function AdminFeaturesPage() {
         setFeedback((current) => ({
           id: (current?.id ?? 0) + 1,
           type: "error",
+          name: requestError.statusCode ? requestError.name : undefined,
           message: requestError.message,
           action: requestError.action,
         }));
@@ -204,6 +205,7 @@ function AdminFeaturesPage() {
     } catch (requestError) {
       setFeedback({
         type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
         message: requestError.message,
         action: requestError.action,
       });
@@ -317,6 +319,7 @@ function AdminFeaturesPage() {
             {feedback && (
               <StatusMessage
                 type={feedback.type}
+                name={feedback.name}
                 action={feedback.action}
                 resetKey={feedback}
               >

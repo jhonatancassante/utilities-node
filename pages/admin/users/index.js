@@ -95,6 +95,7 @@ function AdminUsersPage() {
       setFeedback((current) => ({
         id: (current?.id ?? 0) + 1,
         type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
         message: requestError.message,
         action: requestError.action,
       }));
@@ -250,6 +251,7 @@ function AdminUsersPage() {
             {feedback && (
               <StatusMessage
                 type={feedback.type}
+                name={feedback.name}
                 action={feedback.action}
                 resetKey={feedback}
               >
@@ -417,7 +419,8 @@ function UserEditor({ user, onUpdated, onCancel }) {
     } catch (requestError) {
       setFeedback((current) => ({
         id: (current?.id ?? 0) + 1,
-        type: requestError.name === "ConflictError" ? "critical" : "error",
+        type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
         message: requestError.message,
         action: requestError.action,
       }));
@@ -628,7 +631,7 @@ function UserEditor({ user, onUpdated, onCancel }) {
 
         {feedback &&
           (feedback.type === "critical" ? (
-            <StatusMessage type="critical" action={feedback.action}>
+            <StatusMessage type="critical" name={feedback.name} action={feedback.action}>
               {feedback.message}
             </StatusMessage>
           ) : (
