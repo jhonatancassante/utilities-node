@@ -52,6 +52,20 @@ function filterOutput(user, feature, resource) {
     };
   }
 
+  if (feature === "read:user:others") {
+    const filterUser = (userObject) => ({
+      id: userObject.id,
+      username: userObject.username,
+      email: userObject.email,
+      features: userObject.features,
+      privileged_features: userObject.privileged_features ?? [],
+      created_at: userObject.created_at,
+      updated_at: userObject.updated_at,
+    });
+
+    return Array.isArray(resource) ? resource.map(filterUser) : filterUser(resource);
+  }
+
   if (feature === "read:user:self") {
     if (user.id === resource.id) {
       return {
@@ -95,6 +109,25 @@ function filterOutput(user, feature, resource) {
       name: migration.name,
       timestamp: migration.timestamp,
     }));
+  }
+
+  if (feature === "read:feature") {
+    const filterFeature = (featureObject) => ({
+      id: featureObject.id,
+      name: featureObject.name,
+      label: featureObject.label,
+      group_name: featureObject.group_name,
+      description: featureObject.description,
+      is_removable: featureObject.is_removable,
+      is_privileged: featureObject.is_privileged,
+      is_protected: featureObject.is_protected,
+      created_at: featureObject.created_at,
+      updated_at: featureObject.updated_at,
+    });
+
+    return Array.isArray(resource)
+      ? resource.map(filterFeature)
+      : filterFeature(resource);
   }
 
   if (feature === "read:status") {
