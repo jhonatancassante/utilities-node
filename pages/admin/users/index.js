@@ -116,6 +116,7 @@ function AdminUsersPage() {
       setFeedback((current) => ({
         id: (current?.id ?? 0) + 1,
         type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
         message: requestError.message,
         action: requestError.action,
       }));
@@ -148,7 +149,8 @@ function AdminUsersPage() {
     } catch (requestError) {
       setFeedback({
         type: "error",
-        message: `Alterações salvas, mas não foi possível atualizar a lista: ${requestError.message}`,
+        name: requestError.statusCode ? requestError.name : undefined,
+        message: requestError.message,
         action: requestError.action,
       });
     } finally {
@@ -182,8 +184,12 @@ function AdminUsersPage() {
             <section
               className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
             >
-              <StatusMessage type="critical">
-                Não foi possível verificar suas permissões.
+              <StatusMessage
+                type="critical"
+                name={error.statusCode ? error.name : undefined}
+                action={error.action}
+              >
+                {error.statusCode ? error.message : "Não foi possível verificar suas permissões."}
               </StatusMessage>
             </section>
           </main>
@@ -636,7 +642,7 @@ function UserEditor({ user, onUpdated, onCancel }) {
             </StatusMessage>
           ) : (
             <div className={styles.feedback} role="status">
-              <StatusMessage type="inline-error" action={feedback.action}>
+              <StatusMessage type="inline-error" name={feedback.name} action={feedback.action}>
                 {feedback.message}
               </StatusMessage>
             </div>

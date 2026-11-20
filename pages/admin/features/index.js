@@ -88,6 +88,7 @@ function AdminFeaturesPage() {
         setFeedback((current) => ({
           id: (current?.id ?? 0) + 1,
           type: "error",
+          name: requestError.statusCode ? requestError.name : undefined,
           message: requestError.message,
           action: requestError.action,
         }));
@@ -250,8 +251,12 @@ function AdminFeaturesPage() {
             <section
               className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
             >
-              <StatusMessage type="critical">
-                Não foi possível verificar suas permissões.
+              <StatusMessage
+                type="critical"
+                name={error.statusCode ? error.name : undefined}
+                action={error.action}
+              >
+                {error.statusCode ? error.message : "Não foi possível verificar suas permissões."}
               </StatusMessage>
             </section>
           </main>
@@ -584,6 +589,7 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
 
     if (requestError) {
       setFormError({
+        name: requestError.statusCode ? requestError.name : undefined,
         message: requestError.message,
         action: requestError.action,
       });
@@ -757,7 +763,11 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
 
         {formError && (
           <div className={styles.feedback} role="alert">
-            <StatusMessage type="inline-error" action={formError.action}>
+            <StatusMessage
+              type="inline-error"
+              name={formError.name}
+              action={formError.action}
+            >
               {formError.message}
             </StatusMessage>
           </div>

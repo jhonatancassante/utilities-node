@@ -75,7 +75,7 @@ function StatusMessage({ type = "info", children, action, name, resetKey }) {
   const [dismissedKey, setDismissedKey] = useState(null);
   const [toastState, setToastState] = useState({ items: [], nextId: 0 });
   const [lastToastKey, setLastToastKey] = useState(null);
-  const isToast = !["inline-error", "critical"].includes(type);
+  const isToast = !name && !["inline-error", "critical"].includes(type);
 
   if (isToast && children && messageKey !== lastToastKey) {
     setLastToastKey(messageKey);
@@ -105,15 +105,6 @@ function StatusMessage({ type = "info", children, action, name, resetKey }) {
     }));
   }, []);
 
-  if (type === "inline-error") {
-    return (
-      <div className={styles.inlineError} role="alert">
-        <p>{children}</p>
-        {action && <small>{action}</small>}
-      </div>
-    );
-  }
-
   if (name || type === "critical") {
     if (!children || dismissedKey === messageKey) return null;
 
@@ -139,6 +130,15 @@ function StatusMessage({ type = "info", children, action, name, resetKey }) {
           </Button>
         </div>
       </Modal>
+    );
+  }
+
+  if (type === "inline-error") {
+    return (
+      <div className={styles.inlineError} role="alert">
+        <p>{children}</p>
+        {action && <small>{action}</small>}
+      </div>
     );
   }
 
