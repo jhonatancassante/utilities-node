@@ -15,7 +15,7 @@ function adminUserUrl(username) {
 async function createPrivilegedSession() {
   const privilegedUser = await orchestrator.createUser();
   await orchestrator.activateUser(privilegedUser);
-  await orchestrator.addFeaturesToUser(privilegedUser, protectedFeatures);
+  await orchestrator.addFeaturesToUser(privilegedUser, [...protectedFeatures, "read:session"]);
   const sessionObject = await orchestrator.createSession(privilegedUser);
   return { privilegedUser, sessionObject };
 }
