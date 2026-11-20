@@ -18,8 +18,11 @@ async function patchHandler(request, response) {
   const updatedUser = await user.update(request.query.username, request.body, {
     allowFeatures: true,
   });
+  const updatedUserWithPrivileges = await user.findOneById(updatedUser.id);
 
-  return response.status(200).json(filterUserOutput(updatedUser));
+  return response.status(200).json(
+    filterUserOutput(updatedUserWithPrivileges),
+  );
 }
 
 function filterUserOutput(userObject) {
