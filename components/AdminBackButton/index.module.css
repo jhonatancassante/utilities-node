@@ -29,11 +29,11 @@
 }
 
 .button.stuck {
-  transform: translateX(-36px);
+  transform: translateX(-44px);
 }
 
 .button.stuck:hover {
-  transform: translateX(-40px);
+  transform: translateX(-20px);
 }
 
 .button:focus-visible {
