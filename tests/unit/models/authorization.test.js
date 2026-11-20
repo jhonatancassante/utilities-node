@@ -22,6 +22,12 @@ describe("models/authorization.js", () => {
       expect(authorization.can(createdUser, "read:dynamicreports")).toBe(true);
     });
 
+    test("Com uma feature dinâmica que não foi atribuída ao usuário", () => {
+      expect(
+        authorization.can({ features: [] }, "read:dynamicreports"),
+      ).toBe(false);
+    });
+
     test("Sem informar uma feature válida", () => {
       const createdUser = { features: [] };
 
@@ -96,6 +102,30 @@ describe("models/authorization.js", () => {
         updated_at: "2026-01-01T00:00:00Z",
       });
     });
+    test("read:user:self inclui privilégios cadastrados no banco", () => {
+      const currentUser = {
+        id: "user-1",
+        features: ["read:user:self"],
+      };
+      const userResource = {
+        id: "user-1",
+        username: "usuario",
+        email: "usuario@example.com",
+        features: ["read:dynamicreports"],
+        privileged_features: ["read:dynamicreports"],
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      };
+
+      const result = authorization.filterOutput(
+        currentUser,
+        "read:user:self",
+        userResource,
+      );
+
+      expect(result.privileged_features).toEqual(["read:dynamicreports"]);
+    });
+
     test("`read:session` não devolve o token da sessão", () => {
       const sessionOwner = { id: "user-1", features: ["read:session"] };
       const sessionResource = {
