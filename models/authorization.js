@@ -63,7 +63,9 @@ function filterOutput(user, feature, resource) {
       updated_at: userObject.updated_at,
     });
 
-    return Array.isArray(resource) ? resource.map(filterUser) : filterUser(resource);
+    return Array.isArray(resource)
+      ? resource.map(filterUser)
+      : filterUser(resource);
   }
 
   if (feature === "read:user:self") {
