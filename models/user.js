@@ -264,23 +264,7 @@ async function update(
       });
     }
 
-    const removedNonRemovableFeatures = currentUser.features.filter(
-      (featureName) =>
-        !allowedInputValues.features.includes(featureName) &&
-        featureMetadata.get(featureName)?.is_removable === false,
-    );
 
-    if (removedNonRemovableFeatures.length > 0) {
-      throw new ValidationError({
-        message:
-          [
-            "As seguintes features não podem ser removidas deste usuário:",
-            removedNonRemovableFeatures.join(", "),
-          ].join(" ") + ".",
-        action:
-          "Uma feature não removível pode ser atribuída, mas não pode ser retirada depois.",
-      });
-    }
   }
 
   const userWithNewValues = { ...currentUser, ...allowedInputValues };
