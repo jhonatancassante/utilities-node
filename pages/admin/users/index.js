@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
+import AdminBackButton from "@/components/AdminBackButton";
 
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
@@ -213,10 +213,7 @@ function AdminUsersPage() {
           <section
             className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
           >
-            <Link href="/admin" className={styles.backLink}>
-              <i className="fas fa-arrow-left" aria-hidden="true"></i>
-              Painel administrativo
-            </Link>
+            <AdminBackButton />
 
             <header className={styles.pageHeader}>
               <div className={shared.icon} aria-hidden="true">

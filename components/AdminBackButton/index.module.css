@@ -13,6 +13,8 @@
   color: var(--accent);
   box-shadow: var(--shadow-md);
   font-size: 16px;
+  text-decoration: none;
+  cursor: pointer;
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
