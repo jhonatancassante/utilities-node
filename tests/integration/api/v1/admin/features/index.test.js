@@ -160,7 +160,7 @@ describe("POST /api/v1/admin/features", () => {
           "Content-Type": "application/json",
           Cookie: `session_id=${sessionObject.token}`,
         },
-        body: JSON.stringify({ ...featureInput, name: "read:duplicate-reports" }),
+        body: JSON.stringify({ ...featureInput, name: "read:duplicatereports" }),
       });
       expect(firstResponse.status).toBe(201);
 
@@ -170,7 +170,7 @@ describe("POST /api/v1/admin/features", () => {
           "Content-Type": "application/json",
           Cookie: `session_id=${sessionObject.token}`,
         },
-        body: JSON.stringify({ ...featureInput, name: "read:duplicate-reports" }),
+        body: JSON.stringify({ ...featureInput, name: "read:duplicatereports" }),
       });
 
       expect(response.status).toBe(400);

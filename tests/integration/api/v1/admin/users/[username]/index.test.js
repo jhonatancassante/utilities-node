@@ -287,6 +287,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       const { privilegedUser, sessionObject } = await createPrivilegedSession();
       const remainingFeatures = [
         ...protectedFeatures.slice(1),
+        "read:activation_token",
         "read:session",
       ];
 

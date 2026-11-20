@@ -63,7 +63,7 @@ describe("models/feature.js", () => {
   describe(".create()", () => {
     test("Cadastra uma feature com os valores padrão", async () => {
       const querySpy = mockQueries([
-        ["FOR UPDATE", []],
+        ["SELECT", []],
         ["INSERT", [existingFeature]],
       ]);
 
@@ -83,7 +83,7 @@ describe("models/feature.js", () => {
 
     test("Normaliza textos e mantém flags informadas", async () => {
       const querySpy = mockQueries([
-        ["FOR UPDATE", []],
+        ["SELECT", []],
         ["INSERT", [existingFeature]],
       ]);
 
@@ -171,7 +171,7 @@ describe("models/feature.js", () => {
 
   describe(".findOneById()", () => {
     test("Retorna a feature ativa pelo ID", async () => {
-      mockQueries([["FOR UPDATE", [existingFeature]]]);
+      mockQueries([["SELECT", [existingFeature]]]);
 
       await expect(feature.findOneById(existingFeature.id)).resolves.toEqual(
         existingFeature,
@@ -179,7 +179,7 @@ describe("models/feature.js", () => {
     });
 
     test("Com ID inexistente ou feature excluída", async () => {
-      const querySpy = mockQueries([["FOR UPDATE", []]]);
+      const querySpy = mockQueries([["SELECT", []]]);
 
       await expect(feature.findOneById("inexistente")).rejects.toThrow(
         NotFoundError,
@@ -192,7 +192,7 @@ describe("models/feature.js", () => {
 
   describe(".findOneByName()", () => {
     test("Retorna a feature ativa pelo nome", async () => {
-      mockQueries([["FOR UPDATE", [existingFeature]]]);
+      mockQueries([["SELECT", [existingFeature]]]);
 
       await expect(feature.findOneByName(existingFeature.name)).resolves.toEqual(
         existingFeature,
@@ -200,7 +200,7 @@ describe("models/feature.js", () => {
     });
 
     test("Com nome inexistente ou feature excluída", async () => {
-      const querySpy = mockQueries([["FOR UPDATE", []]]);
+      const querySpy = mockQueries([["SELECT", []]]);
 
       await expect(feature.findOneByName("inexistente")).rejects.toThrow(
         NotFoundError,
@@ -213,7 +213,7 @@ describe("models/feature.js", () => {
 
   describe(".findAll()", () => {
     test("Retorna somente features ativas em ordem de grupo, rótulo e nome", async () => {
-      const querySpy = mockQueries([["FOR UPDATE", [existingFeature]]]);
+      const querySpy = mockQueries([["SELECT", [existingFeature]]]);
 
       await expect(feature.findAll()).resolves.toEqual([existingFeature]);
 
@@ -281,12 +281,12 @@ describe("models/feature.js", () => {
         ["FOR UPDATE", [existingFeature]],
         ["SELECT\n        id\n      FROM\n        features", []],
         ["UPDATE\n          features", [updatedFeature]],
-        ["UPDATE\n          users", []],
+        ["array_replace(features, $1, $2)", []],
       ]);
 
       await feature.update(existingFeature.id, { name: "read:documents" });
 
-      const [usersUpdate] = getCallsContaining(querySpy, "UPDATE\n          users");
+      const [usersUpdate] = getCallsContaining(querySpy, "array_replace(features, $1, $2)");
       expect(usersUpdate.values).toEqual(["read:reports", "read:documents"]);
       expect(usersUpdate.text).toContain("array_replace(features, $1, $2)");
     });
@@ -300,7 +300,7 @@ describe("models/feature.js", () => {
       };
       const querySpy = mockQueries([
         ["FOR UPDATE", [existingFeature]],
-        ["UPDATE\n          users", []],
+        ["array_remove(features, $1)", []],
         ["UPDATE\n          features", [deletedFeature]],
       ]);
 
@@ -308,7 +308,7 @@ describe("models/feature.js", () => {
         deletedFeature,
       );
 
-      const [usersUpdate] = getCallsContaining(querySpy, "UPDATE\n          users");
+      const [usersUpdate] = getCallsContaining(querySpy, "array_remove(features, $1)");
       expect(usersUpdate.values).toEqual([existingFeature.name]);
       const [featureUpdate] = getCallsContaining(querySpy, "UPDATE\n          features");
       expect(featureUpdate.text).toContain("deleted_at = timezone");
@@ -335,7 +335,7 @@ describe("models/feature.js", () => {
     test("Rejeita exclusão de feature não removível atribuída a um usuário", async () => {
       mockQueries([
         ["FOR UPDATE", [{ ...existingFeature, is_removable: false }]],
-        ["SELECT\n          id", [{ id: "user-1" }]],
+        ["ANY(features)", [{ id: "user-1" }]],
       ]);
 
       await expect(feature.delete(existingFeature.id)).rejects.toThrow(
@@ -346,8 +346,8 @@ describe("models/feature.js", () => {
     test("Permite excluir feature não removível sem usuários atribuídos", async () => {
       const querySpy = mockQueries([
         ["FOR UPDATE", [{ ...existingFeature, is_removable: false }]],
-        ["SELECT\n          id", []],
-        ["UPDATE\n          users", []],
+        ["ANY(features)", []],
+        ["array_remove(features, $1)", []],
         ["UPDATE\n          features", [existingFeature]],
       ]);
 
