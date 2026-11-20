@@ -57,7 +57,7 @@ describe("models/user.js", () => {
   describe(".update()", () => {
     test("Usa o id do usuário encontrado no WHERE", async () => {
       const querySpy = mockQueries([
-        ["LOWER(username) = LOWER($1)\n        LIMIT 1", [existingUser]],
+        ["LOWER(users.username) = LOWER($1)\n        LIMIT 1", [existingUser]],
         ["UPDATE", (query) => [{ ...existingUser, username: query.values[1] }]],
       ]);
 
@@ -253,7 +253,7 @@ describe("models/user.js", () => {
 
     test("Com nome de usuário já utilizado por outro usuário", async () => {
       mockQueries([
-        ["SELECT\n          *", [existingUser]],
+        ["LOWER(users.username) = LOWER($1)", [existingUser]],
         ["SELECT\n          username", [{ username: "Outro" }]],
       ]);
 
@@ -264,7 +264,7 @@ describe("models/user.js", () => {
 
     test("Trocar a caixa do username não conta como duplicado", async () => {
       const querySpy = mockQueries([
-        ["SELECT\n          *", [existingUser]],
+        ["LOWER(users.username) = LOWER($1)", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
 
