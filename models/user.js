@@ -282,8 +282,6 @@ async function update(
         action: "Selecione apenas features ativas no sistema.",
       });
     }
-
-
   }
 
   const userWithNewValues = { ...currentUser, ...allowedInputValues };

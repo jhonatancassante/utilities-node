@@ -194,9 +194,9 @@ describe("models/feature.js", () => {
     test("Retorna a feature ativa pelo nome", async () => {
       mockQueries([["SELECT", [existingFeature]]]);
 
-      await expect(feature.findOneByName(existingFeature.name)).resolves.toEqual(
-        existingFeature,
-      );
+      await expect(
+        feature.findOneByName(existingFeature.name),
+      ).resolves.toEqual(existingFeature);
     });
 
     test("Com nome inexistente ou feature excluída", async () => {
@@ -235,8 +235,14 @@ describe("models/feature.js", () => {
 
       await feature.update(existingFeature.id, { label: "Ler relatórios" });
 
-      const [updateQuery] = getCallsContaining(querySpy, "UPDATE\n          features");
-      expect(updateQuery.values).toEqual([existingFeature.id, "Ler relatórios"]);
+      const [updateQuery] = getCallsContaining(
+        querySpy,
+        "UPDATE\n          features",
+      );
+      expect(updateQuery.values).toEqual([
+        existingFeature.id,
+        "Ler relatórios",
+      ]);
       expect(updateQuery.text).toContain("updated_at");
     });
 
@@ -267,7 +273,10 @@ describe("models/feature.js", () => {
     test("Rejeita nome que já pertence a outra feature", async () => {
       mockQueries([
         ["FOR UPDATE", [existingFeature]],
-        ["SELECT\n        id\n      FROM\n        features", [{ id: "outra-feature" }]],
+        [
+          "SELECT\n        id\n      FROM\n        features",
+          [{ id: "outra-feature" }],
+        ],
       ]);
 
       await expect(
@@ -286,7 +295,10 @@ describe("models/feature.js", () => {
 
       await feature.update(existingFeature.id, { name: "read:documents" });
 
-      const [usersUpdate] = getCallsContaining(querySpy, "array_replace(features, $1, $2)");
+      const [usersUpdate] = getCallsContaining(
+        querySpy,
+        "array_replace(features, $1, $2)",
+      );
       expect(usersUpdate.values).toEqual(["read:reports", "read:documents"]);
       expect(usersUpdate.text).toContain("array_replace(features, $1, $2)");
     });
@@ -308,9 +320,15 @@ describe("models/feature.js", () => {
         deletedFeature,
       );
 
-      const [usersUpdate] = getCallsContaining(querySpy, "array_remove(features, $1)");
+      const [usersUpdate] = getCallsContaining(
+        querySpy,
+        "array_remove(features, $1)",
+      );
       expect(usersUpdate.values).toEqual([existingFeature.name]);
-      const [featureUpdate] = getCallsContaining(querySpy, "UPDATE\n          features");
+      const [featureUpdate] = getCallsContaining(
+        querySpy,
+        "UPDATE\n          features",
+      );
       expect(featureUpdate.text).toContain("deleted_at = timezone");
     });
 
@@ -353,9 +371,9 @@ describe("models/feature.js", () => {
 
       await feature.delete(existingFeature.id);
 
-      expect(getCallsContaining(querySpy, "UPDATE\n          features")).toHaveLength(
-        1,
-      );
+      expect(
+        getCallsContaining(querySpy, "UPDATE\n          features"),
+      ).toHaveLength(1);
     });
   });
 });

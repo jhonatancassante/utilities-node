@@ -23,9 +23,9 @@ describe("models/authorization.js", () => {
     });
 
     test("Com uma feature dinâmica que não foi atribuída ao usuário", () => {
-      expect(
-        authorization.can({ features: [] }, "read:dynamicreports"),
-      ).toBe(false);
+      expect(authorization.can({ features: [] }, "read:dynamicreports")).toBe(
+        false,
+      );
     });
 
     test("Sem informar uma feature válida", () => {

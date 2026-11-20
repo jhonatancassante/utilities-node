@@ -20,9 +20,7 @@ async function patchHandler(request, response) {
   });
   const updatedUserWithPrivileges = await user.findOneById(updatedUser.id);
 
-  return response.status(200).json(
-    filterUserOutput(updatedUserWithPrivileges),
-  );
+  return response.status(200).json(filterUserOutput(updatedUserWithPrivileges));
 }
 
 function filterUserOutput(userObject) {

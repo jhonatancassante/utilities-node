@@ -176,7 +176,10 @@ describe("models/user.js", () => {
 
     test("Com permissão administrativa, atualiza as features", async () => {
       const querySpy = mockQueries([
-        ["name,\n          is_removable,\n          deleted_at\n        FROM\n          features", existingFeatureMetadata],
+        [
+          "name,\n          is_removable,\n          deleted_at\n        FROM\n          features",
+          existingFeatureMetadata,
+        ],
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
@@ -203,7 +206,10 @@ describe("models/user.js", () => {
 
     test("Rejeita a alteração de uma feature não editável", async () => {
       const querySpy = mockQueries([
-        ["name,\n          is_removable,\n          deleted_at\n        FROM\n          features", existingFeatureMetadata],
+        [
+          "name,\n          is_removable,\n          deleted_at\n        FROM\n          features",
+          existingFeatureMetadata,
+        ],
         [
           "SELECT name, is_removable FROM features",
           [{ name: "read:session", is_removable: false }],

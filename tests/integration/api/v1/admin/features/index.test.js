@@ -36,8 +36,7 @@ describe("GET /api/v1/admin/features", () => {
       expect(await response.json()).toEqual({
         name: "ForbiddenError",
         message: "Você não possui permissão para executar esta ação.",
-        action:
-          'Verifique se o seu usuário possui a feature "read:feature".',
+        action: 'Verifique se o seu usuário possui a feature "read:feature".',
         status_code: 403,
       });
     });
@@ -165,7 +164,10 @@ describe("POST /api/v1/admin/features", () => {
           "Content-Type": "application/json",
           Cookie: `session_id=${sessionObject.token}`,
         },
-        body: JSON.stringify({ ...featureInput, name: "read:duplicatereports" }),
+        body: JSON.stringify({
+          ...featureInput,
+          name: "read:duplicatereports",
+        }),
       });
       expect(firstResponse.status).toBe(201);
 
@@ -175,7 +177,10 @@ describe("POST /api/v1/admin/features", () => {
           "Content-Type": "application/json",
           Cookie: `session_id=${sessionObject.token}`,
         },
-        body: JSON.stringify({ ...featureInput, name: "read:duplicatereports" }),
+        body: JSON.stringify({
+          ...featureInput,
+          name: "read:duplicatereports",
+        }),
       });
 
       expect(response.status).toBe(400);

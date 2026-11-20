@@ -354,8 +354,8 @@ function UserEditor({ user, onUpdated, onCancel }) {
 
   const featureGroups = useMemo(
     () =>
-      [...new Set(features.map((feature) => feature.group_name))].sort(
-        (a, b) => a.localeCompare(b, "pt-BR"),
+      [...new Set(features.map((feature) => feature.group_name))].sort((a, b) =>
+        a.localeCompare(b, "pt-BR"),
       ),
     [features],
   );
