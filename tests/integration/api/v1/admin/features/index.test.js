@@ -1,5 +1,5 @@
 import orchestrator from "tests/orchestrator.js";
-import { protectedFeatures } from "@/configs/features.js";
+import feature from "@/models/feature.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -7,11 +7,16 @@ beforeAll(async () => {
   await orchestrator.runPendingMigrations();
 });
 
-async function createPrivilegedSession(features = protectedFeatures) {
+async function createPrivilegedSession(features) {
+  const protectedFeatures =
+    features ??
+    (await feature.findAll())
+      .filter((item) => item.is_protected)
+      .map((item) => item.name);
   const privilegedUser = await orchestrator.createUser();
   await orchestrator.activateUser(privilegedUser);
   await orchestrator.addFeaturesToUser(privilegedUser, [
-    ...features,
+    ...protectedFeatures,
     "read:session",
   ]);
   const sessionObject = await orchestrator.createSession(privilegedUser);
