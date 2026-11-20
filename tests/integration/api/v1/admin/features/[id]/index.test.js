@@ -234,7 +234,7 @@ describe("DELETE /api/v1/admin/features/[id]", () => {
     test("Rejeitando exclusão de feature não removível atribuída a usuários", async () => {
       const { sessionObject } = await createPrivilegedSession();
       const createdFeature = await createTestFeature({
-        name: "read:locked-reports",
+        name: "read:lockedreports",
         is_removable: false,
       });
       const targetUser = await orchestrator.createUser();
