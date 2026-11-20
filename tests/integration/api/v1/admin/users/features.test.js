@@ -10,13 +10,10 @@ beforeAll(async () => {
 const endpoint = `${orchestrator.API_URL}/admin/users/features`;
 
 async function createPrivilegedSession() {
-  const protectedFeatures = (await feature.findAll())
-    .filter((item) => item.is_protected)
-    .map((item) => item.name);
   const privilegedUser = await orchestrator.createUser();
   await orchestrator.activateUser(privilegedUser);
   await orchestrator.addFeaturesToUser(privilegedUser, [
-    ...protectedFeatures,
+    "update:user:others",
     "read:session",
   ]);
   const sessionObject = await orchestrator.createSession(privilegedUser);
