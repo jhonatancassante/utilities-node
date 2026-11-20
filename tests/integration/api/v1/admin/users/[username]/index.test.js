@@ -281,6 +281,9 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
     });
 
     test("Impedindo a remoção do último conjunto de permissões protegidas", async () => {
+      await orchestrator.clearDatabase();
+      await orchestrator.runPendingMigrations();
+
       const { privilegedUser, sessionObject } = await createPrivilegedSession();
       const remainingFeatures = [
         ...protectedFeatures.slice(1),
