@@ -285,11 +285,10 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       await orchestrator.runPendingMigrations();
 
       const { privilegedUser, sessionObject } = await createPrivilegedSession();
-      const remainingFeatures = [
-        ...protectedFeatures.slice(1),
-        "read:activation_token",
-        "read:session",
-      ];
+      const currentPrivilegedUser = await user.findOneById(privilegedUser.id);
+      const remainingFeatures = currentPrivilegedUser.features.filter(
+        (name) => name !== protectedFeatures[0],
+      );
 
       const response = await fetch(adminUserUrl(privilegedUser.username), {
         method: "PATCH",
