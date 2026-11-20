@@ -82,7 +82,13 @@
 
 .groups {
   display: grid;
-  gap: 26px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  align-items: start;
+  gap: 22px 18px;
+}
+
+.featureGroup {
+  min-width: 0;
 }
 
 .featureGroup h3 {
@@ -95,7 +101,7 @@
 
 .featureList {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   align-items: stretch;
   gap: 8px;
   padding: 0;
@@ -334,9 +340,6 @@
     width: 100%;
   }
 
-  .featureList {
-    grid-template-columns: 1fr;
-  }
 
   .featureItem {
     align-items: flex-start;

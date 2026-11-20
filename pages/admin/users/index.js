@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
+import AdminBackButton from "@/components/AdminBackButton";
 
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
@@ -213,10 +213,7 @@ function AdminUsersPage() {
           <section
             className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
           >
-            <Link href="/admin" className={styles.backLink}>
-              <i className="fas fa-arrow-left" aria-hidden="true"></i>
-              Painel administrativo
-            </Link>
+            <AdminBackButton />
 
             <header className={styles.pageHeader}>
               <div className={shared.icon} aria-hidden="true">
@@ -539,7 +536,8 @@ function UserEditor({ user, onUpdated, onCancel }) {
             disabled={isSaving}
           />
 
-          {featureGroups.map((group) => {
+          <div className={styles.featureGroups}>
+            {featureGroups.map((group) => {
             const groupFeatures = filteredFeatures.filter(
               (feature) => feature.group_name === group,
             );
@@ -626,7 +624,8 @@ function UserEditor({ user, onUpdated, onCancel }) {
                 </div>
               </div>
             );
-          })}
+            })}
+          </div>
 
           {filteredFeatures.length === 0 && (
             <p className={styles.emptyFeatures}>

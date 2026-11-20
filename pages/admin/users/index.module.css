@@ -231,20 +231,29 @@
   font-weight: 600;
 }
 
-.featureGroup {
+.featureGroups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  align-items: start;
+  gap: 20px 16px;
   margin-top: 20px;
+}
+
+.featureGroup {
+  min-width: 0;
 }
 
 .featureGroup h4 {
   margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
   font-size: 14px;
 }
 
 .featureList {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: stretch;
+  grid-template-columns: 1fr;
   gap: 8px;
 }
 
@@ -417,9 +426,6 @@
     width: 100%;
   }
 
-  .featureList {
-    grid-template-columns: 1fr;
-  }
 
   .userId {
     display: none;
