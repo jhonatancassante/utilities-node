@@ -86,6 +86,7 @@ describe("GET /api/v1/user", () => {
         username: "UsuarioComSessaoValida",
         email: activatedUser.email,
         features: ["create:session", "read:session", "update:user"],
+        privileged_features: [],
         created_at: activatedUser.created_at.toISOString(),
         updated_at: activatedUser.updated_at.toISOString(),
       });
@@ -210,6 +211,7 @@ describe("GET /api/v1/user", () => {
         username: activatedUser.username,
         email: activatedUser.email,
         features: ["create:session", "read:session", "update:user"],
+        privileged_features: [],
         created_at: activatedUser.created_at.toISOString(),
         updated_at: activatedUser.updated_at.toISOString(),
       });
