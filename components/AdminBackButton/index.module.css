@@ -1,6 +1,6 @@
 .button {
   position: sticky;
-  top: calc(clamp(64px, 9vw, 76px) + 18px);
+  top: calc(clamp(64px, 9vw, 76px) + 12px);
   z-index: 100;
   width: 46px;
   height: 46px;
@@ -26,6 +26,14 @@
   border-color: var(--accent);
   background: var(--accent-soft);
   transform: translateX(-2px);
+}
+
+.button.stuck {
+  transform: translateX(-18px);
+}
+
+.button.stuck:hover {
+  transform: translateX(-20px);
 }
 
 .button:focus-visible {
