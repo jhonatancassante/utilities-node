@@ -190,14 +190,23 @@ function AdminFeaturesPage() {
     setDeleteCandidate(null);
     setFeedback(null);
     try {
-      await requestAPI("/api/v1/admin/features/" + encodeURIComponent(feature.id), { method: "DELETE" });
+      await requestAPI(
+        "/api/v1/admin/features/" + encodeURIComponent(feature.id),
+        { method: "DELETE" },
+      );
       const refreshed = await loadFeatures({ showFeedback: false });
       setFeedback({
         type: refreshed ? "success" : "error",
-        message: refreshed ? "Feature excluída com sucesso." : "A feature foi excluída, mas não foi possível atualizar a listagem.",
+        message: refreshed
+          ? "Feature excluída com sucesso."
+          : "A feature foi excluída, mas não foi possível atualizar a listagem.",
       });
     } catch (requestError) {
-      setFeedback({ type: "error", message: requestError.message, action: requestError.action });
+      setFeedback({
+        type: "error",
+        message: requestError.message,
+        action: requestError.action,
+      });
     }
   }
 
@@ -306,7 +315,11 @@ function AdminFeaturesPage() {
             </div>
 
             {feedback && (
-              <StatusMessage type={feedback.type} action={feedback.action} resetKey={feedback}>
+              <StatusMessage
+                type={feedback.type}
+                action={feedback.action}
+                resetKey={feedback}
+              >
                 {feedback.message}
               </StatusMessage>
             )}
@@ -326,7 +339,10 @@ function AdminFeaturesPage() {
                   key={creating ? "new-feature" : editingFeature.id}
                   feature={editingFeature}
                   onSubmit={(values) =>
-                    handleSaveFeature(values, editingFeature ? editingFeature.id : null)
+                    handleSaveFeature(
+                      values,
+                      editingFeature ? editingFeature.id : null,
+                    )
                   }
                   onCancel={() => {
                     setCreating(false);
@@ -527,7 +543,8 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
     } else if (form.name.trim().length > 50) {
       errors.name = "Utilize no máximo 50 caracteres.";
     } else if (!/^[a-z][a-z0-9]*(?::[a-z][a-z0-9]*)*$/.test(form.name.trim())) {
-      errors.name = "Use letras minúsculas, números e dois-pontos (ex.: read:user).";
+      errors.name =
+        "Use letras minúsculas, números e dois-pontos (ex.: read:user).";
     }
 
     if (!form.label.trim()) {
@@ -592,15 +609,21 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               maxLength={50}
               disabled={isSaving}
               aria-invalid={Boolean(fieldErrors.name)}
-              aria-describedby={fieldErrors.name ? "feature-name-error" : undefined}
+              aria-describedby={
+                fieldErrors.name ? "feature-name-error" : undefined
+              }
             />
             {fieldErrors.name ? (
-              <small className={styles.fieldError} id="feature-name-error" role="alert">
+              <small
+                className={styles.fieldError}
+                id="feature-name-error"
+                role="alert"
+              >
                 {fieldErrors.name}
               </small>
             ) : (
               <small className={styles.fieldHint}>
-              Use letras minúsculas, números e dois-pontos.
+                Use letras minúsculas, números e dois-pontos.
               </small>
             )}
           </div>
@@ -617,10 +640,16 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               maxLength={50}
               disabled={isSaving}
               aria-invalid={Boolean(fieldErrors.label)}
-              aria-describedby={fieldErrors.label ? "feature-label-error" : undefined}
+              aria-describedby={
+                fieldErrors.label ? "feature-label-error" : undefined
+              }
             />
             {fieldErrors.label && (
-              <small className={styles.fieldError} id="feature-label-error" role="alert">
+              <small
+                className={styles.fieldError}
+                id="feature-label-error"
+                role="alert"
+              >
                 {fieldErrors.label}
               </small>
             )}
@@ -640,10 +669,16 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               maxLength={50}
               disabled={isSaving}
               aria-invalid={Boolean(fieldErrors.group_name)}
-              aria-describedby={fieldErrors.group_name ? "feature-group-error" : undefined}
+              aria-describedby={
+                fieldErrors.group_name ? "feature-group-error" : undefined
+              }
             />
             {fieldErrors.group_name && (
-              <small className={styles.fieldError} id="feature-group-error" role="alert">
+              <small
+                className={styles.fieldError}
+                id="feature-group-error"
+                role="alert"
+              >
                 {fieldErrors.group_name}
               </small>
             )}
@@ -663,10 +698,18 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               rows={3}
               disabled={isSaving}
               aria-invalid={Boolean(fieldErrors.description)}
-              aria-describedby={fieldErrors.description ? "feature-description-error" : undefined}
+              aria-describedby={
+                fieldErrors.description
+                  ? "feature-description-error"
+                  : undefined
+              }
             />
             {fieldErrors.description && (
-              <small className={styles.fieldError} id="feature-description-error" role="alert">
+              <small
+                className={styles.fieldError}
+                id="feature-description-error"
+                role="alert"
+              >
                 {fieldErrors.description}
               </small>
             )}

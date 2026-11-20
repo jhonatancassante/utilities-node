@@ -334,7 +334,10 @@ function RegistrationPage() {
 
                   {feedback && (
                     <div className={styles.feedback} role="alert">
-                      <StatusMessage type="inline-error" action={feedback.action}>
+                      <StatusMessage
+                        type="inline-error"
+                        action={feedback.action}
+                      >
                         {feedback.message}
                       </StatusMessage>
                     </div>

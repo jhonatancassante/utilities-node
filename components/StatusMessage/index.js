@@ -36,7 +36,9 @@ function ToastNotification({ item, onDismiss }) {
       role={item.type === "error" ? "alert" : "status"}
     >
       <i
-        className={"fas " + (TYPE_ICON[item.type] || TYPE_ICON.info) + " " + styles.icon}
+        className={
+          "fas " + (TYPE_ICON[item.type] || TYPE_ICON.info) + " " + styles.icon
+        }
         aria-hidden="true"
       ></i>
       <div className={styles.content}>

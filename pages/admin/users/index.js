@@ -248,7 +248,11 @@ function AdminUsersPage() {
             </form>
 
             {feedback && (
-              <StatusMessage type={feedback.type} action={feedback.action} resetKey={feedback}>
+              <StatusMessage
+                type={feedback.type}
+                action={feedback.action}
+                resetKey={feedback}
+              >
                 {feedback.message}
               </StatusMessage>
             )}

@@ -39,11 +39,7 @@ function Modal({
         <header className={styles.header}>
           <h2 id="modal-title">{title}</h2>
           {showCloseButton && (
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Fechar modal"
-            >
+            <button type="button" onClick={onClose} aria-label="Fechar modal">
               <i className="fas fa-times" aria-hidden="true"></i>
             </button>
           )}
