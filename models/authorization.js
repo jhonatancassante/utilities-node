@@ -129,7 +129,7 @@ function validateFeature(feature) {
   if (typeof feature !== "string" || !feature.trim()) {
     throw new InternalServerError({
       cause:
-        "É necessário fornecer `feature` conhecida no model `authorization`.",
+        "É necessário fornecer uma `feature` válida no model `authorization`.",
     });
   }
 }
