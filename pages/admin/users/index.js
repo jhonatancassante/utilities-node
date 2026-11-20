@@ -547,7 +547,7 @@ function UserEditor({ user, onUpdated, onCancel }) {
                           ? styles.featureOptionLocked
                           : ""
                       } ${
-                        feature.is_privileged || feature.is_removable === false
+                        feature.is_privileged || feature.is_protected || feature.is_removable === false
                           ? styles.featureOptionBadged
                           : ""
                       }`}
@@ -568,6 +568,16 @@ function UserEditor({ user, onUpdated, onCancel }) {
                             aria-label="Permissão privilegiada"
                           >
                             <i className="fas fa-crown" aria-hidden="true"></i>
+                          </span>
+                        )}
+                        {feature.is_protected && (
+                          <span
+                            className={`${styles.featureBadge} ${styles.protectedBadge}`}
+                            title="Feature protegida: não pode ser alterada ou excluída"
+                            role="img"
+                            aria-label="Feature protegida"
+                          >
+                            <i className="fas fa-shield-alt" aria-hidden="true"></i>
                           </span>
                         )}
                         {feature.is_removable === false && (
