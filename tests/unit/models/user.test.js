@@ -204,6 +204,10 @@ describe("models/user.js", () => {
     test("Rejeita a alteração de uma feature não editável", async () => {
       const querySpy = mockQueries([
         ["FROM\n          features", existingFeatureMetadata],
+        [
+          "SELECT name, is_removable FROM features",
+          [{ name: "read:session", is_removable: false }],
+        ],
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
