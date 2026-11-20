@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import styles from "./index.module.css";
@@ -71,33 +71,37 @@ function ToastNotification({ item, onDismiss }) {
 function StatusMessage({ type = "info", children, action, resetKey }) {
   const messageKey = resetKey ?? children;
   const [dismissedKey, setDismissedKey] = useState(null);
-  const [toastQueue, setToastQueue] = useState([]);
+  const [toastState, setToastState] = useState({ items: [], nextId: 0 });
   const [lastToastKey, setLastToastKey] = useState(null);
   const isToast = !["inline-error", "critical"].includes(type);
 
   if (isToast && children && messageKey !== lastToastKey) {
     setLastToastKey(messageKey);
-    setToastQueue((currentQueue) =>
-      currentQueue.length >= 3
-        ? currentQueue
-        : [
-            ...currentQueue,
-            {
-              id: `${String(messageKey)}-${currentQueue.length}`,
-              type,
-              children,
-              action,
-              duration: DISPLAY_DURATION[type] ?? DISPLAY_DURATION.info,
-            },
-          ],
+    setToastState((currentState) =>
+      currentState.items.length >= 3
+        ? currentState
+        : {
+            items: [
+              ...currentState.items,
+              {
+                id: currentState.nextId,
+                type,
+                children,
+                action,
+                duration: DISPLAY_DURATION[type] ?? DISPLAY_DURATION.info,
+              },
+            ],
+            nextId: currentState.nextId + 1,
+          },
     );
   }
 
-  function dismissToast(id) {
-    setToastQueue((currentQueue) =>
-      currentQueue.filter((item) => item.id !== id),
-    );
-  }
+  const dismissToast = useCallback((id) => {
+    setToastState((currentState) => ({
+      ...currentState,
+      items: currentState.items.filter((item) => item.id !== id),
+    }));
+  }, []);
 
   if (type === "inline-error") {
     return (
@@ -136,12 +140,12 @@ function StatusMessage({ type = "info", children, action, resetKey }) {
     );
   }
 
-  if (toastQueue.length === 0) return null;
+  if (toastState.items.length === 0) return null;
 
   return (
     <div className={styles.viewport} aria-live="polite">
       <div className={styles.stack}>
-        {toastQueue.map((item) => (
+        {toastState.items.map((item) => (
           <ToastNotification
             key={item.id}
             item={item}
