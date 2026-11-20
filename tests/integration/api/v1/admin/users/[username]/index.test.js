@@ -1,5 +1,6 @@
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
+import { protectedFeatures } from "@/configs/features.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -14,7 +15,7 @@ function adminUserUrl(username) {
 async function createPrivilegedSession() {
   const privilegedUser = await orchestrator.createUser();
   await orchestrator.activateUser(privilegedUser);
-  await orchestrator.addFeaturesToUser(privilegedUser, ["update:user:others"]);
+  await orchestrator.addFeaturesToUser(privilegedUser, protectedFeatures);
   const sessionObject = await orchestrator.createSession(privilegedUser);
   return { privilegedUser, sessionObject };
 }
@@ -143,7 +144,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
             "create:session",
             "read:session",
             "update:user",
-            "update:user:others",
+            ...protectedFeatures,
             "read:status:all",
           ],
         }),
@@ -156,7 +157,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
         "create:session",
         "read:session",
         "update:user",
-        "update:user:others",
+        ...protectedFeatures,
         "read:status:all",
       ]);
       expect(responseBody).not.toHaveProperty("password");
@@ -166,7 +167,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
         "create:session",
         "read:session",
         "update:user",
-        "update:user:others",
+        ...protectedFeatures,
         "read:status:all",
       ]);
     });
