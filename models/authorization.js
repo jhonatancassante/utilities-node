@@ -1,5 +1,4 @@
 import { InternalServerError } from "@/infra/errors.js";
-import { availableFeatures, featureCatalog } from "@/configs/features.js";
 import { adminSections } from "@/configs/admin.js";
 
 function can(user, feature, resource) {
@@ -24,13 +23,7 @@ function can(user, feature, resource) {
 }
 
 export function hasAdminAccess(user) {
-  return Boolean(
-    user?.features?.some((name) =>
-      featureCatalog.some(
-        (feature) => feature.name === name && feature.privileged,
-      ),
-    ),
-  );
+  return Boolean(user?.privileged_features?.length);
 }
 
 export function hasAdminSectionAccess(user, sectionId) {
@@ -59,6 +52,22 @@ function filterOutput(user, feature, resource) {
     };
   }
 
+  if (feature === "read:user:others") {
+    const filterUser = (userObject) => ({
+      id: userObject.id,
+      username: userObject.username,
+      email: userObject.email,
+      features: userObject.features,
+      privileged_features: userObject.privileged_features ?? [],
+      created_at: userObject.created_at,
+      updated_at: userObject.updated_at,
+    });
+
+    return Array.isArray(resource)
+      ? resource.map(filterUser)
+      : filterUser(resource);
+  }
+
   if (feature === "read:user:self") {
     if (user.id === resource.id) {
       return {
@@ -66,6 +75,7 @@ function filterOutput(user, feature, resource) {
         username: resource.username,
         email: resource.email,
         features: resource.features,
+        privileged_features: resource.privileged_features ?? [],
         created_at: resource.created_at,
         updated_at: resource.updated_at,
       };
@@ -103,6 +113,25 @@ function filterOutput(user, feature, resource) {
     }));
   }
 
+  if (feature === "read:feature") {
+    const filterFeature = (featureObject) => ({
+      id: featureObject.id,
+      name: featureObject.name,
+      label: featureObject.label,
+      group_name: featureObject.group_name,
+      description: featureObject.description,
+      is_removable: featureObject.is_removable,
+      is_privileged: featureObject.is_privileged,
+      is_protected: featureObject.is_protected,
+      created_at: featureObject.created_at,
+      updated_at: featureObject.updated_at,
+    });
+
+    return Array.isArray(resource)
+      ? resource.map(filterFeature)
+      : filterFeature(resource);
+  }
+
   if (feature === "read:status") {
     const output = {
       updated_at: resource.updated_at,
@@ -132,10 +161,10 @@ function validateUser(user) {
 }
 
 function validateFeature(feature) {
-  if (!feature || !availableFeatures.includes(feature)) {
+  if (typeof feature !== "string" || !feature.trim()) {
     throw new InternalServerError({
       cause:
-        "É necessário fornecer `feature` conhecida no model `authorization`.",
+        "É necessário fornecer uma `feature` válida no model `authorization`.",
     });
   }
 }
@@ -151,7 +180,6 @@ function validateResource(resource) {
 const authorization = {
   can,
   filterOutput,
-  availableFeatures,
   hasAdminAccess,
   hasAdminSectionAccess,
   getAvailableAdminSections,

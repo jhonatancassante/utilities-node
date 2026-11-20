@@ -18,7 +18,7 @@ describe("GET /api/v1/admin/users", () => {
         name: "ForbiddenError",
         message: "Você não possui permissão para executar esta ação.",
         action:
-          'Verifique se o seu usuário possui a feature "update:user:others".',
+          'Verifique se o seu usuário possui a feature "read:user:others".',
         status_code: 403,
       });
     });
@@ -47,6 +47,7 @@ describe("GET /api/v1/admin/users", () => {
       await orchestrator.activateUser(privilegedUser);
       await orchestrator.addFeaturesToUser(privilegedUser, [
         "update:user:others",
+        "read:user:others",
       ]);
       const sessionObject = await orchestrator.createSession(privilegedUser);
       const targetUser = await orchestrator.createUser({
@@ -81,6 +82,7 @@ describe("GET /api/v1/admin/users", () => {
       await orchestrator.activateUser(privilegedUser);
       await orchestrator.addFeaturesToUser(privilegedUser, [
         "update:user:others",
+        "read:user:others",
       ]);
       const sessionObject = await orchestrator.createSession(privilegedUser);
       const targetUser = await orchestrator.createUser({
@@ -110,6 +112,7 @@ describe("GET /api/v1/admin/users", () => {
       await orchestrator.activateUser(privilegedUser);
       await orchestrator.addFeaturesToUser(privilegedUser, [
         "update:user:others",
+        "read:user:others",
       ]);
       const sessionObject = await orchestrator.createSession(privilegedUser);
 
@@ -131,6 +134,7 @@ describe("GET /api/v1/admin/users", () => {
       await orchestrator.activateUser(privilegedUser);
       await orchestrator.addFeaturesToUser(privilegedUser, [
         "update:user:others",
+        "read:user:others",
       ]);
       const sessionObject = await orchestrator.createSession(privilegedUser);
 

@@ -40,8 +40,14 @@ function ProfilePage() {
             </section>
           ) : error ? (
             <section className={`${shared.card} ${styles.card}`}>
-              <StatusMessage type="error">
-                Não foi possível carregar os dados da sua conta.
+              <StatusMessage
+                type="critical"
+                name={error.statusCode ? error.name : undefined}
+                action={error.action}
+              >
+                {error.statusCode
+                  ? error.message
+                  : "Não foi possível carregar os dados da sua conta."}
               </StatusMessage>
             </section>
           ) : user ? (
@@ -206,6 +212,7 @@ function ProfileForm({ user, onUpdated }) {
     } catch (error) {
       setFeedback({
         type: "error",
+        name: error.statusCode ? error.name : undefined,
         message: error.message,
         action: error.action,
       });
@@ -367,12 +374,13 @@ function ProfileForm({ user, onUpdated }) {
 
         {feedback && (
           <div className={styles.feedback} role="alert">
-            <StatusMessage type={feedback.type}>
+            <StatusMessage
+              type="inline-error"
+              name={feedback.name}
+              action={feedback.action}
+            >
               {feedback.message}
             </StatusMessage>
-            {feedback.action && (
-              <p className={styles.errorAction}>{feedback.action}</p>
-            )}
           </div>
         )}
 

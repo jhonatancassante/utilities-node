@@ -1,22 +1,160 @@
-// components/StatusMessage/index.js
-// Mensagem de andamento, sucesso ou erro. O contêiner fica sempre na página
-// para que leitores de tela anunciem as mudanças de texto.
+import { useCallback, useEffect, useState } from "react";
+import Button from "@/components/Button";
+import Modal from "@/components/Modal";
 import styles from "./index.module.css";
 
 const TYPE_CLASS = {
   info: styles.info,
   success: styles.success,
+  warning: styles.warning,
   error: styles.error,
 };
 
-function StatusMessage({ type = "info", children }) {
+const TYPE_ICON = {
+  info: "fa-info-circle",
+  success: "fa-check-circle",
+  warning: "fa-exclamation-triangle",
+  error: "fa-exclamation-circle",
+};
+
+const DISPLAY_DURATION = {
+  info: 4000,
+  success: 4000,
+  warning: 6000,
+  error: 8000,
+};
+
+function ToastNotification({ item, onDismiss }) {
+  useEffect(() => {
+    const timeout = setTimeout(() => onDismiss(item.id), item.duration);
+    return () => clearTimeout(timeout);
+  }, [item, onDismiss]);
+
   return (
-    <div className={styles.container} aria-live="polite">
-      {children && (
-        <p className={`${styles.message} ${TYPE_CLASS[type] ?? styles.info}`}>
-          {children}
-        </p>
-      )}
+    <div
+      className={styles.toast + " " + (TYPE_CLASS[item.type] || styles.info)}
+      role={item.type === "error" ? "alert" : "status"}
+    >
+      <i
+        className={
+          "fas " + (TYPE_ICON[item.type] || TYPE_ICON.info) + " " + styles.icon
+        }
+        aria-hidden="true"
+      ></i>
+      <div className={styles.content}>
+        <strong>
+          {item.type === "success"
+            ? "Sucesso"
+            : item.type === "warning"
+              ? "Atenção"
+              : item.type === "error"
+                ? "Erro"
+                : "Informação"}
+        </strong>
+        <p>{item.children}</p>
+        {item.action && <small>{item.action}</small>}
+        <span
+          className={styles.progress}
+          style={{ animationDuration: `${item.duration}ms` }}
+        />
+      </div>
+      <button
+        type="button"
+        className={styles.close}
+        aria-label="Dispensar notificação"
+        onClick={() => onDismiss(item.id)}
+      >
+        <i className="fas fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
+  );
+}
+
+function StatusMessage({ type = "info", children, action, name, resetKey }) {
+  const messageKey = resetKey ?? children;
+  const [dismissedKey, setDismissedKey] = useState(null);
+  const [toastState, setToastState] = useState({ items: [], nextId: 0 });
+  const [lastToastKey, setLastToastKey] = useState(null);
+  const isToast = !name && !["inline-error", "critical"].includes(type);
+
+  if (isToast && children && messageKey !== lastToastKey) {
+    setLastToastKey(messageKey);
+    setToastState((currentState) =>
+      currentState.items.length >= 3
+        ? currentState
+        : {
+            items: [
+              ...currentState.items,
+              {
+                id: currentState.nextId,
+                type,
+                children,
+                action,
+                duration: DISPLAY_DURATION[type] ?? DISPLAY_DURATION.info,
+              },
+            ],
+            nextId: currentState.nextId + 1,
+          },
+    );
+  }
+
+  const dismissToast = useCallback((id) => {
+    setToastState((currentState) => ({
+      ...currentState,
+      items: currentState.items.filter((item) => item.id !== id),
+    }));
+  }, []);
+
+  if (name || type === "critical") {
+    if (!children || dismissedKey === messageKey) return null;
+
+    return (
+      <Modal
+        title={
+          <span className={styles.errorTitle}>
+            <i className="fas fa-exclamation-circle" aria-hidden="true"></i>
+            <span>{name || "Não foi possível concluir"}</span>
+          </span>
+        }
+        onClose={() => setDismissedKey(messageKey)}
+        closeOnBackdrop={false}
+        showCloseButton={false}
+      >
+        <div className={styles.errorDialog} role="alert">
+          <p>{children}</p>
+          {action && <small>{action}</small>}
+        </div>
+        <div className={styles.errorActions}>
+          <Button type="button" onClick={() => setDismissedKey(messageKey)}>
+            OK
+          </Button>
+        </div>
+      </Modal>
+    );
+  }
+
+  if (type === "inline-error") {
+    return (
+      <div className={styles.inlineError} role="alert">
+        <p>{children}</p>
+        {action && <small>{action}</small>}
+      </div>
+    );
+  }
+
+  if (toastState.items.length === 0) return null;
+
+  return (
+    <div className={styles.viewport} aria-live="polite">
+      <div className={styles.stack}>
+        {toastState.items.map((item) => (
+          <ToastNotification
+            key={item.id}
+            item={item}
+            onDismiss={dismissToast}
+          />
+        ))}
+      </div>
     </div>
   );
 }

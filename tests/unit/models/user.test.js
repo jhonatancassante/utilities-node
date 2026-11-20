@@ -13,19 +13,35 @@ const existingUser = {
 };
 
 function mockQueries(handlers) {
-  return jest.spyOn(database, "query").mockImplementation(async (query) => {
-    const text = typeof query === "string" ? query : query.text;
+  const queryMock = jest
+    .spyOn(database, "query")
+    .mockImplementation(async (query) => {
+      const text = typeof query === "string" ? query : query.text;
 
-    for (const [pattern, result] of handlers) {
-      if (text.includes(pattern)) {
-        const rows = typeof result === "function" ? result(query) : result;
-        return { rows, rowCount: rows.length };
+      for (const [pattern, result] of handlers) {
+        if (text.includes(pattern)) {
+          const rows = typeof result === "function" ? result(query) : result;
+          return { rows, rowCount: rows.length };
+        }
       }
-    }
 
-    throw new Error(`Consulta inesperada: ${text}`);
-  });
+      throw new Error(`Consulta inesperada: ${text}`);
+    });
+
+  jest
+    .spyOn(database, "transaction")
+    .mockImplementation(async (callback) => callback({ query: queryMock }));
+
+  return queryMock;
 }
+
+const existingFeatureMetadata = [
+  { name: "create:session", is_removable: false, deleted_at: null },
+  { name: "read:session", is_removable: false, deleted_at: null },
+  { name: "update:user", is_removable: false, deleted_at: null },
+  { name: "update:user:others", is_removable: true, deleted_at: null },
+  { name: "read:status:all", is_removable: true, deleted_at: null },
+];
 
 function getCallsContaining(querySpy, pattern) {
   return querySpy.mock.calls
@@ -41,7 +57,7 @@ describe("models/user.js", () => {
   describe(".update()", () => {
     test("Usa o id do usuário encontrado no WHERE", async () => {
       const querySpy = mockQueries([
-        ["LOWER(username) = LOWER($1)\n        LIMIT 1", [existingUser]],
+        ["LOWER(users.username) = LOWER($1)\n        LIMIT 1", [existingUser]],
         ["UPDATE", (query) => [{ ...existingUser, username: query.values[1] }]],
       ]);
 
@@ -160,18 +176,24 @@ describe("models/user.js", () => {
 
     test("Com permissão administrativa, atualiza as features", async () => {
       const querySpy = mockQueries([
+        [
+          "name,\n          is_removable,\n          deleted_at\n        FROM\n          features",
+          existingFeatureMetadata,
+        ],
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
       const features = [
+        "create:session",
+        "read:session",
+        "update:user",
         "update:user:others",
         "read:status:all",
-        "read:session",
       ];
 
       await user.update("UsuarioAtual", { features }, { allowFeatures: true });
 
-      const [updateQuery] = getCallsContaining(querySpy, "UPDATE");
+      const [updateQuery] = getCallsContaining(querySpy, "UPDATE users SET");
       expect(updateQuery.text).toContain("features = $5");
       expect(updateQuery.values).toEqual([
         existingUser.id,
@@ -184,6 +206,14 @@ describe("models/user.js", () => {
 
     test("Rejeita a alteração de uma feature não editável", async () => {
       const querySpy = mockQueries([
+        [
+          "name,\n          is_removable,\n          deleted_at\n        FROM\n          features",
+          existingFeatureMetadata,
+        ],
+        [
+          "SELECT name, is_removable FROM features",
+          [{ name: "read:session", is_removable: false }],
+        ],
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
@@ -198,9 +228,9 @@ describe("models/user.js", () => {
 
       expect(error).toBeInstanceOf(ValidationError);
       expect(error.message).toBe(
-        "As seguintes features não podem ser alteradas: read:session.",
+        "As seguintes features não podem ser removidas deste usuário: read:session.",
       );
-      expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
+      expect(getCallsContaining(querySpy, "UPDATE users SET")).toEqual([]);
     });
 
     test("Com nome de usuário inválido", async () => {
@@ -229,7 +259,7 @@ describe("models/user.js", () => {
 
     test("Com nome de usuário já utilizado por outro usuário", async () => {
       mockQueries([
-        ["SELECT\n          *", [existingUser]],
+        ["LOWER(users.username) = LOWER($1)", [existingUser]],
         ["SELECT\n          username", [{ username: "Outro" }]],
       ]);
 
@@ -240,7 +270,7 @@ describe("models/user.js", () => {
 
     test("Trocar a caixa do username não conta como duplicado", async () => {
       const querySpy = mockQueries([
-        ["SELECT\n          *", [existingUser]],
+        ["LOWER(users.username) = LOWER($1)", [existingUser]],
         ["UPDATE", [existingUser]],
       ]);
 

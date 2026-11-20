@@ -14,13 +14,24 @@ describe("models/authorization.js", () => {
       expect(() => authorization.can(createdUser)).toThrow(InternalServerError);
     });
 
-    test("Com uma `feature` desconhecida", () => {
+    test("Com uma feature criada dinamicamente e atribuída ao usuário", () => {
       const createdUser = {
-        features: [],
+        features: ["read:dynamicreports"],
       };
-      expect(() => {
-        authorization.can(createdUser, "unknown:feature");
-      }).toThrow(InternalServerError);
+
+      expect(authorization.can(createdUser, "read:dynamicreports")).toBe(true);
+    });
+
+    test("Com uma feature dinâmica que não foi atribuída ao usuário", () => {
+      expect(authorization.can({ features: [] }, "read:dynamicreports")).toBe(
+        false,
+      );
+    });
+
+    test("Sem informar uma feature válida", () => {
+      const createdUser = { features: [] };
+
+      expect(() => authorization.can(createdUser)).toThrow(InternalServerError);
     });
 
     test("Com um usuário válido e uma `feature` conhecida", () => {
@@ -45,13 +56,12 @@ describe("models/authorization.js", () => {
       );
     });
 
-    test("Com uma `feature` desconhecida", () => {
-      const createdUser = {
-        features: [],
-      };
-      expect(() => {
-        authorization.filterOutput(createdUser, "unknown:feature");
-      }).toThrow(InternalServerError);
+    test("Sem informar uma feature válida", () => {
+      const createdUser = { features: [] };
+
+      expect(() => authorization.filterOutput(createdUser)).toThrow(
+        InternalServerError,
+      );
     });
 
     test("Com usuário e `feature`, mas sem `resource`", () => {
@@ -92,6 +102,30 @@ describe("models/authorization.js", () => {
         updated_at: "2026-01-01T00:00:00Z",
       });
     });
+    test("read:user:self inclui privilégios cadastrados no banco", () => {
+      const currentUser = {
+        id: "user-1",
+        features: ["read:user:self"],
+      };
+      const userResource = {
+        id: "user-1",
+        username: "usuario",
+        email: "usuario@example.com",
+        features: ["read:dynamicreports"],
+        privileged_features: ["read:dynamicreports"],
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      };
+
+      const result = authorization.filterOutput(
+        currentUser,
+        "read:user:self",
+        userResource,
+      );
+
+      expect(result.privileged_features).toEqual(["read:dynamicreports"]);
+    });
+
     test("`read:session` não devolve o token da sessão", () => {
       const sessionOwner = { id: "user-1", features: ["read:session"] };
       const sessionResource = {
@@ -121,23 +155,38 @@ describe("models/authorization.js", () => {
   });
   describe(".hasAdminAccess()", () => {
     test("Usuário sem features privilegiadas", () => {
-      expect(authorization.hasAdminAccess({ features: ["read:user"] })).toBe(
-        false,
-      );
+      expect(
+        authorization.hasAdminAccess({
+          features: ["read:user"],
+          privileged_features: [],
+        }),
+      ).toBe(false);
     });
 
     test("Usuário com qualquer feature privilegiada", () => {
       expect(
-        authorization.hasAdminAccess({ features: ["read:status:all"] }),
+        authorization.hasAdminAccess({
+          features: ["read:status:all"],
+          privileged_features: ["read:status:all"],
+        }),
       ).toBe(true);
       expect(
-        authorization.hasAdminAccess({ features: ["update:user:others"] }),
+        authorization.hasAdminAccess({
+          features: ["update:user:others"],
+          privileged_features: ["update:user:others"],
+        }),
       ).toBe(true);
     });
 
     test("Usuário ausente ou sem features", () => {
       expect(authorization.hasAdminAccess()).toBe(false);
       expect(authorization.hasAdminAccess({})).toBe(false);
+      expect(
+        authorization.hasAdminAccess({
+          features: ["read:dynamicreports"],
+          privileged_features: ["read:dynamicreports"],
+        }),
+      ).toBe(true);
     });
   });
 

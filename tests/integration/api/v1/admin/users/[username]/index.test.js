@@ -1,5 +1,6 @@
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
+import feature from "@/models/feature.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -12,11 +13,17 @@ function adminUserUrl(username) {
 }
 
 async function createPrivilegedSession() {
+  const protectedFeatures = (await feature.findAll())
+    .filter((item) => item.is_protected)
+    .map((item) => item.name);
   const privilegedUser = await orchestrator.createUser();
   await orchestrator.activateUser(privilegedUser);
-  await orchestrator.addFeaturesToUser(privilegedUser, ["update:user:others"]);
+  await orchestrator.addFeaturesToUser(privilegedUser, [
+    ...protectedFeatures,
+    "read:session",
+  ]);
   const sessionObject = await orchestrator.createSession(privilegedUser);
-  return { privilegedUser, sessionObject };
+  return { privilegedUser, sessionObject, protectedFeatures };
 }
 
 describe("GET /api/v1/admin/users/[username]", () => {
@@ -130,7 +137,8 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
     });
 
     test("Alterando as próprias permissões", async () => {
-      const { privilegedUser, sessionObject } = await createPrivilegedSession();
+      const { privilegedUser, sessionObject, protectedFeatures } =
+        await createPrivilegedSession();
 
       const response = await fetch(adminUserUrl(privilegedUser.username), {
         method: "PATCH",
@@ -139,7 +147,13 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
           Cookie: `session_id=${sessionObject.token}`,
         },
         body: JSON.stringify({
-          features: ["update:user:others", "read:status:all", "read:session"],
+          features: [
+            "create:session",
+            "read:session",
+            "update:user",
+            ...protectedFeatures,
+            "read:status:all",
+          ],
         }),
       });
 
@@ -147,17 +161,21 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       const responseBody = await response.json();
       expect(responseBody.id).toBe(privilegedUser.id);
       expect(responseBody.features).toEqual([
-        "update:user:others",
-        "read:status:all",
+        "create:session",
         "read:session",
+        "update:user",
+        ...protectedFeatures,
+        "read:status:all",
       ]);
       expect(responseBody).not.toHaveProperty("password");
 
       const updatedUser = await user.findOneById(privilegedUser.id);
       expect(updatedUser.features).toEqual([
-        "update:user:others",
-        "read:status:all",
+        "create:session",
         "read:session",
+        "update:user",
+        ...protectedFeatures,
+        "read:status:all",
       ]);
     });
 
@@ -171,7 +189,12 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
           Cookie: `session_id=${sessionObject.token}`,
         },
         body: JSON.stringify({
-          features: ["update:user:others", "read:status:all"],
+          features: [
+            "create:session",
+            "update:user",
+            "update:user:others",
+            "read:status:all",
+          ],
         }),
       });
 
@@ -179,7 +202,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       const responseBody = await response.json();
       expect(responseBody.name).toBe("ValidationError");
       expect(responseBody.message).toBe(
-        "As seguintes features não podem ser alteradas: read:session.",
+        "As seguintes features não podem ser removidas deste usuário: read:session.",
       );
     });
 
@@ -199,8 +222,110 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       const responseBody = await response.json();
       expect(responseBody.name).toBe("ValidationError");
       expect(responseBody.message).toBe(
-        "As features a seguir não são reconhecidas: feature:inexistente.",
+        "As features a seguir não são reconhecidas ou estão excluídas: feature:inexistente.",
       );
+    });
+
+    test("Atribuindo uma feature criada dinamicamente", async () => {
+      const { sessionObject } = await createPrivilegedSession();
+      const targetUser = await orchestrator.createUser();
+      const dynamicFeature = await feature.create({
+        name: "read:dynamicreports",
+        label: "Consultar relatórios dinâmicos",
+        group_name: "Relatórios",
+        description: "Permite consultar relatórios criados dinamicamente.",
+        is_privileged: true,
+      });
+
+      const response = await fetch(adminUserUrl(targetUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({
+          features: ["read:activation_token", dynamicFeature.name],
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      const responseBody = await response.json();
+      expect(responseBody.features).toEqual([
+        "read:activation_token",
+        "read:dynamicreports",
+      ]);
+      expect(responseBody.privileged_features).toContain(dynamicFeature.name);
+
+      const updatedUser = await user.findOneById(targetUser.id);
+      expect(updatedUser.features).toContain(dynamicFeature.name);
+      expect(updatedUser.privileged_features).toContain(dynamicFeature.name);
+    });
+
+    test("Rejeitando a atribuição de uma feature excluída", async () => {
+      const { sessionObject } = await createPrivilegedSession();
+      const targetUser = await orchestrator.createUser();
+      const deletedFeature = await feature.create({
+        name: "read:deletedreports",
+        label: "Consultar relatórios excluídos",
+        group_name: "Relatórios",
+        description: "Feature usada para validar exclusão lógica.",
+      });
+      await feature.delete(deletedFeature.id);
+
+      const response = await fetch(adminUserUrl(targetUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({
+          features: ["read:activation_token", deletedFeature.name],
+        }),
+      });
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({
+        name: "ValidationError",
+        message:
+          "As features a seguir não são reconhecidas ou estão excluídas: read:deletedreports.",
+      });
+    });
+
+    test("Impedindo a remoção do último conjunto de permissões protegidas", async () => {
+      await orchestrator.clearDatabase();
+      await orchestrator.runPendingMigrations();
+
+      const dynamicProtectedFeature = await feature.create({
+        name: "read:protectedreports",
+        label: "Consultar relatórios protegidos",
+        group_name: "Relatórios",
+        description: "Feature protegida criada dinamicamente para o teste.",
+        is_protected: true,
+      });
+      const { privilegedUser, sessionObject } = await createPrivilegedSession();
+      const currentPrivilegedUser = await user.findOneById(privilegedUser.id);
+      const remainingFeatures = currentPrivilegedUser.features.filter(
+        (name) => name !== dynamicProtectedFeature.name,
+      );
+
+      const response = await fetch(adminUserUrl(privilegedUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({ features: remainingFeatures }),
+      });
+
+      expect(response.status).toBe(409);
+      expect(await response.json()).toEqual({
+        name: "ConflictError",
+        message:
+          "Esta alteração não pode ser realizada porque deixaria o sistema sem um administrador com todas as permissões protegidas.",
+        action:
+          "Atribua todas as permissões protegidas a outro usuário antes de tentar novamente.",
+        status_code: 409,
+      });
     });
   });
 });

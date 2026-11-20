@@ -6,6 +6,7 @@ import user from "@/models/user.js";
 import authorization from "@/models/authorization.js";
 import {
   ConfigurationError,
+  ConflictError,
   ForbiddenError,
   InternalServerError,
   MethodNotAllowedError,
@@ -61,6 +62,7 @@ function onErrorHandler(error, request, response) {
   }
 
   if (
+    error instanceof ConflictError ||
     error instanceof ForbiddenError ||
     error instanceof NotFoundError ||
     error instanceof ValidationError ||

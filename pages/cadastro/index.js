@@ -117,6 +117,7 @@ function RegistrationPage() {
     } catch (error) {
       setFeedback({
         type: "error",
+        name: error.statusCode ? error.name : undefined,
         message: error.message,
         action: error.action,
       });
@@ -334,12 +335,13 @@ function RegistrationPage() {
 
                   {feedback && (
                     <div className={styles.feedback} role="alert">
-                      <StatusMessage type={feedback.type}>
+                      <StatusMessage
+                        type="inline-error"
+                        name={feedback.name}
+                        action={feedback.action}
+                      >
                         {feedback.message}
                       </StatusMessage>
-                      {feedback.action && (
-                        <p className={styles.errorAction}>{feedback.action}</p>
-                      )}
                     </div>
                   )}
 

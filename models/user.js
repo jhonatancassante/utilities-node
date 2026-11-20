@@ -1,7 +1,10 @@
 import database from "@/infra/database.js";
-import { availableFeatures, featureCatalog } from "@/configs/features.js";
 import password from "@/models/password.js";
-import { ValidationError, NotFoundError } from "@/infra/errors.js";
+import {
+  ConflictError,
+  ValidationError,
+  NotFoundError,
+} from "@/infra/errors.js";
 import {
   validateUsername,
   validateEmail,
@@ -58,11 +61,21 @@ async function findOneById(id) {
     const results = await database.query({
       text: `
         SELECT
-          *
+          users.*,
+          COALESCE(
+            (
+              SELECT array_agg(features.name)
+              FROM features
+              WHERE features.is_privileged = true
+                AND features.deleted_at IS NULL
+                AND features.name = ANY(users.features)
+            ),
+            ARRAY[]::varchar[]
+          ) AS privileged_features
         FROM
           users
         WHERE
-          id = $1
+          users.id = $1
         LIMIT 1
         ;`,
       values: [id],
@@ -89,11 +102,21 @@ async function findOneByUsername(username) {
     const results = await database.query({
       text: `
         SELECT
-          *
+          users.*,
+          COALESCE(
+            (
+              SELECT array_agg(features.name)
+              FROM features
+              WHERE features.is_privileged = true
+                AND features.deleted_at IS NULL
+                AND features.name = ANY(users.features)
+            ),
+            ARRAY[]::varchar[]
+          ) AS privileged_features
         FROM
           users
         WHERE
-          LOWER(username) = LOWER($1)
+          LOWER(users.username) = LOWER($1)
         LIMIT 1
         ;`,
       values: [username],
@@ -221,43 +244,42 @@ async function update(
       });
     }
 
+    allowedInputValues.features = [...new Set(allowedInputValues.features)];
+
+    const featureResults = await database.query({
+      text: `
+        SELECT
+          name,
+          is_removable,
+          deleted_at
+        FROM
+          features
+        WHERE
+          name = ANY($1)
+      ;`,
+      values: [
+        [...new Set([...currentUser.features, ...allowedInputValues.features])],
+      ],
+    });
+    const featureMetadata = new Map(
+      featureResults.rows.map((feature) => [feature.name, feature]),
+    );
     const unknownFeatures = allowedInputValues.features.filter(
-      (feature) => !availableFeatures.includes(feature),
+      (featureName) => {
+        const feature = featureMetadata.get(featureName);
+        return !feature || feature.deleted_at !== null;
+      },
     );
 
     if (unknownFeatures.length > 0) {
       const message = [
-        "As features a seguir não são reconhecidas:",
+        "As features a seguir não são reconhecidas ou estão excluídas:",
         unknownFeatures.join(", "),
       ].join(" ");
 
       throw new ValidationError({
         message: `${message}.`,
-        action: "Selecione apenas features disponíveis no sistema.",
-      });
-    }
-
-    allowedInputValues.features = [...new Set(allowedInputValues.features)];
-
-    const immutableFeatures = featureCatalog.filter(
-      (feature) => feature.editable === false,
-    );
-    const changedImmutableFeatures = immutableFeatures
-      .filter(
-        (feature) =>
-          currentUser.features.includes(feature.name) !==
-          allowedInputValues.features.includes(feature.name),
-      )
-      .map((feature) => feature.name);
-
-    if (changedImmutableFeatures.length > 0) {
-      throw new ValidationError({
-        message:
-          [
-            "As seguintes features não podem ser alteradas:",
-            changedImmutableFeatures.join(", "),
-          ].join(" ") + ".",
-        action: "Mantenha as features protegidas com o valor atual do usuário.",
+        action: "Selecione apenas features ativas no sistema.",
       });
     }
   }
@@ -272,35 +294,108 @@ async function update(
   return updatedUser;
 
   async function runUpdateQuery(userId, userWithNewValues, allowFeatures) {
-    const featuresUpdate = allowFeatures ? "features = $5," : "";
-    const values = [
-      userId,
-      userWithNewValues.username,
-      userWithNewValues.email,
-      userWithNewValues.password,
-    ];
+    const updateUser = async (client) => {
+      if (allowFeatures && Object.hasOwn(allowedInputValues, "features")) {
+        await client.query({
+          text: "SELECT pg_advisory_xact_lock(hashtext($1));",
+          values: ["protected-features-coverage"],
+        });
+        const currentResults = await client.query({
+          text: "SELECT id, features FROM users WHERE id = $1 FOR UPDATE;",
+          values: [userId],
+        });
+        if (currentResults.rowCount === 0)
+          throw new NotFoundError({
+            message: "O usuário não foi encontrado.",
+            action: "Atualize a lista e tente novamente.",
+          });
+        const currentFeatures = currentResults.rows[0].features;
+        if (
+          JSON.stringify([...currentFeatures].sort()) !==
+          JSON.stringify([...currentUser.features].sort())
+        ) {
+          throw new ValidationError({
+            message:
+              "As permissões deste usuário foram alteradas por outra operação.",
+            action: "Atualize os dados do usuário antes de tentar novamente.",
+          });
+        }
+        const removedFeatures = currentFeatures.filter(
+          (name) => !userWithNewValues.features.includes(name),
+        );
+        if (removedFeatures.length) {
+          const metadata = await client.query({
+            text: "SELECT name, is_removable FROM features WHERE name = ANY($1);",
+            values: [removedFeatures],
+          });
+          const locked = metadata.rows
+            .filter((item) => !item.is_removable)
+            .map((item) => item.name);
+          if (locked.length)
+            throw new ValidationError({
+              message: `As seguintes features não podem ser removidas deste usuário: ${locked.join(", ")}.`,
+              action:
+                "Uma feature não removível pode ser atribuída, mas não pode ser retirada depois.",
+            });
+        }
+        const protectedFeatureResults = await client.query({
+          text: `
+            SELECT name
+            FROM features
+            WHERE is_protected = true
+              AND deleted_at IS NULL
+            ORDER BY name
+          ;`,
+        });
+        const protectedFeatures = protectedFeatureResults.rows.map(
+          (item) => item.name,
+        );
 
-    if (allowFeatures) values.push(userWithNewValues.features);
-
-    const results = await database.query({
-      text: `
-        UPDATE
-          users
-        SET
-          username = $2,
-          email = $3,
-          password = $4,
-          ${featuresUpdate}
-          updated_at = timezone('utc', now())
-        WHERE
-          id = $1
-        RETURNING
-          *
-      ;`,
-      values,
+        if (protectedFeatures.length) {
+          const coverage = await client.query({
+            text: `
+              SELECT id FROM users
+              WHERE (id = $1 AND $2::varchar[] @> $3::varchar[])
+                 OR (id <> $1 AND features @> $3::varchar[])
+              LIMIT 1
+            ;`,
+            values: [userId, userWithNewValues.features, protectedFeatures],
+          });
+          if (!coverage.rowCount)
+            throw new ConflictError({
+              message:
+                "Esta alteração não pode ser realizada porque deixaria o sistema sem um administrador com todas as permissões protegidas.",
+              action:
+                "Atribua todas as permissões protegidas a outro usuário antes de tentar novamente.",
+            });
+        }
+      }
+      const featuresUpdate = allowFeatures ? "features = $5," : "";
+      const values = [
+        userId,
+        userWithNewValues.username,
+        userWithNewValues.email,
+        userWithNewValues.password,
+      ];
+      if (allowFeatures) values.push(userWithNewValues.features);
+      const result = await client.query({
+        text: `UPDATE users SET username = $2, email = $3, password = $4, ${featuresUpdate} updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
+        values,
+      });
+      return result.rows[0];
+    };
+    if (allowFeatures && Object.hasOwn(allowedInputValues, "features"))
+      return database.transaction(updateUser);
+    const result = await database.query({
+      text: "UPDATE users SET username = $2, email = $3, password = $4, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;",
+      values: [
+        userId,
+        userWithNewValues.username,
+        userWithNewValues.email,
+        userWithNewValues.password,
+      ],
     });
-
-    return results.rows[0];
+    return result.rows[0];
   }
 }
 

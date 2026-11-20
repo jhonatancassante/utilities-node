@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
+import AdminBackButton from "@/components/AdminBackButton";
 
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
@@ -13,17 +13,12 @@ import {
   validatePassword,
   validateUsername,
 } from "@/lib/shared/user-validation.js";
-import { featureCatalog } from "@/configs/features.js";
 import {
   hasAdminAccess,
   hasAdminSectionAccess,
 } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
-
-const featureGroups = [
-  ...new Set(featureCatalog.map((feature) => feature.group)),
-].sort((a, b) => a.localeCompare(b, "pt-BR"));
 
 function AdminUsersPage() {
   const router = useRouter();
@@ -68,10 +63,11 @@ function AdminUsersPage() {
     const normalizedSearch = searchTerm.trim();
 
     if (normalizedSearch.length < 2) {
-      setFeedback({
+      setFeedback((current) => ({
+        id: (current?.id ?? 0) + 1,
         type: "error",
         message: "Informe ao menos dois caracteres para pesquisar.",
-      });
+      }));
       return;
     }
 
@@ -91,11 +87,13 @@ function AdminUsersPage() {
         });
       }
     } catch (requestError) {
-      setFeedback({
+      setFeedback((current) => ({
+        id: (current?.id ?? 0) + 1,
         type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
         message: requestError.message,
         action: requestError.action,
-      });
+      }));
     } finally {
       setIsSearching(false);
     }
@@ -110,11 +108,13 @@ function AdminUsersPage() {
       );
       setSelectedUser(foundUser);
     } catch (requestError) {
-      setFeedback({
+      setFeedback((current) => ({
+        id: (current?.id ?? 0) + 1,
         type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
         message: requestError.message,
         action: requestError.action,
-      });
+      }));
     }
   }
 
@@ -144,7 +144,8 @@ function AdminUsersPage() {
     } catch (requestError) {
       setFeedback({
         type: "error",
-        message: `Alterações salvas, mas não foi possível atualizar a lista: ${requestError.message}`,
+        name: requestError.statusCode ? requestError.name : undefined,
+        message: requestError.message,
         action: requestError.action,
       });
     } finally {
@@ -178,8 +179,14 @@ function AdminUsersPage() {
             <section
               className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
             >
-              <StatusMessage type="error">
-                Não foi possível verificar suas permissões.
+              <StatusMessage
+                type="critical"
+                name={error.statusCode ? error.name : undefined}
+                action={error.action}
+              >
+                {error.statusCode
+                  ? error.message
+                  : "Não foi possível verificar suas permissões."}
               </StatusMessage>
             </section>
           </main>
@@ -203,10 +210,7 @@ function AdminUsersPage() {
           <section
             className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
           >
-            <Link href="/admin" className={styles.backLink}>
-              <i className="fas fa-arrow-left" aria-hidden="true"></i>
-              Painel administrativo
-            </Link>
+            <AdminBackButton />
 
             <header className={styles.pageHeader}>
               <div className={shared.icon} aria-hidden="true">
@@ -245,19 +249,14 @@ function AdminUsersPage() {
             </form>
 
             {feedback && (
-              <div
-                className={`${styles.feedback} ${
-                  feedback.type === "success" ? styles.successFeedback : ""
-                }`}
-                role="status"
+              <StatusMessage
+                type={feedback.type}
+                name={feedback.name}
+                action={feedback.action}
+                resetKey={feedback}
               >
-                <StatusMessage type={feedback.type}>
-                  {feedback.message}
-                </StatusMessage>
-                {feedback.action && (
-                  <p className={styles.errorAction}>{feedback.action}</p>
-                )}
-              </div>
+                {feedback.message}
+              </StatusMessage>
             )}
 
             {results.length > 0 && (
@@ -325,17 +324,52 @@ function UserEditor({ user, onUpdated, onCancel }) {
   const [featureSearch, setFeatureSearch] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [features, setFeatures] = useState([]);
+  const [isLoadingFeatures, setIsLoadingFeatures] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    requestAPI("/api/v1/admin/users/features")
+      .then((availableFeatures) => {
+        if (isMounted) setFeatures(availableFeatures);
+      })
+      .catch((requestError) => {
+        if (!isMounted) return;
+        setFeedback({
+          type: "error",
+          name: requestError.statusCode ? requestError.name : undefined,
+          message: requestError.message,
+          action: requestError.action,
+        });
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingFeatures(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const featureGroups = useMemo(
+    () =>
+      [...new Set(features.map((feature) => feature.group_name))].sort((a, b) =>
+        a.localeCompare(b, "pt-BR"),
+      ),
+    [features],
+  );
 
   const filteredFeatures = useMemo(() => {
     const term = featureSearch.trim().toLowerCase();
-    return featureCatalog.filter(
+    return features.filter(
       (feature) =>
         !term ||
         feature.name.toLowerCase().includes(term) ||
         feature.label.toLowerCase().includes(term) ||
         feature.description.toLowerCase().includes(term),
     );
-  }, [featureSearch]);
+  }, [featureSearch, features]);
 
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
@@ -418,11 +452,13 @@ function UserEditor({ user, onUpdated, onCancel }) {
       );
       await onUpdated(updatedUser);
     } catch (requestError) {
-      setFeedback({
+      setFeedback((current) => ({
+        id: (current?.id ?? 0) + 1,
         type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
         message: requestError.message,
         action: requestError.action,
-      });
+      }));
     } finally {
       setIsSaving(false);
     }
@@ -522,6 +558,8 @@ function UserEditor({ user, onUpdated, onCancel }) {
             </span>
           </div>
 
+          {isLoadingFeatures && <p>Carregando permissões disponíveis...</p>}
+
           <input
             className={shared.input}
             type="search"
@@ -532,79 +570,106 @@ function UserEditor({ user, onUpdated, onCancel }) {
             disabled={isSaving}
           />
 
-          {featureGroups.map((group) => {
-            const groupFeatures = filteredFeatures.filter(
-              (feature) => feature.group === group,
-            );
-            if (groupFeatures.length === 0) return null;
+          <div className={styles.featureGroups}>
+            {featureGroups.map((group) => {
+              const groupFeatures = filteredFeatures.filter(
+                (feature) => feature.group_name === group,
+              );
+              if (groupFeatures.length === 0) return null;
 
-            return (
-              <div className={styles.featureGroup} key={group}>
-                <h4>{group}</h4>
-                <div className={styles.featureList}>
-                  {groupFeatures.map((feature) => (
-                    <label
-                      className={`${styles.featureOption} ${
-                        feature.editable === false
-                          ? styles.featureOptionLocked
-                          : ""
-                      } ${
-                        feature.privileged || feature.editable === false
-                          ? styles.featureOptionBadged
-                          : ""
-                      }`}
-                      key={feature.name}
-                      title={
-                        feature.editable === false
-                          ? "Permissão protegida — não pode ser alterada"
-                          : undefined
-                      }
-                    >
-                      <span className={styles.featureBadges}>
-                        {feature.privileged && (
-                          <span
-                            className={`${styles.featureBadge} ${styles.privilegedBadge}`}
-                            title="Permissão privilegiada"
-                            role="img"
-                            aria-label="Permissão privilegiada"
-                          >
-                            <i className="fas fa-crown" aria-hidden="true"></i>
-                          </span>
-                        )}
-                        {feature.editable === false && (
-                          <span
-                            className={`${styles.featureBadge} ${styles.protectedBadge}`}
-                            title="Permissão protegida — não pode ser alterada"
-                            role="img"
-                            aria-label="Permissão protegida"
-                          >
-                            <i className="fas fa-ban" aria-hidden="true"></i>
-                          </span>
-                        )}
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={form.features.includes(feature.name)}
-                        onChange={() => toggleFeature(feature.name)}
-                        disabled={isSaving || feature.editable === false}
-                      />
-                      <span
-                        className={`${styles.switch} ${
-                          feature.editable === false ? styles.switchLocked : ""
+              return (
+                <div className={styles.featureGroup} key={group}>
+                  <h4>{group}</h4>
+                  <div className={styles.featureList}>
+                    {groupFeatures.map((feature) => (
+                      <label
+                        className={`${styles.featureOption} ${
+                          feature.is_removable === false
+                            ? styles.featureOptionLocked
+                            : ""
+                        } ${
+                          feature.is_privileged ||
+                          feature.is_protected ||
+                          feature.is_removable === false
+                            ? styles.featureOptionBadged
+                            : ""
                         }`}
-                        aria-hidden="true"
-                      ></span>
-                      <span className={styles.featureText}>
-                        <strong>{feature.label}</strong>
-                        <small>{feature.description}</small>
-                        <code>{feature.name}</code>
-                      </span>
-                    </label>
-                  ))}
+                        key={feature.name}
+                        title={
+                          feature.is_removable === false &&
+                          form.features.includes(feature.name)
+                            ? "Esta feature não pode ser removida deste usuário"
+                            : undefined
+                        }
+                      >
+                        <span className={styles.featureBadges}>
+                          {feature.is_privileged && (
+                            <span
+                              className={`${styles.featureBadge} ${styles.privilegedBadge}`}
+                              title="Permissão privilegiada"
+                              role="img"
+                              aria-label="Permissão privilegiada"
+                            >
+                              <i
+                                className="fas fa-crown"
+                                aria-hidden="true"
+                              ></i>
+                            </span>
+                          )}
+                          {feature.is_protected && (
+                            <span
+                              className={`${styles.featureBadge} ${styles.protectedFeatureBadge}`}
+                              title="Feature protegida: não pode ser alterada ou excluída"
+                              role="img"
+                              aria-label="Feature protegida"
+                            >
+                              <i
+                                className="fas fa-shield-alt"
+                                aria-hidden="true"
+                              ></i>
+                            </span>
+                          )}
+                          {feature.is_removable === false && (
+                            <span
+                              className={`${styles.featureBadge} ${styles.protectedBadge}`}
+                              title="Não pode ser removida deste usuário"
+                              role="img"
+                              aria-label="Não pode ser removida deste usuário"
+                            >
+                              <i className="fas fa-ban" aria-hidden="true"></i>
+                            </span>
+                          )}
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={form.features.includes(feature.name)}
+                          onChange={() => toggleFeature(feature.name)}
+                          disabled={
+                            isSaving ||
+                            (feature.is_removable === false &&
+                              form.features.includes(feature.name))
+                          }
+                        />
+                        <span
+                          className={`${styles.switch} ${
+                            feature.is_removable === false
+                              ? styles.switchLocked
+                              : ""
+                          }`}
+                          aria-hidden="true"
+                        ></span>
+                        <span className={styles.featureText}>
+                          <strong>{feature.label}</strong>
+                          <small>{feature.description}</small>
+                          <code>{feature.name}</code>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
 
           {filteredFeatures.length === 0 && (
             <p className={styles.emptyFeatures}>
@@ -613,16 +678,26 @@ function UserEditor({ user, onUpdated, onCancel }) {
           )}
         </div>
 
-        {feedback && (
-          <div className={styles.feedback} role="status">
-            <StatusMessage type={feedback.type}>
+        {feedback &&
+          (feedback.type === "critical" ? (
+            <StatusMessage
+              type="critical"
+              name={feedback.name}
+              action={feedback.action}
+            >
               {feedback.message}
             </StatusMessage>
-            {feedback.action && (
-              <p className={styles.errorAction}>{feedback.action}</p>
-            )}
-          </div>
-        )}
+          ) : (
+            <div className={styles.feedback} role="status">
+              <StatusMessage
+                type="inline-error"
+                name={feedback.name}
+                action={feedback.action}
+              >
+                {feedback.message}
+              </StatusMessage>
+            </div>
+          ))}
 
         <div className={styles.formActions}>
           <Button type="submit" icon="fa-save" disabled={isSaving}>
