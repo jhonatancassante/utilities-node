@@ -242,16 +242,14 @@
 }
 
 .featureList {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
   gap: 8px;
 }
 
 .featureOption {
   position: relative;
-  flex: 0 1 calc(33.333% - 8px);
-  max-width: calc(33.333% - 6px);
   min-width: 0;
   padding: 12px;
   display: flex;
@@ -419,9 +417,8 @@
     width: 100%;
   }
 
-  .featureOption {
-    flex-basis: 100%;
-    max-width: 100%;
+  .featureList {
+    grid-template-columns: 1fr;
   }
 
   .userId {

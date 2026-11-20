@@ -94,9 +94,9 @@
 }
 
 .featureList {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
   gap: 8px;
   padding: 0;
   margin: 0;
@@ -104,8 +104,6 @@
 }
 
 .featureItem {
-  flex: 0 1 calc(33.333% - 8px);
-  max-width: calc(33.333% - 6px);
   min-width: 0;
   display: flex;
   align-items: center;
@@ -336,9 +334,11 @@
     width: 100%;
   }
 
+  .featureList {
+    grid-template-columns: 1fr;
+  }
+
   .featureItem {
-    flex-basis: 100%;
-    max-width: 100%;
     align-items: flex-start;
     flex-direction: column;
   }

@@ -1,6 +1,6 @@
 .button {
   position: sticky;
-  top: 16px;
+  top: calc(clamp(64px, 9vw, 76px) + 18px);
   z-index: 100;
   width: 46px;
   height: 46px;
