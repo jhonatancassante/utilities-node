@@ -370,9 +370,6 @@ function ProfileForm({ user, onUpdated }) {
             <StatusMessage type="inline-error" action={feedback.action}>
               {feedback.message}
             </StatusMessage>
-            {feedback.action && (
-              <p className={styles.errorAction}>{feedback.action}</p>
-            )}
           </div>
         )}
 
