@@ -25,19 +25,19 @@ const DISPLAY_DURATION = {
 };
 
 function StatusMessage({ type = "info", children, action, resetKey }) {
-  const [visible, setVisible] = useState(Boolean(children));
+  const messageKey = resetKey ?? children;
+  const [dismissedKey, setDismissedKey] = useState(null);
+  const visible = Boolean(children) && dismissedKey !== messageKey;
 
   useEffect(() => {
-    setVisible(Boolean(children));
-
     const duration = DISPLAY_DURATION[type];
-    if (!children || !duration) return undefined;
+    if (!visible || !duration) return undefined;
 
-    const timeout = setTimeout(() => setVisible(false), duration);
+    const timeout = setTimeout(() => setDismissedKey(messageKey), duration);
     return () => clearTimeout(timeout);
-  }, [children, type, resetKey]);
+  }, [children, type, resetKey, visible, messageKey]);
 
-  if (!visible || !children) return null;
+  if (!visible) return null;
 
   if (type === "inline-error") {
     return (
@@ -57,7 +57,7 @@ function StatusMessage({ type = "info", children, action, resetKey }) {
             <span>Não foi possível concluir</span>
           </span>
         }
-        onClose={() => setVisible(false)}
+        onClose={() => setDismissedKey(messageKey)}
         closeOnBackdrop={false}
         showCloseButton={false}
       >
@@ -66,7 +66,7 @@ function StatusMessage({ type = "info", children, action, resetKey }) {
           {action && <small>{action}</small>}
         </div>
         <div className={styles.errorActions}>
-          <Button type="button" onClick={() => setVisible(false)}>
+          <Button type="button" onClick={() => setDismissedKey(messageKey)}>
             OK
           </Button>
         </div>
@@ -102,7 +102,7 @@ function StatusMessage({ type = "info", children, action, resetKey }) {
           type="button"
           className={styles.close}
           aria-label="Dispensar notificação"
-          onClick={() => setVisible(false)}
+          onClick={() => setDismissedKey(messageKey)}
         >
           <i className="fas fa-times" aria-hidden="true"></i>
         </button>
