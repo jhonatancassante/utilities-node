@@ -734,6 +734,7 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               }
               disabled={isSaving}
             />
+            <span className={styles.switch} aria-hidden="true"></span>
             <span>Permite retirar de usuários</span>
           </label>
           <label>
@@ -745,6 +746,7 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               }
               disabled={isSaving}
             />
+            <span className={styles.switch} aria-hidden="true"></span>
             <span>Feature privilegiada</span>
           </label>
           <label>
@@ -756,6 +758,7 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               }
               disabled={isSaving}
             />
+            <span className={styles.switch} aria-hidden="true"></span>
             <span>Feature protegida</span>
           </label>
         </div>
