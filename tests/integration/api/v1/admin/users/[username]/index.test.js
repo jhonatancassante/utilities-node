@@ -231,6 +231,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
         label: "Consultar relatórios dinâmicos",
         group_name: "Relatórios",
         description: "Permite consultar relatórios criados dinamicamente.",
+        is_privileged: true,
       });
 
       const response = await fetch(adminUserUrl(targetUser.username), {
@@ -245,12 +246,16 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       });
 
       expect(response.status).toBe(200);
-      expect((await response.json()).features).toEqual([
+      const responseBody = await response.json();
+      expect(responseBody.features).toEqual([
         "read:activation_token",
         "read:dynamicreports",
       ]);
+      expect(responseBody.privileged_features).toContain(dynamicFeature.name);
+
       const updatedUser = await user.findOneById(targetUser.id);
       expect(updatedUser.features).toContain(dynamicFeature.name);
+      expect(updatedUser.privileged_features).toContain(dynamicFeature.name);
     });
 
     test("Rejeitando a atribuição de uma feature excluída", async () => {
