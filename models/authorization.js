@@ -1,5 +1,4 @@
 import { InternalServerError } from "@/infra/errors.js";
-import { availableFeatures, featureCatalog } from "@/configs/features.js";
 import { adminSections } from "@/configs/admin.js";
 
 function can(user, feature, resource) {
@@ -24,13 +23,7 @@ function can(user, feature, resource) {
 }
 
 export function hasAdminAccess(user) {
-  return Boolean(
-    user?.features?.some((name) =>
-      featureCatalog.some(
-        (feature) => feature.name === name && feature.is_privileged,
-      ),
-    ),
-  );
+  return Boolean(user?.privileged_features?.length);
 }
 
 export function hasAdminSectionAccess(user, sectionId) {
@@ -132,7 +125,7 @@ function validateUser(user) {
 }
 
 function validateFeature(feature) {
-  if (!feature || !availableFeatures.includes(feature)) {
+  if (typeof feature !== "string" || !feature.trim()) {
     throw new InternalServerError({
       cause:
         "É necessário fornecer `feature` conhecida no model `authorization`.",
@@ -151,7 +144,6 @@ function validateResource(resource) {
 const authorization = {
   can,
   filterOutput,
-  availableFeatures,
   hasAdminAccess,
   hasAdminSectionAccess,
   getAvailableAdminSections,
