@@ -13,18 +13,26 @@ const existingUser = {
 };
 
 function mockQueries(handlers) {
-  return jest.spyOn(database, "query").mockImplementation(async (query) => {
-    const text = typeof query === "string" ? query : query.text;
+  const queryMock = jest
+    .spyOn(database, "query")
+    .mockImplementation(async (query) => {
+      const text = typeof query === "string" ? query : query.text;
 
-    for (const [pattern, result] of handlers) {
-      if (text.includes(pattern)) {
-        const rows = typeof result === "function" ? result(query) : result;
-        return { rows, rowCount: rows.length };
+      for (const [pattern, result] of handlers) {
+        if (text.includes(pattern)) {
+          const rows = typeof result === "function" ? result(query) : result;
+          return { rows, rowCount: rows.length };
+        }
       }
-    }
 
-    throw new Error(`Consulta inesperada: ${text}`);
-  });
+      throw new Error(`Consulta inesperada: ${text}`);
+    });
+
+  jest
+    .spyOn(database, "transaction")
+    .mockImplementation(async (callback) => callback({ query: queryMock }));
+
+  return queryMock;
 }
 
 const existingFeatureMetadata = [
