@@ -1,7 +1,6 @@
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
 import feature from "@/models/feature.js";
-import { protectedFeatures } from "@/configs/features.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -14,11 +13,14 @@ function adminUserUrl(username) {
 }
 
 async function createPrivilegedSession() {
+  const protectedFeatures = (await feature.findAll())
+    .filter((item) => item.is_protected)
+    .map((item) => item.name);
   const privilegedUser = await orchestrator.createUser();
   await orchestrator.activateUser(privilegedUser);
   await orchestrator.addFeaturesToUser(privilegedUser, [...protectedFeatures, "read:session"]);
   const sessionObject = await orchestrator.createSession(privilegedUser);
-  return { privilegedUser, sessionObject };
+  return { privilegedUser, sessionObject, protectedFeatures };
 }
 
 describe("GET /api/v1/admin/users/[username]", () => {
@@ -132,7 +134,8 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
     });
 
     test("Alterando as próprias permissões", async () => {
-      const { privilegedUser, sessionObject } = await createPrivilegedSession();
+      const { privilegedUser, sessionObject, protectedFeatures } =
+        await createPrivilegedSession();
 
       const response = await fetch(adminUserUrl(privilegedUser.username), {
         method: "PATCH",
@@ -284,10 +287,17 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       await orchestrator.clearDatabase();
       await orchestrator.runPendingMigrations();
 
+      const dynamicProtectedFeature = await feature.create({
+        name: "read:protectedreports",
+        label: "Consultar relatórios protegidos",
+        group_name: "Relatórios",
+        description: "Feature protegida criada dinamicamente para o teste.",
+        is_protected: true,
+      });
       const { privilegedUser, sessionObject } = await createPrivilegedSession();
       const currentPrivilegedUser = await user.findOneById(privilegedUser.id);
       const remainingFeatures = currentPrivilegedUser.features.filter(
-        (name) => name !== protectedFeatures[0],
+        (name) => name !== dynamicProtectedFeature.name,
       );
 
       const response = await fetch(adminUserUrl(privilegedUser.username), {
