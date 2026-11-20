@@ -68,10 +68,11 @@ function AdminUsersPage() {
     const normalizedSearch = searchTerm.trim();
 
     if (normalizedSearch.length < 2) {
-      setFeedback({
+      setFeedback((current) => ({
+        id: (current?.id ?? 0) + 1,
         type: "error",
         message: "Informe ao menos dois caracteres para pesquisar.",
-      });
+      }));
       return;
     }
 
@@ -91,11 +92,12 @@ function AdminUsersPage() {
         });
       }
     } catch (requestError) {
-      setFeedback({
+      setFeedback((current) => ({
+        id: (current?.id ?? 0) + 1,
         type: "error",
         message: requestError.message,
         action: requestError.action,
-      });
+      }));
     } finally {
       setIsSearching(false);
     }
@@ -110,11 +112,12 @@ function AdminUsersPage() {
       );
       setSelectedUser(foundUser);
     } catch (requestError) {
-      setFeedback({
+      setFeedback((current) => ({
+        id: (current?.id ?? 0) + 1,
         type: "error",
         message: requestError.message,
         action: requestError.action,
-      });
+      }));
     }
   }
 
@@ -178,7 +181,7 @@ function AdminUsersPage() {
             <section
               className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
             >
-              <StatusMessage type="error">
+              <StatusMessage type="critical">
                 Não foi possível verificar suas permissões.
               </StatusMessage>
             </section>
@@ -245,19 +248,9 @@ function AdminUsersPage() {
             </form>
 
             {feedback && (
-              <div
-                className={`${styles.feedback} ${
-                  feedback.type === "success" ? styles.successFeedback : ""
-                }`}
-                role="status"
-              >
-                <StatusMessage type={feedback.type}>
-                  {feedback.message}
-                </StatusMessage>
-                {feedback.action && (
-                  <p className={styles.errorAction}>{feedback.action}</p>
-                )}
-              </div>
+              <StatusMessage type={feedback.type} action={feedback.action} resetKey={feedback}>
+                {feedback.message}
+              </StatusMessage>
             )}
 
             {results.length > 0 && (
@@ -418,11 +411,12 @@ function UserEditor({ user, onUpdated, onCancel }) {
       );
       await onUpdated(updatedUser);
     } catch (requestError) {
-      setFeedback({
+      setFeedback((current) => ({
+        id: (current?.id ?? 0) + 1,
         type: "error",
         message: requestError.message,
         action: requestError.action,
-      });
+      }));
     } finally {
       setIsSaving(false);
     }
@@ -620,12 +614,9 @@ function UserEditor({ user, onUpdated, onCancel }) {
 
         {feedback && (
           <div className={styles.feedback} role="status">
-            <StatusMessage type={feedback.type}>
+            <StatusMessage type="inline-error" action={feedback.action}>
               {feedback.message}
             </StatusMessage>
-            {feedback.action && (
-              <p className={styles.errorAction}>{feedback.action}</p>
-            )}
           </div>
         )}
 

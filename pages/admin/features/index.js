@@ -56,11 +56,12 @@ function AdminFeaturesPage() {
       return true;
     } catch (requestError) {
       if (showFeedback) {
-        setFeedback({
+        setFeedback((current) => ({
+          id: (current?.id ?? 0) + 1,
           type: "error",
           message: requestError.message,
           action: requestError.action,
-        });
+        }));
       }
       return false;
     } finally {
@@ -83,11 +84,12 @@ function AdminFeaturesPage() {
         setFeatures(loadedFeatures);
       } catch (requestError) {
         if (!active) return;
-        setFeedback({
+        setFeedback((current) => ({
+          id: (current?.id ?? 0) + 1,
           type: "error",
           message: requestError.message,
           action: requestError.action,
-        });
+        }));
       } finally {
         if (active) {
           setIsLoadingFeatures(false);
@@ -172,11 +174,7 @@ function AdminFeaturesPage() {
           : "A alteração foi salva, mas não foi possível atualizar a listagem.",
       });
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        message: requestError.message,
-        action: requestError.action,
-      });
+      return requestError;
     } finally {
       setIsSaving(false);
     }
@@ -241,7 +239,7 @@ function AdminFeaturesPage() {
             <section
               className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
             >
-              <StatusMessage type="error">
+              <StatusMessage type="critical">
                 Não foi possível verificar suas permissões.
               </StatusMessage>
             </section>
@@ -308,9 +306,9 @@ function AdminFeaturesPage() {
             </div>
 
             {feedback && (
-              <div className={styles.feedback} role="status">
-                <StatusMessage type={feedback.type} action={feedback.action}>{feedback.message}</StatusMessage>
-              </div>
+              <StatusMessage type={feedback.type} action={feedback.action} resetKey={feedback}>
+                {feedback.message}
+              </StatusMessage>
             )}
 
             {(creating || editingFeature) && (
@@ -510,14 +508,67 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
     is_privileged: feature?.is_privileged ?? false,
     is_protected: feature?.is_protected ?? false,
   });
+  const [formError, setFormError] = useState(null);
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
+    setFormError(null);
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    onSubmit(form);
+
+    const requiredFields = [
+      ["name", "nome identificador"],
+      ["label", "título"],
+      ["group_name", "grupo"],
+      ["description", "descrição"],
+    ];
+    const missingField = requiredFields.find(([field]) => !form[field].trim());
+
+    if (missingField) {
+      setFormError({
+        message: `O campo ${missingField[1]} é obrigatório.`,
+        action: "Preencha os campos obrigatórios para continuar.",
+      });
+      return;
+    }
+
+    if (
+      form.name.trim().length > 50 ||
+      form.label.trim().length > 50 ||
+      form.group_name.trim().length > 50
+    ) {
+      setFormError({
+        message: "Nome, título e grupo devem ter no máximo 50 caracteres.",
+        action: "Revise os campos e tente novamente.",
+      });
+      return;
+    }
+
+    if (!/^[a-z][a-z0-9]*(?::[a-z][a-z0-9]*)*$/.test(form.name.trim())) {
+      setFormError({
+        message: "O nome da feature possui um formato inválido.",
+        action: "Utilize letras minúsculas, números e dois-pontos para separar os níveis (ex.: read:user).",
+      });
+      return;
+    }
+
+    setFormError(null);
+    const requestError = await onSubmit({
+      ...form,
+      name: form.name.trim(),
+      label: form.label.trim(),
+      group_name: form.group_name.trim(),
+      description: form.description.trim(),
+    });
+
+    if (requestError) {
+      setFormError({
+        message: requestError.message,
+        action: requestError.action,
+      });
+    }
   }
 
   return (
@@ -527,7 +578,7 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
         {feature && <span className={styles.featureId}>ID: {feature.id}</span>}
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <div className={styles.formGrid}>
           <div className={styles.field}>
             <label className={shared.label} htmlFor="feature-name">
@@ -540,7 +591,6 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               onChange={(event) => updateField("name", event.target.value)}
               placeholder="read:report"
               maxLength={50}
-              required
               disabled={isSaving}
             />
             <small className={styles.fieldHint}>
@@ -558,7 +608,6 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
               value={form.label}
               onChange={(event) => updateField("label", event.target.value)}
               maxLength={50}
-              required
               disabled={isSaving}
             />
           </div>
@@ -575,7 +624,6 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
                 updateField("group_name", event.target.value)
               }
               maxLength={50}
-              required
               disabled={isSaving}
             />
           </div>
@@ -592,7 +640,6 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
                 updateField("description", event.target.value)
               }
               rows={3}
-              required
               disabled={isSaving}
             />
           </div>
@@ -633,6 +680,14 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
             <span>Feature protegida</span>
           </label>
         </div>
+
+        {formError && (
+          <div className={styles.feedback} role="alert">
+            <StatusMessage type="inline-error" action={formError.action}>
+              {formError.message}
+            </StatusMessage>
+          </div>
+        )}
 
         <div className={styles.formActions}>
           <Button type="submit" icon="fa-save" disabled={isSaving}>

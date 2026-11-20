@@ -7,21 +7,24 @@ const TYPE_CLASS = {
   info: styles.info,
   success: styles.success,
   warning: styles.warning,
+  error: styles.error,
 };
 
 const TYPE_ICON = {
   info: "fa-info-circle",
   success: "fa-check-circle",
   warning: "fa-exclamation-triangle",
+  error: "fa-exclamation-circle",
 };
 
 const DISPLAY_DURATION = {
   info: 4000,
   success: 4000,
   warning: 6000,
+  error: 8000,
 };
 
-function StatusMessage({ type = "info", children, action }) {
+function StatusMessage({ type = "info", children, action, resetKey }) {
   const [visible, setVisible] = useState(Boolean(children));
 
   useEffect(() => {
@@ -32,11 +35,20 @@ function StatusMessage({ type = "info", children, action }) {
 
     const timeout = setTimeout(() => setVisible(false), duration);
     return () => clearTimeout(timeout);
-  }, [children, type]);
+  }, [children, type, resetKey]);
 
   if (!visible || !children) return null;
 
-  if (type === "error") {
+  if (type === "inline-error") {
+    return (
+      <div className={styles.inlineError} role="alert">
+        <p>{children}</p>
+        {action && <small>{action}</small>}
+      </div>
+    );
+  }
+
+  if (type === "critical") {
     return (
       <Modal
         title={
@@ -66,7 +78,7 @@ function StatusMessage({ type = "info", children, action }) {
     <div className={styles.viewport} aria-live="polite">
       <div
         className={styles.toast + " " + (TYPE_CLASS[type] || styles.info)}
-        role="status"
+        role={type === "error" ? "alert" : "status"}
       >
         <i
           className={"fas " + (TYPE_ICON[type] || TYPE_ICON.info) + " " + styles.icon}
@@ -78,7 +90,9 @@ function StatusMessage({ type = "info", children, action }) {
               ? "Sucesso"
               : type === "warning"
                 ? "Atenção"
-                : "Informação"}
+                : type === "error"
+                  ? "Erro"
+                  : "Informação"}
           </strong>
           <p>{children}</p>
           {action && <small>{action}</small>}

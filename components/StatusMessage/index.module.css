@@ -27,6 +27,7 @@
 .info { border-left-color: var(--accent); }
 .success { border-left-color: var(--success); }
 .warning { border-left-color: #d99a19; }
+.error { border-left-color: var(--danger); }
 
 .icon {
   margin-top: 2px;
@@ -35,6 +36,7 @@
 }
 .success .icon { color: var(--success-fg); }
 .warning .icon { color: var(--warning-fg); }
+.error .icon { color: var(--danger-fg); }
 
 .content { min-width: 0; flex: 1; }
 .content strong {
@@ -80,6 +82,30 @@
 .warning .progress {
   background: #d99a19;
   animation-duration: 6s;
+}
+.error .progress {
+  background: var(--danger);
+  animation-duration: 8s;
+}
+
+.inlineError {
+  color: var(--danger-fg);
+  text-align: left;
+}
+
+.inlineError p {
+  margin: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.inlineError small {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .errorTitle {

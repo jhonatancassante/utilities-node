@@ -51,7 +51,7 @@ function AdminPage() {
             <section
               className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
             >
-              <StatusMessage type="error">
+              <StatusMessage type="critical">
                 Não foi possível verificar suas permissões.
               </StatusMessage>
             </section>

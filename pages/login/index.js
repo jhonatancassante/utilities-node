@@ -136,12 +136,9 @@ function LoginPage() {
 
               {feedback && (
                 <div className={styles.feedback} role="alert">
-                  <StatusMessage type={feedback.type}>
+                  <StatusMessage type="inline-error" action={feedback.action}>
                     {feedback.message}
                   </StatusMessage>
-                  {feedback.action && (
-                    <p className={styles.errorAction}>{feedback.action}</p>
-                  )}
                 </div>
               )}
 

@@ -40,7 +40,7 @@ function ProfilePage() {
             </section>
           ) : error ? (
             <section className={`${shared.card} ${styles.card}`}>
-              <StatusMessage type="error">
+              <StatusMessage type="critical">
                 Não foi possível carregar os dados da sua conta.
               </StatusMessage>
             </section>
@@ -367,7 +367,7 @@ function ProfileForm({ user, onUpdated }) {
 
         {feedback && (
           <div className={styles.feedback} role="alert">
-            <StatusMessage type={feedback.type}>
+            <StatusMessage type="inline-error" action={feedback.action}>
               {feedback.message}
             </StatusMessage>
             {feedback.action && (
