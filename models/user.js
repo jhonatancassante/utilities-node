@@ -1,6 +1,7 @@
 import database from "@/infra/database.js";
 import password from "@/models/password.js";
 import { ValidationError, NotFoundError } from "@/infra/errors.js";
+import { protectedFeatures } from "@/configs/features.js";
 import {
   validateUsername,
   validateEmail,
