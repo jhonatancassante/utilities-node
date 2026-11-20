@@ -318,6 +318,11 @@
   color: #dc3545;
 }
 
+.protectedFeatureBadge {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 .featureOption > input {
   position: absolute;
   width: 1px;

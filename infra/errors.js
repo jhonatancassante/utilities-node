@@ -1,3 +1,24 @@
+export class ConflictError extends Error {
+  constructor({ cause, message, action }) {
+    super(
+      message || "A operação não pode ser concluída porque há um conflito com o estado atual do sistema.",
+      { cause },
+    );
+    this.name = "ConflictError";
+    this.action = action || "Atualize os dados e tente novamente.";
+    this.statusCode = 409;
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    };
+  }
+}
+
 export class ConfigurationError extends Error {
   constructor({ cause, message, action }) {
     super(message || "Configuração da aplicação ausente ou inválida.", {

@@ -1,6 +1,6 @@
 import database from "@/infra/database.js";
 import password from "@/models/password.js";
-import { ValidationError, NotFoundError } from "@/infra/errors.js";
+import { ConflictError, ValidationError, NotFoundError } from "@/infra/errors.js";
 import { protectedFeatures } from "@/configs/features.js";
 import {
   validateUsername,
@@ -323,15 +323,15 @@ async function update(
           const coverage = await client.query({
             text: `
               SELECT id FROM users
-              WHERE (id = $1 AND $2::text[] @> $3::text[])
-                 OR (id <> $1 AND features @> $3::text[])
+              WHERE (id = $1 AND $2::varchar[] @> $3::varchar[])
+                 OR (id <> $1 AND features @> $3::varchar[])
               LIMIT 1
             ;`,
             values: [userId, userWithNewValues.features, protectedFeatures],
           });
-          if (!coverage.rowCount) throw new ValidationError({
-            message: "Esta alteração deixaria o sistema sem um usuário com todas as permissões administrativas protegidas.",
-            action: "Mantenha pelo menos um usuário com todas as permissões protegidas ou atribua essas permissões a outro usuário antes de continuar.",
+          if (!coverage.rowCount) throw new ConflictError({
+            message: "Esta alteração não pode ser realizada porque deixaria o sistema sem um administrador com todas as permissões protegidas.",
+            action: "Atribua todas as permissões protegidas a outro usuário antes de tentar novamente.",
           });
         }
       }

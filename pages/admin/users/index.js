@@ -417,7 +417,7 @@ function UserEditor({ user, onUpdated, onCancel }) {
     } catch (requestError) {
       setFeedback((current) => ({
         id: (current?.id ?? 0) + 1,
-        type: "error",
+        type: requestError.name === "ConflictError" ? "critical" : "error",
         message: requestError.message,
         action: requestError.action,
       }));
@@ -572,7 +572,7 @@ function UserEditor({ user, onUpdated, onCancel }) {
                         )}
                         {feature.is_protected && (
                           <span
-                            className={`${styles.featureBadge} ${styles.protectedBadge}`}
+                            className={`${styles.featureBadge} ${styles.protectedFeatureBadge}`}
                             title="Feature protegida: não pode ser alterada ou excluída"
                             role="img"
                             aria-label="Feature protegida"
@@ -626,13 +626,18 @@ function UserEditor({ user, onUpdated, onCancel }) {
           )}
         </div>
 
-        {feedback && (
-          <div className={styles.feedback} role="status">
-            <StatusMessage type="inline-error" action={feedback.action}>
+        {feedback &&
+          (feedback.type === "critical" ? (
+            <StatusMessage type="critical" action={feedback.action}>
               {feedback.message}
             </StatusMessage>
-          </div>
-        )}
+          ) : (
+            <div className={styles.feedback} role="status">
+              <StatusMessage type="inline-error" action={feedback.action}>
+                {feedback.message}
+              </StatusMessage>
+            </div>
+          ))}
 
         <div className={styles.formActions}>
           <Button type="submit" icon="fa-save" disabled={isSaving}>
