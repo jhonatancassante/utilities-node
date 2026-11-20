@@ -23,20 +23,6 @@
   text-align: center;
 }
 
-.backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 28px;
-  color: var(--accent);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.backLink:hover {
-  text-decoration: underline;
-}
-
 .searchForm {
   padding: 20px;
   border: 1px solid var(--border-color);
@@ -256,13 +242,16 @@
 }
 
 .featureList {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
 }
 
 .featureOption {
   position: relative;
+  flex: 1 1 calc(33.333% - 8px);
+  max-width: calc(33.333% - 6px);
   min-width: 0;
   padding: 12px;
   display: flex;
@@ -430,8 +419,9 @@
     width: 100%;
   }
 
-  .featureList {
-    grid-template-columns: 1fr;
+  .featureOption {
+    flex-basis: 100%;
+    max-width: 100%;
   }
 
   .userId {

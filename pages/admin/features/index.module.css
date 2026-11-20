@@ -23,20 +23,6 @@
   text-align: center;
 }
 
-.backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 28px;
-  color: var(--accent);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.backLink:hover {
-  text-decoration: underline;
-}
-
 .toolbar {
   display: flex;
   align-items: flex-end;
@@ -108,7 +94,9 @@
 }
 
 .featureList {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
   padding: 0;
   margin: 0;
@@ -116,6 +104,8 @@
 }
 
 .featureItem {
+  flex: 1 1 calc(33.333% - 8px);
+  max-width: calc(33.333% - 6px);
   min-width: 0;
   display: flex;
   align-items: center;
@@ -347,6 +337,8 @@
   }
 
   .featureItem {
+    flex-basis: 100%;
+    max-width: 100%;
     align-items: flex-start;
     flex-direction: column;
   }
