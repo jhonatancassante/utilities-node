@@ -82,6 +82,7 @@ describe("GET /api/v1/admin/users", () => {
       await orchestrator.activateUser(privilegedUser);
       await orchestrator.addFeaturesToUser(privilegedUser, [
         "update:user:others",
+        "read:user:others",
       ]);
       const sessionObject = await orchestrator.createSession(privilegedUser);
       const targetUser = await orchestrator.createUser({
@@ -111,6 +112,7 @@ describe("GET /api/v1/admin/users", () => {
       await orchestrator.activateUser(privilegedUser);
       await orchestrator.addFeaturesToUser(privilegedUser, [
         "update:user:others",
+        "read:user:others",
       ]);
       const sessionObject = await orchestrator.createSession(privilegedUser);
 
@@ -132,6 +134,7 @@ describe("GET /api/v1/admin/users", () => {
       await orchestrator.activateUser(privilegedUser);
       await orchestrator.addFeaturesToUser(privilegedUser, [
         "update:user:others",
+        "read:user:others",
       ]);
       const sessionObject = await orchestrator.createSession(privilegedUser);
 
