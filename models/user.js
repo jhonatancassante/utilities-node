@@ -5,7 +5,6 @@ import {
   ValidationError,
   NotFoundError,
 } from "@/infra/errors.js";
-import { protectedFeatures } from "@/configs/features.js";
 import {
   validateUsername,
   validateEmail,
@@ -62,11 +61,21 @@ async function findOneById(id) {
     const results = await database.query({
       text: `
         SELECT
-          *
+          users.*,
+          COALESCE(
+            (
+              SELECT array_agg(features.name)
+              FROM features
+              WHERE features.is_privileged = true
+                AND features.deleted_at IS NULL
+                AND features.name = ANY(users.features)
+            ),
+            ARRAY[]::varchar[]
+          ) AS privileged_features
         FROM
           users
         WHERE
-          id = $1
+          users.id = $1
         LIMIT 1
         ;`,
       values: [id],
@@ -321,6 +330,19 @@ async function update(
                 "Uma feature não removível pode ser atribuída, mas não pode ser retirada depois.",
             });
         }
+        const protectedFeatureResults = await client.query({
+          text: `
+            SELECT name
+            FROM features
+            WHERE is_protected = true
+              AND deleted_at IS NULL
+            ORDER BY name
+          ;`,
+        });
+        const protectedFeatures = protectedFeatureResults.rows.map(
+          (item) => item.name,
+        );
+
         if (protectedFeatures.length) {
           const coverage = await client.query({
             text: `
