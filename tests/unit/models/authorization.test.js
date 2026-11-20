@@ -14,13 +14,18 @@ describe("models/authorization.js", () => {
       expect(() => authorization.can(createdUser)).toThrow(InternalServerError);
     });
 
-    test("Com uma `feature` desconhecida", () => {
+    test("Com uma feature criada dinamicamente e atribuída ao usuário", () => {
       const createdUser = {
-        features: [],
+        features: ["read:dynamicreports"],
       };
-      expect(() => {
-        authorization.can(createdUser, "unknown:feature");
-      }).toThrow(InternalServerError);
+
+      expect(authorization.can(createdUser, "read:dynamicreports")).toBe(true);
+    });
+
+    test("Sem informar uma feature válida", () => {
+      const createdUser = { features: [] };
+
+      expect(() => authorization.can(createdUser)).toThrow(InternalServerError);
     });
 
     test("Com um usuário válido e uma `feature` conhecida", () => {
@@ -45,13 +50,12 @@ describe("models/authorization.js", () => {
       );
     });
 
-    test("Com uma `feature` desconhecida", () => {
-      const createdUser = {
-        features: [],
-      };
-      expect(() => {
-        authorization.filterOutput(createdUser, "unknown:feature");
-      }).toThrow(InternalServerError);
+    test("Sem informar uma feature válida", () => {
+      const createdUser = { features: [] };
+
+      expect(() => authorization.filterOutput(createdUser)).toThrow(
+        InternalServerError,
+      );
     });
 
     test("Com usuário e `feature`, mas sem `resource`", () => {
@@ -121,23 +125,38 @@ describe("models/authorization.js", () => {
   });
   describe(".hasAdminAccess()", () => {
     test("Usuário sem features privilegiadas", () => {
-      expect(authorization.hasAdminAccess({ features: ["read:user"] })).toBe(
-        false,
-      );
+      expect(
+        authorization.hasAdminAccess({
+          features: ["read:user"],
+          privileged_features: [],
+        }),
+      ).toBe(false);
     });
 
     test("Usuário com qualquer feature privilegiada", () => {
       expect(
-        authorization.hasAdminAccess({ features: ["read:status:all"] }),
+        authorization.hasAdminAccess({
+          features: ["read:status:all"],
+          privileged_features: ["read:status:all"],
+        }),
       ).toBe(true);
       expect(
-        authorization.hasAdminAccess({ features: ["update:user:others"] }),
+        authorization.hasAdminAccess({
+          features: ["update:user:others"],
+          privileged_features: ["update:user:others"],
+        }),
       ).toBe(true);
     });
 
     test("Usuário ausente ou sem features", () => {
       expect(authorization.hasAdminAccess()).toBe(false);
       expect(authorization.hasAdminAccess({})).toBe(false);
+      expect(
+        authorization.hasAdminAccess({
+          features: ["read:dynamicreports"],
+          privileged_features: ["read:dynamicreports"],
+        }),
+      ).toBe(true);
     });
   });
 
