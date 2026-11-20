@@ -28,6 +28,7 @@ function filterUserOutput(userObject) {
     username: userObject.username,
     email: userObject.email,
     features: userObject.features,
+    privileged_features: userObject.privileged_features ?? [],
     created_at: userObject.created_at,
     updated_at: userObject.updated_at,
   };
