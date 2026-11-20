@@ -22,7 +22,7 @@ import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 const featureGroups = [
-  ...new Set(featureCatalog.map((feature) => feature.group)),
+  ...new Set(featureCatalog.map((feature) => feature.group_name)),
 ].sort((a, b) => a.localeCompare(b, "pt-BR"));
 
 function AdminUsersPage() {
@@ -532,7 +532,7 @@ function UserEditor({ user, onUpdated, onCancel }) {
 
           {featureGroups.map((group) => {
             const groupFeatures = filteredFeatures.filter(
-              (feature) => feature.group === group,
+              (feature) => feature.group_name === group,
             );
             if (groupFeatures.length === 0) return null;
 
@@ -543,24 +543,24 @@ function UserEditor({ user, onUpdated, onCancel }) {
                   {groupFeatures.map((feature) => (
                     <label
                       className={`${styles.featureOption} ${
-                        feature.editable === false
+                        feature.is_removable === false
                           ? styles.featureOptionLocked
                           : ""
                       } ${
-                        feature.privileged || feature.editable === false
+                        feature.is_privileged || feature.is_removable === false
                           ? styles.featureOptionBadged
                           : ""
                       }`}
                       key={feature.name}
                       title={
-                        feature.editable === false &&
+                        feature.is_removable === false &&
                         form.features.includes(feature.name)
                           ? "Esta feature não pode ser removida deste usuário"
                           : undefined
                       }
                     >
                       <span className={styles.featureBadges}>
-                        {feature.privileged && (
+                        {feature.is_privileged && (
                           <span
                             className={`${styles.featureBadge} ${styles.privilegedBadge}`}
                             title="Permissão privilegiada"
@@ -570,7 +570,7 @@ function UserEditor({ user, onUpdated, onCancel }) {
                             <i className="fas fa-crown" aria-hidden="true"></i>
                           </span>
                         )}
-                        {feature.editable === false && (
+                        {feature.is_removable === false && (
                           <span
                             className={`${styles.featureBadge} ${styles.protectedBadge}`}
                             title="Não pode ser removida deste usuário"
@@ -587,13 +587,13 @@ function UserEditor({ user, onUpdated, onCancel }) {
                         onChange={() => toggleFeature(feature.name)}
                         disabled={
                           isSaving ||
-                          (feature.editable === false &&
+                          (feature.is_removable === false &&
                             form.features.includes(feature.name))
                         }
                       />
                       <span
                         className={`${styles.switch} ${
-                          feature.editable === false ? styles.switchLocked : ""
+                          feature.is_removable === false ? styles.switchLocked : ""
                         }`}
                         aria-hidden="true"
                       ></span>

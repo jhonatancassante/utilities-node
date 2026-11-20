@@ -288,35 +288,67 @@ async function update(
   return updatedUser;
 
   async function runUpdateQuery(userId, userWithNewValues, allowFeatures) {
-    const featuresUpdate = allowFeatures ? "features = $5," : "";
-    const values = [
-      userId,
-      userWithNewValues.username,
-      userWithNewValues.email,
-      userWithNewValues.password,
-    ];
-
-    if (allowFeatures) values.push(userWithNewValues.features);
-
-    const results = await database.query({
-      text: `
-        UPDATE
-          users
-        SET
-          username = $2,
-          email = $3,
-          password = $4,
-          ${featuresUpdate}
-          updated_at = timezone('utc', now())
-        WHERE
-          id = $1
-        RETURNING
-          *
-      ;`,
-      values,
+    const updateUser = async (client) => {
+      if (allowFeatures && Object.hasOwn(allowedInputValues, "features")) {
+        await client.query({ text: "SELECT pg_advisory_xact_lock(hashtext($1));", values: ["protected-features-coverage"] });
+        const currentResults = await client.query({
+          text: "SELECT id, features FROM users WHERE id = $1 FOR UPDATE;",
+          values: [userId],
+        });
+        if (currentResults.rowCount === 0) throw new NotFoundError({
+          message: "O usuário não foi encontrado.",
+          action: "Atualize a lista e tente novamente.",
+        });
+        const currentFeatures = currentResults.rows[0].features;
+        if (JSON.stringify([...currentFeatures].sort()) !== JSON.stringify([...currentUser.features].sort())) {
+          throw new ValidationError({
+            message: "As permissões deste usuário foram alteradas por outra operação.",
+            action: "Atualize os dados do usuário antes de tentar novamente.",
+          });
+        }
+        const removedFeatures = currentFeatures.filter((name) => !userWithNewValues.features.includes(name));
+        if (removedFeatures.length) {
+          const metadata = await client.query({
+            text: "SELECT name, is_removable FROM features WHERE name = ANY($1);",
+            values: [removedFeatures],
+          });
+          const locked = metadata.rows.filter((item) => !item.is_removable).map((item) => item.name);
+          if (locked.length) throw new ValidationError({
+            message: `As seguintes features não podem ser removidas deste usuário: ${locked.join(", ")}.`,
+            action: "Uma feature não removível pode ser atribuída, mas não pode ser retirada depois.",
+          });
+        }
+        if (protectedFeatures.length) {
+          const coverage = await client.query({
+            text: `
+              SELECT id FROM users
+              WHERE (id = $1 AND $2::text[] @> $3::text[])
+                 OR (id <> $1 AND features @> $3::text[])
+              LIMIT 1
+            ;`,
+            values: [userId, userWithNewValues.features, protectedFeatures],
+          });
+          if (!coverage.rowCount) throw new ValidationError({
+            message: "Esta alteração deixaria o sistema sem um usuário com todas as permissões administrativas protegidas.",
+            action: "Mantenha pelo menos um usuário com todas as permissões protegidas ou atribua essas permissões a outro usuário antes de continuar.",
+          });
+        }
+      }
+      const featuresUpdate = allowFeatures ? "features = $5," : "";
+      const values = [userId, userWithNewValues.username, userWithNewValues.email, userWithNewValues.password];
+      if (allowFeatures) values.push(userWithNewValues.features);
+      const result = await client.query({
+        text: `UPDATE users SET username = $2, email = $3, password = $4, ${featuresUpdate} updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
+        values,
+      });
+      return result.rows[0];
+    };
+    if (allowFeatures && Object.hasOwn(allowedInputValues, "features")) return database.transaction(updateUser);
+    const result = await database.query({
+      text: "UPDATE users SET username = $2, email = $3, password = $4, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;",
+      values: [userId, userWithNewValues.username, userWithNewValues.email, userWithNewValues.password],
     });
-
-    return results.rows[0];
+    return result.rows[0];
   }
 }
 

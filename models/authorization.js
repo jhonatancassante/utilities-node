@@ -27,7 +27,7 @@ export function hasAdminAccess(user) {
   return Boolean(
     user?.features?.some((name) =>
       featureCatalog.some(
-        (feature) => feature.name === name && feature.privileged,
+        (feature) => feature.name === name && feature.is_privileged,
       ),
     ),
   );
