@@ -102,11 +102,21 @@ async function findOneByUsername(username) {
     const results = await database.query({
       text: `
         SELECT
-          *
+          users.*,
+          COALESCE(
+            (
+              SELECT array_agg(features.name)
+              FROM features
+              WHERE features.is_privileged = true
+                AND features.deleted_at IS NULL
+                AND features.name = ANY(users.features)
+            ),
+            ARRAY[]::varchar[]
+          ) AS privileged_features
         FROM
           users
         WHERE
-          LOWER(username) = LOWER($1)
+          LOWER(users.username) = LOWER($1)
         LIMIT 1
         ;`,
       values: [username],
