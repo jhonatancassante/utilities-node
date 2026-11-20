@@ -13,17 +13,12 @@ import {
   validatePassword,
   validateUsername,
 } from "@/lib/shared/user-validation.js";
-import { featureCatalog } from "@/configs/features.js";
 import {
   hasAdminAccess,
   hasAdminSectionAccess,
 } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
-
-const featureGroups = [
-  ...new Set(featureCatalog.map((feature) => feature.group_name)),
-].sort((a, b) => a.localeCompare(b, "pt-BR"));
 
 function AdminUsersPage() {
   const router = useRouter();
@@ -329,17 +324,52 @@ function UserEditor({ user, onUpdated, onCancel }) {
   const [featureSearch, setFeatureSearch] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [features, setFeatures] = useState([]);
+  const [isLoadingFeatures, setIsLoadingFeatures] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    requestAPI("/api/v1/admin/users/features")
+      .then((availableFeatures) => {
+        if (isMounted) setFeatures(availableFeatures);
+      })
+      .catch((requestError) => {
+        if (!isMounted) return;
+        setFeedback({
+          type: "error",
+          name: requestError.statusCode ? requestError.name : undefined,
+          message: requestError.message,
+          action: requestError.action,
+        });
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingFeatures(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const featureGroups = useMemo(
+    () =>
+      [...new Set(features.map((feature) => feature.group_name))].sort(
+        (a, b) => a.localeCompare(b, "pt-BR"),
+      ),
+    [features],
+  );
 
   const filteredFeatures = useMemo(() => {
     const term = featureSearch.trim().toLowerCase();
-    return featureCatalog.filter(
+    return features.filter(
       (feature) =>
         !term ||
         feature.name.toLowerCase().includes(term) ||
         feature.label.toLowerCase().includes(term) ||
         feature.description.toLowerCase().includes(term),
     );
-  }, [featureSearch]);
+  }, [featureSearch, features]);
 
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
@@ -527,6 +557,8 @@ function UserEditor({ user, onUpdated, onCancel }) {
               {form.features.length} selecionada(s)
             </span>
           </div>
+
+          {isLoadingFeatures && <p>Carregando permissões disponíveis...</p>}
 
           <input
             className={shared.input}
