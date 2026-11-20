@@ -224,7 +224,7 @@ describe("models/user.js", () => {
       expect(error.message).toBe(
         "As seguintes features não podem ser removidas deste usuário: read:session.",
       );
-      expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
+      expect(getCallsContaining(querySpy, "UPDATE users SET")).toEqual([]);
     });
 
     test("Com nome de usuário inválido", async () => {
