@@ -1,6 +1,10 @@
 import { jest } from "@jest/globals";
 
-import { NotFoundError, UnauthorizedError } from "@/infra/errors.js";
+import {
+  BannedUserError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/infra/errors.js";
 
 describe("models/authentication.js", () => {
   let instance = 0;
@@ -51,6 +55,34 @@ describe("models/authentication.js", () => {
       expect(error.message).toBe(
         "Não foi possível autenticar seu usuário no sistema.",
       );
+    });
+
+    test("Com credenciais corretas, rejeita uma conta banida com erro específico", async () => {
+      jest.spyOn(user, "findOneByEmail").mockResolvedValue({
+        id: "user-1",
+        email: "banido@example.com",
+        password: "hash",
+        banned_at: new Date(),
+      });
+      jest.spyOn(password, "compare").mockResolvedValue(true);
+
+      await expect(
+        authentication.getUser("banido@example.com", "Senha_Correta_123!!"),
+      ).rejects.toBeInstanceOf(BannedUserError);
+    });
+
+    test("Com senha incorreta, mantém o erro genérico mesmo para conta banida", async () => {
+      jest.spyOn(user, "findOneByEmail").mockResolvedValue({
+        id: "user-1",
+        email: "banido@example.com",
+        password: "hash",
+        banned_at: new Date(),
+      });
+      jest.spyOn(password, "compare").mockResolvedValue(false);
+
+      await expect(
+        authentication.getUser("banido@example.com", "Senha_Incorreta_123!!"),
+      ).rejects.toBeInstanceOf(UnauthorizedError);
     });
 
     test("Se a geração do hash falso falhar, tenta de novo na chamada seguinte", async () => {

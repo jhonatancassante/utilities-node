@@ -18,6 +18,8 @@
     "dev": "node infra/scripts/dev.js",
     "dev:raw": "npm run services:up && npm run services:wait:database && npm run migrations:up && next dev",
     "test": "npm run services:up && concurrently -n next,jest --hide next -k -s command-jest \"next dev\" \"node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --verbose\"",
+    "test:coverage": "npm run services:up && concurrently -n next,jest --hide next -k -s command-jest \"next dev\" \"node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --verbose --coverage\"",
+    "posttest:coverage": "npm run services:stop",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watchAll --runInBand --verbose",
     "posttest": "npm run services:stop",
     "services:up": "docker compose -f infra/compose.yaml up -d",

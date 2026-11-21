@@ -10,7 +10,7 @@ const existingFeature = {
   label: "Consultar relatórios",
   group_name: "Relatórios",
   description: "Permite consultar relatórios.",
-  is_removable: true,
+  is_self_removable: true,
   is_privileged: false,
   is_protected: false,
   deleted_at: null,
@@ -93,7 +93,7 @@ describe("models/feature.js", () => {
           label: " Consultar relatórios ",
           group_name: " Relatórios ",
           description: " Permite consultar relatórios. ",
-          is_removable: false,
+          is_self_removable: false,
           is_privileged: true,
           is_protected: true,
         }),
@@ -153,7 +153,7 @@ describe("models/feature.js", () => {
       ).rejects.toThrow(ValidationError);
     });
 
-    test.each(["is_removable", "is_privileged", "is_protected"])(
+    test.each(["is_self_removable", "is_privileged", "is_protected"])(
       "Com valor não booleano em %s",
       async (field) => {
         await expect(
@@ -350,29 +350,35 @@ describe("models/feature.js", () => {
       );
     });
 
-    test("Rejeita exclusão de feature não removível atribuída a um usuário", async () => {
-      mockQueries([
-        ["FOR UPDATE", [{ ...existingFeature, is_removable: false }]],
-        ["ANY(features)", [{ id: "user-1" }]],
-      ]);
-
-      await expect(feature.delete(existingFeature.id)).rejects.toThrow(
-        "Esta feature não pode ser excluída enquanto estiver atribuída a usuários.",
-      );
-    });
-
-    test("Permite excluir feature não removível sem usuários atribuídos", async () => {
+    test("Exclui feature não removível do catálogo independentemente dos usuários atribuídos", async () => {
+      const nonSelfRemovableFeature = {
+        ...existingFeature,
+        is_self_removable: false,
+      };
+      const deletedFeature = {
+        ...nonSelfRemovableFeature,
+        deleted_at: "2026-11-21T00:00:00.000Z",
+      };
       const querySpy = mockQueries([
-        ["FOR UPDATE", [{ ...existingFeature, is_removable: false }]],
-        ["ANY(features)", []],
+        ["FOR UPDATE", [nonSelfRemovableFeature]],
         ["array_remove(features, $1)", []],
-        ["UPDATE\n          features", [existingFeature]],
+        ["UPDATE\n          features", [deletedFeature]],
       ]);
 
-      await feature.delete(existingFeature.id);
+      await expect(feature.delete(existingFeature.id)).resolves.toEqual(
+        deletedFeature,
+      );
 
+      const userLookupQueries = querySpy.mock.calls
+        .map(([query]) => query)
+        .filter(
+          (query) =>
+            query.text.trimStart().startsWith("SELECT") &&
+            query.text.includes("ANY(features)"),
+        );
+      expect(userLookupQueries).toEqual([]);
       expect(
-        getCallsContaining(querySpy, "UPDATE\n          features"),
+        getCallsContaining(querySpy, "array_remove(features, $1)"),
       ).toHaveLength(1);
     });
   });

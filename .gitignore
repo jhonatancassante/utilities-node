@@ -1,6 +1,8 @@
 .next
+/coverage/
 node_modules
 .env
+local
 
 # Added by ggshield
 .cache_ggshield

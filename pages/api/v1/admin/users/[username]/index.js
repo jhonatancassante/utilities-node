@@ -31,6 +31,7 @@ async function patchHandler(request, response) {
   const userTryingToUpdate = request.context.user;
   const updatedUser = await user.update(request.query.username, request.body, {
     allowFeatures: true,
+    actorUserId: userTryingToUpdate.id,
   });
   const updatedUserWithPrivileges = await user.findOneById(updatedUser.id);
 

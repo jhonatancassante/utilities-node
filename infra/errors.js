@@ -1,3 +1,25 @@
+export class BannedUserError extends Error {
+  constructor({ cause, message, action } = {}) {
+    super(message || "Esta conta foi banida e não pode acessar o sistema.", {
+      cause,
+    });
+    this.name = "BannedUserError";
+    this.action =
+      action ||
+      "Entre em contato com a administração do sistema caso acredite que isso seja um engano.";
+    this.statusCode = 403;
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    };
+  }
+}
+
 export class ConflictError extends Error {
   constructor({ cause, message, action }) {
     super(

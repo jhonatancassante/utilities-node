@@ -16,6 +16,14 @@ export const adminSections = [
     requiredFeature: "read:feature",
   },
   {
+    id: "audit",
+    title: "Auditoria",
+    description: "Consulte ações administrativas e de segurança do sistema.",
+    href: "/admin/audit",
+    icon: "fa-clipboard-list",
+    requiredFeature: "read:audit",
+  },
+  {
     id: "status",
     title: "Status do sistema",
     description: "Acesse as métricas do sistema e a versão do banco de dados.",

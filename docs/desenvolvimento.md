@@ -67,7 +67,9 @@ Durante o desenvolvimento, a interface fica disponível em `http://localhost:300
 - `/tools/ar-generator`: Gerador de AR e Etiquetas.
 - `/status`: painel de monitoramento da conexão com o banco de dados.
 - `/admin`: painel administrativo, visível para usuários com ao menos uma feature privilegiada.
-- `/admin/usuarios`: pesquisa, edição de dados, gerenciamento de features e remoção de usuários; exige `update:user:others`.
+- `/admin/users`: pesquisa, edição de dados, gerenciamento de features, remoção e banimento/desbanimento de usuários; exige `update:user:others`.
+- `/admin/audit`: área de auditoria administrativa; exige `read:audit`.
+- `/admin/audit/banned`: histórico de banimentos e desbanimentos.
 - `/diario-oficial/edicao-0012026`: página de leitura e download da edição 001/2026 do Diário Oficial.
 
 As páginas de ferramentas seguem a estrutura `pages/tools/<slug>/index.js`, com componentes e lógica isolados em `features/<slug>/`. Para adicionar uma ferramenta, atualizar seu status ou conhecer os componentes compartilhados, consulte o [guia Adicionando uma nova ferramenta](adicionando-ferramentas.md).
@@ -92,6 +94,7 @@ O Gerador de AR e Etiquetas consulta CEP pelo ViaCEP e listas de UFs e municípi
 | `npm run dev:raw`                   | Sobe serviços, aguarda banco, aplica migrations e inicia Next.js |
 | `npm test`                          | Sobe serviços e Next.js, executa Jest e finaliza com `posttest`  |
 | `npm run test:watch`                | Jest em modo contínuo; requer servidor e banco já ativos         |
+| `npm run test:coverage`             | Executa Jest com cobertura e gera relatórios em `coverage/`      |
 | `npm run services:up`               | Inicia PostgreSQL e Mailcatcher                                  |
 | `npm run services:stop`             | Para os containers sem removê-los                                |
 | `npm run services:down`             | Para e remove os containers                                      |
@@ -119,13 +122,17 @@ npm run migrations:up
 
 Migrations existentes na branch principal:
 
-| Arquivo                                                          | Alteração                                  |
-| ---------------------------------------------------------------- | ------------------------------------------ |
-| `1792077675178_create-users.js`                                  | Cria a tabela `users`                      |
-| `1792179953104_altera-nomes-de-colunas-createdAt-e-updatedAt.js` | Renomeia colunas de data para `snake_case` |
-| `1792247067512_create-sessions.js`                               | Cria a tabela `sessions`                   |
-| `1792760460131_adiciona-features-na-tabela-users.js`             | Adiciona `users.features`                  |
-| `1792781687009_cria-tabela-user-activation-tokens.js`            | Cria `user_activation_tokens`              |
+| Arquivo                                                          | Alteração                                                 |
+| ---------------------------------------------------------------- | --------------------------------------------------------- |
+| `1792077675178_create-users.js`                                  | Cria a tabela `users`                                     |
+| `1792179953104_altera-nomes-de-colunas-createdAt-e-updatedAt.js` | Renomeia colunas de data para `snake_case`                |
+| `1792247067512_create-sessions.js`                               | Cria a tabela `sessions`                                  |
+| `1792760460131_adiciona-features-na-tabela-users.js`             | Adiciona `users.features`                                 |
+| `1792781687009_cria-tabela-user-activation-tokens.js`            | Cria `user_activation_tokens`                             |
+| `1795263904008_rename-feature-is-removable.js`                   | Renomeia `features.is_removable` para `is_self_removable` |
+| `1795266838572_add-banned-column-to-users-table.js`              | Adiciona `users.banned_at`                                |
+| `1795270290404_add-audit-feature-and-organize-feature-groups.js` | Cria `read:audit` e reorganiza grupos/permissões          |
+| `1795270639425_create-user-ban-audit-events.js`                  | Cria `user_ban_events` e importa os banimentos existentes |
 
 O histórico das execuções fica em `pgmigrations`. As migrations atuais exportam `down = false`; não existe rollback automático.
 
@@ -144,16 +151,16 @@ Regras:
 npm test
 ```
 
-O script sobe os containers, inicia `next dev` e executa Jest com `--runInBand --verbose`. Os testes compartilham o mesmo banco, por isso são executados em sequência. O `posttest` para os serviços.
+O script sobe os containers, inicia `next dev` e executa Jest com `--runInBand --verbose`. Os testes compartilham o mesmo banco, por isso são executados em sequência. O `posttest` para os serviços. Para executar com cobertura, use `npm run test:coverage`; são gerados relatórios de texto, LCOV e resumo JSON em `coverage/`, ignorado pelo Git. O percentual cobre os módulos instrumentados de `features/**/lib`, `infra`, `lib` e `models`; as rotas `pages/api` são exercitadas pelos testes de integração, mas não entram no cálculo porque o Next.js executa em processo separado.
 
 Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm run test:watch`.
 
 ### Organização dos testes
 
-- `tests/integration/api/v1/`: testes dos endpoints, incluindo pesquisa, consulta e atualização administrativa de usuários.
+- `tests/integration/api/v1/`: testes dos endpoints, incluindo pesquisa, consulta, atualização, banimento e desbanimento administrativos, além da consulta da auditoria.
 - `tests/integration/infra/email.test.js`: integração do serviço de e-mail.
 - `tests/integration/_use-cases/registration-flow.test.js`: fluxo completo de cadastro, recebimento do e-mail, ativação, login e consulta do usuário.
-- `tests/unit/models/`: testes unitários de `user`, `password`, `session`, `activation`, `authentication` (hash falso contra timing attack) e `authorization`, sem banco de dados (as consultas são simuladas).
+- `tests/unit/models/`: testes unitários de `user`, `audit`, `password`, `session`, `activation`, `authentication` (hash falso contra timing attack) e `authorization`, sem banco de dados (as consultas são simuladas).
 - `tests/unit/infra/`: testes unitários de `errors`, `database` e `controller`. Os testes de integração de `database.transaction()` e `activation.activate()` ficam em `tests/integration/infra/` e `tests/integration/models/`.
 - `tests/unit/lib/client/` e `tests/unit/lib/shared/`: testes unitários do cliente HTTP, sessão, ativação, arquivos e validação de usuário.
 - `tests/unit/features/qr-code/lib/`: testes unitários da normalização de URLs e da formatação do timestamp usado nos downloads.
@@ -165,7 +172,7 @@ Para modo contínuo, deixe `npm run dev` ativo em outro terminal e execute `npm 
 - `tests/unit/features/txt-to-csv/lib/`: testes unitários da detecção de codificação, interpretação de colunas de largura fixa, formatação de valores e geração do CSV.
 - `tests/orchestrator.js`: utilitários compartilhados.
 
-Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, ativação, login, logout e consulta/renovação da sessão. Os testes unitários cobrem a validação/normalização de URLs do Gerador de QR Code, a formatação do nome dos arquivos baixados (`lib/client/files.js`), as regras do Divisor e do Unificador de PDF, a geração de ARs e etiquetas, o Testador de CPF e as conversões de CSV para JSON, JSON para CSV e TXT para CSV.
+Os testes de API cobrem status, migrations, cadastro, consulta/atualização de usuários, banimento/desbanimento e consulta da auditoria, ativação, login, logout e consulta/renovação da sessão. Os testes unitários cobrem a validação/normalização de URLs do Gerador de QR Code, a formatação do nome dos arquivos baixados (`lib/client/files.js`), as regras do Divisor e do Unificador de PDF, a geração de ARs e etiquetas, o Testador de CPF e as conversões de CSV para JSON, JSON para CSV e TXT para CSV.
 
 ### Orchestrator
 

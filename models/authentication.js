@@ -1,7 +1,11 @@
 import crypto from "node:crypto";
 import user from "@/models/user.js";
 import password from "@/models/password.js";
-import { NotFoundError, UnauthorizedError } from "@/infra/errors.js";
+import {
+  BannedUserError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/infra/errors.js";
 
 let dummyHashPromise = null;
 
@@ -25,6 +29,10 @@ async function getUser(providedEmail, providedPassword) {
     const storedUser = await findUserByEmail(providedEmail, providedPassword);
 
     await validatePassword(providedPassword, storedUser.password);
+
+    if (storedUser.banned_at) {
+      throw new BannedUserError({});
+    }
 
     return storedUser;
   } catch (error) {

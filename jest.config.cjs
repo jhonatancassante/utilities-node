@@ -10,6 +10,17 @@ const createJestConfig = nextJest({
 const jestConfig = createJestConfig({
   moduleDirectories: ["node_modules", "<rootDir>"],
   testTimeout: 60000,
+  collectCoverageFrom: [
+    "features/**/lib/**/*.js",
+    "infra/**/*.js",
+    "lib/**/*.js",
+    "models/**/*.js",
+    "!infra/migrations/**",
+    "!infra/scripts/**",
+    "!**/*.test.js",
+  ],
+  coverageDirectory: "coverage",
+  coverageReporters: ["text", "lcov", "json-summary"],
 });
 
 module.exports = jestConfig;

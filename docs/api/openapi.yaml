@@ -354,6 +354,111 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /api/v1/admin/users/{username}/ban:
+    parameters:
+      - $ref: "#/components/parameters/Username"
+    post:
+      tags: [Admin]
+      operationId: banAdminUser
+      summary: Bane uma conta
+      description: Exige sessão válida e update:user:others. Não permite auto banimento. Expira sessões e registra o evento na mesma transação.
+      x-required-feature: update:user:others
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Conta banida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: [Admin]
+      operationId: unbanAdminUser
+      summary: Remove o banimento de uma conta
+      description: Exige sessão válida e update:user:others. Não reativa sessões antigas.
+      x-required-feature: update:user:others
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Conta desbanida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/admin/audit/banned:
+    get:
+      tags: [Admin]
+      operationId: listBanAuditEvents
+      summary: Consulta eventos de banimento e desbanimento
+      description: Exige sessão válida e read:audit. Retorna snapshots em ordem cronológica decrescente; resposta com Cache-Control no-store.
+      x-required-feature: read:audit
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Eventos de auditoria.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    [
+                      id,
+                      action,
+                      username,
+                      email,
+                      account_created_at,
+                      created_at,
+                      is_currently_banned,
+                    ]
+                  properties:
+                    id: { type: string, format: uuid }
+                    user_id: { type: [string, "null"], format: uuid }
+                    actor_user_id: { type: [string, "null"], format: uuid }
+                    action: { type: string, enum: [ban, unban] }
+                    username: { type: string }
+                    email: { type: string, format: email }
+                    account_created_at: { type: string, format: date-time }
+                    actor_username: { type: [string, "null"] }
+                    actor_email: { type: [string, "null"], format: email }
+                    created_at: { type: string, format: date-time }
+                    is_currently_banned: { type: boolean }
+                    current_banned_at:
+                      { type: [string, "null"], format: date-time }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /api/v1/activations/{token_id}:
     parameters:
       - name: token_id
@@ -641,6 +746,14 @@ components:
             email:
               type: string
               format: email
+    AdminUser:
+      allOf:
+        - $ref: "#/components/schemas/PrivateUser"
+        - type: object
+          properties:
+            banned_at:
+              type: [string, "null"]
+              format: date-time
     SessionCreate:
       type: object
       required: [email, password]

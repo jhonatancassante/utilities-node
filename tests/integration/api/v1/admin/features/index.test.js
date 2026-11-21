@@ -73,8 +73,8 @@ describe("GET /api/v1/admin/features", () => {
           expect.objectContaining({
             name: "create:feature",
             label: "Criar feature",
-            group_name: "Privilégios",
-            is_removable: true,
+            group_name: "Features",
+            is_self_removable: true,
             is_privileged: true,
             is_protected: true,
           }),
@@ -145,7 +145,7 @@ describe("POST /api/v1/admin/features", () => {
 
       expect(responseBody).toMatchObject({
         ...featureInput,
-        is_removable: true,
+        is_self_removable: true,
         is_privileged: false,
         is_protected: false,
       });

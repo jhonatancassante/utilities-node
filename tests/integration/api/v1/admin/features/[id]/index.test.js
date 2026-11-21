@@ -233,11 +233,11 @@ describe("DELETE /api/v1/admin/features/[id]", () => {
       });
     });
 
-    test("Rejeitando exclusão de feature não removível atribuída a usuários", async () => {
+    test("Exclui feature não removível do catálogo e remove sua atribuição dos usuários", async () => {
       const { sessionObject } = await createPrivilegedSession();
       const createdFeature = await createTestFeature({
         name: "read:lockedreports",
-        is_removable: false,
+        is_self_removable: false,
       });
       const targetUser = await orchestrator.createUser();
       await orchestrator.addFeaturesToUser(targetUser, [createdFeature.name]);
@@ -247,12 +247,16 @@ describe("DELETE /api/v1/admin/features/[id]", () => {
         headers: { Cookie: `session_id=${sessionObject.token}` },
       });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
       expect(await response.json()).toMatchObject({
-        name: "ValidationError",
-        message:
-          "Esta feature não pode ser excluída enquanto estiver atribuída a usuários.",
+        id: createdFeature.id,
+        name: createdFeature.name,
       });
+      await expect(feature.findOneById(createdFeature.id)).rejects.toThrow(
+        "A feature com o ID informado não foi encontrada.",
+      );
+      const updatedUser = await user.findOneById(targetUser.id);
+      expect(updatedUser.features).not.toContain(createdFeature.name);
     });
 
     test("Com ID inexistente", async () => {

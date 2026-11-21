@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import database from "@/infra/database.js";
-import { UnauthorizedError } from "@/infra/errors.js";
+import { BannedUserError, UnauthorizedError } from "@/infra/errors.js";
 
 const EXPIRATION_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000; // 30 DIAS
 
@@ -8,12 +8,25 @@ async function create(userId) {
   const token = crypto.randomBytes(48).toString("hex");
   const expiresAt = getExpiresAt();
 
-  const newSession = await runInsertQuery(token, userId, expiresAt);
+  return database.transaction(async (client) => {
+    const userResults = await client.query({
+      text: "SELECT banned_at FROM users WHERE id = $1 FOR UPDATE;",
+      values: [userId],
+    });
 
-  return newSession;
+    if (userResults.rowCount === 0) {
+      throw new UnauthorizedError({
+        message: "Não foi possível autenticar seu usuário no sistema.",
+        action:
+          "Verifique se digitou o e-mail e a senha corretamente e tente novamente.",
+      });
+    }
 
-  async function runInsertQuery(token, userId, expiresAt) {
-    const results = await database.query({
+    if (userResults.rows[0].banned_at) {
+      throw new BannedUserError({});
+    }
+
+    const results = await client.query({
       text: `
         INSERT INTO
           sessions (token, user_id, expires_at)
@@ -26,7 +39,7 @@ async function create(userId) {
     });
 
     return results.rows[0];
-  }
+  });
 }
 
 async function findOneValidByToken(sessionToken) {
@@ -38,12 +51,16 @@ async function findOneValidByToken(sessionToken) {
     const results = await database.query({
       text: `
         SELECT
-          *
+          sessions.*
         FROM
           sessions
+        INNER JOIN
+          users
+          ON users.id = sessions.user_id
         WHERE
-          token = $1
-          AND expires_at > NOW()
+          sessions.token = $1
+          AND sessions.expires_at > NOW()
+          AND users.banned_at IS NULL
         LIMIT 1
       ;`,
       values: [sessionToken],
@@ -62,11 +79,32 @@ async function findOneValidByToken(sessionToken) {
 
 async function renew(sessionId) {
   const expiresAt = getExpiresAt();
-  const renewedSession = await runUpdateQuery(sessionId, expiresAt);
-  return renewedSession;
 
-  async function runUpdateQuery(sessionId, expiresAt) {
-    const results = await database.query({
+  return database.transaction(async (client) => {
+    const userResults = await client.query({
+      text: `
+        SELECT
+          users.banned_at
+        FROM
+          sessions
+        INNER JOIN
+          users
+          ON users.id = sessions.user_id
+        WHERE
+          sessions.id = $1
+        FOR UPDATE OF users
+      ;`,
+      values: [sessionId],
+    });
+
+    if (userResults.rowCount === 0 || userResults.rows[0].banned_at) {
+      throw new UnauthorizedError({
+        message: "Usuário não possui sessão ativa.",
+        action: "Verifique se este usuário está logado e tente novamente.",
+      });
+    }
+
+    const results = await client.query({
       text: `
         UPDATE
           sessions
@@ -82,7 +120,7 @@ async function renew(sessionId) {
     });
 
     return results.rows[0];
-  }
+  });
 }
 
 async function expireById(sessionId) {
@@ -109,6 +147,25 @@ async function expireById(sessionId) {
   }
 }
 
+async function expireAllByUserId(userId, client = database) {
+  const results = await client.query({
+    text: `
+      UPDATE
+        sessions
+      SET
+        expires_at = expires_at - interval '1 year',
+        updated_at = timezone('utc', now())
+      WHERE
+        user_id = $1
+      RETURNING
+        id
+    ;`,
+    values: [userId],
+  });
+
+  return results.rows;
+}
+
 function getExpiresAt() {
   return new Date(Date.now() + EXPIRATION_IN_MILLISECONDS);
 }
@@ -118,6 +175,7 @@ const session = {
   findOneValidByToken,
   renew,
   expireById,
+  expireAllByUserId,
   EXPIRATION_IN_MILLISECONDS,
 };
 
