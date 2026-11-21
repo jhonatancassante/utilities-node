@@ -123,4 +123,21 @@ describe("models/session.js", () => {
       expect(query.values).toEqual(["s1"]);
     });
   });
+
+  describe(".expireAllByUserId()", () => {
+    test("Expira todas as sessões do usuário usando a transação informada", async () => {
+      const client = {
+        query: jest
+          .fn()
+          .mockResolvedValue({ rows: [{ id: "s1" }, { id: "s2" }] }),
+      };
+
+      const expiredSessions = await session.expireAllByUserId("user-1", client);
+
+      expect(expiredSessions).toEqual([{ id: "s1" }, { id: "s2" }]);
+      const [query] = client.query.mock.calls[0];
+      expect(query.text).toContain("expires_at - interval '1 year'");
+      expect(query.values).toEqual(["user-1"]);
+    });
+  });
 });

@@ -97,10 +97,13 @@ describe("/api/v1/admin/users/[username]/ban", () => {
         password: "Senha_Padrao_V@l1d@_1234",
       }),
     });
-    expect(loginResponse.status).toBe(401);
+    expect(loginResponse.status).toBe(403);
     expect(await loginResponse.json()).toMatchObject({
-      name: "UnauthorizedError",
-      message: "Não foi possível autenticar seu usuário no sistema.",
+      name: "BannedUserError",
+      message: "Esta conta foi banida e não pode acessar o sistema.",
+      action:
+        "Entre em contato com a administração do sistema caso acredite que isso seja um engano.",
+      status_code: 403,
     });
 
     const searchResponse = await fetch(
