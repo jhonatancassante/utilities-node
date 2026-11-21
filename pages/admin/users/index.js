@@ -7,7 +7,6 @@ import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
-import ProfilePhotoField from "@/components/ProfilePhotoField";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
 import {
@@ -410,7 +409,6 @@ function UserEditor({
   const [privilegedOnly, setPrivilegedOnly] = useState(false);
   const [protectedOnly, setProtectedOnly] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [profilePhoto, setProfilePhoto] = useState("");
   const [isUpdatingBan, setIsUpdatingBan] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [features, setFeatures] = useState([]);
@@ -488,7 +486,6 @@ function UserEditor({
     setFeatureSearch("");
     setPrivilegedOnly(false);
     setProtectedOnly(false);
-    setProfilePhoto("");
     setFeedback(null);
     onCancel();
   }
@@ -548,7 +545,6 @@ function UserEditor({
     }
     if (form.password) payload.password = form.password;
 
-    if (profilePhoto) payload.profile_photo = profilePhoto;
 
     const currentFeatures = [...user.features].sort();
     const nextFeatures = [...new Set(form.features)].sort();
@@ -572,7 +568,6 @@ function UserEditor({
           body: JSON.stringify(payload),
         },
       );
-      setProfilePhoto("");
       await onUpdated(updatedUser);
     } catch (requestError) {
       setFeedback((current) => ({
@@ -618,45 +613,49 @@ function UserEditor({
       </div>
 
       <form onSubmit={handleSubmit} noValidate>
-        <ProfilePhotoField
-          value={profilePhoto}
-          initialUrl={user.profile_photo_url}
-          onChange={setProfilePhoto}
-          disabled={isSaving}
-        />
         {user.profile_photo_url && (
-          <div className={styles.photoActions}>
-            <Button
-              type="button"
-              variant="danger"
-              icon="fa-trash"
-              disabled={isSaving}
-              onClick={async () => {
-                setIsSaving(true);
-                setFeedback(null);
-                try {
-                  const updatedUser = await requestAPI(
-                    `/api/v1/admin/users/${encodeURIComponent(user.username)}/photo`,
-                    { method: "DELETE" },
-                  );
-                  setProfilePhoto("");
-                  await onUpdated(updatedUser);
-                } catch (requestError) {
-                  setFeedback({
-                    type: "error",
-                    name: requestError.statusCode
-                      ? requestError.name
-                      : undefined,
-                    message: requestError.message,
-                    action: requestError.action,
-                  });
-                } finally {
-                  setIsSaving(false);
-                }
-              }}
-            >
-              Remover foto de perfil
-            </Button>
+          <div className={styles.profilePhoto}>
+            <Image
+              src={user.profile_photo_url}
+              alt={`Foto de perfil de ${user.username}`}
+              width={88}
+              height={88}
+              unoptimized
+            />
+            <div>
+              <strong>Foto de perfil</strong>
+              <small>A imagem atual desta conta.</small>
+              <Button
+                type="button"
+                variant="danger"
+                icon="fa-trash"
+                disabled={isSaving}
+                onClick={async () => {
+                  setIsSaving(true);
+                  setFeedback(null);
+                  try {
+                    const updatedUser = await requestAPI(
+                      `/api/v1/admin/users/${encodeURIComponent(user.username)}/photo`,
+                      { method: "DELETE" },
+                    );
+                    await onUpdated(updatedUser);
+                  } catch (requestError) {
+                    setFeedback({
+                      type: "error",
+                      name: requestError.statusCode
+                        ? requestError.name
+                        : undefined,
+                      message: requestError.message,
+                      action: requestError.action,
+                    });
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }}
+              >
+                Remover foto de perfil
+              </Button>
+            </div>
           </div>
         )}
         <div className={styles.formGrid}>
@@ -727,6 +726,21 @@ function UserEditor({
               />
             </div>
           </div>
+        </div>
+
+        <div className={styles.formActions}>
+          <Button type="submit" icon="fa-save" disabled={isSaving}>
+            {isSaving ? "Salvando..." : "Salvar alterações"}
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            icon="fa-times"
+            onClick={handleCancel}
+            disabled={isSaving}
+          >
+            Cancelar
+          </Button>
         </div>
 
         <div className={styles.featureSection}>
