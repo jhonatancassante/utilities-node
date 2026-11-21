@@ -324,7 +324,7 @@ paths:
       tags: [Admin]
       operationId: updateAdminUser
       summary: Atualiza dados e permissões de um usuário
-      description: Exige update:user:others e permite alterar qualquer conta, inclusive a própria conta do administrador. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
+      description: Exige update:user:others e permite alterar qualquer conta, inclusive a própria conta do administrador. Aceita também profile_photo como Data URL de imagem JPEG, PNG ou WebP estática, até 2 MB e dimensões entre 128 e 2048 pixels. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
       x-required-feature: update:user:others
       security:
         - SessionCookie: []
@@ -724,6 +724,10 @@ components:
             2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns
             conhecidos como password, admin, qwerty, letmein e welcome são
             rejeitados.
+        profile_photo:
+          type: string
+          maxLength: 2800000
+          description: Data URL de imagem JPEG, PNG ou WebP estática, até 2 MB e dimensões entre 128 e 2048 pixels.
     UserUpdate:
       type: object
       additionalProperties: false
