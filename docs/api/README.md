@@ -24,6 +24,9 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 | `GET`   | `/api/v1/admin/users?search=...` | Feature `update:user:others`                                   |
 | `GET`   | `/api/v1/admin/users/{username}` | Feature `update:user:others`                                   |
 | `PATCH` | `/api/v1/admin/users/{username}` | Feature `update:user:others`; inclui alteração de features     |
+| `POST`  | `/api/v1/admin/users/{username}/ban` | Feature `update:user:others`; bane a conta                     |
+| `DELETE`| `/api/v1/admin/users/{username}/ban` | Feature `update:user:others`; desbane a conta                  |
+| `GET`   | `/api/v1/admin/audit/banned`      | Feature `read:audit`; consulta a trilha de auditoria           |
 | `PATCH` | `/api/v1/users/{username}`       | Feature `update:user`; próprio usuário ou `update:user:others` |
 | `PATCH` | `/api/v1/activations/{token_id}` | Feature `read:activation_token`                                |
 | `POST`  | `/api/v1/sessions`               | Feature `create:session`                                       |
@@ -135,6 +138,16 @@ Permite alterar `username`, `email`, `password` e `features` de qualquer conta, 
 
 Os endpoints administrativos retornam `403` quando a sessão não possui `update:user:others`, `404` quando o usuário alvo não existe e `400` quando a pesquisa ou os dados enviados são inválidos.
 
+### Banimento e desbanimento
+
+`POST /api/v1/admin/users/{username}/ban` exige `update:user:others` e bane a conta indicada. O próprio administrador não pode banir a própria conta. A operação atualiza `users.banned_at`, expira todas as sessões existentes e registra o evento na mesma transação. Operações repetidas que não alteram o estado não criam eventos duplicados.
+
+`DELETE /api/v1/admin/users/{username}/ban` remove o banimento e registra o evento de desbanimento. Sessões expiradas pelo banimento não são reativadas; o usuário precisa entrar novamente. Ambos os endpoints retornam `200` com os dados administrativos atualizados, sem hash de senha.
+
+### `GET /api/v1/admin/audit/banned`
+
+Exige sessão válida e `read:audit`. Retorna os eventos em ordem cronológica decrescente, com snapshots do usuário e do responsável pela ação quando disponíveis, data de criação da conta, data do evento e situação atual. Eventos anteriores à implantação da auditoria podem não identificar o responsável. A resposta usa `Cache-Control: no-store` e a saída é filtrada para expor somente os campos previstos. Os snapshots preservam o histórico mesmo após a exclusão da conta.
+
 ## `PATCH /api/v1/activations/{token_id}`
 
 Exige `read:activation_token`. O identificador é o UUID enviado no link por e-mail.
@@ -219,6 +232,8 @@ A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica c
 - Um JSON sintaticamente inválido pode ser rejeitado pelo parser de corpo do Next.js antes de chegar ao controller; nesse caso, a resposta `400` pode não usar o envelope JSON padronizado da API.
 - A feature `read:status` consta no catálogo e é usada nos testes, mas a rota de status não possui middleware `canRequest`; o acesso ao endpoint permanece público. A feature `read:status:all` controla apenas a inclusão da versão do banco.
 - A administração de features é restrita aos endpoints administrativos e à feature `update:user:others`. O catálogo central em `configs/features.js` alimenta a validação do backend e a interface de seleção.
+- Contas banidas não conseguem iniciar sessão; sessões existentes são expiradas no banimento. O desbanimento não restaura sessões anteriores.
+- `read:audit` permite consultar os eventos de banimento e desbanimento, sem conceder acesso às demais operações administrativas.
 
 ## Visualizar e validar o OpenAPI
 

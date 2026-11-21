@@ -161,6 +161,7 @@ O model `models/authorization.js` centraliza as permissões conhecidas. As featu
 | `read:migration`        | Permite consultar migrations pendentes                                                                       |
 | `read:status`           | Seleciona a representação do status; não restringe o endpoint público                                        |
 | `read:status:all`       | Permite incluir a versão do banco na resposta de status                                                      |
+| `read:audit`            | Permite consultar a trilha de auditoria de banimentos e desbanimentos                                      |
 
 ### Perfis iniciais
 
@@ -189,6 +190,14 @@ A lista de features de um usuário pode ser alterada pelo model `user.setFeature
 | `POST /migrations`              | Exige `create:migration`                                                                          |
 
 A autorização de saída também é centralizada em `authorization.filterOutput`. Ela define quais campos podem ser devolvidos para cada tipo de recurso. A representação pública de usuário não inclui e-mail ou hash da senha; a representação privada do próprio usuário inclui o e-mail, mas não a senha.
+
+## Banimento de contas
+
+O campo `users.banned_at` registra quando a conta foi banida. Um administrador com `update:user:others` pode banir outra conta, mas não a própria. A operação expira todas as sessões existentes e registra o evento em `user_ban_events` dentro da mesma transação.
+
+Uma conta banida não consegue iniciar sessão. A criação e a renovação de sessões também verificam o estado de banimento, e sessões existentes deixam de ser válidas. A tentativa de login com senha correta retorna `403 BannedUserError`; credenciais incorretas continuam recebendo a resposta genérica de autenticação.
+
+O desbanimento remove `banned_at` e registra o evento, mas não reativa sessões anteriores. O usuário precisa autenticar-se novamente. Operações repetidas que não alteram o estado não geram eventos duplicados. A auditoria preserva snapshots mesmo após a exclusão da conta; eventos anteriores à implantação podem não identificar o responsável. A consulta exige `read:audit` e não é armazenável em cache.
 
 ## Cuidados e limitações conhecidas
 
