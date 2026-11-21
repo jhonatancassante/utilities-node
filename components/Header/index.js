@@ -43,7 +43,7 @@ function Header() {
   }, [router.events]);
 
   useEffect(() => {
-    if (!openMenu) return;
+    if (!openMenu && !isToolsExpanded) return;
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
@@ -66,7 +66,7 @@ function Header() {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("pointerdown", handlePointerDown);
     };
-  }, [openMenu]);
+  }, [openMenu, isToolsExpanded]);
 
   function toggleMenu(menu) {
     setOpenMenu((current) => (current === menu ? null : menu));
@@ -97,7 +97,10 @@ function Header() {
           aria-expanded={isMobileOpen}
           aria-controls="main-nav"
           aria-label={isMobileOpen ? "Fechar menu" : "Abrir menu"}
-          onClick={() => toggleMenu(MENU.mobile)}
+          onClick={() => {
+            toggleMenu(MENU.mobile);
+            if (isMobileOpen) setIsToolsExpanded(false);
+          }}
         >
           <i
             className={`fas ${isMobileOpen ? "fa-times" : "fa-bars"}`}
