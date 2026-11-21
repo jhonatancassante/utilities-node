@@ -61,11 +61,11 @@ async function patchHandler(request, response) {
   let updatedUser = targetUser;
 
   try {
+    if (profile_photo) uploadedPhoto = await uploadProfilePhoto(profile_photo);
     if (Object.keys(userInputValues).length > 0) {
       updatedUser = await user.update(username, userInputValues);
     }
-    if (profile_photo) {
-      uploadedPhoto = await uploadProfilePhoto(profile_photo);
+    if (uploadedPhoto) {
       updatedUser = await user.setProfilePhoto(targetUser.id, uploadedPhoto);
     }
   } catch (error) {
