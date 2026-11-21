@@ -88,9 +88,128 @@
   font-size: 12px;
 }
 
+.cropOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.cropDialog {
+  width: min(100%, 420px);
+  padding: 24px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
+}
+
+.cropDialog h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.cropDialog p {
+  margin: 0 0 18px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cropViewport {
+  position: relative;
+  width: min(100%, 280px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #111111;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.cropViewport:active {
+  cursor: grabbing;
+}
+
+.cropImage {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+.cropGuide {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.zoomControl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.zoomControl input {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.cropActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.cropActions button {
+  padding: 9px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cropActions button:last-child {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.cropActions button:hover {
+  filter: brightness(1.08);
+}
+
 @media (max-width: 420px) {
   .control {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .cropDialog {
+    padding: 18px;
+  }
+
+  .cropActions {
+    flex-direction: column-reverse;
+  }
+
+  .cropActions button {
+    width: 100%;
   }
 }
