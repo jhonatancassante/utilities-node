@@ -302,6 +302,7 @@ function AdminUsersPage() {
               <UserEditor
                 key={selectedUser.id}
                 user={selectedUser}
+                currentUserId={user.id}
                 onUpdated={handleUserUpdated}
                 onCancel={() => setSelectedUser(null)}
               />
@@ -313,7 +314,8 @@ function AdminUsersPage() {
   );
 }
 
-function UserEditor({ user, onUpdated, onCancel }) {
+function UserEditor({ user, currentUserId, onUpdated, onCancel }) {
+  const isEditingSelf = user.id === currentUserId;
   const [form, setForm] = useState({
     username: user.username,
     email: user.email,
@@ -581,24 +583,25 @@ function UserEditor({ user, onUpdated, onCancel }) {
                 <div className={styles.featureGroup} key={group}>
                   <h4>{group}</h4>
                   <div className={styles.featureList}>
-                    {groupFeatures.map((feature) => (
+                    {groupFeatures.map((feature) => {
+                      const isLockedForSelf =
+                        isEditingSelf && feature.is_self_removable === false;
+                      return (
                       <label
                         className={`${styles.featureOption} ${
-                          feature.is_removable === false
-                            ? styles.featureOptionLocked
-                            : ""
+                          isLockedForSelf ? styles.featureOptionLocked : ""
                         } ${
                           feature.is_privileged ||
                           feature.is_protected ||
-                          feature.is_removable === false
+                          feature.is_self_removable === false
                             ? styles.featureOptionBadged
                             : ""
                         }`}
                         key={feature.name}
                         title={
-                          feature.is_removable === false &&
+                          isLockedForSelf &&
                           form.features.includes(feature.name)
-                            ? "Esta feature não pode ser removida deste usuário"
+                            ? "Esta feature não pode ser removida pelo próprio usuário"
                             : undefined
                         }
                       >
@@ -629,12 +632,12 @@ function UserEditor({ user, onUpdated, onCancel }) {
                               ></i>
                             </span>
                           )}
-                          {feature.is_removable === false && (
+                          {feature.is_self_removable === false && (
                             <span
                               className={`${styles.featureBadge} ${styles.protectedBadge}`}
-                              title="Não pode ser removida deste usuário"
+                              title="Não pode ser removida pelo próprio usuário"
                               role="img"
-                              aria-label="Não pode ser removida deste usuário"
+                              aria-label="Não pode ser removida pelo próprio usuário"
                             >
                               <i className="fas fa-ban" aria-hidden="true"></i>
                             </span>
@@ -646,14 +649,13 @@ function UserEditor({ user, onUpdated, onCancel }) {
                           onChange={() => toggleFeature(feature.name)}
                           disabled={
                             isSaving ||
-                            (feature.is_removable === false &&
+                            (isLockedForSelf &&
                               form.features.includes(feature.name))
                           }
                         />
                         <span
                           className={`${styles.switch} ${
-                            feature.is_removable === false
-                              ? styles.switchLocked
+                            isLockedForSelf ? styles.switchLocked
                               : ""
                           }`}
                           aria-hidden="true"
@@ -664,7 +666,8 @@ function UserEditor({ user, onUpdated, onCancel }) {
                           <code>{feature.name}</code>
                         </span>
                       </label>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );
