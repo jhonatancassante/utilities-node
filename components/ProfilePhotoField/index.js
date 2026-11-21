@@ -233,13 +233,13 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
                 className={styles.cropImage}
                 src={cropSource}
                 alt="Imagem sendo ajustada"
-                width={imageWidth}
-                height={imageHeight}
+                width={imageSize.width}
+                height={imageSize.height}
                 unoptimized
                 draggable={false}
                 style={{
                   width: imageWidth,
-                  height: "auto",
+                  height: imageHeight,
                   left: imageLeft,
                   top: imageTop,
                 }}
