@@ -1,7 +1,12 @@
 import { jest } from "@jest/globals";
 
 import database from "@/infra/database.js";
-import { NotFoundError, ValidationError } from "@/infra/errors.js";
+import {
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "@/infra/errors.js";
+import session from "@/models/session.js";
 import user from "@/models/user.js";
 
 const existingUser = {
@@ -427,4 +432,129 @@ describe("models/user.js", () => {
       expect(updateQuery.values).toEqual([existingUser.id, ["read:migration"]]);
     });
   });
+
+  describe(".setBanStatus()", () => {
+    test("Rejeita um status que não seja booleano", async () => {
+      const querySpy = mockQueries([]);
+
+      await expect(user.setBanStatus("UsuarioAtual", "banido")).rejects.toThrow(
+        ValidationError,
+      );
+
+      expect(querySpy).not.toHaveBeenCalled();
+      expect(database.transaction).not.toHaveBeenCalled();
+    });
+
+    test("Impede que o usuário bana a própria conta", async () => {
+      mockQueries([
+        ["LOWER(users.username) = LOWER($1)", [existingUser]],
+      ]);
+
+      await expect(
+        user.setBanStatus("UsuarioAtual", true, existingUser.id),
+      ).rejects.toThrow(ForbiddenError);
+
+      expect(database.transaction).not.toHaveBeenCalled();
+    });
+
+    test("Não registra evento quando o status já está aplicado", async () => {
+      const alreadyBannedUser = {
+        ...existingUser,
+        banned_at: new Date("2026-01-01T00:00:00.000Z"),
+      };
+      const querySpy = mockQueries([
+        ["LOWER(users.username) = LOWER($1)", [alreadyBannedUser]],
+        ["SELECT * FROM users WHERE id = $1 FOR UPDATE;", [alreadyBannedUser]],
+      ]);
+
+      const result = await user.setBanStatus("UsuarioAtual", true, "admin-1");
+
+      expect(result).toEqual(alreadyBannedUser);
+      expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
+      expect(getCallsContaining(querySpy, "INSERT INTO user_ban_events")).toEqual(
+        [],
+      );
+    });
+
+    test("Registra o banimento e expira as sessões na mesma transação", async () => {
+      const createdAt = new Date("2026-01-01T00:00:00.000Z");
+      const updatedAt = new Date("2026-02-01T00:00:00.000Z");
+      const lockedUser = { ...existingUser, created_at: createdAt, banned_at: null };
+      const bannedUser = { ...lockedUser, banned_at: updatedAt, updated_at: updatedAt };
+      const actor = { username: "Administrador", email: "admin@example.com" };
+      const querySpy = mockQueries([
+        ["LOWER(users.username) = LOWER($1)", [lockedUser]],
+        ["SELECT * FROM users WHERE id = $1 FOR UPDATE;", [lockedUser]],
+        ["UPDATE\n          users", [bannedUser]],
+        ["SELECT username, email FROM users WHERE id = $1;", [actor]],
+        ["INSERT INTO user_ban_events", []],
+      ]);
+      const expireSessionsSpy = jest
+        .spyOn(session, "expireAllByUserId")
+        .mockResolvedValue([]);
+
+      await user.setBanStatus("UsuarioAtual", true, "admin-1");
+
+      const [insertQuery] = getCallsContaining(
+        querySpy,
+        "INSERT INTO user_ban_events",
+      );
+      expect(insertQuery.values).toEqual([
+        existingUser.id,
+        "admin-1",
+        "ban",
+        existingUser.username,
+        existingUser.email,
+        createdAt,
+        actor.username,
+        actor.email,
+        updatedAt,
+      ]);
+      expect(expireSessionsSpy).toHaveBeenCalledWith(
+        existingUser.id,
+        expect.objectContaining({ query: expect.any(Function) }),
+      );
+    });
+
+    test("Registra o desbanimento sem reativar sessões anteriores", async () => {
+      const createdAt = new Date("2026-01-01T00:00:00.000Z");
+      const bannedAt = new Date("2026-01-15T00:00:00.000Z");
+      const updatedAt = new Date("2026-02-01T00:00:00.000Z");
+      const lockedUser = {
+        ...existingUser,
+        created_at: createdAt,
+        banned_at: bannedAt,
+      };
+      const unbannedUser = { ...lockedUser, banned_at: null, updated_at: updatedAt };
+      const actor = { username: "Administrador", email: "admin@example.com" };
+      const querySpy = mockQueries([
+        ["LOWER(users.username) = LOWER($1)", [lockedUser]],
+        ["SELECT * FROM users WHERE id = $1 FOR UPDATE;", [lockedUser]],
+        ["UPDATE\n          users", [unbannedUser]],
+        ["SELECT username, email FROM users WHERE id = $1;", [actor]],
+        ["INSERT INTO user_ban_events", []],
+      ]);
+      const expireSessionsSpy = jest.spyOn(session, "expireAllByUserId");
+
+      await user.setBanStatus("UsuarioAtual", false, "admin-1");
+
+      const [insertQuery] = getCallsContaining(
+        querySpy,
+        "INSERT INTO user_ban_events",
+      );
+      expect(insertQuery.values).toEqual([
+        existingUser.id,
+        "admin-1",
+        "unban",
+        existingUser.username,
+        existingUser.email,
+        createdAt,
+        actor.username,
+        actor.email,
+        updatedAt,
+      ]);
+      expect(expireSessionsSpy).not.toHaveBeenCalled();
+    });
+  });
+
 });

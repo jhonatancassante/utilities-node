@@ -10,7 +10,8 @@ beforeAll(async () => {
   await orchestrator.deleteAllEmail();
 });
 
-describe("Caso de Uso: Fluxo de registro com sucesso", () => {
+describe("POST /api/v1/users", () => {
+  describe("Usuário anônimo", () => {
   let createUserRespondseBody;
   let activationTokenId;
   let createSessionResponseBody;
@@ -123,5 +124,6 @@ describe("Caso de Uso: Fluxo de registro com sucesso", () => {
 
     const userResponseBody = await userResponse.json();
     expect(userResponseBody.id).toBe(createUserRespondseBody.id);
+  });
   });
 });

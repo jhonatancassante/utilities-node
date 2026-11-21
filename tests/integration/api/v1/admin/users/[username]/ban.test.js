@@ -1,3 +1,4 @@
+
 import orchestrator from "tests/orchestrator.js";
 import database from "@/infra/database.js";
 import user from "@/models/user.js";
@@ -11,11 +12,11 @@ beforeAll(async () => {
 });
 
 function adminUserUrl(username) {
-  return `${orchestrator.API_URL}/admin/users/${username}`;
+  return orchestrator.API_URL + "/admin/users/" + username;
 }
 
 function adminUserBanUrl(username) {
-  return `${adminUserUrl(username)}/ban`;
+  return adminUserUrl(username) + "/ban";
 }
 
 async function createPrivilegedSession() {
@@ -34,175 +35,141 @@ async function createPrivilegedSession() {
   return { privilegedUser, sessionObject };
 }
 
-describe("/api/v1/admin/users/[username]/ban", () => {
-  test("Rejeita tentativa de banimento por usuário anônimo", async () => {
-    const targetUser = await orchestrator.createUser();
+async function createStandardSession() {
+  const standardUser = await orchestrator.createUser();
+  await orchestrator.activateUser(standardUser);
+  const sessionObject = await orchestrator.createSession(standardUser);
+  return { standardUser, sessionObject };
+}
 
-    const response = await fetch(adminUserBanUrl(targetUser.username), {
-      method: "POST",
+describe("POST /api/v1/admin/users/[username]/ban", () => {
+  describe("Usuário anônimo", () => {
+    test("Tentando banir outro usuário", async () => {
+      const targetUser = await orchestrator.createUser();
+
+      const response = await fetch(adminUserBanUrl(targetUser.username), {
+        method: "POST",
+      });
+
+      expect(response.status).toBe(403);
     });
-
-    expect(response.status).toBe(403);
   });
 
-  test("Rejeita consulta à auditoria sem a feature read:audit", async () => {
-    const response = await fetch(
-      `${orchestrator.API_URL}/admin/audit/banned`,
-    );
+  describe("Usuário padrão", () => {
+    test("Tentando banir outro usuário sem permissões administrativas", async () => {
+      const { sessionObject } = await createStandardSession();
+      const targetUser = await orchestrator.createUser();
 
-    expect(response.status).toBe(403);
+      const response = await fetch(adminUserBanUrl(targetUser.username), {
+        method: "POST",
+        headers: { Cookie: "session_id=" + sessionObject.token },
+      });
+
+      expect(response.status).toBe(403);
+    });
   });
 
-  test("Permite banir e desbanir outro usuário", async () => {
-    const { privilegedUser, sessionObject } = await createPrivilegedSession();
-    const targetUser = await orchestrator.createUser();
-    await orchestrator.activateUser(targetUser);
-    const targetSessions = await Promise.all([
-      orchestrator.createSession(targetUser),
-      orchestrator.createSession(targetUser),
-    ]);
-    const headers = { Cookie: `session_id=${sessionObject.token}` };
+  describe("Usuário privilegiado", () => {
+    test("Banindo outro usuário, encerrando suas sessões e bloqueando o login", async () => {
+      const { privilegedUser, sessionObject } = await createPrivilegedSession();
+      const targetUser = await orchestrator.createUser();
+      await orchestrator.activateUser(targetUser);
+      const targetSessions = await Promise.all([
+        orchestrator.createSession(targetUser),
+        orchestrator.createSession(targetUser),
+      ]);
+      const headers = { Cookie: "session_id=" + sessionObject.token };
 
-    const banResponse = await fetch(adminUserBanUrl(targetUser.username), {
-      method: "POST",
-      headers,
-    });
+      const banResponse = await fetch(adminUserBanUrl(targetUser.username), {
+        method: "POST",
+        headers,
+      });
 
-    expect(banResponse.status).toBe(200);
-    const bannedUser = await banResponse.json();
-    expect(bannedUser.id).toBe(targetUser.id);
-    expect(Date.parse(bannedUser.banned_at)).not.toBeNaN();
+      expect(banResponse.status).toBe(200);
+      const bannedUser = await banResponse.json();
+      expect(bannedUser.id).toBe(targetUser.id);
+      expect(Date.parse(bannedUser.banned_at)).not.toBeNaN();
 
-    const persistedBannedUser = await user.findOneById(targetUser.id);
-    expect(Date.parse(persistedBannedUser.banned_at)).not.toBeNaN();
+      const persistedBannedUser = await user.findOneById(targetUser.id);
+      expect(Date.parse(persistedBannedUser.banned_at)).not.toBeNaN();
 
-    const expiredSessions = await database.query({
-      text: "SELECT expires_at FROM sessions WHERE user_id = $1;",
-      values: [targetUser.id],
-    });
-    expect(expiredSessions.rows).toHaveLength(targetSessions.length);
-    expect(
-      expiredSessions.rows.every(
-        (item) => new Date(item.expires_at) < new Date(),
-      ),
-    ).toBe(true);
+      const expiredSessions = await database.query({
+        text: "SELECT expires_at FROM sessions WHERE user_id = $1;",
+        values: [targetUser.id],
+      });
+      expect(expiredSessions.rows).toHaveLength(targetSessions.length);
+      expect(
+        expiredSessions.rows.every(
+          (item) => new Date(item.expires_at) < new Date(),
+        ),
+      ).toBe(true);
 
-    for (const targetSession of targetSessions) {
-      await expect(
-        session.findOneValidByToken(targetSession.token),
-      ).rejects.toThrow("Usuário não possui sessão ativa.");
+      for (const targetSession of targetSessions) {
+        await expect(
+          session.findOneValidByToken(targetSession.token),
+        ).rejects.toThrow("Usuário não possui sessão ativa.");
 
-      const existingSessionResponse = await fetch(
-        `${orchestrator.API_URL}/user`,
-        { headers: { Cookie: `session_id=${targetSession.token}` } },
-      );
-      expect(existingSessionResponse.status).toBe(401);
-    }
+        const existingSessionResponse = await fetch(
+          orchestrator.API_URL + "/user",
+          { headers: { Cookie: "session_id=" + targetSession.token } },
+        );
+        expect(existingSessionResponse.status).toBe(401);
+      }
 
-    const loginResponse = await fetch(`${orchestrator.API_URL}/sessions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: targetUser.email,
-        password: "Senha_Padrao_V@l1d@_1234",
-      }),
-    });
-    expect(loginResponse.status).toBe(403);
-    expect(await loginResponse.json()).toMatchObject({
-      name: "BannedUserError",
-      message: "Esta conta foi banida e não pode acessar o sistema.",
-      action:
-        "Entre em contato com a administração do sistema caso acredite que isso seja um engano.",
-      status_code: 403,
-    });
-
-    const searchResponse = await fetch(
-      `${orchestrator.API_URL}/admin/users?search=${encodeURIComponent(
-        targetUser.username,
-      )}`,
-      { headers },
-    );
-    expect(searchResponse.status).toBe(200);
-    const searchResults = await searchResponse.json();
-    expect(searchResults[0].banned_at).toBe(bannedUser.banned_at);
-
-    const auditResponse = await fetch(
-      `${orchestrator.API_URL}/admin/audit/banned`,
-      { headers },
-    );
-    expect(auditResponse.status).toBe(200);
-    const banEvents = await auditResponse.json();
-    expect(banEvents).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          user_id: targetUser.id,
-          action: "ban",
-          username: targetUser.username,
-          email: targetUser.email,
-          actor_user_id: privilegedUser.id,
-          actor_username: privilegedUser.username,
-          is_currently_banned: true,
-        }),
-      ]),
-    );
-
-    const unbanResponse = await fetch(adminUserBanUrl(targetUser.username), {
-      method: "DELETE",
-      headers,
-    });
-
-    expect(unbanResponse.status).toBe(200);
-    const unbannedUser = await unbanResponse.json();
-    expect(unbannedUser.banned_at).toBeNull();
-
-    const persistedUnbannedUser = await user.findOneById(targetUser.id);
-    expect(persistedUnbannedUser.banned_at).toBeNull();
-
-    const historyResponse = await fetch(
-      `${orchestrator.API_URL}/admin/audit/banned`,
-      { headers },
-    );
-    expect(historyResponse.status).toBe(200);
-    const history = await historyResponse.json();
-    expect(
-      history
-        .filter((event) => event.user_id === targetUser.id)
-        .map((event) => event.action),
-    ).toEqual(["unban", "ban"]);
-    expect(
-      history.filter((event) => event.user_id === targetUser.id).every(
-        (event) => event.actor_user_id === privilegedUser.id,
-      ),
-    ).toBe(true);
-
-    for (const targetSession of targetSessions) {
-      await expect(
-        session.findOneValidByToken(targetSession.token),
-      ).rejects.toThrow("Usuário não possui sessão ativa.");
-    }
-
-    const loginAfterUnbanResponse = await fetch(
-      `${orchestrator.API_URL}/sessions`,
-      {
+      const loginResponse = await fetch(orchestrator.API_URL + "/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: targetUser.email,
           password: "Senha_Padrao_V@l1d@_1234",
         }),
-      },
-    );
-    expect(loginAfterUnbanResponse.status).toBe(201);
-  });
+      });
+      expect(loginResponse.status).toBe(403);
+      expect(await loginResponse.json()).toMatchObject({
+        name: "BannedUserError",
+        message: "Esta conta foi banida e não pode acessar o sistema.",
+        action:
+          "Entre em contato com a administração do sistema caso acredite que isso seja um engano.",
+        status_code: 403,
+      });
 
-  test(
-    "Não permite reutilizar username ou e-mail de uma conta banida",
-    async () => {
+      const searchResponse = await fetch(
+        orchestrator.API_URL +
+          "/admin/users?search=" +
+          encodeURIComponent(targetUser.username),
+        { headers },
+      );
+      expect(searchResponse.status).toBe(200);
+      const searchResults = await searchResponse.json();
+      expect(searchResults[0].banned_at).toBe(bannedUser.banned_at);
+
+      const auditResponse = await fetch(
+        orchestrator.API_URL + "/admin/audit/banned",
+        { headers },
+      );
+      expect(auditResponse.status).toBe(200);
+      const banEvents = await auditResponse.json();
+      expect(banEvents).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            user_id: targetUser.id,
+            action: "ban",
+            username: targetUser.username,
+            email: targetUser.email,
+            actor_user_id: privilegedUser.id,
+            actor_username: privilegedUser.username,
+            is_currently_banned: true,
+          }),
+        ]),
+      );
+    });
+
+    test("Impedindo a reutilização do username ou e-mail de uma conta banida", async () => {
       const { sessionObject } = await createPrivilegedSession();
       const targetUser = await orchestrator.createUser();
       const headers = {
         "Content-Type": "application/json",
-        Cookie: `session_id=${sessionObject.token}`,
+        Cookie: "session_id=" + sessionObject.token,
       };
 
       const banResponse = await fetch(adminUserBanUrl(targetUser.username), {
@@ -212,7 +179,7 @@ describe("/api/v1/admin/users/[username]/ban", () => {
       expect(banResponse.status).toBe(200);
 
       const duplicateUsernameResponse = await fetch(
-        `${orchestrator.API_URL}/users`,
+        orchestrator.API_URL + "/users",
         {
           method: "POST",
           headers,
@@ -229,7 +196,7 @@ describe("/api/v1/admin/users/[username]/ban", () => {
       });
 
       const duplicateEmailResponse = await fetch(
-        `${orchestrator.API_URL}/users`,
+        orchestrator.API_URL + "/users",
         {
           method: "POST",
           headers,
@@ -244,24 +211,113 @@ describe("/api/v1/admin/users/[username]/ban", () => {
       expect(await duplicateEmailResponse.json()).toMatchObject({
         message: "O email informado já está sendo utilizado.",
       });
-    },
-  );
-
-  test("Impede que o administrador bana a própria conta", async () => {
-    const { privilegedUser, sessionObject } = await createPrivilegedSession();
-
-    const response = await fetch(adminUserBanUrl(privilegedUser.username), {
-      method: "POST",
-      headers: { Cookie: `session_id=${sessionObject.token}` },
     });
 
-    expect(response.status).toBe(403);
-    expect(await response.json()).toMatchObject({
-      name: "ForbiddenError",
-      message: "Não é permitido banir a própria conta administrativa.",
-    });
+    test("Impedindo que o administrador bana a própria conta", async () => {
+      const { privilegedUser, sessionObject } = await createPrivilegedSession();
 
-    const unchangedUser = await user.findOneById(privilegedUser.id);
-    expect(unchangedUser.banned_at).toBeNull();
+      const response = await fetch(adminUserBanUrl(privilegedUser.username), {
+        method: "POST",
+        headers: { Cookie: "session_id=" + sessionObject.token },
+      });
+
+      expect(response.status).toBe(403);
+      expect(await response.json()).toMatchObject({
+        name: "ForbiddenError",
+        message: "Não é permitido banir a própria conta administrativa.",
+      });
+
+      const unchangedUser = await user.findOneById(privilegedUser.id);
+      expect(unchangedUser.banned_at).toBeNull();
+    });
+  });
+});
+
+describe("DELETE /api/v1/admin/users/[username]/ban", () => {
+  describe("Usuário anônimo", () => {
+    test("Tentando desbanir outro usuário", async () => {
+      const targetUser = await orchestrator.createUser();
+
+      const response = await fetch(adminUserBanUrl(targetUser.username), {
+        method: "DELETE",
+      });
+
+      expect(response.status).toBe(403);
+    });
+  });
+
+  describe("Usuário padrão", () => {
+    test("Tentando desbanir outro usuário sem permissões administrativas", async () => {
+      const { sessionObject } = await createStandardSession();
+      const targetUser = await orchestrator.createUser();
+
+      const response = await fetch(adminUserBanUrl(targetUser.username), {
+        method: "DELETE",
+        headers: { Cookie: "session_id=" + sessionObject.token },
+      });
+
+      expect(response.status).toBe(403);
+    });
+  });
+
+  describe("Usuário privilegiado", () => {
+    test("Desbanindo outro usuário sem reativar sessões anteriores", async () => {
+      const { privilegedUser, sessionObject } = await createPrivilegedSession();
+      const targetUser = await orchestrator.createUser({
+        password: "Senha_Padrao_V@l1d@_1234",
+      });
+      await orchestrator.activateUser(targetUser);
+      const targetSessions = await Promise.all([
+        orchestrator.createSession(targetUser),
+        orchestrator.createSession(targetUser),
+      ]);
+
+      await user.setBanStatus(targetUser.username, true, privilegedUser.id);
+
+      const response = await fetch(adminUserBanUrl(targetUser.username), {
+        method: "DELETE",
+        headers: { Cookie: "session_id=" + sessionObject.token },
+      });
+
+      expect(response.status).toBe(200);
+      const unbannedUser = await response.json();
+      expect(unbannedUser.banned_at).toBeNull();
+
+      const persistedUnbannedUser = await user.findOneById(targetUser.id);
+      expect(persistedUnbannedUser.banned_at).toBeNull();
+
+      for (const targetSession of targetSessions) {
+        await expect(
+          session.findOneValidByToken(targetSession.token),
+        ).rejects.toThrow("Usuário não possui sessão ativa.");
+      }
+
+      const historyResponse = await fetch(
+        orchestrator.API_URL + "/admin/audit/banned",
+        { headers: { Cookie: "session_id=" + sessionObject.token } },
+      );
+      expect(historyResponse.status).toBe(200);
+      const history = await historyResponse.json();
+      expect(
+        history
+          .filter((event) => event.user_id === targetUser.id)
+          .map((event) => event.action),
+      ).toEqual(["unban", "ban"]);
+      expect(
+        history
+          .filter((event) => event.user_id === targetUser.id)
+          .every((event) => event.actor_user_id === privilegedUser.id),
+      ).toBe(true);
+
+      const loginResponse = await fetch(orchestrator.API_URL + "/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: targetUser.email,
+          password: "Senha_Padrao_V@l1d@_1234",
+        }),
+      });
+      expect(loginResponse.status).toBe(201);
+    });
   });
 });
