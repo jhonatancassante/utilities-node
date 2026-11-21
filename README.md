@@ -192,7 +192,7 @@ No ambiente local, o Mailcatcher recebe SMTP na porta `1025` e apresenta as mens
 
 A origem dos links de ativação é definida em `infra/webserver.js`: localmente é `http://localhost:3000`, em preview usa `VERCEL_URL` e em produção usa o domínio configurado no código.
 
-As fotos de perfil são opcionais e usam o Cloudinary. Configure as três variáveis acima no `.env.development` e também no ambiente de produção. Nunca utilize o prefixo `NEXT_PUBLIC_` nessas credenciais. São aceitos JPEG, PNG e WebP estáticos, com até 2 MB e dimensões entre 128×128 e 2048×2048 pixels. A aplicação valida o conteúdo do arquivo no servidor, usa o SDK oficial do Cloudinary e identifica cada foto por `profile-photos/{user_id}`. A substituição sobrescreve o ativo do próprio usuário e invalida o cache de entrega; fotos antigas com identificadores aleatórios são removidas após a persistência da nova referência no banco.
+As fotos de perfil são opcionais e usam o Cloudinary. Configure as três variáveis acima no `.env.development` e também no ambiente de produção. Nunca utilize o prefixo `NEXT_PUBLIC_` nessas credenciais. São aceitos JPEG, PNG e WebP estáticos, com até 2 MB e dimensões entre 128×128 e 2048×2048 pixels. Antes do envio, a interface permite mover e ampliar a imagem em um recorte quadrado. A aplicação valida o conteúdo do arquivo no servidor, usa o SDK oficial do Cloudinary e identifica cada foto por `profile-photos/{user_id}`. A substituição sobrescreve o ativo do próprio usuário e invalida o cache de entrega; fotos antigas com identificadores aleatórios são removidas após a persistência da nova referência no banco.
 
 ## API
 
