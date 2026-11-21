@@ -265,7 +265,11 @@ function Header() {
                 aria-controls="account-menu"
                 onClick={() => toggleMenu(MENU.account)}
               >
-                {getInitials(user.username)}
+                {user.profile_photo_url ? (
+                  <img className={styles.avatarPhoto} src={user.profile_photo_url} alt="" />
+                ) : (
+                  getInitials(user.username)
+                )}
               </button>
               <div
                 id="account-menu"

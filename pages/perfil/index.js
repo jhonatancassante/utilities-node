@@ -5,6 +5,7 @@ import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
+import ProfilePhotoField from "@/components/ProfilePhotoField";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
 import {
@@ -67,6 +68,7 @@ function ProfileForm({ user, onUpdated }) {
     passwordConfirmation: "",
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState("");
   const [touched, setTouched] = useState({});
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,6 +113,7 @@ function ProfileForm({ user, onUpdated }) {
     });
 
     setTouched({});
+    setProfilePhoto("");
     setFeedback(null);
     setIsEditing(true);
   }
@@ -123,6 +126,7 @@ function ProfileForm({ user, onUpdated }) {
       passwordConfirmation: "",
     });
     setTouched({});
+    setProfilePhoto("");
     setFeedback(null);
     setShowPassword(false);
     setShowPasswordConfirmation(false);
@@ -177,6 +181,7 @@ function ProfileForm({ user, onUpdated }) {
     if (form.password) {
       payload.password = form.password;
     }
+    if (profilePhoto) payload.profile_photo = profilePhoto;
 
     if (Object.keys(payload).length === 0) {
       handleCancel();
@@ -187,7 +192,7 @@ function ProfileForm({ user, onUpdated }) {
     setFeedback(null);
 
     try {
-      await requestAPI(`/api/v1/users/${encodeURIComponent(user.username)}`, {
+      const savedUser = await requestAPI(`/api/v1/users/${encodeURIComponent(user.username)}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
       });
@@ -196,6 +201,7 @@ function ProfileForm({ user, onUpdated }) {
         ...user,
         username: payload.username ?? user.username,
         email: payload.email ?? user.email,
+        profile_photo_url: savedUser.profile_photo_url ?? user.profile_photo_url,
       };
 
       onUpdated(updatedUser);
@@ -206,6 +212,7 @@ function ProfileForm({ user, onUpdated }) {
         passwordConfirmation: "",
       });
       setTouched({});
+      setProfilePhoto("");
       setShowPassword(false);
       setShowPasswordConfirmation(false);
       setIsEditing(false);
@@ -223,8 +230,12 @@ function ProfileForm({ user, onUpdated }) {
 
   return (
     <section className={`${shared.card} ${styles.card}`}>
-      <div className={shared.icon} aria-hidden="true">
-        <i className="fas fa-user"></i>
+      <div className={styles.profileAvatar} aria-hidden="true">
+        {user.profile_photo_url ? (
+          <img src={user.profile_photo_url} alt="" />
+        ) : (
+          user.username.slice(0, 2).toUpperCase()
+        )}
       </div>
       <span className={shared.badge}>MINHA CONTA</span>
       <h1>Meu perfil</h1>
@@ -283,6 +294,12 @@ function ProfileForm({ user, onUpdated }) {
 
         {isEditing && (
           <>
+            <ProfilePhotoField
+              value={profilePhoto}
+              initialUrl={user.profile_photo_url}
+              onChange={setProfilePhoto}
+              disabled={isSubmitting}
+            />
             <div className={styles.divider}>
               <span>Alterar senha</span>
               <small>Deixe em branco se não quiser trocar sua senha.</small>
