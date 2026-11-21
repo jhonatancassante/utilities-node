@@ -2,7 +2,7 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 100;
   width: 100%;
   height: clamp(64px, 9vw, 76px);
   padding: 0 clamp(16px, 2.5vw, 28px);
@@ -234,11 +234,12 @@ a.toolItem[aria-current="page"] {
   height: 40px;
   padding: 0;
   display: none;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--header-text);
   font-size: 1.2rem;
   cursor: pointer;
@@ -252,7 +253,11 @@ a.toolItem[aria-current="page"] {
 /* ---------- Mobile ---------- */
 @media (max-width: 860px) {
   .content {
-    gap: 16px;
+    gap: 12px;
+  }
+
+  .brand {
+    margin-right: auto;
   }
 
   .menuButton {
@@ -268,6 +273,7 @@ a.toolItem[aria-current="page"] {
     top: 100%;
     left: 0;
     right: 0;
+    z-index: 90;
     display: none;
     max-height: calc(100vh - 64px);
     overflow-y: auto;
@@ -402,7 +408,7 @@ a.toolItem[aria-current="page"] {
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
-  z-index: 70;
+  z-index: 120;
   min-width: 190px;
   padding: 8px;
   display: none;
@@ -475,7 +481,7 @@ a.toolItem[aria-current="page"] {
   }
 
   .accountMenu {
-    margin-left: auto;
+    margin-left: 0;
   }
 
   .avatar {
@@ -499,4 +505,38 @@ a.toolItem[aria-current="page"] {
     color: #16305a;
     box-shadow: var(--shadow-md);
   }
+}
+
+
+.themeItem {
+  padding: 4px 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.themeItem > button {
+  width: 100%;
+  height: auto;
+  min-height: 38px;
+  padding: 9px 12px;
+  justify-content: flex-start;
+  gap: 10px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  transform: none;
+}
+
+.themeItem > button::after {
+  content: "Alternar tema";
+}
+
+.themeItem > button:hover {
+  background: var(--accent-soft);
+  transform: none;
+}
+
+.themeItem > button:focus-visible {
+  outline-color: var(--accent);
 }

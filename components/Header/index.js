@@ -74,6 +74,20 @@ function Header() {
   return (
     <header className={styles.header} ref={headerRef}>
       <div className={styles.content}>
+        <button
+          type="button"
+          className={styles.menuButton}
+          aria-expanded={isMobileOpen}
+          aria-controls="main-nav"
+          aria-label={isMobileOpen ? "Fechar menu" : "Abrir menu"}
+          onClick={() => toggleMenu(MENU.mobile)}
+        >
+          <i
+            className={`fas ${isMobileOpen ? "fa-times" : "fa-bars"}`}
+            aria-hidden="true"
+          ></i>
+        </button>
+
         <Link href="/" className={styles.brand} onClick={closeMenus}>
           <i className="fas fa-tools" aria-hidden="true"></i>
           <span>{headConfigs.appName}</span>
@@ -252,6 +266,9 @@ function Header() {
                     Administração
                   </Link>
                 )}
+                <div className={styles.themeItem}>
+                  <ThemeToggle />
+                </div>
                 <button
                   type="button"
                   className={styles.accountItem}
@@ -269,21 +286,7 @@ function Header() {
             </div>
           )}
 
-          <ThemeToggle />
-
-          <button
-            type="button"
-            className={styles.menuButton}
-            aria-expanded={isMobileOpen}
-            aria-controls="main-nav"
-            aria-label={isMobileOpen ? "Fechar menu" : "Abrir menu"}
-            onClick={() => toggleMenu(MENU.mobile)}
-          >
-            <i
-              className={`fas ${isMobileOpen ? "fa-times" : "fa-bars"}`}
-              aria-hidden="true"
-            ></i>
-          </button>
+          {user === null && <ThemeToggle />}
         </div>
       </div>
     </header>

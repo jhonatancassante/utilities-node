@@ -1,6 +1,6 @@
 .breadcrumb {
   position: relative;
-  z-index: 110;
+  z-index: 1;
   width: min(calc(100% - 48px), 1280px);
   margin: 18px auto -14px;
   color: var(--text-secondary);
