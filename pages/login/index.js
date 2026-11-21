@@ -54,7 +54,7 @@ function LoginPage() {
     } catch (error) {
       setFeedback({
         type: "error",
-        name: error.name === "BannedUserError" ? "Conta banida" : undefined,
+        name: error.name === "BannedUserError" ? error.name : undefined,
         message: error.message,
         action: error.action,
       });
@@ -135,7 +135,7 @@ function LoginPage() {
                 </div>
               </div>
 
-              {feedback && (
+              {feedback && !feedback.name && (
                 <div className={styles.feedback} role="alert">
                   <StatusMessage
                     type="inline-error"
