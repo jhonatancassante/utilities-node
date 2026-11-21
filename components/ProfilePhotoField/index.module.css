@@ -130,7 +130,8 @@
   background: #111111;
   cursor: grab;
   touch-action: none;
-  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
 .cropViewport:active {
@@ -163,7 +164,6 @@
 
 .zoomControl input {
   width: 100%;
-  accent-color: var(--accent);
 }
 
 .cropActions {
