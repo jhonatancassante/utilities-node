@@ -462,22 +462,52 @@ async function setBanStatus(username, isBanned, actorUserId) {
     });
   }
 
-  const results = await database.query({
-    text: `
-      UPDATE
-        users
-      SET
-        banned_at = CASE WHEN $2 THEN now() ELSE NULL END,
-        updated_at = timezone('utc', now())
-      WHERE
-        id = $1
-      RETURNING
-        *
-    ;`,
-    values: [currentUser.id, isBanned],
-  });
+  return database.transaction(async (client) => {
+    const lockedUser = await client.query({
+      text: "SELECT id FROM users WHERE id = $1 FOR UPDATE;",
+      values: [currentUser.id],
+    });
 
-  return results.rows[0];
+    if (lockedUser.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O usuário não foi encontrado.",
+        action: "Atualize a lista e tente novamente.",
+      });
+    }
+
+    const results = await client.query({
+      text: `
+        UPDATE
+          users
+        SET
+          banned_at = CASE WHEN $2 THEN now() ELSE NULL END,
+          updated_at = timezone('utc', now())
+        WHERE
+          id = $1
+        RETURNING
+          *
+      ;`,
+      values: [currentUser.id, isBanned],
+    });
+
+    if (isBanned) {
+      await client.query({
+        text: `
+          UPDATE
+            sessions
+          SET
+            expires_at = NOW() - interval '1 second',
+            updated_at = timezone('utc', now())
+          WHERE
+            user_id = $1
+            AND expires_at > NOW()
+        ;`,
+        values: [currentUser.id],
+      });
+    }
+
+    return results.rows[0];
+  });
 }
 
 async function setFeatures(userId, userFeatures) {

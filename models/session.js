@@ -8,12 +8,21 @@ async function create(userId) {
   const token = crypto.randomBytes(48).toString("hex");
   const expiresAt = getExpiresAt();
 
-  const newSession = await runInsertQuery(token, userId, expiresAt);
+  return database.transaction(async (client) => {
+    const userResults = await client.query({
+      text: "SELECT banned_at FROM users WHERE id = $1 FOR UPDATE;",
+      values: [userId],
+    });
 
-  return newSession;
+    if (userResults.rowCount === 0 || userResults.rows[0].banned_at) {
+      throw new UnauthorizedError({
+        message: "Não foi possível autenticar seu usuário no sistema.",
+        action:
+          "Verifique se digitou o e-mail e a senha corretamente e tente novamente.",
+      });
+    }
 
-  async function runInsertQuery(token, userId, expiresAt) {
-    const results = await database.query({
+    const results = await client.query({
       text: `
         INSERT INTO
           sessions (token, user_id, expires_at)
@@ -26,7 +35,7 @@ async function create(userId) {
     });
 
     return results.rows[0];
-  }
+  });
 }
 
 async function findOneValidByToken(sessionToken) {
@@ -38,12 +47,16 @@ async function findOneValidByToken(sessionToken) {
     const results = await database.query({
       text: `
         SELECT
-          *
+          sessions.*
         FROM
           sessions
+        INNER JOIN
+          users
+          ON users.id = sessions.user_id
         WHERE
-          token = $1
-          AND expires_at > NOW()
+          sessions.token = $1
+          AND sessions.expires_at > NOW()
+          AND users.banned_at IS NULL
         LIMIT 1
       ;`,
       values: [sessionToken],

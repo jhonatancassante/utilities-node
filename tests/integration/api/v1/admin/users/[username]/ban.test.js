@@ -1,6 +1,7 @@
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
 import feature from "@/models/feature.js";
+import session from "@/models/session.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -44,6 +45,11 @@ describe("/api/v1/admin/users/[username]/ban", () => {
   test("Permite banir e desbanir outro usuário", async () => {
     const { sessionObject } = await createPrivilegedSession();
     const targetUser = await orchestrator.createUser();
+    await orchestrator.activateUser(targetUser);
+    const targetSessions = await Promise.all([
+      orchestrator.createSession(targetUser),
+      orchestrator.createSession(targetUser),
+    ]);
     const headers = { Cookie: `session_id=${sessionObject.token}` };
 
     const banResponse = await fetch(adminUserBanUrl(targetUser.username), {
@@ -58,6 +64,32 @@ describe("/api/v1/admin/users/[username]/ban", () => {
 
     const persistedBannedUser = await user.findOneById(targetUser.id);
     expect(Date.parse(persistedBannedUser.banned_at)).not.toBeNaN();
+
+    for (const targetSession of targetSessions) {
+      await expect(
+        session.findOneValidByToken(targetSession.token),
+      ).rejects.toThrow("Usuário não possui sessão ativa.");
+
+      const existingSessionResponse = await fetch(
+        `${orchestrator.API_URL}/user`,
+        { headers: { Cookie: `session_id=${targetSession.token}` } },
+      );
+      expect(existingSessionResponse.status).toBe(401);
+    }
+
+    const loginResponse = await fetch(`${orchestrator.API_URL}/sessions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: targetUser.email,
+        password: "Senha_Padrao_V@l1d@_1234",
+      }),
+    });
+    expect(loginResponse.status).toBe(401);
+    expect(await loginResponse.json()).toMatchObject({
+      name: "UnauthorizedError",
+      message: "Não foi possível autenticar seu usuário no sistema.",
+    });
 
     const searchResponse = await fetch(
       `${orchestrator.API_URL}/admin/users?search=${encodeURIComponent(targetUser.username)}`,
@@ -78,6 +110,74 @@ describe("/api/v1/admin/users/[username]/ban", () => {
 
     const persistedUnbannedUser = await user.findOneById(targetUser.id);
     expect(persistedUnbannedUser.banned_at).toBeNull();
+
+    for (const targetSession of targetSessions) {
+      await expect(
+        session.findOneValidByToken(targetSession.token),
+      ).rejects.toThrow("Usuário não possui sessão ativa.");
+    }
+
+    const loginAfterUnbanResponse = await fetch(
+      `${orchestrator.API_URL}/sessions`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: targetUser.email,
+          password: "Senha_Padrao_V@l1d@_1234",
+        }),
+      },
+    );
+    expect(loginAfterUnbanResponse.status).toBe(201);
+  });
+
+  test("Não permite reutilizar username ou e-mail de uma conta banida", async () => {
+    const { sessionObject } = await createPrivilegedSession();
+    const targetUser = await orchestrator.createUser();
+    const headers = {
+      "Content-Type": "application/json",
+      Cookie: `session_id=${sessionObject.token}`,
+    };
+
+    const banResponse = await fetch(adminUserBanUrl(targetUser.username), {
+      method: "POST",
+      headers,
+    });
+    expect(banResponse.status).toBe(200);
+
+    const duplicateUsernameResponse = await fetch(
+      `${orchestrator.API_URL}/users`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          username: targetUser.username.toUpperCase(),
+          email: "outro.email@example.com",
+          password: "Senha_Padrao_V@l1d@_1234",
+        }),
+      },
+    );
+    expect(duplicateUsernameResponse.status).toBe(400);
+    expect(await duplicateUsernameResponse.json()).toMatchObject({
+      message: "O nome de usuário informado já está sendo utilizado.",
+    });
+
+    const duplicateEmailResponse = await fetch(
+      `${orchestrator.API_URL}/users`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          username: "outro-usuario",
+          email: targetUser.email.toUpperCase(),
+          password: "Senha_Padrao_V@l1d@_1234",
+        }),
+      },
+    );
+    expect(duplicateEmailResponse.status).toBe(400);
+    expect(await duplicateEmailResponse.json()).toMatchObject({
+      message: "O email informado já está sendo utilizado.",
+    });
   });
 
   test("Impede que o administrador bana a própria conta", async () => {
