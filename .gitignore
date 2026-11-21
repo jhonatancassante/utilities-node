@@ -7,6 +7,7 @@ local
 .env
 .env.*
 !.env.example
+!.env.test
 
 # Added by ggshield
 .cache_ggshield
