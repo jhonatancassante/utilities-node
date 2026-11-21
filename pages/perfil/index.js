@@ -291,6 +291,7 @@ function ProfileForm({ user, onUpdated }) {
               width={176}
               height={176}
               unoptimized
+              loading="eager"
             />
           </button>
         ) : (
@@ -314,8 +315,7 @@ function ProfileForm({ user, onUpdated }) {
           className={styles.photoEditorOverlay}
           role="presentation"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget)
-              handleClosePhotoEditor();
+            if (event.target === event.currentTarget) handleClosePhotoEditor();
           }}
         >
           <section
@@ -397,6 +397,7 @@ function ProfileForm({ user, onUpdated }) {
               width={1024}
               height={1024}
               unoptimized
+              loading="eager"
             />
           </div>
         </div>

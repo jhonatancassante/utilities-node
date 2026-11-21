@@ -545,7 +545,6 @@ function UserEditor({
     }
     if (form.password) payload.password = form.password;
 
-
     const currentFeatures = [...user.features].sort();
     const nextFeatures = [...new Set(form.features)].sort();
     if (JSON.stringify(currentFeatures) !== JSON.stringify(nextFeatures)) {
