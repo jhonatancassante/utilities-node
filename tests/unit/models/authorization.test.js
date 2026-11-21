@@ -40,6 +40,36 @@ describe("models/authorization.js", () => {
       };
       expect(authorization.can(createdUser, "create:user")).toBe(true);
     });
+    test("Com update:user e o próprio recurso", () => {
+      const currentUser = { id: "user-1", features: ["update:user"] };
+      const resource = { id: "user-1" };
+
+      expect(authorization.can(currentUser, "update:user", resource)).toBe(
+        true,
+      );
+    });
+
+    test("Com update:user e outro recurso sem a permissão administrativa", () => {
+      const currentUser = { id: "user-1", features: ["update:user"] };
+      const resource = { id: "user-2" };
+
+      expect(authorization.can(currentUser, "update:user", resource)).toBe(
+        false,
+      );
+    });
+
+    test("Com update:user e outro recurso com a permissão administrativa", () => {
+      const currentUser = {
+        id: "user-1",
+        features: ["update:user", "update:user:others"],
+      };
+      const resource = { id: "user-2" };
+
+      expect(authorization.can(currentUser, "update:user", resource)).toBe(
+        true,
+      );
+    });
+
   });
 
   describe(".filterOutput()", () => {
@@ -102,6 +132,187 @@ describe("models/authorization.js", () => {
         updated_at: "2026-01-01T00:00:00Z",
       });
     });
+
+    test("read:user:others filtra uma lista de usuários e define privilégios vazios", () => {
+      const administrator = { features: ["read:user:others"] };
+      const resource = [
+        {
+          id: "user-2",
+          username: "outro",
+          email: "outro@example.com",
+          features: ["read:session"],
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-02T00:00:00Z",
+          banned_at: null,
+          password: "segredo",
+        },
+      ];
+
+      expect(authorization.filterOutput(administrator, "read:user:others", resource)).toEqual([
+        {
+          id: "user-2",
+          username: "outro",
+          email: "outro@example.com",
+          features: ["read:session"],
+          privileged_features: [],
+          banned_at: null,
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-02T00:00:00Z",
+        },
+      ]);
+    });
+
+    test("read:user:self não expõe outro usuário", () => {
+      const currentUser = { id: "user-1", features: ["read:user:self"] };
+      const resource = { id: "user-2", username: "outro" };
+
+      expect(
+        authorization.filterOutput(currentUser, "read:user:self", resource),
+      ).toBeUndefined();
+    });
+
+    test("read:session não expõe a sessão de outro usuário", () => {
+      const currentUser = { id: "user-1", features: ["read:session"] };
+      const resource = { id: "session-1", user_id: "user-2" };
+
+      expect(
+        authorization.filterOutput(currentUser, "read:session", resource),
+      ).toBeUndefined();
+    });
+
+    test("read:activation_token retorna somente os campos permitidos", () => {
+      const currentUser = { features: ["read:activation_token"] };
+      const resource = {
+        id: "token-1",
+        user_id: "user-1",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:01:00Z",
+        expires_at: "2026-01-01T00:15:00Z",
+        used_at: null,
+        token: "segredo",
+      };
+
+      expect(
+        authorization.filterOutput(
+          currentUser,
+          "read:activation_token",
+          resource,
+        ),
+      ).toEqual({
+        id: "token-1",
+        user_id: "user-1",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:01:00Z",
+        expires_at: "2026-01-01T00:15:00Z",
+        used_at: null,
+      });
+    });
+
+    test("read:migration filtra os campos internos das migrações", () => {
+      const currentUser = { features: ["read:migration"] };
+      const resource = [
+        {
+          path: "infra/migrations/001.js",
+          name: "001",
+          timestamp: 1,
+          applied: true,
+        },
+      ];
+
+      expect(
+        authorization.filterOutput(currentUser, "read:migration", resource),
+      ).toEqual([{ path: "infra/migrations/001.js", name: "001", timestamp: 1 }]);
+    });
+
+    test("read:feature filtra os campos internos de uma feature", () => {
+      const currentUser = { features: ["read:feature"] };
+      const resource = {
+        id: "feature-1",
+        name: "read:reports",
+        label: "Consultar relatórios",
+        group_name: "Relatórios",
+        description: "Permite consultar relatórios.",
+        is_self_removable: true,
+        is_privileged: false,
+        is_protected: false,
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-02T00:00:00Z",
+        deleted_at: null,
+      };
+
+      expect(
+        authorization.filterOutput(currentUser, "read:feature", resource),
+      ).toEqual({
+        id: "feature-1",
+        name: "read:reports",
+        label: "Consultar relatórios",
+        group_name: "Relatórios",
+        description: "Permite consultar relatórios.",
+        is_self_removable: true,
+        is_privileged: false,
+        is_protected: false,
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-02T00:00:00Z",
+      });
+    });
+
+    test("read:status não expõe a versão do banco sem a permissão adicional", () => {
+      const currentUser = { features: ["read:status"] };
+      const resource = {
+        updated_at: "2026-01-01T00:00:00Z",
+        dependencies: {
+          database: {
+            max_connections: 100,
+            opened_connections: 1,
+            version: "16.0",
+          },
+        },
+      };
+
+      expect(
+        authorization.filterOutput(currentUser, "read:status", resource),
+      ).toEqual({
+        updated_at: "2026-01-01T00:00:00Z",
+        dependencies: {
+          database: {
+            max_connections: 100,
+            opened_connections: 1,
+          },
+        },
+      });
+    });
+
+    test("read:status expõe a versão do banco com a permissão adicional", () => {
+      const currentUser = {
+        features: ["read:status", "read:status:all"],
+      };
+      const resource = {
+        updated_at: "2026-01-01T00:00:00Z",
+        dependencies: {
+          database: {
+            max_connections: 100,
+            opened_connections: 1,
+            version: "16.0",
+          },
+        },
+      };
+
+      expect(
+        authorization.filterOutput(currentUser, "read:status", resource)
+          .dependencies.database.version,
+      ).toBe("16.0");
+    });
+
+    test("Feature sem regra de saída específica retorna undefined", () => {
+      expect(
+        authorization.filterOutput(
+          { features: ["read:unknown"] },
+          "read:unknown",
+          {},
+        ),
+      ).toBeUndefined();
+    });
+
     test("read:user:self inclui privilégios cadastrados no banco", () => {
       const currentUser = {
         id: "user-1",
