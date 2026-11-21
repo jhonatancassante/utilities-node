@@ -1,8 +1,12 @@
 .next
 /coverage/
 node_modules
-.env
 local
+
+# Environment variables
+.env
+.env.*
+!.env.example
 
 # Added by ggshield
 .cache_ggshield

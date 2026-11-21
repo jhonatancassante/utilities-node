@@ -61,7 +61,8 @@ async function patchHandler(request, response) {
   let updatedUser = targetUser;
 
   try {
-    if (profile_photo) uploadedPhoto = await uploadProfilePhoto(profile_photo, targetUser.id);
+    if (profile_photo)
+      uploadedPhoto = await uploadProfilePhoto(profile_photo, targetUser.id);
     if (Object.keys(userInputValues).length > 0) {
       updatedUser = await user.update(request.query.username, userInputValues, {
         allowFeatures: true,

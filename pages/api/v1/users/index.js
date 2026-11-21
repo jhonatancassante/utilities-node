@@ -32,7 +32,10 @@ async function postHandler(request, response) {
   try {
     if (profile_photo) {
       userInputValues.id = randomUUID();
-      uploadedPhoto = await uploadProfilePhoto(profile_photo, userInputValues.id);
+      uploadedPhoto = await uploadProfilePhoto(
+        profile_photo,
+        userInputValues.id,
+      );
       userInputValues.profile_photo_url = uploadedPhoto.url;
       userInputValues.profile_photo_public_id = uploadedPhoto.publicId;
     }
