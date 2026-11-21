@@ -142,7 +142,8 @@
   position: absolute;
   max-width: none;
   pointer-events: none;
-  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
 .cropGuide {
