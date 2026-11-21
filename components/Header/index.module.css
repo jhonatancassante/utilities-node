@@ -332,9 +332,19 @@ a.toolItem[aria-current="page"] {
     border-radius: var(--radius-md);
   }
 
-  /* No celular a lista já fica sempre aberta, então a setinha some */
+  .splitItem .navItem {
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+  }
+
   .chevronButton {
-    display: none;
+    padding: 0 14px;
+    border-left-color: var(--border-color);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    color: var(--text-primary);
+  }
+
+  .chevronButton:hover {
+    background-color: var(--accent-soft);
   }
 
   .dropdown {
@@ -342,12 +352,16 @@ a.toolItem[aria-current="page"] {
     min-width: 0;
     margin-left: 22px;
     padding: 0 0 0 8px;
-    display: block;
+    display: none;
     background: transparent;
     border: none;
     border-left: 2px solid var(--border-color);
     border-radius: 0;
     box-shadow: none;
+  }
+
+  .dropdown.dropdownOpen {
+    display: block;
   }
 }
 
