@@ -60,6 +60,26 @@ describe("POST /api/v1/users", () => {
       expect(incorrectPasswordMatch).toBe(false);
     });
 
+    test("Rejeita uma foto de perfil em formato não permitido", async () => {
+      const response = await fetch(`${orchestrator.API_URL}/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: "fotoformato",
+          email: "fotoformato@example.com",
+          password: validPassword,
+          profile_photo: "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=",
+        }),
+      });
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({
+        name: "ValidationError",
+        message: "O formato da imagem não é permitido.",
+        status_code: 400,
+      });
+    });
+
     test("Com nome de usuário duplicado", async () => {
       const response1 = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",

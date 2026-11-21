@@ -182,12 +182,17 @@ Para executar os testes continuamente, mantenha o ambiente ativo com `npm run de
 | `PASSWORD_PEPPER`                                                                     | Segredo usado no processamento das senhas                 |
 | `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`                                                  | Host e porta SMTP                                         |
 | `EMAIL_SMTP_USER`, `EMAIL_SMTP_PASSWORD`                                              | Credenciais SMTP; podem ficar vazias no Mailcatcher local |
+| `CLOUDINARY_CLOUD_NAME`                                                                | Identificação do ambiente Cloudinary                      |
+| `CLOUDINARY_API_KEY`                                                                   | Chave de API usada exclusivamente no servidor             |
+| `CLOUDINARY_API_SECRET`                                                               | Segredo de API usado exclusivamente no servidor           |
 
 Em `development` e `test`, o banco usa as variáveis `POSTGRES_*`. Nos demais ambientes, usa `DATABASE_URL` com `sslmode=verify-full`. A aplicação exige `PASSWORD_PEPPER` para criar ou comparar senhas.
 
 No ambiente local, o Mailcatcher recebe SMTP na porta `1025` e apresenta as mensagens em <http://localhost:1080>. Em produção, configure as variáveis SMTP com os dados do provedor de e-mail. O transporte usa conexão segura quando `NODE_ENV=production`.
 
 A origem dos links de ativação é definida em `infra/webserver.js`: localmente é `http://localhost:3000`, em preview usa `VERCEL_URL` e em produção usa o domínio configurado no código.
+
+As fotos de perfil são opcionais e usam o Cloudinary. Configure as três variáveis acima no `.env.development` e também no ambiente de produção. Nunca utilize o prefixo `NEXT_PUBLIC_` nessas credenciais. São aceitos JPEG, PNG e WebP estáticos, com até 2 MB e dimensões entre 128×128 e 2048×2048 pixels. A aplicação valida o conteúdo do arquivo no servidor, mantém o identificador do ativo para exclusão e entrega a imagem em corte quadrado centralizado. A troca só remove a imagem anterior depois de salvar a nova referência no banco.
 
 ## API
 
