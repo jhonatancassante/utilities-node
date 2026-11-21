@@ -137,11 +137,7 @@ function LoginPage() {
 
               {feedback && !feedback.name && (
                 <div className={styles.feedback} role="alert">
-                  <StatusMessage
-                    type="inline-error"
-                    name={feedback.name}
-                    action={feedback.action}
-                  >
+                  <StatusMessage type="inline-error" action={feedback.action}>
                     {feedback.message}
                   </StatusMessage>
                 </div>
@@ -157,6 +153,16 @@ function LoginPage() {
                 </Button>
               </div>
             </form>
+
+            {feedback?.name && (
+              <StatusMessage
+                type="error"
+                name={feedback.name}
+                action={feedback.action}
+              >
+                {feedback.message}
+              </StatusMessage>
+            )}
 
             <p className={styles.signupPrompt}>
               Ainda não possui uma conta?{" "}

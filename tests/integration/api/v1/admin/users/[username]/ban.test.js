@@ -26,6 +26,7 @@ async function createPrivilegedSession() {
   await orchestrator.activateUser(privilegedUser);
   await orchestrator.addFeaturesToUser(privilegedUser, [
     ...protectedFeatures,
+    "create:user",
     "read:session",
   ]);
   const sessionObject = await orchestrator.createSession(privilegedUser);
