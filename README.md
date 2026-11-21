@@ -209,6 +209,7 @@ Todos os endpoints usam o prefixo `/api/v1`.
 | `GET`            | `/user`                       | Retorna o usuário autenticado e renova a sessão           |
 | `GET`            | `/admin/audit/banned`         | Consulta a auditoria; exige `read:audit`                  |
 | `POST`, `DELETE` | `/admin/users/{username}/ban` | Bane e desbane contas; exige `update:user:others`         |
+| `DELETE`         | `/admin/users/{username}/photo` | Remove a foto de perfil; exige `update:user:others` e `read:user:others` |
 
 A API usa autorização por _features_, não uma regra única de “estar logado”. Algumas operações são públicas, outras exigem sessão válida e outras exigem permissões específicas. Consulte o [guia da API](docs/api/README.md) e a [especificação OpenAPI](docs/api/openapi.yaml).
 

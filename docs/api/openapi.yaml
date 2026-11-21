@@ -408,6 +408,35 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /api/v1/admin/users/{username}/photo:
+    parameters:
+      - $ref: "#/components/parameters/Username"
+    delete:
+      tags: [Admin]
+      operationId: deleteAdminUserPhoto
+      summary: Remove a foto de perfil de um usuário
+      description: Exige sessão válida e as features update:user:others e read:user:others. Remove a referência no banco e solicita a exclusão do ativo no Cloudinary.
+      x-required-feature: update:user:others
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Foto de perfil removida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /api/v1/admin/audit/banned:
     get:
       tags: [Admin]
@@ -718,6 +747,36 @@ components:
             2 maiúsculas, 2 números e 2 caracteres especiais. Termos comuns
             conhecidos como password, admin, qwerty, letmein e welcome são
             rejeitados.
+        profile_photo:
+          type: string
+          maxLength: 2800000
+          description: Data URL de imagem JPEG, PNG ou WebP estática, até 2 MB e dimensões entre 128 e 2048 pixels.
+    AdminUserUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 30
+          pattern: "^[a-zA-Z0-9_-]+$"
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          minLength: 12
+          maxLength: 64
+        features:
+          type: array
+          items:
+            type: string
+        profile_photo:
+          type: string
+          maxLength: 2800000
+          description: Data URL de imagem JPEG, PNG ou WebP estática, até 2 MB e dimensões entre 128 e 2048 pixels.
     PublicUser:
       type: object
       required: [id, username, features, created_at, updated_at]
@@ -737,6 +796,10 @@ components:
         updated_at:
           type: string
           format: date-time
+        profile_photo_url:
+          type: string
+          format: uri
+          description: URL pública da foto de perfil, presente quando cadastrada.
     PrivateUser:
       allOf:
         - $ref: "#/components/schemas/PublicUser"
