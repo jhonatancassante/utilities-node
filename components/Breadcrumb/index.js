@@ -54,7 +54,8 @@ function Breadcrumb() {
   }, [router.asPath]);
 
   const hiddenItems = items.slice(1, -2);
-  const visibleItems = items.length > 3 ? [items[0], ...items.slice(-2)] : items;
+  const visibleItems =
+    items.length > 3 ? [items[0], ...items.slice(-2)] : items;
 
   useEffect(() => {
     function handleRouteChange() {
