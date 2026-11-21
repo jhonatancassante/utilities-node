@@ -129,6 +129,12 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
       canvas.width = OUTPUT_SIZE;
       canvas.height = OUTPUT_SIZE;
       const context = canvas.getContext("2d");
+      if (!context) {
+        setError("Não foi possível preparar o recorte.");
+        return;
+      }
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
       const sourceX = Math.max(0, -imageLeft / scale);
       const sourceY = Math.max(0, -imageTop / scale);
       const sourceSize = VIEWPORT_SIZE / scale;
