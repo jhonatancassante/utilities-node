@@ -99,6 +99,15 @@
   color: var(--text-primary);
 }
 
+.userLink {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.userLink:hover {
+  text-decoration: underline;
+}
+
 .table td:first-child {
   min-width: 180px;
 }

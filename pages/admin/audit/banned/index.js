@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 import AdminBackButton from "@/components/AdminBackButton";
@@ -34,29 +35,64 @@ function formatAccountAge(startValue, endValue) {
     return "—";
   }
 
-  let years = end.getUTCFullYear() - start.getUTCFullYear();
-  let months = end.getUTCMonth() - start.getUTCMonth();
-  let days = end.getUTCDate() - start.getUTCDate();
+  function addMonths(date, amount) {
+    const result = new Date(date);
+    const day = result.getUTCDate();
 
-  if (days < 0) {
-    months -= 1;
-    days += new Date(
-      Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 0),
+    result.setUTCDate(1);
+    result.setUTCMonth(result.getUTCMonth() + amount);
+
+    const lastDay = new Date(
+      Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0),
     ).getUTCDate();
+
+    result.setUTCDate(Math.min(day, lastDay));
+
+    return result;
   }
 
-  if (months < 0) {
-    years -= 1;
-    months += 12;
+  let cursor = new Date(start);
+  let years = 0;
+  let months = 0;
+  let days = 0;
+
+  while (addMonths(cursor, 12) <= end) {
+    cursor = addMonths(cursor, 12);
+    years += 1;
   }
 
-  const parts = [];
+  while (addMonths(cursor, 1) <= end) {
+    cursor = addMonths(cursor, 1);
+    months += 1;
+  }
 
-  if (years) parts.push(`${years} ano(s)`);
-  if (months) parts.push(`${months} mês(es)`);
-  if (days || parts.length === 0) parts.push(`${days} dia(s)`);
+  while (true) {
+    const nextDay = new Date(cursor);
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
 
-  return parts.join(", ");
+    if (nextDay > end) break;
+
+    cursor = nextDay;
+    days += 1;
+  }
+
+  const remainingMinutes = Math.floor((end - cursor) / 60000);
+  const hours = Math.floor(remainingMinutes / 60);
+  const minutes = remainingMinutes % 60;
+
+  const units = [
+    [years, "ano", "anos"],
+    [months, "mês", "meses"],
+    [days, "dia", "dias"],
+    [hours, "hora", "horas"],
+    [minutes, "minuto", "minutos"],
+  ];
+  const firstNonZero = units.findIndex(([value]) => value > 0);
+
+  return units
+    .slice(firstNonZero === -1 ? units.length - 1 : firstNonZero)
+    .map(([value, singular, plural]) => `${value} ${value === 1 ? singular : plural}`)
+    .join(", ");
 }
 
 export default function AdminBannedAuditPage() {
@@ -283,7 +319,16 @@ export default function AdminBannedAuditPage() {
                     {filteredEvents.map((event) => (
                       <tr key={event.id}>
                         <td>
-                          <strong>{event.username}</strong>
+                          {event.user_id ? (
+                            <Link
+                              href={`/admin/users?username=${encodeURIComponent(event.username)}`}
+                              className={styles.userLink}
+                            >
+                              <strong>{event.username}</strong>
+                            </Link>
+                          ) : (
+                            <strong>{event.username}</strong>
+                          )}
                           <small>{event.email}</small>
                           <code>{event.user_id ?? "Conta removida"}</code>
                         </td>

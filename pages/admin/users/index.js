@@ -118,6 +118,42 @@ function AdminUsersPage() {
     }
   }
 
+  useEffect(() => {
+    const username = router.query.username;
+
+    if (
+      !router.isReady ||
+      typeof username !== "string" ||
+      !user ||
+      !hasAdminSectionAccess(user, "users")
+    ) {
+      return undefined;
+    }
+
+    let active = true;
+
+    setSearchTerm(username);
+
+    requestAPI(`/api/v1/admin/users/${encodeURIComponent(username)}`)
+      .then((foundUser) => {
+        if (active) setSelectedUser(foundUser);
+      })
+      .catch((requestError) => {
+        if (!active) return;
+
+        setFeedback({
+          type: "error",
+          name: requestError.statusCode ? requestError.name : undefined,
+          message: requestError.message,
+          action: requestError.action,
+        });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [router.isReady, router.query.username, user]);
+
   async function handleBanStatusChanged(updatedUser) {
     setSelectedUser(updatedUser);
     setResults((currentResults) =>
