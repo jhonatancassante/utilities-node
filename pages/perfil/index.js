@@ -74,6 +74,9 @@ function ProfileForm({ user, onUpdated }) {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState("");
+  const [isPhotoEditorOpen, setIsPhotoEditorOpen] = useState(false);
+  const [isSavingPhoto, setIsSavingPhoto] = useState(false);
+  const [photoFeedback, setPhotoFeedback] = useState(null);
   const [touched, setTouched] = useState({});
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -119,7 +122,6 @@ function ProfileForm({ user, onUpdated }) {
     });
 
     setTouched({});
-    setProfilePhoto("");
     setFeedback(null);
     setIsEditing(true);
   }
@@ -132,11 +134,49 @@ function ProfileForm({ user, onUpdated }) {
       passwordConfirmation: "",
     });
     setTouched({});
-    setProfilePhoto("");
     setFeedback(null);
     setShowPassword(false);
     setShowPasswordConfirmation(false);
     setIsEditing(false);
+  }
+
+  async function handleSavePhoto() {
+    if (!profilePhoto || isSavingPhoto) return;
+
+    setIsSavingPhoto(true);
+    setPhotoFeedback(null);
+
+    try {
+      const savedUser = await requestAPI(
+        `/api/v1/users/${encodeURIComponent(user.username)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ profile_photo: profilePhoto }),
+        },
+      );
+
+      onUpdated({
+        ...user,
+        profile_photo_url: savedUser.profile_photo_url,
+      });
+      setProfilePhoto("");
+      setIsPhotoEditorOpen(false);
+    } catch (error) {
+      setPhotoFeedback({
+        name: error.statusCode ? error.name : undefined,
+        message: error.message,
+        action: error.action,
+      });
+    } finally {
+      setIsSavingPhoto(false);
+    }
+  }
+
+  function handleClosePhotoEditor() {
+    if (isSavingPhoto) return;
+    setProfilePhoto("");
+    setPhotoFeedback(null);
+    setIsPhotoEditorOpen(false);
   }
 
   function renderError(name) {
@@ -187,8 +227,6 @@ function ProfileForm({ user, onUpdated }) {
     if (form.password) {
       payload.password = form.password;
     }
-    if (profilePhoto) payload.profile_photo = profilePhoto;
-
     if (Object.keys(payload).length === 0) {
       handleCancel();
       return;
@@ -222,7 +260,6 @@ function ProfileForm({ user, onUpdated }) {
         passwordConfirmation: "",
       });
       setTouched({});
-      setProfilePhoto("");
       setShowPassword(false);
       setShowPasswordConfirmation(false);
       setIsEditing(false);
@@ -240,24 +277,95 @@ function ProfileForm({ user, onUpdated }) {
 
   return (
     <section className={`${shared.card} ${styles.card}`}>
-      {user.profile_photo_url ? (
+      <div className={styles.profileAvatarWrapper}>
+        {user.profile_photo_url ? (
+          <button
+            className={styles.profileAvatar}
+            type="button"
+            aria-label="Ampliar foto de perfil"
+            onClick={() => setIsPhotoPreviewOpen(true)}
+          >
+            <Image
+              src={user.profile_photo_url}
+              alt=""
+              width={176}
+              height={176}
+              unoptimized
+            />
+          </button>
+        ) : (
+          <div className={styles.profileAvatar} aria-hidden="true">
+            {user.username.slice(0, 2).toUpperCase()}
+          </div>
+        )}
         <button
-          className={styles.profileAvatar}
+          className={styles.editPhotoButton}
           type="button"
-          aria-label="Ampliar foto de perfil"
-          onClick={() => setIsPhotoPreviewOpen(true)}
+          aria-label="Alterar foto de perfil"
+          title="Alterar foto"
+          onClick={() => setIsPhotoEditorOpen(true)}
         >
-          <Image
-            src={user.profile_photo_url}
-            alt=""
-            width={88}
-            height={88}
-            unoptimized
-          />
+          <i className="fas fa-pen" aria-hidden="true"></i>
+          <span>Alterar foto</span>
         </button>
-      ) : (
-        <div className={styles.profileAvatar} aria-hidden="true">
-          {user.username.slice(0, 2).toUpperCase()}
+      </div>
+      {isPhotoEditorOpen && (
+        <div
+          className={styles.photoEditorOverlay}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget)
+              handleClosePhotoEditor();
+          }}
+        >
+          <section
+            className={styles.photoEditorDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-photo-editor-title"
+          >
+            <h2 id="profile-photo-editor-title">Alterar foto de perfil</h2>
+            <p>Escolha uma imagem e ajuste o enquadramento antes de salvar.</p>
+            <ProfilePhotoField
+              value={profilePhoto}
+              initialUrl={user.profile_photo_url}
+              onChange={(value) => {
+                setProfilePhoto(value);
+                setPhotoFeedback(null);
+              }}
+              disabled={isSavingPhoto}
+            />
+            {photoFeedback && (
+              <div className={styles.feedback} role="alert">
+                <StatusMessage
+                  type="inline-error"
+                  name={photoFeedback.name}
+                  action={photoFeedback.action}
+                >
+                  {photoFeedback.message}
+                </StatusMessage>
+              </div>
+            )}
+            <div className={styles.photoEditorActions}>
+              <Button
+                type="button"
+                variant="danger"
+                icon="fa-times"
+                onClick={handleClosePhotoEditor}
+                disabled={isSavingPhoto}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                icon="fa-save"
+                onClick={handleSavePhoto}
+                disabled={!profilePhoto || isSavingPhoto}
+              >
+                {isSavingPhoto ? "Salvando..." : "Salvar foto"}
+              </Button>
+            </div>
+          </section>
         </div>
       )}
       {isPhotoPreviewOpen && (
@@ -350,12 +458,6 @@ function ProfileForm({ user, onUpdated }) {
 
         {isEditing && (
           <>
-            <ProfilePhotoField
-              value={profilePhoto}
-              initialUrl={user.profile_photo_url}
-              onChange={setProfilePhoto}
-              disabled={isSubmitting}
-            />
             <div className={styles.divider}>
               <span>Alterar senha</span>
               <small>Deixe em branco se não quiser trocar sua senha.</small>
