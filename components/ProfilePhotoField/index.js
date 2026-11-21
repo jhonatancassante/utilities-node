@@ -214,11 +214,14 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
               onPointerCancel={handlePointerUp}
               onLostPointerCapture={handlePointerUp}
             >
-              <img
+              <NextImage
                 className={styles.cropImage}
                 src={cropSource}
                 alt="Imagem sendo ajustada"
-                draggable="false"
+                width={imageWidth}
+                height={imageHeight}
+                unoptimized
+                draggable={false}
                 style={{
                   width: imageWidth,
                   height: imageHeight,
