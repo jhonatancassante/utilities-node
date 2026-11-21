@@ -26,8 +26,14 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
     : 1;
   const imageWidth = imageSize ? imageSize.width * scale : VIEWPORT_SIZE;
   const imageHeight = imageSize ? imageSize.height * scale : VIEWPORT_SIZE;
-  const imageLeft = (VIEWPORT_SIZE - imageWidth) / 2 + offset.x;
-  const imageTop = (VIEWPORT_SIZE - imageHeight) / 2 + offset.y;
+  const maxOffsetX = Math.max(0, (imageWidth - VIEWPORT_SIZE) / 2);
+  const maxOffsetY = Math.max(0, (imageHeight - VIEWPORT_SIZE) / 2);
+  const safeOffset = {
+    x: Math.min(maxOffsetX, Math.max(-maxOffsetX, offset.x)),
+    y: Math.min(maxOffsetY, Math.max(-maxOffsetY, offset.y)),
+  };
+  const imageLeft = (VIEWPORT_SIZE - imageWidth) / 2 + safeOffset.x;
+  const imageTop = (VIEWPORT_SIZE - imageHeight) / 2 + safeOffset.y;
 
   useEffect(
     () => () => {
@@ -96,8 +102,8 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
-      offsetX: offset.x,
-      offsetY: offset.y,
+      offsetX: safeOffset.x,
+      offsetY: safeOffset.y,
     };
   }
 
