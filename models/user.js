@@ -2,6 +2,7 @@ import database from "@/infra/database.js";
 import password from "@/models/password.js";
 import {
   ConflictError,
+  ForbiddenError,
   ValidationError,
   NotFoundError,
 } from "@/infra/errors.js";
@@ -182,6 +183,7 @@ async function search(searchTerm) {
         username,
         email,
         features,
+        banned_at,
         created_at,
         updated_at
       FROM
@@ -443,6 +445,41 @@ function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
   return picked;
 }
 
+async function setBanStatus(username, isBanned, actorUserId) {
+  if (typeof isBanned !== "boolean") {
+    throw new ValidationError({
+      message: "O status de banimento deve ser verdadeiro ou falso.",
+      action: "Informe se o usuário deve ser banido ou desbanido.",
+    });
+  }
+
+  const currentUser = await findOneByUsername(username);
+
+  if (currentUser.id === actorUserId) {
+    throw new ForbiddenError({
+      message: "Não é permitido banir a própria conta administrativa.",
+      action: "Selecione outro usuário para realizar esta operação.",
+    });
+  }
+
+  const results = await database.query({
+    text: `
+      UPDATE
+        users
+      SET
+        banned_at = CASE WHEN $2 THEN now() ELSE NULL END,
+        updated_at = timezone('utc', now())
+      WHERE
+        id = $1
+      RETURNING
+        *
+    ;`,
+    values: [currentUser.id, isBanned],
+  });
+
+  return results.rows[0];
+}
+
 async function setFeatures(userId, userFeatures) {
   const updatedUser = await runUpdateQuery(userId, userFeatures);
   return updatedUser;
@@ -562,6 +599,7 @@ const user = {
   findOneByUsername,
   findOneByEmail,
   update,
+  setBanStatus,
   setFeatures,
   addFeatures,
 };
