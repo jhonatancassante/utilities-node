@@ -76,6 +76,7 @@ function ProfileForm({ user, onUpdated }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirmation, setShowPasswordConfirmation] =
     useState(false);
+  const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
 
   const errors = {
     username: validateUsername(form.username.trim())?.message ?? "",
@@ -235,8 +236,13 @@ function ProfileForm({ user, onUpdated }) {
 
   return (
     <section className={`${shared.card} ${styles.card}`}>
-      <div className={styles.profileAvatar} aria-hidden="true">
-        {user.profile_photo_url ? (
+      {user.profile_photo_url ? (
+        <button
+          className={styles.profileAvatar}
+          type="button"
+          aria-label="Ampliar foto de perfil"
+          onClick={() => setIsPhotoPreviewOpen(true)}
+        >
           <Image
             src={user.profile_photo_url}
             alt=""
@@ -244,10 +250,45 @@ function ProfileForm({ user, onUpdated }) {
             height={88}
             unoptimized
           />
-        ) : (
-          user.username.slice(0, 2).toUpperCase()
-        )}
-      </div>
+        </button>
+      ) : (
+        <div className={styles.profileAvatar} aria-hidden="true">
+          {user.username.slice(0, 2).toUpperCase()}
+        </div>
+      )}
+      {isPhotoPreviewOpen && (
+        <div
+          className={styles.photoPreviewOverlay}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget)
+              setIsPhotoPreviewOpen(false);
+          }}
+        >
+          <div
+            className={styles.photoPreviewDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Foto de perfil ampliada"
+          >
+            <button
+              className={styles.photoPreviewClose}
+              type="button"
+              aria-label="Fechar visualização"
+              onClick={() => setIsPhotoPreviewOpen(false)}
+            >
+              <i className="fas fa-times" aria-hidden="true"></i>
+            </button>
+            <Image
+              src={user.profile_photo_url}
+              alt={`Foto de perfil de ${user.username}`}
+              width={640}
+              height={640}
+              unoptimized
+            />
+          </div>
+        </div>
+      )}
       <span className={shared.badge}>MINHA CONTA</span>
       <h1>Meu perfil</h1>
       <p className={styles.description}>
