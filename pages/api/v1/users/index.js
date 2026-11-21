@@ -17,7 +17,7 @@ export default controller.createController(
 
 async function postHandler(request, response) {
   const userTryingToGet = request.context.user;
-  const { profile_photo, ...userInputValues } = request.body;
+  const { profile_photo, ...userInputValues } = request.body ?? {};
   let uploadedPhoto = null;
   let newUser;
 

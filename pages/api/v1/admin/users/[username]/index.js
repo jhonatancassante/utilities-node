@@ -35,6 +35,12 @@ async function getHandler(request, response) {
 
 async function patchHandler(request, response) {
   const userTryingToUpdate = request.context.user;
+  if (!request.body || typeof request.body !== "object" || Array.isArray(request.body)) {
+    throw new ValidationError({
+      message: "O corpo da requisição deve ser um objeto JSON.",
+      action: "Envie um objeto com os campos a serem alterados.",
+    });
+  }
   const { profile_photo, ...userInputValues } = request.body;
   if (profile_photo !== undefined && typeof profile_photo !== "string") {
     throw new ValidationError({

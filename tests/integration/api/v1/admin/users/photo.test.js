@@ -8,6 +8,16 @@ beforeAll(async () => {
 });
 
 describe("DELETE /api/v1/admin/users/[username]/photo", () => {
+  test("Bloqueia usuários sem permissão administrativa", async () => {
+    const targetUser = await orchestrator.createUser();
+    const response = await fetch(
+      `${orchestrator.API_URL}/admin/users/${targetUser.username}/photo`,
+      { method: "DELETE" },
+    );
+
+    expect(response.status).toBe(403);
+  });
+
   test("Remove a referência da foto de perfil com permissão administrativa", async () => {
     const adminUser = await orchestrator.createUser();
     await orchestrator.activateUser(adminUser);
