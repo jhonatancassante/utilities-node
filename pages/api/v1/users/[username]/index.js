@@ -68,7 +68,7 @@ async function patchHandler(request, response) {
   let updatedUser = targetUser;
 
   try {
-    if (profile_photo) uploadedPhoto = await uploadProfilePhoto(profile_photo);
+    if (profile_photo) uploadedPhoto = await uploadProfilePhoto(profile_photo, targetUser.id);
     if (Object.keys(userInputValues).length > 0) {
       updatedUser = await user.update(username, userInputValues);
     }
@@ -76,11 +76,20 @@ async function patchHandler(request, response) {
       updatedUser = await user.setProfilePhoto(targetUser.id, uploadedPhoto);
     }
   } catch (error) {
-    if (uploadedPhoto) await deleteProfilePhoto(uploadedPhoto.publicId);
+    if (
+      uploadedPhoto &&
+      uploadedPhoto.publicId !== targetUser.profile_photo_public_id
+    ) {
+      await deleteProfilePhoto(uploadedPhoto.publicId);
+    }
     throw error;
   }
 
-  if (uploadedPhoto && targetUser.profile_photo_public_id) {
+  if (
+    uploadedPhoto &&
+    targetUser.profile_photo_public_id &&
+    targetUser.profile_photo_public_id !== uploadedPhoto.publicId
+  ) {
     try {
       await deleteProfilePhoto(targetUser.profile_photo_public_id);
     } catch (error) {
