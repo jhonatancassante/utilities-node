@@ -36,11 +36,11 @@ function mockQueries(handlers) {
 }
 
 const existingFeatureMetadata = [
-  { name: "create:session", is_removable: false, deleted_at: null },
-  { name: "read:session", is_removable: false, deleted_at: null },
-  { name: "update:user", is_removable: false, deleted_at: null },
-  { name: "update:user:others", is_removable: true, deleted_at: null },
-  { name: "read:status:all", is_removable: true, deleted_at: null },
+  { name: "create:session", is_self_removable: false, deleted_at: null },
+  { name: "read:session", is_self_removable: false, deleted_at: null },
+  { name: "update:user", is_self_removable: false, deleted_at: null },
+  { name: "update:user:others", is_self_removable: true, deleted_at: null },
+  { name: "read:status:all", is_self_removable: true, deleted_at: null },
 ];
 
 function getCallsContaining(querySpy, pattern) {
@@ -177,7 +177,7 @@ describe("models/user.js", () => {
     test("Com permissão administrativa, atualiza as features", async () => {
       const querySpy = mockQueries([
         [
-          "name,\n          is_removable,\n          deleted_at\n        FROM\n          features",
+          "name,\n          is_self_removable,\n          deleted_at\n        FROM\n          features",
           existingFeatureMetadata,
         ],
         ["SELECT", [existingUser]],
@@ -207,12 +207,12 @@ describe("models/user.js", () => {
     test("Rejeita a alteração de uma feature não editável", async () => {
       const querySpy = mockQueries([
         [
-          "name,\n          is_removable,\n          deleted_at\n        FROM\n          features",
+          "name,\n          is_self_removable,\n          deleted_at\n        FROM\n          features",
           existingFeatureMetadata,
         ],
         [
-          "SELECT name, is_removable FROM features",
-          [{ name: "read:session", is_removable: false }],
+          "SELECT name, is_self_removable FROM features",
+          [{ name: "read:session", is_self_removable: false }],
         ],
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
