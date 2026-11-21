@@ -62,6 +62,10 @@ function ProfilePage() {
 }
 
 function ProfileForm({ user, onUpdated }) {
+  const originalProfilePhotoUrl = user.profile_photo_url?.replace(
+    "/c_fill,g_center,h_256,w_256/",
+    "/",
+  );
   const [form, setForm] = useState({
     username: user.username,
     email: user.email,
@@ -280,7 +284,7 @@ function ProfileForm({ user, onUpdated }) {
               <i className="fas fa-times" aria-hidden="true"></i>
             </button>
             <Image
-              src={user.profile_photo_url}
+              src={originalProfilePhotoUrl}
               alt={`Foto de perfil de ${user.username}`}
               width={1024}
               height={1024}
