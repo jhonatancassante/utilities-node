@@ -607,63 +607,66 @@ function UserEditor({ user, currentUserId, onUpdated, onCancel }) {
                           }
                         >
                           <span className={styles.featureBadges}>
-                          {feature.is_privileged && (
-                            <span
-                              className={`${styles.featureBadge} ${styles.privilegedBadge}`}
-                              title="Permissão privilegiada"
-                              role="img"
-                              aria-label="Permissão privilegiada"
-                            >
-                              <i
-                                className="fas fa-crown"
-                                aria-hidden="true"
-                              ></i>
-                            </span>
-                          )}
-                          {feature.is_protected && (
-                            <span
-                              className={`${styles.featureBadge} ${styles.protectedFeatureBadge}`}
-                              title="Feature protegida: não pode ser alterada ou excluída"
-                              role="img"
-                              aria-label="Feature protegida"
-                            >
-                              <i
-                                className="fas fa-shield-alt"
-                                aria-hidden="true"
-                              ></i>
-                            </span>
-                          )}
-                          {feature.is_self_removable === false && (
-                            <span
-                              className={`${styles.featureBadge} ${styles.protectedBadge}`}
-                              title="Não pode ser removida pelo próprio usuário"
-                              role="img"
-                              aria-label="Não pode ser removida pelo próprio usuário"
-                            >
-                              <i className="fas fa-ban" aria-hidden="true"></i>
-                            </span>
-                          )}
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={form.features.includes(feature.name)}
-                          onChange={() => toggleFeature(feature.name)}
-                          disabled={
-                            isSaving ||
-                            (isLockedForSelf &&
-                              form.features.includes(feature.name))
-                          }
-                        />
-                        <span
-                          className={`${styles.switch} ${
-                            isLockedForSelf ? styles.switchLocked : ""
-                          }`}
-                          aria-hidden="true"
-                        ></span>
-                        <span className={styles.featureText}>
-                          <strong>{feature.label}</strong>
-                          <small>{feature.description}</small>
-                          <code>{feature.name}</code>
+                            {feature.is_privileged && (
+                              <span
+                                className={`${styles.featureBadge} ${styles.privilegedBadge}`}
+                                title="Permissão privilegiada"
+                                role="img"
+                                aria-label="Permissão privilegiada"
+                              >
+                                <i
+                                  className="fas fa-crown"
+                                  aria-hidden="true"
+                                ></i>
+                              </span>
+                            )}
+                            {feature.is_protected && (
+                              <span
+                                className={`${styles.featureBadge} ${styles.protectedFeatureBadge}`}
+                                title="Feature protegida: não pode ser alterada ou excluída"
+                                role="img"
+                                aria-label="Feature protegida"
+                              >
+                                <i
+                                  className="fas fa-shield-alt"
+                                  aria-hidden="true"
+                                ></i>
+                              </span>
+                            )}
+                            {feature.is_self_removable === false && (
+                              <span
+                                className={`${styles.featureBadge} ${styles.protectedBadge}`}
+                                title="Não pode ser removida pelo próprio usuário"
+                                role="img"
+                                aria-label="Não pode ser removida pelo próprio usuário"
+                              >
+                                <i
+                                  className="fas fa-ban"
+                                  aria-hidden="true"
+                                ></i>
+                              </span>
+                            )}
+                          </span>
+                          <input
+                            type="checkbox"
+                            checked={form.features.includes(feature.name)}
+                            onChange={() => toggleFeature(feature.name)}
+                            disabled={
+                              isSaving ||
+                              (isLockedForSelf &&
+                                form.features.includes(feature.name))
+                            }
+                          />
+                          <span
+                            className={`${styles.switch} ${
+                              isLockedForSelf ? styles.switchLocked : ""
+                            }`}
+                            aria-hidden="true"
+                          ></span>
+                          <span className={styles.featureText}>
+                            <strong>{feature.label}</strong>
+                            <small>{feature.description}</small>
+                            <code>{feature.name}</code>
                           </span>
                         </label>
                       );
