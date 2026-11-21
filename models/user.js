@@ -465,7 +465,7 @@ async function setBanStatus(username, isBanned, actorUserId) {
 
   return database.transaction(async (client) => {
     const lockedUser = await client.query({
-      text: "SELECT id FROM users WHERE id = $1 FOR UPDATE;",
+      text: "SELECT * FROM users WHERE id = $1 FOR UPDATE;",
       values: [currentUser.id],
     });
 
@@ -474,6 +474,11 @@ async function setBanStatus(username, isBanned, actorUserId) {
         message: "O usuário não foi encontrado.",
         action: "Atualize a lista e tente novamente.",
       });
+    }
+
+    const lockedUserData = lockedUser.rows[0];
+    if (Boolean(lockedUserData.banned_at) === isBanned) {
+      return lockedUserData;
     }
 
     const results = await client.query({
@@ -489,6 +494,42 @@ async function setBanStatus(username, isBanned, actorUserId) {
           *
       ;`,
       values: [currentUser.id, isBanned],
+    });
+
+    const actorResults = actorUserId
+      ? await client.query({
+          text: "SELECT username, email FROM users WHERE id = $1;",
+          values: [actorUserId],
+        })
+      : { rows: [] };
+    const actor = actorResults.rows[0] ?? {};
+
+    await client.query({
+      text: `
+        INSERT INTO user_ban_events (
+          user_id,
+          actor_user_id,
+          action,
+          username,
+          email,
+          account_created_at,
+          actor_username,
+          actor_email,
+          created_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+      `,
+      values: [
+        lockedUserData.id,
+        actorUserId ?? null,
+        isBanned ? "ban" : "unban",
+        lockedUserData.username,
+        lockedUserData.email,
+        lockedUserData.created_at,
+        actor.username ?? null,
+        actor.email ?? null,
+        results.rows[0].updated_at,
+      ],
     });
 
     if (isBanned) {

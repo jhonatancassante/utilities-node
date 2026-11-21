@@ -1,0 +1,70 @@
+.card {
+  width: 100%;
+  max-width: 1040px;
+}
+
+.header {
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.header h1 {
+  margin: 10px 0;
+  color: var(--text-primary);
+  font-size: 30px;
+}
+
+.header p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.menu {
+  display: grid;
+  gap: 10px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.menuItem:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.menuIcon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.menuItem > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 4px;
+}
+
+.menuItem small {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.menuItem > i {
+  color: var(--text-faint);
+}
