@@ -142,7 +142,7 @@ Os endpoints administrativos retornam `403` quando a sessão não possui `update
 
 ### `DELETE /api/v1/admin/users/{username}/photo`
 
-Remove a foto de perfil do usuário. Exige simultaneamente `update:user:others` e `read:user:others`. A URL e o identificador do ativo são removidos do banco; a aplicação solicita ao Cloudinary a exclusão do arquivo e a invalidação do cache. A operação não altera os demais dados da conta.
+Remove a foto de perfil do usuário. Exige simultaneamente `update:user:others` e `read:user:others`. A URL e o identificador do ativo são removidos do banco; a aplicação solicita ao Cloudinary a exclusão do arquivo e a invalidação do cache. Se o Cloudinary não confirmar a exclusão, a aplicação tenta restaurar a referência no banco e retorna erro. A operação não altera os demais dados da conta.
 
 ### Banimento e desbanimento
 
