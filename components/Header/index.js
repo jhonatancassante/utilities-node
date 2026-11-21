@@ -20,30 +20,43 @@ function Header() {
   const router = useRouter();
   const headerRef = useRef(null);
   const [openMenu, setOpenMenu] = useState(null);
+  const [isToolsExpanded, setIsToolsExpanded] = useState(false);
   const [logoutError, setLogoutError] = useState("");
   const { user, clearUser } = useUser();
 
-  const closeMenus = () => setOpenMenu(null);
+  const closeMenus = () => {
+    setOpenMenu(null);
+    setIsToolsExpanded(false);
+  };
   const isMobileOpen = openMenu === MENU.mobile;
-  const isToolsOpen = openMenu === MENU.tools;
+  const isToolsOpen = isToolsExpanded;
   const isAccountOpen = openMenu === MENU.account;
   const isToolsRoute = router.pathname.startsWith(TOOLS_BASE_PATH);
 
   useEffect(() => {
-    const close = () => setOpenMenu(null);
+    const close = () => {
+      setOpenMenu(null);
+      setIsToolsExpanded(false);
+    };
     router.events.on("routeChangeStart", close);
     return () => router.events.off("routeChangeStart", close);
   }, [router.events]);
 
   useEffect(() => {
-    if (!openMenu) return;
+    if (!openMenu && !isToolsExpanded) return;
 
     function handleKeyDown(event) {
-      if (event.key === "Escape") setOpenMenu(null);
+      if (event.key === "Escape") {
+        setOpenMenu(null);
+        setIsToolsExpanded(false);
+      }
     }
 
     function handlePointerDown(event) {
-      if (!headerRef.current?.contains(event.target)) setOpenMenu(null);
+      if (!headerRef.current?.contains(event.target)) {
+        setOpenMenu(null);
+        setIsToolsExpanded(false);
+      }
     }
 
     document.addEventListener("keydown", handleKeyDown);
@@ -53,11 +66,15 @@ function Header() {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("pointerdown", handlePointerDown);
     };
-  }, [openMenu]);
+  }, [openMenu, isToolsExpanded]);
 
   function toggleMenu(menu) {
     setOpenMenu((current) => (current === menu ? null : menu));
     setLogoutError("");
+  }
+
+  function toggleTools() {
+    setIsToolsExpanded((current) => !current);
   }
 
   async function handleLogout() {
@@ -74,6 +91,23 @@ function Header() {
   return (
     <header className={styles.header} ref={headerRef}>
       <div className={styles.content}>
+        <button
+          type="button"
+          className={styles.menuButton}
+          aria-expanded={isMobileOpen}
+          aria-controls="main-nav"
+          aria-label={isMobileOpen ? "Fechar menu" : "Abrir menu"}
+          onClick={() => {
+            toggleMenu(MENU.mobile);
+            if (isMobileOpen) setIsToolsExpanded(false);
+          }}
+        >
+          <i
+            className={`fas ${isMobileOpen ? "fa-times" : "fa-bars"}`}
+            aria-hidden="true"
+          ></i>
+        </button>
+
         <Link href="/" className={styles.brand} onClick={closeMenus}>
           <i className="fas fa-tools" aria-hidden="true"></i>
           <span>{headConfigs.appName}</span>
@@ -114,8 +148,12 @@ function Header() {
                   className={styles.chevronButton}
                   aria-expanded={isToolsOpen}
                   aria-controls="tools-menu"
-                  aria-label="Abrir lista de ferramentas"
-                  onClick={() => toggleMenu(MENU.tools)}
+                  aria-label={
+                    isToolsOpen
+                      ? "Recolher lista de ferramentas"
+                      : "Expandir lista de ferramentas"
+                  }
+                  onClick={toggleTools}
                 >
                   <i className="fas fa-chevron-down" aria-hidden="true"></i>
                 </button>
@@ -252,6 +290,9 @@ function Header() {
                     Administração
                   </Link>
                 )}
+                <div className={styles.themeItem}>
+                  <ThemeToggle />
+                </div>
                 <button
                   type="button"
                   className={styles.accountItem}
@@ -269,21 +310,7 @@ function Header() {
             </div>
           )}
 
-          <ThemeToggle />
-
-          <button
-            type="button"
-            className={styles.menuButton}
-            aria-expanded={isMobileOpen}
-            aria-controls="main-nav"
-            aria-label={isMobileOpen ? "Fechar menu" : "Abrir menu"}
-            onClick={() => toggleMenu(MENU.mobile)}
-          >
-            <i
-              className={`fas ${isMobileOpen ? "fa-times" : "fa-bars"}`}
-              aria-hidden="true"
-            ></i>
-          </button>
+          {user === null && <ThemeToggle />}
         </div>
       </div>
     </header>
