@@ -313,12 +313,24 @@ function AdminFeaturesPage() {
                 />
                 <div className={styles.searchFilters}>
                   <label className={styles.filterSwitch}>
-                    <input type="checkbox" checked={privilegedOnly} onChange={(event) => setPrivilegedOnly(event.target.checked)} />
+                    <input
+                      type="checkbox"
+                      checked={privilegedOnly}
+                      onChange={(event) =>
+                        setPrivilegedOnly(event.target.checked)
+                      }
+                    />
                     <span className={styles.switch} aria-hidden="true"></span>
                     <span>Privilegiadas</span>
                   </label>
                   <label className={styles.filterSwitch}>
-                    <input type="checkbox" checked={protectedOnly} onChange={(event) => setProtectedOnly(event.target.checked)} />
+                    <input
+                      type="checkbox"
+                      checked={protectedOnly}
+                      onChange={(event) =>
+                        setProtectedOnly(event.target.checked)
+                      }
+                    />
                     <span className={styles.switch} aria-hidden="true"></span>
                     <span>Protegidas</span>
                   </label>
