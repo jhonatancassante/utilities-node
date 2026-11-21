@@ -15,25 +15,27 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
   const [imageSize, setImageSize] = useState(null);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [viewportSize, setViewportSize] = useState(VIEWPORT_SIZE);
+  const cropViewportRef = useRef(null);
   const dragRef = useRef(null);
   const preview = value || initialUrl;
 
   const scale = imageSize
     ? Math.max(
-        VIEWPORT_SIZE / imageSize.width,
-        VIEWPORT_SIZE / imageSize.height,
+        viewportSize / imageSize.width,
+        viewportSize / imageSize.height,
       ) * zoom
     : 1;
   const imageWidth = imageSize ? imageSize.width * scale : VIEWPORT_SIZE;
   const imageHeight = imageSize ? imageSize.height * scale : VIEWPORT_SIZE;
-  const maxOffsetX = Math.max(0, (imageWidth - VIEWPORT_SIZE) / 2);
-  const maxOffsetY = Math.max(0, (imageHeight - VIEWPORT_SIZE) / 2);
+  const maxOffsetX = Math.max(0, (imageWidth - viewportSize) / 2);
+  const maxOffsetY = Math.max(0, (imageHeight - viewportSize) / 2);
   const safeOffset = {
     x: Math.min(maxOffsetX, Math.max(-maxOffsetX, offset.x)),
     y: Math.min(maxOffsetY, Math.max(-maxOffsetY, offset.y)),
   };
-  const imageLeft = (VIEWPORT_SIZE - imageWidth) / 2 + safeOffset.x;
-  const imageTop = (VIEWPORT_SIZE - imageHeight) / 2 + safeOffset.y;
+  const imageLeft = (viewportSize - imageWidth) / 2 + safeOffset.x;
+  const imageTop = (viewportSize - imageHeight) / 2 + safeOffset.y;
 
   useEffect(
     () => () => {
@@ -42,11 +44,17 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
     [cropSource],
   );
 
+  useEffect(() => {
+    if (!cropSource || !cropViewportRef.current) return;
+    setViewportSize(cropViewportRef.current.getBoundingClientRect().width);
+  }, [cropSource]);
+
   function closeCropper() {
     setCropSource("");
     setImageSize(null);
     setZoom(1);
     setOffset({ x: 0, y: 0 });
+    setViewportSize(VIEWPORT_SIZE);
   }
 
   function handleFileChange(event) {
@@ -137,7 +145,7 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
       context.fillRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
       const sourceX = Math.max(0, -imageLeft / scale);
       const sourceY = Math.max(0, -imageTop / scale);
-      const sourceSize = VIEWPORT_SIZE / scale;
+      const sourceSize = viewportSize / scale;
 
       context.drawImage(
         image,
@@ -213,6 +221,7 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
             <h2 id="profile-photo-crop-title">Ajustar foto de perfil</h2>
             <p>Arraste a imagem para posicionar o rosto dentro do círculo.</p>
             <div
+              ref={cropViewportRef}
               className={styles.cropViewport}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
