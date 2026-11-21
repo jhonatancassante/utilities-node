@@ -426,7 +426,16 @@ paths:
                 type: array
                 items:
                   type: object
-                  required: [id, action, username, email, account_created_at, created_at, is_currently_banned]
+                  required:
+                    [
+                      id,
+                      action,
+                      username,
+                      email,
+                      account_created_at,
+                      created_at,
+                      is_currently_banned,
+                    ]
                   properties:
                     id: { type: string, format: uuid }
                     user_id: { type: [string, "null"], format: uuid }
@@ -439,7 +448,8 @@ paths:
                     actor_email: { type: [string, "null"], format: email }
                     created_at: { type: string, format: date-time }
                     is_currently_banned: { type: boolean }
-                    current_banned_at: { type: [string, "null"], format: date-time }
+                    current_banned_at:
+                      { type: [string, "null"], format: date-time }
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":

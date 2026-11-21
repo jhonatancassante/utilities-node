@@ -161,7 +161,7 @@ O model `models/authorization.js` centraliza as permissões conhecidas. As featu
 | `read:migration`        | Permite consultar migrations pendentes                                                                       |
 | `read:status`           | Seleciona a representação do status; não restringe o endpoint público                                        |
 | `read:status:all`       | Permite incluir a versão do banco na resposta de status                                                      |
-| `read:audit`            | Permite consultar a trilha de auditoria de banimentos e desbanimentos                                      |
+| `read:audit`            | Permite consultar a trilha de auditoria de banimentos e desbanimentos                                        |
 
 ### Perfis iniciais
 
@@ -176,21 +176,21 @@ A lista de features de um usuário pode ser alterada pelo model `user.setFeature
 
 ### Regras de acesso por endpoint
 
-| Endpoint                        | Regra                                                                                             |
-| ------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `GET /status`                   | Público; a versão do banco só aparece com `read:status:all`                                       |
-| `POST /admin/users/{username}/ban` | Exige `update:user:others`; bane outra conta                                                      |
-| `DELETE /admin/users/{username}/ban` | Exige `update:user:others`; desbane outra conta                                                 |
-| `GET /admin/audit/banned`         | Exige `read:audit`                                                                                 |
-| `POST /users`                   | Exige `create:user`; disponível ao visitante padrão                                               |
-| `GET /users/{username}`         | Público; retorna somente a representação pública                                                  |
-| `PATCH /users/{username}`       | Exige `update:user`; o model também verifica se é o próprio usuário ou se há `update:user:others` |
-| `PATCH /activations/{token_id}` | Exige `read:activation_token`; o token precisa estar válido e não utilizado                       |
-| `POST /sessions`                | Exige `create:session`                                                                            |
-| `DELETE /sessions`              | Exige sessão válida na prática; encerra a sessão identificada pelo cookie                         |
-| `GET /user`                     | Exige `read:session`                                                                              |
-| `GET /migrations`               | Exige `read:migration`                                                                            |
-| `POST /migrations`              | Exige `create:migration`                                                                          |
+| Endpoint                             | Regra                                                                                             |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `GET /status`                        | Público; a versão do banco só aparece com `read:status:all`                                       |
+| `POST /admin/users/{username}/ban`   | Exige `update:user:others`; bane outra conta                                                      |
+| `DELETE /admin/users/{username}/ban` | Exige `update:user:others`; desbane outra conta                                                   |
+| `GET /admin/audit/banned`            | Exige `read:audit`                                                                                |
+| `POST /users`                        | Exige `create:user`; disponível ao visitante padrão                                               |
+| `GET /users/{username}`              | Público; retorna somente a representação pública                                                  |
+| `PATCH /users/{username}`            | Exige `update:user`; o model também verifica se é o próprio usuário ou se há `update:user:others` |
+| `PATCH /activations/{token_id}`      | Exige `read:activation_token`; o token precisa estar válido e não utilizado                       |
+| `POST /sessions`                     | Exige `create:session`                                                                            |
+| `DELETE /sessions`                   | Exige sessão válida na prática; encerra a sessão identificada pelo cookie                         |
+| `GET /user`                          | Exige `read:session`                                                                              |
+| `GET /migrations`                    | Exige `read:migration`                                                                            |
+| `POST /migrations`                   | Exige `create:migration`                                                                          |
 
 A autorização de saída também é centralizada em `authorization.filterOutput`. Ela define quais campos podem ser devolvidos para cada tipo de recurso. A representação pública de usuário não inclui e-mail ou hash da senha; a representação privada do próprio usuário inclui o e-mail, mas não a senha.
 

@@ -446,9 +446,7 @@ describe("models/user.js", () => {
     });
 
     test("Impede que o usuário bana a própria conta", async () => {
-      mockQueries([
-        ["LOWER(users.username) = LOWER($1)", [existingUser]],
-      ]);
+      mockQueries([["LOWER(users.username) = LOWER($1)", [existingUser]]]);
 
       await expect(
         user.setBanStatus("UsuarioAtual", true, existingUser.id),
@@ -471,16 +469,24 @@ describe("models/user.js", () => {
 
       expect(result).toEqual(alreadyBannedUser);
       expect(getCallsContaining(querySpy, "banned_at = CASE")).toEqual([]);
-      expect(getCallsContaining(querySpy, "INSERT INTO user_ban_events")).toEqual(
-        [],
-      );
+      expect(
+        getCallsContaining(querySpy, "INSERT INTO user_ban_events"),
+      ).toEqual([]);
     });
 
     test("Registra o banimento e expira as sessões na mesma transação", async () => {
       const createdAt = new Date("2026-01-01T00:00:00.000Z");
       const updatedAt = new Date("2026-02-01T00:00:00.000Z");
-      const lockedUser = { ...existingUser, created_at: createdAt, banned_at: null };
-      const bannedUser = { ...lockedUser, banned_at: updatedAt, updated_at: updatedAt };
+      const lockedUser = {
+        ...existingUser,
+        created_at: createdAt,
+        banned_at: null,
+      };
+      const bannedUser = {
+        ...lockedUser,
+        banned_at: updatedAt,
+        updated_at: updatedAt,
+      };
       const actor = { username: "Administrador", email: "admin@example.com" };
       const querySpy = mockQueries([
         ["LOWER(users.username) = LOWER($1)", [lockedUser]],
@@ -525,7 +531,11 @@ describe("models/user.js", () => {
         created_at: createdAt,
         banned_at: bannedAt,
       };
-      const unbannedUser = { ...lockedUser, banned_at: null, updated_at: updatedAt };
+      const unbannedUser = {
+        ...lockedUser,
+        banned_at: null,
+        updated_at: updatedAt,
+      };
       const actor = { username: "Administrador", email: "admin@example.com" };
       const querySpy = mockQueries([
         ["LOWER(users.username) = LOWER($1)", [lockedUser]],
@@ -556,5 +566,4 @@ describe("models/user.js", () => {
       expect(expireSessionsSpy).not.toHaveBeenCalled();
     });
   });
-
 });

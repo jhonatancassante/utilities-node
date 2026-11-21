@@ -87,7 +87,10 @@ function formatAccountAge(startValue, endValue) {
 
   return units
     .slice(firstNonZero === -1 ? units.length - 1 : firstNonZero)
-    .map(([value, singular, plural]) => `${value} ${value === 1 ? singular : plural}`)
+    .map(
+      ([value, singular, plural]) =>
+        `${value} ${value === 1 ? singular : plural}`,
+    )
     .join(", ");
 }
 
@@ -381,8 +384,7 @@ export default function AdminBannedAuditPage() {
 
             <p className={styles.footnote}>
               A idade da conta é calculada até a data de cada ação. Os registros
-              anteriores à implantação não possuem identificação do
-              responsável.
+              anteriores à implantação não possuem identificação do responsável.
             </p>
           </section>
         </main>

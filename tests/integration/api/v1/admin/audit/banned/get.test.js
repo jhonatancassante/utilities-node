@@ -1,4 +1,3 @@
-
 import orchestrator from "tests/orchestrator.js";
 import database from "@/infra/database.js";
 import user from "@/models/user.js";
@@ -105,7 +104,9 @@ describe("GET /api/v1/admin/audit/banned", () => {
         ]),
       );
 
-      const deletedEvent = events.find((event) => event.user_id === deletedUser.id);
+      const deletedEvent = events.find(
+        (event) => event.user_id === deletedUser.id,
+      );
       expect(deletedEvent.account_created_at).toBe(
         deletedUser.created_at.toISOString(),
       );

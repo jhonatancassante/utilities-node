@@ -1,4 +1,3 @@
-
 import orchestrator from "tests/orchestrator.js";
 import database from "@/infra/database.js";
 import user from "@/models/user.js";

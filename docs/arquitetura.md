@@ -29,37 +29,37 @@ Os endpoints usam `next-connect` por meio de `infra/controller.js`. Cada rota de
 
 ## Estrutura relevante
 
-| Caminho                               | Responsabilidade                                                                     |
-| ------------------------------------- | ------------------------------------------------------------------------------------ |
-| `pages/api/v1/status`                 | Saúde do banco e informações de status                                               |
-| `pages/api/v1/migrations`             | Consulta e aplicação de migrations                                                   |
-| `pages/api/v1/users`                  | Cadastro de usuários                                                                 |
-| `pages/api/v1/users/[username]`       | Consulta pública e atualização autorizada                                            |
-| `pages/api/v1/admin/users`            | Pesquisa administrativa de usuários por nome ou e-mail                               |
-| `pages/api/v1/admin/users/[username]` | Consulta e atualização de dados/features de outras contas                            |
+| Caminho                                   | Responsabilidade                                                                     |
+| ----------------------------------------- | ------------------------------------------------------------------------------------ |
+| `pages/api/v1/status`                     | Saúde do banco e informações de status                                               |
+| `pages/api/v1/migrations`                 | Consulta e aplicação de migrations                                                   |
+| `pages/api/v1/users`                      | Cadastro de usuários                                                                 |
+| `pages/api/v1/users/[username]`           | Consulta pública e atualização autorizada                                            |
+| `pages/api/v1/admin/users`                | Pesquisa administrativa de usuários por nome ou e-mail                               |
+| `pages/api/v1/admin/users/[username]`     | Consulta e atualização de dados/features de outras contas                            |
 | `pages/api/v1/admin/users/[username]/ban` | Banimento e desbanimento de contas                                                   |
-| `pages/api/v1/admin/audit/banned`     | Consulta da trilha de auditoria de banimentos e desbanimentos                         |
-| `pages/api/v1/activations/[token_id]` | Ativação de contas                                                                   |
-| `pages/api/v1/sessions`               | Criação e encerramento de sessões                                                    |
-| `pages/api/v1/user`                   | Consulta do usuário autenticado e renovação da sessão                                |
-| `models/user.js`                      | Cadastro, consulta, atualização, gerenciamento de features e banimento                |
-| `models/audit.js`                     | Consulta dos eventos persistidos de banimento e desbanimento                           |
-| `models/password.js`                  | HMAC-SHA256 com pepper e bcrypt                                                      |
-| `models/authentication.js`            | Validação das credenciais                                                            |
-| `models/authorization.js`             | Verificação de permissões, acesso administrativo e filtragem de saída                |
-| `configs/features.js`                 | Catálogo único de features e seus metadados, incluindo privilégios e edição          |
-| `configs/admin.js`                    | Registro declarativo das seções e features exigidas pelo painel administrativo       |
-| `models/session.js`                   | Criação, validação, renovação e expiração de sessões                                 |
-| `models/activation.js`                | Tokens de ativação, e-mail e ativação da conta                                       |
-| `models/migrator.js`                  | Execução e listagem de migrations                                                    |
-| `infra/controller.js`                 | Middlewares de usuário anônimo/autenticado, verificação de features, cookies e erros |
-| `infra/database.js`                   | Conexão PostgreSQL e execução de consultas                                           |
-| `infra/email.js`                      | Transporte SMTP via Nodemailer                                                       |
-| `infra/webserver.js`                  | Origem usada nos links de ativação                                                   |
-| `infra/errors.js`                     | Classes de erro e serialização JSON                                                  |
-| `infra/migrations/`                   | Histórico versionado do esquema do banco                                             |
-| `infra/compose.yaml`                  | PostgreSQL e Mailcatcher locais                                                      |
-| `tests/`                              | Testes de integração, unidade e fluxo completo de cadastro                           |
+| `pages/api/v1/admin/audit/banned`         | Consulta da trilha de auditoria de banimentos e desbanimentos                        |
+| `pages/api/v1/activations/[token_id]`     | Ativação de contas                                                                   |
+| `pages/api/v1/sessions`                   | Criação e encerramento de sessões                                                    |
+| `pages/api/v1/user`                       | Consulta do usuário autenticado e renovação da sessão                                |
+| `models/user.js`                          | Cadastro, consulta, atualização, gerenciamento de features e banimento               |
+| `models/audit.js`                         | Consulta dos eventos persistidos de banimento e desbanimento                         |
+| `models/password.js`                      | HMAC-SHA256 com pepper e bcrypt                                                      |
+| `models/authentication.js`                | Validação das credenciais                                                            |
+| `models/authorization.js`                 | Verificação de permissões, acesso administrativo e filtragem de saída                |
+| `configs/features.js`                     | Catálogo único de features e seus metadados, incluindo privilégios e edição          |
+| `configs/admin.js`                        | Registro declarativo das seções e features exigidas pelo painel administrativo       |
+| `models/session.js`                       | Criação, validação, renovação e expiração de sessões                                 |
+| `models/activation.js`                    | Tokens de ativação, e-mail e ativação da conta                                       |
+| `models/migrator.js`                      | Execução e listagem de migrations                                                    |
+| `infra/controller.js`                     | Middlewares de usuário anônimo/autenticado, verificação de features, cookies e erros |
+| `infra/database.js`                       | Conexão PostgreSQL e execução de consultas                                           |
+| `infra/email.js`                          | Transporte SMTP via Nodemailer                                                       |
+| `infra/webserver.js`                      | Origem usada nos links de ativação                                                   |
+| `infra/errors.js`                         | Classes de erro e serialização JSON                                                  |
+| `infra/migrations/`                       | Histórico versionado do esquema do banco                                             |
+| `infra/compose.yaml`                      | PostgreSQL e Mailcatcher locais                                                      |
+| `tests/`                                  | Testes de integração, unidade e fluxo completo de cadastro                           |
 
 A API é versionada no caminho `/api/v1`.
 
@@ -180,13 +180,13 @@ Migrations atualmente presentes:
 4. Inclusão da coluna `features` em `users`.
 5. Criação da tabela `user_activation_tokens`.
 
-| Tabela                   | Campos relevantes                                                             |
-| ------------------------ | ----------------------------------------------------------------------------- |
+| Tabela                   | Campos relevantes                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
 | `users`                  | `id`, `username`, `email`, `password`, `features`, `banned_at`, `created_at`, `updated_at` |
-| `sessions`               | `id`, `token`, `user_id`, `expires_at`, `created_at`, `updated_at`            |
-| `user_ban_events`         | Snapshots do usuário, responsável, ação (`ban`/`unban`) e datas do evento     |
-| `user_activation_tokens` | `id`, `user_id`, `expires_at`, `used_at`, `created_at`, `updated_at`          |
-| `pgmigrations`           | Histórico gerenciado pelo `node-pg-migrate`                                   |
+| `sessions`               | `id`, `token`, `user_id`, `expires_at`, `created_at`, `updated_at`                         |
+| `user_ban_events`        | Snapshots do usuário, responsável, ação (`ban`/`unban`) e datas do evento                  |
+| `user_activation_tokens` | `id`, `user_id`, `expires_at`, `used_at`, `created_at`, `updated_at`                       |
+| `pgmigrations`           | Histórico gerenciado pelo `node-pg-migrate`                                                |
 
 Os identificadores são UUID. `username` tem até 30 caracteres, `email` até 254, `password` armazena hash de 60 caracteres, `sessions.token` tem 96 caracteres. As migrations atuais declaram `down = false`: não há rollback automático. Nunca altere uma migration já aplicada; crie outra.
 

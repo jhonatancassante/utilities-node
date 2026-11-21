@@ -122,7 +122,7 @@ Para executar os testes continuamente, mantenha o ambiente ativo com `npm run de
 | `npm run dev:raw`                     | Sobe serviços, aguarda o banco, aplica migrations e inicia o Next.js |
 | `npm test`                            | Sobe serviços e servidor, executa Jest e para os serviços            |
 | `npm run test:watch`                  | Jest em modo contínuo; exige banco e servidor em execução            |
-| `npm run test:coverage`                | Executa Jest com cobertura e gera relatórios em `coverage/`          |
+| `npm run test:coverage`               | Executa Jest com cobertura e gera relatórios em `coverage/`          |
 | `npm run services:up`                 | Sobe PostgreSQL e Mailcatcher                                        |
 | `npm run services:stop`               | Para os containers, mantendo-os criados                              |
 | `npm run services:down`               | Para e remove os containers                                          |
@@ -193,17 +193,17 @@ A origem dos links de ativação é definida em `infra/webserver.js`: localmente
 
 Todos os endpoints usam o prefixo `/api/v1`.
 
-| Método           | Caminho                   | Descrição                                                 |
-| ---------------- | ------------------------- | --------------------------------------------------------- |
-| `GET`            | `/status`                 | Consulta o status do banco                                |
-| `GET`, `POST`    | `/migrations`             | Lista e aplica migrations; exige features administrativas |
-| `POST`           | `/users`                  | Cadastra usuário e envia e-mail de ativação               |
-| `GET`, `PATCH`   | `/users/{username}`       | Consulta dados públicos e atualiza conforme autorização   |
-| `PATCH`          | `/activations/{token_id}` | Ativa um cadastro com token válido                        |
-| `POST`, `DELETE` | `/sessions`               | Cria e encerra sessões                                    |
-| `GET`            | `/user`                   | Retorna o usuário autenticado e renova a sessão           |
-| `GET`            | `/admin/audit/banned`     | Consulta a auditoria; exige `read:audit`                   |
-| `POST`, `DELETE` | `/admin/users/{username}/ban` | Bane e desbane contas; exige `update:user:others`       |
+| Método           | Caminho                       | Descrição                                                 |
+| ---------------- | ----------------------------- | --------------------------------------------------------- |
+| `GET`            | `/status`                     | Consulta o status do banco                                |
+| `GET`, `POST`    | `/migrations`                 | Lista e aplica migrations; exige features administrativas |
+| `POST`           | `/users`                      | Cadastra usuário e envia e-mail de ativação               |
+| `GET`, `PATCH`   | `/users/{username}`           | Consulta dados públicos e atualiza conforme autorização   |
+| `PATCH`          | `/activations/{token_id}`     | Ativa um cadastro com token válido                        |
+| `POST`, `DELETE` | `/sessions`                   | Cria e encerra sessões                                    |
+| `GET`            | `/user`                       | Retorna o usuário autenticado e renova a sessão           |
+| `GET`            | `/admin/audit/banned`         | Consulta a auditoria; exige `read:audit`                  |
+| `POST`, `DELETE` | `/admin/users/{username}/ban` | Bane e desbane contas; exige `update:user:others`         |
 
 A API usa autorização por _features_, não uma regra única de “estar logado”. Algumas operações são públicas, outras exigem sessão válida e outras exigem permissões específicas. Consulte o [guia da API](docs/api/README.md) e a [especificação OpenAPI](docs/api/openapi.yaml).
 

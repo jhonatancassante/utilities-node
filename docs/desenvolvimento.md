@@ -94,7 +94,7 @@ O Gerador de AR e Etiquetas consulta CEP pelo ViaCEP e listas de UFs e municípi
 | `npm run dev:raw`                   | Sobe serviços, aguarda banco, aplica migrations e inicia Next.js |
 | `npm test`                          | Sobe serviços e Next.js, executa Jest e finaliza com `posttest`  |
 | `npm run test:watch`                | Jest em modo contínuo; requer servidor e banco já ativos         |
-| `npm run test:coverage`              | Executa Jest com cobertura e gera relatórios em `coverage/`      |
+| `npm run test:coverage`             | Executa Jest com cobertura e gera relatórios em `coverage/`      |
 | `npm run services:up`               | Inicia PostgreSQL e Mailcatcher                                  |
 | `npm run services:stop`             | Para os containers sem removê-los                                |
 | `npm run services:down`             | Para e remove os containers                                      |
@@ -122,17 +122,17 @@ npm run migrations:up
 
 Migrations existentes na branch principal:
 
-| Arquivo                                                          | Alteração                                  |
-| ---------------------------------------------------------------- | ------------------------------------------ |
-| `1792077675178_create-users.js`                                  | Cria a tabela `users`                      |
-| `1792179953104_altera-nomes-de-colunas-createdAt-e-updatedAt.js` | Renomeia colunas de data para `snake_case` |
-| `1792247067512_create-sessions.js`                               | Cria a tabela `sessions`                   |
-| `1792760460131_adiciona-features-na-tabela-users.js`             | Adiciona `users.features`                  |
-| `1792781687009_cria-tabela-user-activation-tokens.js`            | Cria `user_activation_tokens`              |
-| `1795263904008_rename-feature-is-removable.js`                    | Renomeia `features.is_removable` para `is_self_removable` |
-| `1795266838572_add-banned-column-to-users-table.js`               | Adiciona `users.banned_at`                 |
-| `1795270290404_add-audit-feature-and-organize-feature-groups.js`  | Cria `read:audit` e reorganiza grupos/permissões |
-| `1795270639425_create-user-ban-audit-events.js`                   | Cria `user_ban_events` e importa os banimentos existentes |
+| Arquivo                                                          | Alteração                                                 |
+| ---------------------------------------------------------------- | --------------------------------------------------------- |
+| `1792077675178_create-users.js`                                  | Cria a tabela `users`                                     |
+| `1792179953104_altera-nomes-de-colunas-createdAt-e-updatedAt.js` | Renomeia colunas de data para `snake_case`                |
+| `1792247067512_create-sessions.js`                               | Cria a tabela `sessions`                                  |
+| `1792760460131_adiciona-features-na-tabela-users.js`             | Adiciona `users.features`                                 |
+| `1792781687009_cria-tabela-user-activation-tokens.js`            | Cria `user_activation_tokens`                             |
+| `1795263904008_rename-feature-is-removable.js`                   | Renomeia `features.is_removable` para `is_self_removable` |
+| `1795266838572_add-banned-column-to-users-table.js`              | Adiciona `users.banned_at`                                |
+| `1795270290404_add-audit-feature-and-organize-feature-groups.js` | Cria `read:audit` e reorganiza grupos/permissões          |
+| `1795270639425_create-user-ban-audit-events.js`                  | Cria `user_ban_events` e importa os banimentos existentes |
 
 O histórico das execuções fica em `pgmigrations`. As migrations atuais exportam `down = false`; não existe rollback automático.
 

@@ -12,118 +12,120 @@ beforeAll(async () => {
 
 describe("POST /api/v1/users", () => {
   describe("Usuário anônimo", () => {
-  let createUserRespondseBody;
-  let activationTokenId;
-  let createSessionResponseBody;
-  let sessionToken;
+    let createUserRespondseBody;
+    let activationTokenId;
+    let createSessionResponseBody;
+    let sessionToken;
 
-  test("Cria um usuário", async () => {
-    const createUserRespondse = await fetch(`${orchestrator.API_URL}/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: "registrationFlow",
-        email: "registrationFlow@jhonatancassante.com.br",
-        password: "Registration-Flow-123!!",
-      }),
-    });
-    expect(createUserRespondse.status).toBe(201);
-
-    createUserRespondseBody = await createUserRespondse.json();
-
-    expect(createUserRespondseBody).toEqual({
-      id: createUserRespondseBody.id,
-      username: "registrationFlow",
-      features: ["read:activation_token"],
-      created_at: createUserRespondseBody.created_at,
-      updated_at: createUserRespondseBody.updated_at,
-    });
-  });
-
-  test("Recebe um email de ativação", async () => {
-    const lastEmail = await orchestrator.getLastEmail();
-
-    expect(lastEmail.sender).toBe("<contato@jhonatancassante.com.br>");
-    expect(lastEmail.recipients[0]).toBe(
-      "<registrationFlow@jhonatancassante.com.br>",
-    );
-    expect(lastEmail.subject).toBe(
-      "Ative seu cadastro no site jhonatancassante.com.br",
-    );
-    expect(lastEmail.text).toContain("registrationFlow");
-
-    activationTokenId = orchestrator.extractUUID(lastEmail.text);
-    expect(lastEmail.text).toContain(
-      `${webserver.origin}/cadastro/ativar/${activationTokenId}`,
-    );
-
-    const activationTokenObject =
-      await activation.findOneValidById(activationTokenId);
-    expect(activationTokenObject.user_id).toBe(createUserRespondseBody.id);
-    expect(activationTokenObject.used_at).toBe(null);
-  });
-
-  test("Ativa a conta", async () => {
-    const activationResponse = await fetch(
-      `${orchestrator.API_URL}/activations/${activationTokenId}`,
-      {
-        method: "PATCH",
-      },
-    );
-    expect(activationResponse.status).toBe(200);
-
-    const activationResponseBody = await activationResponse.json();
-
-    expect(Date.parse(activationResponseBody.used_at)).not.toBeNaN();
-
-    const activatedUser = await user.findOneByUsername(
-      createUserRespondseBody.username,
-    );
-    expect(activatedUser.features).toEqual([
-      "create:session",
-      "read:session",
-      "update:user",
-    ]);
-  });
-
-  test("Faz login", async () => {
-    const createSessionResponse = await fetch(
-      `${orchestrator.API_URL}/sessions`,
-      {
+    test("Cria um usuário", async () => {
+      const createUserRespondse = await fetch(`${orchestrator.API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          username: "registrationFlow",
           email: "registrationFlow@jhonatancassante.com.br",
           password: "Registration-Flow-123!!",
         }),
-      },
-    );
-    expect(createSessionResponse.status).toBe(201);
+      });
+      expect(createUserRespondse.status).toBe(201);
 
-    createSessionResponseBody = await createSessionResponse.json();
-    expect(createSessionResponseBody.user_id).toBe(createUserRespondseBody.id);
-    expect(createSessionResponseBody).not.toHaveProperty("token");
+      createUserRespondseBody = await createUserRespondse.json();
 
-    // O token só existe no cookie HttpOnly, nunca no corpo da resposta.
-    sessionToken = orchestrator.getSessionCookieObject(
-      createSessionResponse,
-    ).value;
-  });
-
-  test("Recebe dados do usuário", async () => {
-    const userResponse = await fetch(`${orchestrator.API_URL}/user`, {
-      headers: {
-        Cookie: `session_id=${sessionToken}`,
-      },
+      expect(createUserRespondseBody).toEqual({
+        id: createUserRespondseBody.id,
+        username: "registrationFlow",
+        features: ["read:activation_token"],
+        created_at: createUserRespondseBody.created_at,
+        updated_at: createUserRespondseBody.updated_at,
+      });
     });
-    expect(userResponse.status).toBe(200);
 
-    const userResponseBody = await userResponse.json();
-    expect(userResponseBody.id).toBe(createUserRespondseBody.id);
-  });
+    test("Recebe um email de ativação", async () => {
+      const lastEmail = await orchestrator.getLastEmail();
+
+      expect(lastEmail.sender).toBe("<contato@jhonatancassante.com.br>");
+      expect(lastEmail.recipients[0]).toBe(
+        "<registrationFlow@jhonatancassante.com.br>",
+      );
+      expect(lastEmail.subject).toBe(
+        "Ative seu cadastro no site jhonatancassante.com.br",
+      );
+      expect(lastEmail.text).toContain("registrationFlow");
+
+      activationTokenId = orchestrator.extractUUID(lastEmail.text);
+      expect(lastEmail.text).toContain(
+        `${webserver.origin}/cadastro/ativar/${activationTokenId}`,
+      );
+
+      const activationTokenObject =
+        await activation.findOneValidById(activationTokenId);
+      expect(activationTokenObject.user_id).toBe(createUserRespondseBody.id);
+      expect(activationTokenObject.used_at).toBe(null);
+    });
+
+    test("Ativa a conta", async () => {
+      const activationResponse = await fetch(
+        `${orchestrator.API_URL}/activations/${activationTokenId}`,
+        {
+          method: "PATCH",
+        },
+      );
+      expect(activationResponse.status).toBe(200);
+
+      const activationResponseBody = await activationResponse.json();
+
+      expect(Date.parse(activationResponseBody.used_at)).not.toBeNaN();
+
+      const activatedUser = await user.findOneByUsername(
+        createUserRespondseBody.username,
+      );
+      expect(activatedUser.features).toEqual([
+        "create:session",
+        "read:session",
+        "update:user",
+      ]);
+    });
+
+    test("Faz login", async () => {
+      const createSessionResponse = await fetch(
+        `${orchestrator.API_URL}/sessions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: "registrationFlow@jhonatancassante.com.br",
+            password: "Registration-Flow-123!!",
+          }),
+        },
+      );
+      expect(createSessionResponse.status).toBe(201);
+
+      createSessionResponseBody = await createSessionResponse.json();
+      expect(createSessionResponseBody.user_id).toBe(
+        createUserRespondseBody.id,
+      );
+      expect(createSessionResponseBody).not.toHaveProperty("token");
+
+      // O token só existe no cookie HttpOnly, nunca no corpo da resposta.
+      sessionToken = orchestrator.getSessionCookieObject(
+        createSessionResponse,
+      ).value;
+    });
+
+    test("Recebe dados do usuário", async () => {
+      const userResponse = await fetch(`${orchestrator.API_URL}/user`, {
+        headers: {
+          Cookie: `session_id=${sessionToken}`,
+        },
+      });
+      expect(userResponse.status).toBe(200);
+
+      const userResponseBody = await userResponse.json();
+      expect(userResponseBody.id).toBe(createUserRespondseBody.id);
+    });
   });
 });
