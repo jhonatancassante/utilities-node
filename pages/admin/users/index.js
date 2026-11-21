@@ -586,26 +586,27 @@ function UserEditor({ user, currentUserId, onUpdated, onCancel }) {
                     {groupFeatures.map((feature) => {
                       const isLockedForSelf =
                         isEditingSelf && feature.is_self_removable === false;
+
                       return (
-                      <label
-                        className={`${styles.featureOption} ${
-                          isLockedForSelf ? styles.featureOptionLocked : ""
-                        } ${
-                          feature.is_privileged ||
-                          feature.is_protected ||
-                          feature.is_self_removable === false
-                            ? styles.featureOptionBadged
-                            : ""
-                        }`}
-                        key={feature.name}
-                        title={
-                          isLockedForSelf &&
-                          form.features.includes(feature.name)
-                            ? "Esta feature não pode ser removida pelo próprio usuário"
-                            : undefined
-                        }
-                      >
-                        <span className={styles.featureBadges}>
+                        <label
+                          className={`${styles.featureOption} ${
+                            isLockedForSelf ? styles.featureOptionLocked : ""
+                          } ${
+                            feature.is_privileged ||
+                            feature.is_protected ||
+                            feature.is_self_removable === false
+                              ? styles.featureOptionBadged
+                              : ""
+                          }`}
+                          key={feature.name}
+                          title={
+                            isLockedForSelf &&
+                            form.features.includes(feature.name)
+                              ? "Esta feature não pode ser removida pelo próprio usuário"
+                              : undefined
+                          }
+                        >
+                          <span className={styles.featureBadges}>
                           {feature.is_privileged && (
                             <span
                               className={`${styles.featureBadge} ${styles.privilegedBadge}`}
@@ -655,8 +656,7 @@ function UserEditor({ user, currentUserId, onUpdated, onCancel }) {
                         />
                         <span
                           className={`${styles.switch} ${
-                            isLockedForSelf ? styles.switchLocked
-                              : ""
+                            isLockedForSelf ? styles.switchLocked : ""
                           }`}
                           aria-hidden="true"
                         ></span>
@@ -664,8 +664,8 @@ function UserEditor({ user, currentUserId, onUpdated, onCancel }) {
                           <strong>{feature.label}</strong>
                           <small>{feature.description}</small>
                           <code>{feature.name}</code>
-                        </span>
-                      </label>
+                          </span>
+                        </label>
                       );
                     })}
                   </div>
