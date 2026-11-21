@@ -45,6 +45,14 @@ describe("/api/v1/admin/users/[username]/ban", () => {
     expect(response.status).toBe(403);
   });
 
+  test("Rejeita consulta à auditoria sem a feature read:audit", async () => {
+    const response = await fetch(
+      `${orchestrator.API_URL}/admin/audit/banned`,
+    );
+
+    expect(response.status).toBe(403);
+  });
+
   test("Permite banir e desbanir outro usuário", async () => {
     const { privilegedUser, sessionObject } = await createPrivilegedSession();
     const targetUser = await orchestrator.createUser();
