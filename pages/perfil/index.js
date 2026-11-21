@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
@@ -232,7 +233,13 @@ function ProfileForm({ user, onUpdated }) {
     <section className={`${shared.card} ${styles.card}`}>
       <div className={styles.profileAvatar} aria-hidden="true">
         {user.profile_photo_url ? (
-          <img src={user.profile_photo_url} alt="" />
+          <Image
+            src={user.profile_photo_url}
+            alt=""
+            width={88}
+            height={88}
+            unoptimized
+          />
         ) : (
           user.username.slice(0, 2).toUpperCase()
         )}

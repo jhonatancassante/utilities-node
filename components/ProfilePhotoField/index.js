@@ -1,4 +1,5 @@
 import { useState } from "react";
+import NextImage from "next/image";
 
 import styles from "./index.module.css";
 
@@ -58,7 +59,14 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
       <span className={styles.label}>Foto de perfil</span>
       <div className={styles.control}>
         {preview ? (
-          <img className={styles.preview} src={preview} alt="Prévia da foto de perfil" />
+          <NextImage
+            className={styles.preview}
+            src={preview}
+            alt="Prévia da foto de perfil"
+            width={88}
+            height={88}
+            unoptimized
+          />
         ) : (
           <span className={styles.placeholder} aria-hidden="true">
             <i className="fas fa-user" />

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/router";
 
 import ThemeToggle from "@/components/ThemeToggle";
@@ -266,7 +267,14 @@ function Header() {
                 onClick={() => toggleMenu(MENU.account)}
               >
                 {user.profile_photo_url ? (
-                  <img className={styles.avatarPhoto} src={user.profile_photo_url} alt="" />
+                  <Image
+                    className={styles.avatarPhoto}
+                    src={user.profile_photo_url}
+                    alt=""
+                    width={42}
+                    height={42}
+                    unoptimized
+                  />
                 ) : (
                   getInitials(user.username)
                 )}

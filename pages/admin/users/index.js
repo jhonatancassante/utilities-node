@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
@@ -336,7 +337,13 @@ function AdminUsersPage() {
                       >
                         <span className={styles.userAvatar} aria-hidden="true">
                           {result.profile_photo_url ? (
-                            <img src={result.profile_photo_url} alt="" />
+                            <Image
+                              src={result.profile_photo_url}
+                              alt=""
+                              width={40}
+                              height={40}
+                              unoptimized
+                            />
                           ) : (
                             result.username.slice(0, 2).toUpperCase()
                           )}
