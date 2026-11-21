@@ -198,48 +198,48 @@ describe("/api/v1/admin/users/[username]/ban", () => {
   test(
     "Não permite reutilizar username ou e-mail de uma conta banida",
     async () => {
-    const { sessionObject } = await createPrivilegedSession();
-    const targetUser = await orchestrator.createUser();
-    const headers = {
-      "Content-Type": "application/json",
-      Cookie: `session_id=${sessionObject.token}`,
-    };
+      const { sessionObject } = await createPrivilegedSession();
+      const targetUser = await orchestrator.createUser();
+      const headers = {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      };
 
-    const banResponse = await fetch(adminUserBanUrl(targetUser.username), {
-      method: "POST",
-      headers,
-    });
-    expect(banResponse.status).toBe(200);
-
-    const duplicateUsernameResponse = await fetch(
-      `${orchestrator.API_URL}/users`,
-      {
+      const banResponse = await fetch(adminUserBanUrl(targetUser.username), {
         method: "POST",
         headers,
-        body: JSON.stringify({
-          username: targetUser.username.toUpperCase(),
-          email: "outro.email@example.com",
-          password: "Senha_Padrao_V@l1d@_1234",
-        }),
-      },
-    );
-    expect(duplicateUsernameResponse.status).toBe(400);
-    expect(await duplicateUsernameResponse.json()).toMatchObject({
-      message: "O nome de usuário informado já está sendo utilizado.",
-    });
+      });
+      expect(banResponse.status).toBe(200);
 
-    const duplicateEmailResponse = await fetch(
-      `${orchestrator.API_URL}/users`,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          username: "outro-usuario",
-          email: targetUser.email.toUpperCase(),
-          password: "Senha_Padrao_V@l1d@_1234",
-        }),
-      },
-    );
+      const duplicateUsernameResponse = await fetch(
+        `${orchestrator.API_URL}/users`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            username: targetUser.username.toUpperCase(),
+            email: "outro.email@example.com",
+            password: "Senha_Padrao_V@l1d@_1234",
+          }),
+        },
+      );
+      expect(duplicateUsernameResponse.status).toBe(400);
+      expect(await duplicateUsernameResponse.json()).toMatchObject({
+        message: "O nome de usuário informado já está sendo utilizado.",
+      });
+
+      const duplicateEmailResponse = await fetch(
+        `${orchestrator.API_URL}/users`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            username: "outro-usuario",
+            email: targetUser.email.toUpperCase(),
+            password: "Senha_Padrao_V@l1d@_1234",
+          }),
+        },
+      );
       expect(duplicateEmailResponse.status).toBe(400);
       expect(await duplicateEmailResponse.json()).toMatchObject({
         message: "O email informado já está sendo utilizado.",

@@ -165,9 +165,7 @@ export default function AdminBannedAuditPage() {
       <>
         <AppHead title="Auditoria de contas banidas" />
         <Layout>
-          <main
-            className={`${shared.container} ${shared.containerUltraWide}`}
-          >
+          <main className={`${shared.container} ${shared.containerUltraWide}`}>
             <section className={`${shared.card} ${styles.card}`}>
               <StatusMessage type="critical">
                 Não foi possível verificar suas permissões.
