@@ -57,8 +57,16 @@ function Breadcrumb() {
   const visibleItems = items.length > 3 ? [items[0], ...items.slice(-2)] : items;
 
   useEffect(() => {
-    setIsMenuOpen(false);
-  }, [router.asPath]);
+    function handleRouteChange() {
+      setIsMenuOpen(false);
+    }
+
+    router.events.on("routeChangeStart", handleRouteChange);
+
+    return () => {
+      router.events.off("routeChangeStart", handleRouteChange);
+    };
+  }, [router.events]);
 
   useEffect(() => {
     if (!isMenuOpen) return undefined;
