@@ -126,7 +126,9 @@ describe("models/authorization.js", () => {
       expect(result.privileged_features).toEqual(["read:dynamicreports"]);
     });
 
-    test("`read:audit` retorna somente os campos previstos para auditoria", () => {
+    test(
+      "`read:audit` retorna somente os campos previstos para auditoria",
+      () => {
       const auditor = { features: ["read:audit"] };
       const event = {
         id: "event-1",
@@ -144,7 +146,11 @@ describe("models/authorization.js", () => {
         password: "segredo",
       };
 
-      const result = authorization.filterOutput(auditor, "read:audit", [event]);
+      const result = authorization.filterOutput(
+        auditor,
+        "read:audit",
+        [event],
+      );
 
       expect(result).toEqual([
         {
@@ -250,7 +256,10 @@ describe("models/authorization.js", () => {
 
     test("Usuário com a feature de auditoria acessa a seção", () => {
       expect(
-        authorization.hasAdminSectionAccess({ features: ["read:audit"] }, "audit"),
+        authorization.hasAdminSectionAccess(
+          { features: ["read:audit"] },
+          "audit",
+        ),
       ).toBe(true);
     });
 

@@ -18,7 +18,7 @@ export const adminSections = [
   {
     id: "audit",
     title: "Auditoria",
-    description: "Consulte o histórico de ações administrativas e de segurança.",
+    description: "Consulte ações administrativas e de segurança do sistema.",
     href: "/admin/audit",
     icon: "fa-clipboard-list",
     requiredFeature: "read:audit",

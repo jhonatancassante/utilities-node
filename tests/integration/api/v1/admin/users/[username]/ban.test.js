@@ -163,7 +163,9 @@ describe("/api/v1/admin/users/[username]/ban", () => {
     expect(historyResponse.status).toBe(200);
     const history = await historyResponse.json();
     expect(
-      history.filter((event) => event.user_id === targetUser.id).map((event) => event.action),
+      history
+        .filter((event) => event.user_id === targetUser.id)
+        .map((event) => event.action),
     ).toEqual(["unban", "ban"]);
     expect(
       history.filter((event) => event.user_id === targetUser.id).every(
