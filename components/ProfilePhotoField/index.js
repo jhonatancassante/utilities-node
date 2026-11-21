@@ -239,7 +239,7 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
                 draggable={false}
                 style={{
                   width: imageWidth,
-                  height: imageHeight,
+                  height: "auto",
                   left: imageLeft,
                   top: imageTop,
                 }}
