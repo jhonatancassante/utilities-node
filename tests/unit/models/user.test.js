@@ -366,10 +366,11 @@ describe("models/user.js", () => {
       });
 
       const [insertQuery] = getCallsContaining(querySpy, "INSERT");
-      expect(insertQuery.values[0]).toBe("NovoUsuario");
-      expect(insertQuery.values[1]).toBe("novo@example.com");
-      expect(insertQuery.values[2]).toMatch(/^\$2[aby]\$/);
-      expect(insertQuery.values[3]).toEqual(["read:activation_token"]);
+      expect(insertQuery.values[0]).toBeNull();
+      expect(insertQuery.values[1]).toBe("NovoUsuario");
+      expect(insertQuery.values[2]).toBe("novo@example.com");
+      expect(insertQuery.values[3]).toMatch(/^\$2[aby]\$/);
+      expect(insertQuery.values[4]).toEqual(["read:activation_token"]);
     });
 
     test("Com email já utilizado", async () => {
