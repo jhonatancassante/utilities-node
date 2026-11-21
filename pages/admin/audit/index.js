@@ -14,6 +14,8 @@ import styles from "./index.module.css";
 export default function AdminAuditPage() {
   const router = useRouter();
   const { user, error, isLoading } = useUser();
+  const hasAuditAccess =
+    !isLoading && Boolean(user?.features?.includes("read:audit"));
 
   useEffect(() => {
     if (
@@ -57,7 +59,7 @@ export default function AdminAuditPage() {
               <StatusMessage type="critical">
                 Não foi possível verificar suas permissões.
               </StatusMessage>
-            ) : (
+            ) : hasAuditAccess ? (
               <nav className={styles.menu} aria-label="Tipos de auditoria">
                 <Link href="/admin/audit/banned" className={styles.menuItem}>
                   <span className={styles.menuIcon} aria-hidden="true">
@@ -73,7 +75,7 @@ export default function AdminAuditPage() {
                   <i className="fas fa-chevron-right" aria-hidden="true"></i>
                 </Link>
               </nav>
-            )}
+            ) : null}
           </section>
         </main>
       </Layout>
