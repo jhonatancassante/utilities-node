@@ -177,3 +177,194 @@
     width: 100%;
   }
 }
+
+.profileAvatarWrapper {
+  position: relative;
+  width: 176px;
+  height: 176px;
+  margin: 0 auto 18px;
+}
+
+.profileAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 176px;
+  height: 176px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 40px;
+  font-weight: 700;
+}
+
+.profileAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+button.profileAvatar {
+  cursor: zoom-in;
+  transition: transform var(--transition-fast);
+}
+
+button.profileAvatar:hover {
+  transform: scale(1.03);
+}
+
+.editPhotoButton {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 12px;
+  border: 2px solid var(--bg-card);
+  border-radius: 22px;
+  background: var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast),
+    width var(--transition-fast);
+}
+
+.editPhotoButton span {
+  display: none;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.editPhotoButton:hover,
+.editPhotoButton:focus-visible {
+  background: var(--accent-hover, var(--accent));
+  transform: scale(1.04);
+}
+
+.editPhotoButton:hover span,
+.editPhotoButton:focus-visible span {
+  display: inline;
+}
+
+.editPhotoButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.photoEditorOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.photoEditorDialog {
+  width: min(100%, 460px);
+  max-height: min(90vh, 760px);
+  overflow-y: auto;
+  padding: 24px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.photoEditorDialog h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.photoEditorDialog > p {
+  margin: 0 0 20px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.photoEditorActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.photoEditorActions button {
+  min-width: 130px;
+}
+
+.photoPreviewOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.photoPreviewDialog {
+  position: relative;
+  width: min(80vw, 640px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 0;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+}
+
+.photoPreviewDialog > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoPreviewClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.62);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .editPhotoButton {
+    right: 2px;
+    bottom: 2px;
+  }
+
+  .photoEditorDialog {
+    padding: 18px;
+  }
+
+  .photoEditorActions {
+    flex-direction: column-reverse;
+  }
+
+  .photoEditorActions button {
+    width: 100%;
+  }
+}

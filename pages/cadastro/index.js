@@ -6,6 +6,7 @@ import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
+import ProfilePhotoField from "@/components/ProfilePhotoField";
 import requestAPI from "@/lib/client/api.js";
 import {
   validateUsername,
@@ -44,6 +45,7 @@ function getFieldErrors(form) {
 
 function RegistrationPage() {
   const [form, setForm] = useState(INITIAL_FORM);
+  const [profilePhoto, setProfilePhoto] = useState("");
   const [touched, setTouched] = useState(INITIAL_TOUCHED);
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,6 +112,7 @@ function RegistrationPage() {
           username: form.username.trim(),
           email: form.email.trim(),
           password: form.password,
+          ...(profilePhoto ? { profile_photo: profilePhoto } : {}),
         }),
       });
 
@@ -167,6 +170,12 @@ function RegistrationPage() {
                   onSubmit={handleSubmit}
                   noValidate
                 >
+                  <ProfilePhotoField
+                    value={profilePhoto}
+                    onChange={setProfilePhoto}
+                    disabled={isSubmitting}
+                  />
+
                   <div className={styles.field}>
                     <label className={shared.label} htmlFor="username">
                       Nome de usuário

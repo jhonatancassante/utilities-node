@@ -40,3 +40,13 @@
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
+
+@media (max-width: 700px) {
+  .button.stuck {
+    transform: translateX(-24px);
+  }
+
+  .button.stuck:hover {
+    transform: translateX(-28px);
+  }
+}

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
+import ProfilePhotoField from "@/components/ProfilePhotoField";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
 import {
@@ -60,6 +62,10 @@ function ProfilePage() {
 }
 
 function ProfileForm({ user, onUpdated }) {
+  const originalProfilePhotoUrl = user.profile_photo_url?.replace(
+    "/c_fill,g_center,h_256,w_256/",
+    "/",
+  );
   const [form, setForm] = useState({
     username: user.username,
     email: user.email,
@@ -67,12 +73,17 @@ function ProfileForm({ user, onUpdated }) {
     passwordConfirmation: "",
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState("");
+  const [isPhotoEditorOpen, setIsPhotoEditorOpen] = useState(false);
+  const [isSavingPhoto, setIsSavingPhoto] = useState(false);
+  const [photoFeedback, setPhotoFeedback] = useState(null);
   const [touched, setTouched] = useState({});
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirmation, setShowPasswordConfirmation] =
     useState(false);
+  const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
 
   const errors = {
     username: validateUsername(form.username.trim())?.message ?? "",
@@ -129,6 +140,45 @@ function ProfileForm({ user, onUpdated }) {
     setIsEditing(false);
   }
 
+  async function handleSavePhoto() {
+    if (!profilePhoto || isSavingPhoto) return;
+
+    setIsSavingPhoto(true);
+    setPhotoFeedback(null);
+
+    try {
+      const savedUser = await requestAPI(
+        `/api/v1/users/${encodeURIComponent(user.username)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ profile_photo: profilePhoto }),
+        },
+      );
+
+      onUpdated({
+        ...user,
+        profile_photo_url: savedUser.profile_photo_url,
+      });
+      setProfilePhoto("");
+      setIsPhotoEditorOpen(false);
+    } catch (error) {
+      setPhotoFeedback({
+        name: error.statusCode ? error.name : undefined,
+        message: error.message,
+        action: error.action,
+      });
+    } finally {
+      setIsSavingPhoto(false);
+    }
+  }
+
+  function handleClosePhotoEditor() {
+    if (isSavingPhoto) return;
+    setProfilePhoto("");
+    setPhotoFeedback(null);
+    setIsPhotoEditorOpen(false);
+  }
+
   function renderError(name) {
     if (!isEditing || !touched[name] || !errors[name]) return null;
 
@@ -177,7 +227,6 @@ function ProfileForm({ user, onUpdated }) {
     if (form.password) {
       payload.password = form.password;
     }
-
     if (Object.keys(payload).length === 0) {
       handleCancel();
       return;
@@ -187,15 +236,20 @@ function ProfileForm({ user, onUpdated }) {
     setFeedback(null);
 
     try {
-      await requestAPI(`/api/v1/users/${encodeURIComponent(user.username)}`, {
-        method: "PATCH",
-        body: JSON.stringify(payload),
-      });
+      const savedUser = await requestAPI(
+        `/api/v1/users/${encodeURIComponent(user.username)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        },
+      );
 
       const updatedUser = {
         ...user,
         username: payload.username ?? user.username,
         email: payload.email ?? user.email,
+        profile_photo_url:
+          savedUser.profile_photo_url ?? user.profile_photo_url,
       };
 
       onUpdated(updatedUser);
@@ -223,9 +277,131 @@ function ProfileForm({ user, onUpdated }) {
 
   return (
     <section className={`${shared.card} ${styles.card}`}>
-      <div className={shared.icon} aria-hidden="true">
-        <i className="fas fa-user"></i>
+      <div className={styles.profileAvatarWrapper}>
+        {user.profile_photo_url ? (
+          <button
+            className={styles.profileAvatar}
+            type="button"
+            aria-label="Ampliar foto de perfil"
+            onClick={() => setIsPhotoPreviewOpen(true)}
+          >
+            <Image
+              src={user.profile_photo_url}
+              alt=""
+              width={176}
+              height={176}
+              unoptimized
+              loading="eager"
+            />
+          </button>
+        ) : (
+          <div className={styles.profileAvatar} aria-hidden="true">
+            {user.username.slice(0, 2).toUpperCase()}
+          </div>
+        )}
+        <button
+          className={styles.editPhotoButton}
+          type="button"
+          aria-label="Alterar foto de perfil"
+          title="Alterar foto"
+          onClick={() => setIsPhotoEditorOpen(true)}
+        >
+          <i className="fas fa-pen" aria-hidden="true"></i>
+          <span>Alterar foto</span>
+        </button>
       </div>
+      {isPhotoEditorOpen && (
+        <div
+          className={styles.photoEditorOverlay}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) handleClosePhotoEditor();
+          }}
+        >
+          <section
+            className={styles.photoEditorDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-photo-editor-title"
+          >
+            <h2 id="profile-photo-editor-title">Alterar foto de perfil</h2>
+            <p>Escolha uma imagem e ajuste o enquadramento antes de salvar.</p>
+            <ProfilePhotoField
+              value={profilePhoto}
+              initialUrl={user.profile_photo_url}
+              onChange={(value) => {
+                setProfilePhoto(value);
+                setPhotoFeedback(null);
+              }}
+              disabled={isSavingPhoto}
+            />
+            {photoFeedback && (
+              <div className={styles.feedback} role="alert">
+                <StatusMessage
+                  type="inline-error"
+                  name={photoFeedback.name}
+                  action={photoFeedback.action}
+                >
+                  {photoFeedback.message}
+                </StatusMessage>
+              </div>
+            )}
+            <div className={styles.photoEditorActions}>
+              <Button
+                type="button"
+                variant="danger"
+                icon="fa-times"
+                onClick={handleClosePhotoEditor}
+                disabled={isSavingPhoto}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                icon="fa-save"
+                onClick={handleSavePhoto}
+                disabled={!profilePhoto || isSavingPhoto}
+              >
+                {isSavingPhoto ? "Salvando..." : "Salvar foto"}
+              </Button>
+            </div>
+          </section>
+        </div>
+      )}
+      {isPhotoPreviewOpen && (
+        <div
+          className={styles.photoPreviewOverlay}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget)
+              setIsPhotoPreviewOpen(false);
+          }}
+        >
+          <div
+            className={styles.photoPreviewDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Foto de perfil ampliada"
+          >
+            <button
+              className={styles.photoPreviewClose}
+              type="button"
+              aria-label="Fechar visualização"
+              onClick={() => setIsPhotoPreviewOpen(false)}
+            >
+              <i className="fas fa-times" aria-hidden="true"></i>
+            </button>
+            <Image
+              src={originalProfilePhotoUrl}
+              alt={`Foto de perfil de ${user.username}`}
+              width={1024}
+              height={1024}
+              unoptimized
+              loading="eager"
+            />
+          </div>
+        </div>
+      )}
       <span className={shared.badge}>MINHA CONTA</span>
       <h1>Meu perfil</h1>
       <p className={styles.description}>

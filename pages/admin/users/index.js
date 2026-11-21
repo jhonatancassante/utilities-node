@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
@@ -334,7 +335,17 @@ function AdminUsersPage() {
                         onClick={() => handleSelectUser(result.username)}
                       >
                         <span className={styles.userAvatar} aria-hidden="true">
-                          {result.username.slice(0, 2).toUpperCase()}
+                          {result.profile_photo_url ? (
+                            <Image
+                              src={result.profile_photo_url}
+                              alt=""
+                              width={40}
+                              height={40}
+                              unoptimized
+                            />
+                          ) : (
+                            result.username.slice(0, 2).toUpperCase()
+                          )}
                         </span>
                         <span className={styles.userIdentity}>
                           <span className={styles.userIdentityHeading}>
@@ -601,6 +612,51 @@ function UserEditor({
       </div>
 
       <form onSubmit={handleSubmit} noValidate>
+        {user.profile_photo_url && (
+          <div className={styles.profilePhoto}>
+            <Image
+              src={user.profile_photo_url}
+              alt={`Foto de perfil de ${user.username}`}
+              width={88}
+              height={88}
+              unoptimized
+            />
+            <div>
+              <strong>Foto de perfil</strong>
+              <small>A imagem atual desta conta.</small>
+              <Button
+                type="button"
+                variant="danger"
+                icon="fa-trash"
+                disabled={isSaving}
+                onClick={async () => {
+                  setIsSaving(true);
+                  setFeedback(null);
+                  try {
+                    const updatedUser = await requestAPI(
+                      `/api/v1/admin/users/${encodeURIComponent(user.username)}/photo`,
+                      { method: "DELETE" },
+                    );
+                    await onUpdated(updatedUser);
+                  } catch (requestError) {
+                    setFeedback({
+                      type: "error",
+                      name: requestError.statusCode
+                        ? requestError.name
+                        : undefined,
+                      message: requestError.message,
+                      action: requestError.action,
+                    });
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }}
+              >
+                Remover foto de perfil
+              </Button>
+            </div>
+          </div>
+        )}
         <div className={styles.formGrid}>
           <div className={styles.field}>
             <label className={shared.label} htmlFor="edit-username">
@@ -669,6 +725,21 @@ function UserEditor({
               />
             </div>
           </div>
+        </div>
+
+        <div className={styles.formActions}>
+          <Button type="submit" icon="fa-save" disabled={isSaving}>
+            {isSaving ? "Salvando..." : "Salvar alterações"}
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            icon="fa-times"
+            onClick={handleCancel}
+            disabled={isSaving}
+          >
+            Cancelar
+          </Button>
         </div>
 
         <div className={styles.featureSection}>

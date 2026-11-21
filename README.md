@@ -182,6 +182,9 @@ Para executar os testes continuamente, mantenha o ambiente ativo com `npm run de
 | `PASSWORD_PEPPER`                                                                     | Segredo usado no processamento das senhas                 |
 | `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`                                                  | Host e porta SMTP                                         |
 | `EMAIL_SMTP_USER`, `EMAIL_SMTP_PASSWORD`                                              | Credenciais SMTP; podem ficar vazias no Mailcatcher local |
+| `CLOUDINARY_CLOUD_NAME`                                                               | Identificação do ambiente Cloudinary                      |
+| `CLOUDINARY_API_KEY`                                                                  | Chave de API usada exclusivamente no servidor             |
+| `CLOUDINARY_API_SECRET`                                                               | Segredo de API usado exclusivamente no servidor           |
 
 Em `development` e `test`, o banco usa as variáveis `POSTGRES_*`. Nos demais ambientes, usa `DATABASE_URL` com `sslmode=verify-full`. A aplicação exige `PASSWORD_PEPPER` para criar ou comparar senhas.
 
@@ -189,21 +192,24 @@ No ambiente local, o Mailcatcher recebe SMTP na porta `1025` e apresenta as mens
 
 A origem dos links de ativação é definida em `infra/webserver.js`: localmente é `http://localhost:3000`, em preview usa `VERCEL_URL` e em produção usa o domínio configurado no código.
 
+As fotos de perfil são opcionais e usam o Cloudinary. Configure as três variáveis acima no `.env.development` e também no ambiente de produção. Nunca utilize o prefixo `NEXT_PUBLIC_` nessas credenciais. São aceitos JPEG, PNG e WebP estáticos, com até 2 MB e dimensões entre 128×128 e 2048×2048 pixels. Antes do envio, a interface permite mover e ampliar a imagem em um recorte quadrado. A aplicação valida o conteúdo do arquivo no servidor, usa o SDK oficial do Cloudinary e identifica cada foto por `profile-photos/{user_id}`. A substituição sobrescreve o ativo do próprio usuário e invalida o cache de entrega; fotos antigas com identificadores aleatórios são removidas após a persistência da nova referência no banco.
+
 ## API
 
 Todos os endpoints usam o prefixo `/api/v1`.
 
-| Método           | Caminho                       | Descrição                                                 |
-| ---------------- | ----------------------------- | --------------------------------------------------------- |
-| `GET`            | `/status`                     | Consulta o status do banco                                |
-| `GET`, `POST`    | `/migrations`                 | Lista e aplica migrations; exige features administrativas |
-| `POST`           | `/users`                      | Cadastra usuário e envia e-mail de ativação               |
-| `GET`, `PATCH`   | `/users/{username}`           | Consulta dados públicos e atualiza conforme autorização   |
-| `PATCH`          | `/activations/{token_id}`     | Ativa um cadastro com token válido                        |
-| `POST`, `DELETE` | `/sessions`                   | Cria e encerra sessões                                    |
-| `GET`            | `/user`                       | Retorna o usuário autenticado e renova a sessão           |
-| `GET`            | `/admin/audit/banned`         | Consulta a auditoria; exige `read:audit`                  |
-| `POST`, `DELETE` | `/admin/users/{username}/ban` | Bane e desbane contas; exige `update:user:others`         |
+| Método           | Caminho                         | Descrição                                                                |
+| ---------------- | ------------------------------- | ------------------------------------------------------------------------ |
+| `GET`            | `/status`                       | Consulta o status do banco                                               |
+| `GET`, `POST`    | `/migrations`                   | Lista e aplica migrations; exige features administrativas                |
+| `POST`           | `/users`                        | Cadastra usuário e envia e-mail de ativação                              |
+| `GET`, `PATCH`   | `/users/{username}`             | Consulta dados públicos e atualiza conforme autorização                  |
+| `PATCH`          | `/activations/{token_id}`       | Ativa um cadastro com token válido                                       |
+| `POST`, `DELETE` | `/sessions`                     | Cria e encerra sessões                                                   |
+| `GET`            | `/user`                         | Retorna o usuário autenticado e renova a sessão                          |
+| `GET`            | `/admin/audit/banned`           | Consulta a auditoria; exige `read:audit`                                 |
+| `POST`, `DELETE` | `/admin/users/{username}/ban`   | Bane e desbane contas; exige `update:user:others`                        |
+| `DELETE`         | `/admin/users/{username}/photo` | Remove a foto de perfil; exige `update:user:others` e `read:user:others` |
 
 A API usa autorização por _features_, não uma regra única de “estar logado”. Algumas operações são públicas, outras exigem sessão válida e outras exigem permissões específicas. Consulte o [guia da API](docs/api/README.md) e a [especificação OpenAPI](docs/api/openapi.yaml).
 

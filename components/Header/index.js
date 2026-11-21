@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/router";
 
 import ThemeToggle from "@/components/ThemeToggle";
@@ -265,7 +266,19 @@ function Header() {
                 aria-controls="account-menu"
                 onClick={() => toggleMenu(MENU.account)}
               >
-                {getInitials(user.username)}
+                {user.profile_photo_url ? (
+                  <Image
+                    className={styles.avatarPhoto}
+                    src={user.profile_photo_url}
+                    alt=""
+                    width={42}
+                    height={42}
+                    loading="eager"
+                    unoptimized
+                  />
+                ) : (
+                  getInitials(user.username)
+                )}
               </button>
               <div
                 id="account-menu"

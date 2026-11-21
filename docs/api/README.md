@@ -106,7 +106,9 @@ Exige `create:user`, concedida ao visitante padrão. Recebe:
 
 O nome de usuário deve ter de 3 a 30 caracteres e aceitar somente letras sem acento, números, hífen e sublinhado. O e-mail deve ter formato válido e até 254 caracteres. Nome de usuário e e-mail precisam ser únicos, sem diferenciar maiúsculas de minúsculas. A senha deve ter de 12 a 64 caracteres, incluir pelo menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais, e não pode conter termos comuns conhecidos (`password`, `admin`, `qwerty`, `letmein` ou `welcome`). Antes de armazená-la, a senha é normalizada em NFC, processada com HMAC-SHA256 e bcrypt.
 
-O cadastro cria um token de ativação e envia um e-mail com o link correspondente. A resposta `201` contém apenas os campos públicos:
+O campo opcional `profile_photo` recebe uma imagem em Data URL. São aceitos JPEG, PNG e WebP estáticos, com até 2 MB e dimensões entre 128 e 2048 pixels por lado. A validação do conteúdo é feita também no servidor; o arquivo é enviado ao Cloudinary antes da criação da conta e removido caso a gravação falhe.
+
+O cadastro cria um token de ativação e envia um e-mail com o link correspondente. A resposta `201` contém apenas os campos públicos; quando há imagem, inclui também `profile_photo_url`:
 
 ```json
 {
@@ -134,9 +136,13 @@ Consulta os dados administrativos de uma conta, incluindo e-mail e features, mas
 
 ### `PATCH /api/v1/admin/users/{username}`
 
-Permite alterar `username`, `email`, `password` e `features` de qualquer conta, inclusive a própria conta do administrador. A senha segue as mesmas regras de validação e hash do fluxo de edição do perfil. A lista de features é validada contra o catálogo central em `configs/features.js`; valores desconhecidos são rejeitados com `400 ValidationError`. A lista enviada substitui integralmente as permissões atuais, inclusive quando vazia. Campos omitidos permanecem inalterados.
+Permite alterar `username`, `email`, `password` e `features` de qualquer conta, inclusive a própria conta do administrador. Também aceita `profile_photo` com uma imagem em Data URL nos formatos JPEG, PNG ou WebP, estática, com até 2 MB e dimensões entre 128 e 2048 pixels por lado. A imagem é enviada ao Cloudinary com o identificador estável `profile-photos/{user_id}` e `overwrite: true`, substituindo a foto anterior e invalidando o cache. Quando a conta ainda possui uma foto legada com identificador aleatório, ela é excluída após a persistência da nova referência. A senha segue as mesmas regras de validação e hash do fluxo de edição do perfil. A lista de features é validada contra o catálogo central em `configs/features.js`; valores desconhecidos são rejeitados com `400 ValidationError`. A lista enviada substitui integralmente as permissões atuais, inclusive quando vazia. Campos omitidos permanecem inalterados.
 
 Os endpoints administrativos retornam `403` quando a sessão não possui `update:user:others`, `404` quando o usuário alvo não existe e `400` quando a pesquisa ou os dados enviados são inválidos.
+
+### `DELETE /api/v1/admin/users/{username}/photo`
+
+Remove a foto de perfil do usuário. Exige simultaneamente `update:user:others` e `read:user:others`. A URL e o identificador do ativo são removidos do banco; a aplicação solicita ao Cloudinary a exclusão do arquivo e a invalidação do cache. Se o Cloudinary não confirmar a exclusão, a aplicação tenta restaurar a referência no banco e retorna erro. A operação não altera os demais dados da conta.
 
 ### Banimento e desbanimento
 
@@ -170,7 +176,7 @@ Respostas: `200` encontrado; `404` usuário inexistente.
 
 Exige `update:user`. O usuário pode atualizar a própria conta; para alterar outra conta, precisa também de `update:user:others`.
 
-O corpo deve ser um objeto JSON e aceita somente os campos `username`, `email` e `password`:
+O corpo deve ser um objeto JSON e aceita os campos `username`, `email`, `password` e o campo opcional `profile_photo` (Data URL de imagem JPEG, PNG ou WebP estática, até 2 MB, dimensões de 128 a 2048 pixels por lado):
 
 ```json
 {
@@ -219,7 +225,7 @@ Sessão inexistente ou expirada resulta em `401`.
 
 ## `GET /api/v1/user`
 
-Exige sessão válida e `read:session`. Retorna os dados privados do próprio usuário (`id`, `username`, `email`, `features`, `created_at`, `updated_at`), sem senha.
+Exige sessão válida e `read:session`. Retorna os dados privados do próprio usuário (`id`, `username`, `email`, `features`, `created_at`, `updated_at`), sem senha. Quando cadastrada, a resposta também inclui `profile_photo_url`.
 
 A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica cabeçalho `Cache-Control` para impedir armazenamento em cache. Sem cookie, o visitante anônimo não possui `read:session` e recebe `403`; com cookie inválido ou sessão expirada, recebe `401`.
 
@@ -227,7 +233,6 @@ A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica c
 
 - Não há _rate limiting_ para tentativas de login.
 - A validação de senha já exige de 12 a 64 caracteres, ao menos 2 letras minúsculas, 2 maiúsculas, 2 números e 2 caracteres especiais, além de rejeitar os termos comuns listados em `lib/shared/user-validation.js`; não há verificação de vazamento em bases de senhas comprometidas.
-- A validação do corpo ainda não é uniforme em todos os endpoints. O login e a atualização de usuário verificam o formato do objeto, mas `POST /api/v1/users` não valida explicitamente um corpo de nível superior `null` ou ausente antes de acessar suas propriedades, o que pode resultar em `500`.
 - No cadastro, o e-mail é armazenado com a capitalização enviada (após `trim()`); a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
 - Um JSON sintaticamente inválido pode ser rejeitado pelo parser de corpo do Next.js antes de chegar ao controller; nesse caso, a resposta `400` pode não usar o envelope JSON padronizado da API.
 - A feature `read:status` consta no catálogo e é usada nos testes, mas a rota de status não possui middleware `canRequest`; o acesso ao endpoint permanece público. A feature `read:status:all` controla apenas a inclusão da versão do banco.
