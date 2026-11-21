@@ -75,11 +75,32 @@ async function findOneValidByToken(sessionToken) {
 
 async function renew(sessionId) {
   const expiresAt = getExpiresAt();
-  const renewedSession = await runUpdateQuery(sessionId, expiresAt);
-  return renewedSession;
 
-  async function runUpdateQuery(sessionId, expiresAt) {
-    const results = await database.query({
+  return database.transaction(async (client) => {
+    const userResults = await client.query({
+      text: `
+        SELECT
+          users.banned_at
+        FROM
+          sessions
+        INNER JOIN
+          users
+          ON users.id = sessions.user_id
+        WHERE
+          sessions.id = $1
+        FOR UPDATE OF users
+      ;`,
+      values: [sessionId],
+    });
+
+    if (userResults.rowCount === 0 || userResults.rows[0].banned_at) {
+      throw new UnauthorizedError({
+        message: "Usuário não possui sessão ativa.",
+        action: "Verifique se este usuário está logado e tente novamente.",
+      });
+    }
+
+    const results = await client.query({
       text: `
         UPDATE
           sessions
@@ -95,7 +116,7 @@ async function renew(sessionId) {
     });
 
     return results.rows[0];
-  }
+  });
 }
 
 async function expireById(sessionId) {

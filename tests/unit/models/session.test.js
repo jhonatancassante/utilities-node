@@ -98,17 +98,34 @@ describe("models/session.js", () => {
   });
 
   describe(".renew()", () => {
-    test("Estende a expiração em 30 dias", async () => {
+    test("Estende a expiração em 30 dias para usuário não banido", async () => {
       jest.useFakeTimers({ now: new Date("2026-03-01T12:00:00.000Z") });
-      const querySpy = mockQuery([{ id: "s1" }]);
+      const querySpy = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ banned_at: null }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [{ id: "s1" }], rowCount: 1 });
+      mockTransaction(querySpy);
 
       await session.renew("s1");
 
-      const [query] = querySpy.mock.calls[0];
+      const [query] = querySpy.mock.calls[1];
       expect(query.values).toEqual([
         "s1",
         new Date("2026-03-31T12:00:00.000Z"),
       ]);
+    });
+
+    test("Não renova sessão de usuário banido", async () => {
+      const querySpy = jest.fn().mockResolvedValue({
+        rows: [{ banned_at: new Date() }],
+        rowCount: 1,
+      });
+      mockTransaction(querySpy);
+
+      await expect(session.renew("s1")).rejects.toThrow(
+        "Usuário não possui sessão ativa.",
+      );
+      expect(querySpy).toHaveBeenCalledTimes(1);
     });
   });
 
