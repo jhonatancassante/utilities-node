@@ -1,5 +1,6 @@
 import database from "@/infra/database.js";
 import password from "@/models/password.js";
+import session from "@/models/session.js";
 import {
   ConflictError,
   ForbiddenError,
@@ -491,19 +492,7 @@ async function setBanStatus(username, isBanned, actorUserId) {
     });
 
     if (isBanned) {
-      await client.query({
-        text: `
-          UPDATE
-            sessions
-          SET
-            expires_at = NOW() - interval '1 second',
-            updated_at = timezone('utc', now())
-          WHERE
-            user_id = $1
-            AND expires_at > NOW()
-        ;`,
-        values: [currentUser.id],
-      });
+      await session.expireAllByUserId(currentUser.id, client);
     }
 
     return results.rows[0];

@@ -122,6 +122,25 @@ async function expireById(sessionId) {
   }
 }
 
+async function expireAllByUserId(userId, client = database) {
+  const results = await client.query({
+    text: `
+      UPDATE
+        sessions
+      SET
+        expires_at = expires_at - interval '1 year',
+        updated_at = timezone('utc', now())
+      WHERE
+        user_id = $1
+      RETURNING
+        id
+    ;`,
+    values: [userId],
+  });
+
+  return results.rows;
+}
+
 function getExpiresAt() {
   return new Date(Date.now() + EXPIRATION_IN_MILLISECONDS);
 }
@@ -131,6 +150,7 @@ const session = {
   findOneValidByToken,
   renew,
   expireById,
+  expireAllByUserId,
   EXPIRATION_IN_MILLISECONDS,
 };
 

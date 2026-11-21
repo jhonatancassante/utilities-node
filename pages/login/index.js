@@ -54,6 +54,7 @@ function LoginPage() {
     } catch (error) {
       setFeedback({
         type: "error",
+        name: error.name === "BannedUserError" ? "Conta banida" : undefined,
         message: error.message,
         action: error.action,
       });

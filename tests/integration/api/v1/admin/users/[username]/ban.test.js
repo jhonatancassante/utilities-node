@@ -1,4 +1,5 @@
 import orchestrator from "tests/orchestrator.js";
+import database from "@/infra/database.js";
 import user from "@/models/user.js";
 import feature from "@/models/feature.js";
 import session from "@/models/session.js";
@@ -64,6 +65,17 @@ describe("/api/v1/admin/users/[username]/ban", () => {
 
     const persistedBannedUser = await user.findOneById(targetUser.id);
     expect(Date.parse(persistedBannedUser.banned_at)).not.toBeNaN();
+
+    const expiredSessions = await database.query({
+      text: "SELECT expires_at FROM sessions WHERE user_id = $1;",
+      values: [targetUser.id],
+    });
+    expect(expiredSessions.rows).toHaveLength(targetSessions.length);
+    expect(
+      expiredSessions.rows.every(
+        (item) => new Date(item.expires_at) < new Date(),
+      ),
+    ).toBe(true);
 
     for (const targetSession of targetSessions) {
       await expect(

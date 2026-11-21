@@ -1,7 +1,11 @@
 import crypto from "node:crypto";
 import user from "@/models/user.js";
 import password from "@/models/password.js";
-import { NotFoundError, UnauthorizedError } from "@/infra/errors.js";
+import {
+  BannedUserError,
+  NotFoundError,
+  UnauthorizedError,
+} from "@/infra/errors.js";
 
 let dummyHashPromise = null;
 
@@ -27,11 +31,7 @@ async function getUser(providedEmail, providedPassword) {
     await validatePassword(providedPassword, storedUser.password);
 
     if (storedUser.banned_at) {
-      throw new UnauthorizedError({
-        message: "Não foi possível autenticar seu usuário no sistema.",
-        action:
-          "Verifique se digitou o e-mail e a senha corretamente e tente novamente.",
-      });
+      throw new BannedUserError({});
     }
 
     return storedUser;
