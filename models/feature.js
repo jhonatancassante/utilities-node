@@ -6,7 +6,7 @@ const UPDATABLE_FIELDS = [
   "label",
   "group_name",
   "description",
-  "is_removable",
+  "is_self_removable",
   "is_privileged",
   "is_protected",
 ];
@@ -26,7 +26,7 @@ async function create(featureInputValues) {
           label,
           group_name,
           description,
-          is_removable,
+          is_self_removable,
           is_privileged,
           is_protected
         )
@@ -40,7 +40,7 @@ async function create(featureInputValues) {
       feature.label,
       feature.group_name,
       feature.description,
-      feature.is_removable ?? true,
+      feature.is_self_removable ?? true,
       feature.is_privileged ?? false,
       feature.is_protected ?? false,
     ],
@@ -241,7 +241,7 @@ async function deleteFeature(id) {
       });
     }
 
-    if (!currentFeature.is_removable) {
+    if (!currentFeature.is_self_removable) {
       const assignedUsers = await client.query({
         text: `
           SELECT
@@ -376,7 +376,7 @@ function validateFeatureInput(
     }
   }
 
-  for (const field of ["is_removable", "is_privileged", "is_protected"]) {
+  for (const field of ["is_self_removable", "is_privileged", "is_protected"]) {
     if (!Object.hasOwn(featureInputValues, field)) continue;
 
     if (typeof featureInputValues[field] !== "boolean") {

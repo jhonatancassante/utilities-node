@@ -442,12 +442,12 @@ function AdminFeaturesPage() {
                                         ></i>
                                       </span>
                                     )}
-                                    {!feature.is_removable && (
+                                    {!feature.is_self_removable && (
                                       <span
                                         className={`${styles.badgeIcon} ${styles.nonRemovableBadge}`}
-                                        title="Não pode ser removida de usuários"
+                                        title="Não pode ser removida pelo próprio usuário"
                                         role="img"
-                                        aria-label="Não pode ser removida de usuários"
+                                        aria-label="Não pode ser removida pelo próprio usuário"
                                       >
                                         <i
                                           className="fas fa-ban"
@@ -527,7 +527,7 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
     label: feature?.label ?? "",
     group_name: feature?.group_name ?? "",
     description: feature?.description ?? "",
-    is_removable: feature?.is_removable ?? true,
+    is_self_removable: feature?.is_self_removable ?? true,
     is_privileged: feature?.is_privileged ?? false,
     is_protected: feature?.is_protected ?? false,
   });
@@ -728,14 +728,14 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
           <label>
             <input
               type="checkbox"
-              checked={form.is_removable}
+              checked={form.is_self_removable}
               onChange={(event) =>
-                updateField("is_removable", event.target.checked)
+                updateField("is_self_removable", event.target.checked)
               }
               disabled={isSaving}
             />
             <span className={styles.switch} aria-hidden="true"></span>
-            <span>Permite retirar de usuários</span>
+            <span>Permite retirar de si mesmo</span>
           </label>
           <label>
             <input

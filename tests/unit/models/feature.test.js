@@ -10,7 +10,7 @@ const existingFeature = {
   label: "Consultar relatórios",
   group_name: "Relatórios",
   description: "Permite consultar relatórios.",
-  is_removable: true,
+  is_self_removable: true,
   is_privileged: false,
   is_protected: false,
   deleted_at: null,
@@ -93,7 +93,7 @@ describe("models/feature.js", () => {
           label: " Consultar relatórios ",
           group_name: " Relatórios ",
           description: " Permite consultar relatórios. ",
-          is_removable: false,
+          is_self_removable: false,
           is_privileged: true,
           is_protected: true,
         }),
@@ -153,7 +153,7 @@ describe("models/feature.js", () => {
       ).rejects.toThrow(ValidationError);
     });
 
-    test.each(["is_removable", "is_privileged", "is_protected"])(
+    test.each(["is_self_removable", "is_privileged", "is_protected"])(
       "Com valor não booleano em %s",
       async (field) => {
         await expect(
@@ -352,7 +352,7 @@ describe("models/feature.js", () => {
 
     test("Rejeita exclusão de feature não removível atribuída a um usuário", async () => {
       mockQueries([
-        ["FOR UPDATE", [{ ...existingFeature, is_removable: false }]],
+        ["FOR UPDATE", [{ ...existingFeature, is_self_removable: false }]],
         ["ANY(features)", [{ id: "user-1" }]],
       ]);
 
@@ -363,7 +363,7 @@ describe("models/feature.js", () => {
 
     test("Permite excluir feature não removível sem usuários atribuídos", async () => {
       const querySpy = mockQueries([
-        ["FOR UPDATE", [{ ...existingFeature, is_removable: false }]],
+        ["FOR UPDATE", [{ ...existingFeature, is_self_removable: false }]],
         ["ANY(features)", []],
         ["array_remove(features, $1)", []],
         ["UPDATE\n          features", [existingFeature]],

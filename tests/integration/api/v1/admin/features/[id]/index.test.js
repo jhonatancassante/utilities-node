@@ -237,7 +237,7 @@ describe("DELETE /api/v1/admin/features/[id]", () => {
       const { sessionObject } = await createPrivilegedSession();
       const createdFeature = await createTestFeature({
         name: "read:lockedreports",
-        is_removable: false,
+        is_self_removable: false,
       });
       const targetUser = await orchestrator.createUser();
       await orchestrator.addFeaturesToUser(targetUser, [createdFeature.name]);

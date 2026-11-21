@@ -120,7 +120,7 @@ function filterOutput(user, feature, resource) {
       label: featureObject.label,
       group_name: featureObject.group_name,
       description: featureObject.description,
-      is_removable: featureObject.is_removable,
+      is_self_removable: featureObject.is_self_removable,
       is_privileged: featureObject.is_privileged,
       is_protected: featureObject.is_protected,
       created_at: featureObject.created_at,
