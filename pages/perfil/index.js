@@ -282,8 +282,8 @@ function ProfileForm({ user, onUpdated }) {
             <Image
               src={user.profile_photo_url}
               alt={`Foto de perfil de ${user.username}`}
-              width={640}
-              height={640}
+              width={1024}
+              height={1024}
               unoptimized
             />
           </div>
