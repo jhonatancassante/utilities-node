@@ -57,7 +57,6 @@ describe("models/session.js", () => {
     test("Gera tokens diferentes a cada chamada", async () => {
       const querySpy = jest
         .fn()
-        .mockResolvedValue({ rows: [{ banned_at: null }], rowCount: 1 })
         .mockResolvedValueOnce({ rows: [{ banned_at: null }], rowCount: 1 })
         .mockResolvedValueOnce({ rows: [{ id: "s1" }], rowCount: 1 })
         .mockResolvedValueOnce({ rows: [{ banned_at: null }], rowCount: 1 })
