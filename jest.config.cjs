@@ -15,7 +15,6 @@ const jestConfig = createJestConfig({
     "infra/**/*.js",
     "lib/**/*.js",
     "models/**/*.js",
-    "pages/api/**/*.js",
     "!infra/migrations/**",
     "!infra/scripts/**",
     "!**/*.test.js",

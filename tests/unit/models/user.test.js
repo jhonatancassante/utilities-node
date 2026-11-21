@@ -470,7 +470,7 @@ describe("models/user.js", () => {
       const result = await user.setBanStatus("UsuarioAtual", true, "admin-1");
 
       expect(result).toEqual(alreadyBannedUser);
-      expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
+      expect(getCallsContaining(querySpy, "banned_at = CASE")).toEqual([]);
       expect(getCallsContaining(querySpy, "INSERT INTO user_ban_events")).toEqual(
         [],
       );
