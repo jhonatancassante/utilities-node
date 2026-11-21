@@ -49,6 +49,7 @@ function filterOutput(user, feature, resource) {
       features: resource.features,
       created_at: resource.created_at,
       updated_at: resource.updated_at,
+      profile_photo_url: resource.profile_photo_url,
     };
   }
 
@@ -60,6 +61,7 @@ function filterOutput(user, feature, resource) {
       features: userObject.features,
       privileged_features: userObject.privileged_features ?? [],
       banned_at: userObject.banned_at,
+      profile_photo_url: userObject.profile_photo_url,
       created_at: userObject.created_at,
       updated_at: userObject.updated_at,
     });
@@ -77,6 +79,7 @@ function filterOutput(user, feature, resource) {
         email: resource.email,
         features: resource.features,
         privileged_features: resource.privileged_features ?? [],
+        profile_photo_url: resource.profile_photo_url,
         created_at: resource.created_at,
         updated_at: resource.updated_at,
       };

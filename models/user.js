@@ -32,9 +32,9 @@ async function create(userInputValues) {
     const results = await database.query({
       text: `
         INSERT INTO
-          users (username, email, password, features)
+          users (username, email, password, features, profile_photo_url, profile_photo_public_id)
         VALUES
-          ($1, $2, $3, $4)
+          ($1, $2, $3, $4, $5, $6)
         RETURNING
           *
         ;`,
@@ -43,6 +43,8 @@ async function create(userInputValues) {
         userInputValues.email,
         userInputValues.password,
         userInputValues.features,
+        userInputValues.profile_photo_url ?? null,
+        userInputValues.profile_photo_public_id ?? null,
       ],
     });
 
@@ -185,6 +187,7 @@ async function search(searchTerm) {
         email,
         features,
         banned_at,
+        profile_photo_url,
         created_at,
         updated_at
       FROM
@@ -446,6 +449,22 @@ function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
   return picked;
 }
 
+async function setProfilePhoto(userId, profilePhoto) {
+  const results = await database.query({
+    text: `
+      UPDATE users
+      SET
+        profile_photo_url = $2,
+        profile_photo_public_id = $3,
+        updated_at = timezone('utc', now())
+      WHERE id = $1
+      RETURNING *
+    ;`,
+    values: [userId, profilePhoto?.url ?? null, profilePhoto?.publicId ?? null],
+  });
+  return results.rows[0];
+}
+
 async function setBanStatus(username, isBanned, actorUserId) {
   if (typeof isBanned !== "boolean") {
     throw new ValidationError({
@@ -660,6 +679,7 @@ const user = {
   findOneByEmail,
   update,
   setBanStatus,
+  setProfilePhoto,
   setFeatures,
   addFeatures,
 };
