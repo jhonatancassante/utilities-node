@@ -24,6 +24,8 @@ async function postHandler(request, response) {
   const userTryingToGet = request.context.user;
   const { profile_photo, ...userInputValues } = request.body ?? {};
   delete userInputValues.id;
+  delete userInputValues.profile_photo_url;
+  delete userInputValues.profile_photo_public_id;
   let uploadedPhoto = null;
   let newUser;
 
