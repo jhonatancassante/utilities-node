@@ -28,6 +28,7 @@ async function createPrivilegedSession() {
     ...protectedFeatures,
     "create:user",
     "read:session",
+    "read:audit",
   ]);
   const sessionObject = await orchestrator.createSession(privilegedUser);
   return { privilegedUser, sessionObject };
@@ -45,7 +46,7 @@ describe("/api/v1/admin/users/[username]/ban", () => {
   });
 
   test("Permite banir e desbanir outro usuário", async () => {
-    const { sessionObject } = await createPrivilegedSession();
+    const { privilegedUser, sessionObject } = await createPrivilegedSession();
     const targetUser = await orchestrator.createUser();
     await orchestrator.activateUser(targetUser);
     const targetSessions = await Promise.all([
@@ -115,6 +116,26 @@ describe("/api/v1/admin/users/[username]/ban", () => {
     const searchResults = await searchResponse.json();
     expect(searchResults[0].banned_at).toBe(bannedUser.banned_at);
 
+    const auditResponse = await fetch(
+      `${orchestrator.API_URL}/admin/audit/banned`,
+      { headers },
+    );
+    expect(auditResponse.status).toBe(200);
+    const banEvents = await auditResponse.json();
+    expect(banEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          user_id: targetUser.id,
+          action: "ban",
+          username: targetUser.username,
+          email: targetUser.email,
+          actor_user_id: privilegedUser.id,
+          actor_username: privilegedUser.username,
+          is_currently_banned: true,
+        }),
+      ]),
+    );
+
     const unbanResponse = await fetch(adminUserBanUrl(targetUser.username), {
       method: "DELETE",
       headers,
@@ -126,6 +147,21 @@ describe("/api/v1/admin/users/[username]/ban", () => {
 
     const persistedUnbannedUser = await user.findOneById(targetUser.id);
     expect(persistedUnbannedUser.banned_at).toBeNull();
+
+    const historyResponse = await fetch(
+      `${orchestrator.API_URL}/admin/audit/banned`,
+      { headers },
+    );
+    expect(historyResponse.status).toBe(200);
+    const history = await historyResponse.json();
+    expect(
+      history.filter((event) => event.user_id === targetUser.id).map((event) => event.action),
+    ).toEqual(["unban", "ban"]);
+    expect(
+      history.filter((event) => event.user_id === targetUser.id).every(
+        (event) => event.actor_user_id === privilegedUser.id,
+      ),
+    ).toBe(true);
 
     for (const targetSession of targetSessions) {
       await expect(
