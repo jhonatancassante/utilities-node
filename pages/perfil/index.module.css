@@ -230,7 +230,7 @@ button.profileAvatar:hover {
   overflow: hidden;
   border-radius: 50%;
   background: var(--bg-card);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
 }
 
 .photoPreviewDialog > img {
