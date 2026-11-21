@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import NextImage from "next/image";
 
 import styles from "./index.module.css";
@@ -6,12 +6,44 @@ import styles from "./index.module.css";
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 const MIN_DIMENSION = 128;
 const MAX_DIMENSION = 2048;
+const VIEWPORT_SIZE = 280;
+const OUTPUT_SIZE = 512;
 
 function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
   const [error, setError] = useState("");
+  const [cropSource, setCropSource] = useState("");
+  const [imageSize, setImageSize] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const dragRef = useRef(null);
   const preview = value || initialUrl;
 
-  async function handleFileChange(event) {
+  const scale = imageSize
+    ? Math.max(
+        VIEWPORT_SIZE / imageSize.width,
+        VIEWPORT_SIZE / imageSize.height,
+      ) * zoom
+    : 1;
+  const imageWidth = imageSize ? imageSize.width * scale : VIEWPORT_SIZE;
+  const imageHeight = imageSize ? imageSize.height * scale : VIEWPORT_SIZE;
+  const imageLeft = (VIEWPORT_SIZE - imageWidth) / 2 + offset.x;
+  const imageTop = (VIEWPORT_SIZE - imageHeight) / 2 + offset.y;
+
+  useEffect(
+    () => () => {
+      if (cropSource) URL.revokeObjectURL(cropSource);
+    },
+    [cropSource],
+  );
+
+  function closeCropper() {
+    setCropSource("");
+    setImageSize(null);
+    setZoom(1);
+    setOffset({ x: 0, y: 0 });
+  }
+
+  function handleFileChange(event) {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -30,22 +62,24 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
     const objectUrl = URL.createObjectURL(file);
     const image = new Image();
     image.onload = () => {
-      URL.revokeObjectURL(objectUrl);
       if (
         image.naturalWidth < MIN_DIMENSION ||
         image.naturalHeight < MIN_DIMENSION ||
         image.naturalWidth > MAX_DIMENSION ||
         image.naturalHeight > MAX_DIMENSION
       ) {
+        URL.revokeObjectURL(objectUrl);
         setError("A largura e a altura devem ficar entre 128 e 2048 pixels.");
         event.target.value = "";
         return;
       }
-      const reader = new FileReader();
-      reader.onload = () => onChange(reader.result);
-      reader.onerror = () =>
-        setError("Não foi possível ler a imagem selecionada.");
-      reader.readAsDataURL(file);
+      setImageSize({
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+      });
+      setZoom(1);
+      setOffset({ x: 0, y: 0 });
+      setCropSource(objectUrl);
     };
     image.onerror = () => {
       URL.revokeObjectURL(objectUrl);
@@ -53,6 +87,62 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
       event.target.value = "";
     };
     image.src = objectUrl;
+    event.target.value = "";
+  }
+
+  function handlePointerDown(event) {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      offsetX: offset.x,
+      offsetY: offset.y,
+    };
+  }
+
+  function handlePointerMove(event) {
+    if (!dragRef.current || dragRef.current.pointerId !== event.pointerId)
+      return;
+    setOffset({
+      x: dragRef.current.offsetX + event.clientX - dragRef.current.startX,
+      y: dragRef.current.offsetY + event.clientY - dragRef.current.startY,
+    });
+  }
+
+  function handlePointerUp() {
+    dragRef.current = null;
+  }
+
+  function handleCrop() {
+    if (!cropSource || !imageSize) return;
+
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = OUTPUT_SIZE;
+      canvas.height = OUTPUT_SIZE;
+      const context = canvas.getContext("2d");
+      const sourceX = Math.max(0, -imageLeft / scale);
+      const sourceY = Math.max(0, -imageTop / scale);
+      const sourceSize = VIEWPORT_SIZE / scale;
+
+      context.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        sourceSize,
+        sourceSize,
+        0,
+        0,
+        OUTPUT_SIZE,
+        OUTPUT_SIZE,
+      );
+      onChange(canvas.toDataURL("image/jpeg", 0.92));
+      closeCropper();
+    };
+    image.onerror = () => setError("Não foi possível preparar o recorte.");
+    image.src = cropSource;
   }
 
   return (
@@ -85,16 +175,74 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
             />
           </label>
           <small>JPEG, PNG ou WebP · até 2 MB · 128–2048 px</small>
-          <small>
-            Imagens serão exibidas em formato quadrado, com corte central
-            automático.
-          </small>
+          <small>Você poderá mover e ampliar a imagem antes de salvar.</small>
         </div>
       </div>
       {error && (
         <small className={styles.error} role="alert">
           {error}
         </small>
+      )}
+
+      {cropSource && imageSize && (
+        <div
+          className={styles.cropOverlay}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeCropper();
+          }}
+        >
+          <section
+            className={styles.cropDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-photo-crop-title"
+          >
+            <h2 id="profile-photo-crop-title">Ajustar foto de perfil</h2>
+            <p>Arraste a imagem para posicionar o rosto dentro do círculo.</p>
+            <div
+              className={styles.cropViewport}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+              onLostPointerCapture={handlePointerUp}
+            >
+              <img
+                className={styles.cropImage}
+                src={cropSource}
+                alt="Imagem sendo ajustada"
+                draggable="false"
+                style={{
+                  width: imageWidth,
+                  height: imageHeight,
+                  left: imageLeft,
+                  top: imageTop,
+                }}
+              />
+              <span className={styles.cropGuide} aria-hidden="true" />
+            </div>
+            <label className={styles.zoomControl}>
+              <span>Zoom</span>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                step="0.01"
+                value={zoom}
+                onChange={(event) => setZoom(Number(event.target.value))}
+              />
+            </label>
+            <div className={styles.cropActions}>
+              <button type="button" onClick={closeCropper}>
+                Cancelar
+              </button>
+              <button type="button" onClick={handleCrop}>
+                Usar esta foto
+              </button>
+            </div>
+          </section>
+        </div>
       )}
     </div>
   );
