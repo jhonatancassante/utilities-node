@@ -350,29 +350,35 @@ describe("models/feature.js", () => {
       );
     });
 
-    test("Rejeita exclusão de feature não removível atribuída a um usuário", async () => {
-      mockQueries([
-        ["FOR UPDATE", [{ ...existingFeature, is_self_removable: false }]],
-        ["ANY(features)", [{ id: "user-1" }]],
-      ]);
-
-      await expect(feature.delete(existingFeature.id)).rejects.toThrow(
-        "Esta feature não pode ser excluída enquanto estiver atribuída a usuários.",
-      );
-    });
-
-    test("Permite excluir feature não removível sem usuários atribuídos", async () => {
+    test("Exclui feature não removível do catálogo independentemente dos usuários atribuídos", async () => {
+      const nonSelfRemovableFeature = {
+        ...existingFeature,
+        is_self_removable: false,
+      };
+      const deletedFeature = {
+        ...nonSelfRemovableFeature,
+        deleted_at: "2026-11-21T00:00:00.000Z",
+      };
       const querySpy = mockQueries([
-        ["FOR UPDATE", [{ ...existingFeature, is_self_removable: false }]],
-        ["ANY(features)", []],
+        ["FOR UPDATE", [nonSelfRemovableFeature]],
         ["array_remove(features, $1)", []],
-        ["UPDATE\n          features", [existingFeature]],
+        ["UPDATE\n          features", [deletedFeature]],
       ]);
 
-      await feature.delete(existingFeature.id);
+      await expect(feature.delete(existingFeature.id)).resolves.toEqual(
+        deletedFeature,
+      );
 
+      const userLookupQueries = querySpy.mock.calls
+        .map(([query]) => query)
+        .filter(
+          (query) =>
+            query.text.trimStart().startsWith("SELECT") &&
+            query.text.includes("ANY(features)"),
+        );
+      expect(userLookupQueries).toEqual([]);
       expect(
-        getCallsContaining(querySpy, "UPDATE\n          features"),
+        getCallsContaining(querySpy, "array_remove(features, $1)"),
       ).toHaveLength(1);
     });
   });

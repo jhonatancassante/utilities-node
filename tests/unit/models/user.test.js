@@ -204,6 +204,30 @@ describe("models/user.js", () => {
       ]);
     });
 
+    test("Permite que um administrador retire feature não removível de outro usuário", async () => {
+      const querySpy = mockQueries([
+        [
+          "name,\n          is_self_removable,\n          deleted_at\n        FROM\n          features",
+          existingFeatureMetadata,
+        ],
+        ["SELECT", [existingUser]],
+        ["UPDATE", [existingUser]],
+      ]);
+
+      const features = ["create:session", "update:user"];
+
+      await user.update(
+        "UsuarioAtual",
+        { features },
+        { allowFeatures: true, actorUserId: "admin-user-id" },
+      );
+
+      expect(
+        getCallsContaining(querySpy, "SELECT name, is_self_removable FROM features"),
+      ).toEqual([]);
+      expect(getCallsContaining(querySpy, "UPDATE users SET")).toHaveLength(1);
+    });
+
     test("Rejeita a alteração de uma feature não editável", async () => {
       const querySpy = mockQueries([
         [
@@ -222,7 +246,7 @@ describe("models/user.js", () => {
         .update(
           "UsuarioAtual",
           { features: ["create:session", "update:user"] },
-          { allowFeatures: true },
+          { allowFeatures: true, actorUserId: existingUser.id },
         )
         .catch((e) => e);
 

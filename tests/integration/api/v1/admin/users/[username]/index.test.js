@@ -179,6 +179,37 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       ]);
     });
 
+    test("Permite retirar de outro usuário uma feature não removível por ele mesmo", async () => {
+      const { sessionObject } = await createPrivilegedSession();
+      const targetUser = await orchestrator.createUser();
+      const nonSelfRemovableFeature = await feature.create({
+        name: "read:nonselfremovable",
+        label: "Consultar recurso protegido",
+        group_name: "Testes",
+        description: "Feature que não pode ser removida pelo próprio titular.",
+        is_self_removable: false,
+      });
+      await orchestrator.addFeaturesToUser(targetUser, [
+        nonSelfRemovableFeature.name,
+      ]);
+
+      const response = await fetch(adminUserUrl(targetUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({ features: ["read:activation_token"] }),
+      });
+
+      expect(response.status).toBe(200);
+      const responseBody = await response.json();
+      expect(responseBody.features).toEqual(["read:activation_token"]);
+
+      const updatedUser = await user.findOneById(targetUser.id);
+      expect(updatedUser.features).not.toContain(nonSelfRemovableFeature.name);
+    });
+
     test("Rejeitando a remoção de uma feature protegida", async () => {
       const { privilegedUser, sessionObject } = await createPrivilegedSession();
 

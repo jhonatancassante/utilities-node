@@ -203,7 +203,7 @@ async function search(searchTerm) {
 async function update(
   username,
   userInputValues,
-  { allowFeatures = false } = {},
+  { allowFeatures = false, actorUserId } = {},
 ) {
   const currentUser = await findOneByUsername(username);
   const allowedInputValues = pickUpdatableFields(userInputValues, {
@@ -323,7 +323,8 @@ async function update(
         const removedFeatures = currentFeatures.filter(
           (name) => !userWithNewValues.features.includes(name),
         );
-        if (removedFeatures.length) {
+        const isSelfUpdate = !actorUserId || actorUserId === userId;
+        if (removedFeatures.length && isSelfUpdate) {
           const metadata = await client.query({
             text: "SELECT name, is_self_removable FROM features WHERE name = ANY($1);",
             values: [removedFeatures],
@@ -335,7 +336,7 @@ async function update(
             throw new ValidationError({
               message: `As seguintes features não podem ser removidas deste usuário: ${locked.join(", ")}.`,
               action:
-                "Uma feature não removível pode ser atribuída, mas não pode ser retirada depois.",
+                "Uma feature não removível pode ser atribuída, mas não pode ser retirada pelo próprio usuário.",
             });
         }
         const protectedFeatureResults = await client.query({
