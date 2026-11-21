@@ -1,6 +1,7 @@
 import * as errors from "@/infra/errors.js";
 
 const defaultStatusCodes = {
+  BannedUserError: 403,
   ConflictError: 409,
   ConfigurationError: 500,
   ForbiddenError: 403,

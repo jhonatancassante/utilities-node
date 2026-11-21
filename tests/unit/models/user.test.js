@@ -36,11 +36,11 @@ function mockQueries(handlers) {
 }
 
 const existingFeatureMetadata = [
-  { name: "create:session", is_removable: false, deleted_at: null },
-  { name: "read:session", is_removable: false, deleted_at: null },
-  { name: "update:user", is_removable: false, deleted_at: null },
-  { name: "update:user:others", is_removable: true, deleted_at: null },
-  { name: "read:status:all", is_removable: true, deleted_at: null },
+  { name: "create:session", is_self_removable: false, deleted_at: null },
+  { name: "read:session", is_self_removable: false, deleted_at: null },
+  { name: "update:user", is_self_removable: false, deleted_at: null },
+  { name: "update:user:others", is_self_removable: true, deleted_at: null },
+  { name: "read:status:all", is_self_removable: true, deleted_at: null },
 ];
 
 function getCallsContaining(querySpy, pattern) {
@@ -177,7 +177,7 @@ describe("models/user.js", () => {
     test("Com permissão administrativa, atualiza as features", async () => {
       const querySpy = mockQueries([
         [
-          "name,\n          is_removable,\n          deleted_at\n        FROM\n          features",
+          "name,\n          is_self_removable,\n          deleted_at\n        FROM\n          features",
           existingFeatureMetadata,
         ],
         ["SELECT", [existingUser]],
@@ -204,15 +204,42 @@ describe("models/user.js", () => {
       ]);
     });
 
+    test("Permite que um administrador retire feature não removível de outro usuário", async () => {
+      const querySpy = mockQueries([
+        [
+          "name,\n          is_self_removable,\n          deleted_at\n        FROM\n          features",
+          existingFeatureMetadata,
+        ],
+        ["SELECT", [existingUser]],
+        ["UPDATE", [existingUser]],
+      ]);
+
+      const features = ["create:session", "update:user"];
+
+      await user.update(
+        "UsuarioAtual",
+        { features },
+        { allowFeatures: true, actorUserId: "admin-user-id" },
+      );
+
+      expect(
+        getCallsContaining(
+          querySpy,
+          "SELECT name, is_self_removable FROM features",
+        ),
+      ).toEqual([]);
+      expect(getCallsContaining(querySpy, "UPDATE users SET")).toHaveLength(1);
+    });
+
     test("Rejeita a alteração de uma feature não editável", async () => {
       const querySpy = mockQueries([
         [
-          "name,\n          is_removable,\n          deleted_at\n        FROM\n          features",
+          "name,\n          is_self_removable,\n          deleted_at\n        FROM\n          features",
           existingFeatureMetadata,
         ],
         [
-          "SELECT name, is_removable FROM features",
-          [{ name: "read:session", is_removable: false }],
+          "SELECT name, is_self_removable FROM features",
+          [{ name: "read:session", is_self_removable: false }],
         ],
         ["SELECT", [existingUser]],
         ["UPDATE", [existingUser]],
@@ -222,7 +249,7 @@ describe("models/user.js", () => {
         .update(
           "UsuarioAtual",
           { features: ["create:session", "update:user"] },
-          { allowFeatures: true },
+          { allowFeatures: true, actorUserId: existingUser.id },
         )
         .catch((e) => e);
 

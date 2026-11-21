@@ -1,7 +1,9 @@
 import database from "@/infra/database.js";
 import password from "@/models/password.js";
+import session from "@/models/session.js";
 import {
   ConflictError,
+  ForbiddenError,
   ValidationError,
   NotFoundError,
 } from "@/infra/errors.js";
@@ -182,6 +184,7 @@ async function search(searchTerm) {
         username,
         email,
         features,
+        banned_at,
         created_at,
         updated_at
       FROM
@@ -203,7 +206,7 @@ async function search(searchTerm) {
 async function update(
   username,
   userInputValues,
-  { allowFeatures = false } = {},
+  { allowFeatures = false, actorUserId } = {},
 ) {
   const currentUser = await findOneByUsername(username);
   const allowedInputValues = pickUpdatableFields(userInputValues, {
@@ -250,7 +253,7 @@ async function update(
       text: `
         SELECT
           name,
-          is_removable,
+          is_self_removable,
           deleted_at
         FROM
           features
@@ -323,19 +326,20 @@ async function update(
         const removedFeatures = currentFeatures.filter(
           (name) => !userWithNewValues.features.includes(name),
         );
-        if (removedFeatures.length) {
+        const isSelfUpdate = !actorUserId || actorUserId === userId;
+        if (removedFeatures.length && isSelfUpdate) {
           const metadata = await client.query({
-            text: "SELECT name, is_removable FROM features WHERE name = ANY($1);",
+            text: "SELECT name, is_self_removable FROM features WHERE name = ANY($1);",
             values: [removedFeatures],
           });
           const locked = metadata.rows
-            .filter((item) => !item.is_removable)
+            .filter((item) => !item.is_self_removable)
             .map((item) => item.name);
           if (locked.length)
             throw new ValidationError({
               message: `As seguintes features não podem ser removidas deste usuário: ${locked.join(", ")}.`,
               action:
-                "Uma feature não removível pode ser atribuída, mas não pode ser retirada depois.",
+                "Uma feature não removível pode ser atribuída, mas não pode ser retirada pelo próprio usuário.",
             });
         }
         const protectedFeatureResults = await client.query({
@@ -440,6 +444,59 @@ function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
     }
   }
   return picked;
+}
+
+async function setBanStatus(username, isBanned, actorUserId) {
+  if (typeof isBanned !== "boolean") {
+    throw new ValidationError({
+      message: "O status de banimento deve ser verdadeiro ou falso.",
+      action: "Informe se o usuário deve ser banido ou desbanido.",
+    });
+  }
+
+  const currentUser = await findOneByUsername(username);
+
+  if (currentUser.id === actorUserId) {
+    throw new ForbiddenError({
+      message: "Não é permitido banir a própria conta administrativa.",
+      action: "Selecione outro usuário para realizar esta operação.",
+    });
+  }
+
+  return database.transaction(async (client) => {
+    const lockedUser = await client.query({
+      text: "SELECT id FROM users WHERE id = $1 FOR UPDATE;",
+      values: [currentUser.id],
+    });
+
+    if (lockedUser.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O usuário não foi encontrado.",
+        action: "Atualize a lista e tente novamente.",
+      });
+    }
+
+    const results = await client.query({
+      text: `
+        UPDATE
+          users
+        SET
+          banned_at = CASE WHEN $2 THEN now() ELSE NULL END,
+          updated_at = timezone('utc', now())
+        WHERE
+          id = $1
+        RETURNING
+          *
+      ;`,
+      values: [currentUser.id, isBanned],
+    });
+
+    if (isBanned) {
+      await session.expireAllByUserId(currentUser.id, client);
+    }
+
+    return results.rows[0];
+  });
 }
 
 async function setFeatures(userId, userFeatures) {
@@ -561,6 +618,7 @@ const user = {
   findOneByUsername,
   findOneByEmail,
   update,
+  setBanStatus,
   setFeatures,
   addFeatures,
 };

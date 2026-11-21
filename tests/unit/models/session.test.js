@@ -1,13 +1,19 @@
 import { jest } from "@jest/globals";
 
 import database from "@/infra/database.js";
-import { UnauthorizedError } from "@/infra/errors.js";
+import { BannedUserError, UnauthorizedError } from "@/infra/errors.js";
 import session from "@/models/session.js";
 
 function mockQuery(rows) {
   return jest
     .spyOn(database, "query")
     .mockResolvedValue({ rows, rowCount: rows.length });
+}
+
+function mockTransaction(query) {
+  jest
+    .spyOn(database, "transaction")
+    .mockImplementation(async (callback) => callback({ query }));
 }
 
 afterEach(() => {
@@ -19,24 +25,50 @@ describe("models/session.js", () => {
   describe(".create()", () => {
     test("Gera token hexadecimal de 96 caracteres e expira em 30 dias", async () => {
       jest.useFakeTimers({ now: new Date("2026-01-01T00:00:00.000Z") });
-      const querySpy = mockQuery([{ id: "s1" }]);
+      const querySpy = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ banned_at: null }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [{ id: "s1" }], rowCount: 1 });
+      mockTransaction(querySpy);
 
       await session.create("user-1");
 
-      const [query] = querySpy.mock.calls[0];
+      const [query] = querySpy.mock.calls.slice(1)[0];
       const [token, userId, expiresAt] = query.values;
       expect(token).toMatch(/^[0-9a-f]{96}$/);
       expect(userId).toBe("user-1");
       expect(expiresAt).toEqual(new Date("2026-01-31T00:00:00.000Z"));
     });
 
+    test("Rejeita a criação de sessão para usuário banido", async () => {
+      const querySpy = jest.fn().mockResolvedValue({
+        rows: [{ banned_at: new Date() }],
+        rowCount: 1,
+      });
+      mockTransaction(querySpy);
+
+      await expect(session.create("user-1")).rejects.toBeInstanceOf(
+        BannedUserError,
+      );
+
+      expect(querySpy).toHaveBeenCalledTimes(1);
+    });
+
     test("Gera tokens diferentes a cada chamada", async () => {
-      const querySpy = mockQuery([{ id: "s1" }]);
+      const querySpy = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ banned_at: null }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [{ id: "s1" }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [{ banned_at: null }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [{ id: "s2" }], rowCount: 1 });
+      mockTransaction(querySpy);
 
       await session.create("user-1");
       await session.create("user-1");
 
-      const [first, second] = querySpy.mock.calls.map(([q]) => q.values[0]);
+      const [first, second] = querySpy.mock.calls
+        .filter(([q]) => q.text.includes("INSERT INTO"))
+        .map(([q]) => q.values[0]);
       expect(first).not.toBe(second);
     });
   });
@@ -49,7 +81,9 @@ describe("models/session.js", () => {
 
       expect(found).toEqual({ id: "s1" });
       const [query] = querySpy.mock.calls[0];
-      expect(query.text).toContain("expires_at > NOW()");
+      expect(query.text).toContain("sessions.expires_at > NOW()");
+      expect(query.text).toContain("users.banned_at IS NULL");
+      expect(query.text).toContain("INNER JOIN");
       expect(query.values).toEqual(["token"]);
     });
 
@@ -64,17 +98,34 @@ describe("models/session.js", () => {
   });
 
   describe(".renew()", () => {
-    test("Estende a expiração em 30 dias", async () => {
+    test("Estende a expiração em 30 dias para usuário não banido", async () => {
       jest.useFakeTimers({ now: new Date("2026-03-01T12:00:00.000Z") });
-      const querySpy = mockQuery([{ id: "s1" }]);
+      const querySpy = jest
+        .fn()
+        .mockResolvedValueOnce({ rows: [{ banned_at: null }], rowCount: 1 })
+        .mockResolvedValueOnce({ rows: [{ id: "s1" }], rowCount: 1 });
+      mockTransaction(querySpy);
 
       await session.renew("s1");
 
-      const [query] = querySpy.mock.calls[0];
+      const [query] = querySpy.mock.calls[1];
       expect(query.values).toEqual([
         "s1",
         new Date("2026-03-31T12:00:00.000Z"),
       ]);
+    });
+
+    test("Não renova sessão de usuário banido", async () => {
+      const querySpy = jest.fn().mockResolvedValue({
+        rows: [{ banned_at: new Date() }],
+        rowCount: 1,
+      });
+      mockTransaction(querySpy);
+
+      await expect(session.renew("s1")).rejects.toThrow(
+        "Usuário não possui sessão ativa.",
+      );
+      expect(querySpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -87,6 +138,23 @@ describe("models/session.js", () => {
       const [query] = querySpy.mock.calls[0];
       expect(query.text).toContain("expires_at - interval '1 year'");
       expect(query.values).toEqual(["s1"]);
+    });
+  });
+
+  describe(".expireAllByUserId()", () => {
+    test("Expira todas as sessões do usuário usando a transação informada", async () => {
+      const client = {
+        query: jest
+          .fn()
+          .mockResolvedValue({ rows: [{ id: "s1" }, { id: "s2" }] }),
+      };
+
+      const expiredSessions = await session.expireAllByUserId("user-1", client);
+
+      expect(expiredSessions).toEqual([{ id: "s1" }, { id: "s2" }]);
+      const [query] = client.query.mock.calls[0];
+      expect(query.text).toContain("expires_at - interval '1 year'");
+      expect(query.values).toEqual(["user-1"]);
     });
   });
 });
