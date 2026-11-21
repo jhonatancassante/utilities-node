@@ -273,6 +273,7 @@ function Header() {
                     alt=""
                     width={42}
                     height={42}
+                    loading="eager"
                     unoptimized
                   />
                 ) : (
