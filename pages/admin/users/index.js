@@ -118,23 +118,6 @@ function AdminUsersPage() {
     }
   }
 
-  async function handleBanStatusChanged(updatedUser) {
-    setSelectedUser(updatedUser);
-    setResults((currentResults) =>
-      currentResults.map((result) =>
-        result.id === updatedUser.id
-          ? { ...result, banned_at: updatedUser.banned_at }
-          : result,
-      ),
-    );
-    setFeedback({
-      type: "success",
-      message: updatedUser.banned_at
-        ? "Usuário banido com sucesso."
-        : "Usuário desbanido com sucesso.",
-    });
-  }
-
   async function handleUserUpdated(updatedUser) {
     setSelectedUser(null);
     setIsSearching(true);
@@ -301,18 +284,7 @@ function AdminUsersPage() {
                           {result.username.slice(0, 2).toUpperCase()}
                         </span>
                         <span className={styles.userIdentity}>
-                          <span className={styles.userIdentityHeading}>
-                            <strong>{result.username}</strong>
-                            <span
-                              className={`${styles.userStatusBadge} ${
-                                result.banned_at
-                                  ? styles.userStatusBanned
-                                  : styles.userStatusActive
-                              }`}
-                            >
-                              {result.banned_at ? "Banido" : "Ativo"}
-                            </span>
-                          </span>
+                          <strong>{result.username}</strong>
                           <small>{result.email}</small>
                         </span>
                         <i
@@ -332,7 +304,6 @@ function AdminUsersPage() {
                 user={selectedUser}
                 currentUserId={user.id}
                 onUpdated={handleUserUpdated}
-                onBanStatusChanged={handleBanStatusChanged}
                 onCancel={() => setSelectedUser(null)}
               />
             )}
@@ -343,13 +314,7 @@ function AdminUsersPage() {
   );
 }
 
-function UserEditor({
-  user,
-  currentUserId,
-  onUpdated,
-  onBanStatusChanged,
-  onCancel,
-}) {
+function UserEditor({ user, currentUserId, onUpdated, onCancel }) {
   const isEditingSelf = user.id === currentUserId;
   const [form, setForm] = useState({
     username: user.username,
@@ -360,7 +325,6 @@ function UserEditor({
   });
   const [featureSearch, setFeatureSearch] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [isUpdatingBan, setIsUpdatingBan] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [features, setFeatures] = useState([]);
   const [isLoadingFeatures, setIsLoadingFeatures] = useState(true);
@@ -437,32 +401,6 @@ function UserEditor({
     onCancel();
   }
 
-  async function handleToggleBan() {
-    if (isEditingSelf || isUpdatingBan || isSaving) return;
-
-    const isBanned = Boolean(user.banned_at);
-    setIsUpdatingBan(true);
-    setFeedback(null);
-
-    try {
-      const updatedUser = await requestAPI(
-        `/api/v1/admin/users/${encodeURIComponent(user.username)}/ban`,
-        { method: isBanned ? "DELETE" : "POST" },
-      );
-      await onBanStatusChanged(updatedUser);
-    } catch (requestError) {
-      setFeedback((current) => ({
-        id: (current?.id ?? 0) + 1,
-        type: "error",
-        name: requestError.statusCode ? requestError.name : undefined,
-        message: requestError.message,
-        action: requestError.action,
-      }));
-    } finally {
-      setIsUpdatingBan(false);
-    }
-  }
-
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -536,26 +474,6 @@ function UserEditor({
           <span>Altere os campos desejados e salve as alterações.</span>
         </div>
         <span className={styles.userId}>ID: {user.id}</span>
-      </div>
-
-      <div className={styles.banActions}>
-        <Button
-          variant={user.banned_at ? "success" : "danger"}
-          icon={user.banned_at ? "fa-unlock" : "fa-ban"}
-          onClick={handleToggleBan}
-          disabled={isEditingSelf || isSaving || isUpdatingBan}
-        >
-          {isUpdatingBan
-            ? user.banned_at
-              ? "Desbanindo..."
-              : "Banindo..."
-            : user.banned_at
-              ? "Desbanir usuário"
-              : "Banir usuário"}
-        </Button>
-        {isEditingSelf && (
-          <small>Não é permitido banir a própria conta administrativa.</small>
-        )}
       </div>
 
       <form onSubmit={handleSubmit} noValidate>

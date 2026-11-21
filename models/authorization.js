@@ -59,7 +59,6 @@ function filterOutput(user, feature, resource) {
       email: userObject.email,
       features: userObject.features,
       privileged_features: userObject.privileged_features ?? [],
-      banned_at: userObject.banned_at,
       created_at: userObject.created_at,
       updated_at: userObject.updated_at,
     });
