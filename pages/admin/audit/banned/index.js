@@ -51,20 +51,16 @@ function formatAccountAge(startValue, endValue) {
     return result;
   }
 
-  let cursor = new Date(start);
-  let years = 0;
-  let months = 0;
+  let totalMonths = 0;
+
+  while (addMonths(start, totalMonths + 1) <= end) {
+    totalMonths += 1;
+  }
+
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+  let cursor = addMonths(start, totalMonths);
   let days = 0;
-
-  while (addMonths(cursor, 12) <= end) {
-    cursor = addMonths(cursor, 12);
-    years += 1;
-  }
-
-  while (addMonths(cursor, 1) <= end) {
-    cursor = addMonths(cursor, 1);
-    months += 1;
-  }
 
   while (true) {
     const nextDay = new Date(cursor);
