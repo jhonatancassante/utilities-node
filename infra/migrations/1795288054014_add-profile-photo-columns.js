@@ -9,6 +9,4 @@ export const up = (pgm) => {
   });
 };
 
-export const down = (pgm) => {
-  pgm.dropColumns("users", ["profile_photo_url", "profile_photo_public_id"]);
-};
+export const down = false;

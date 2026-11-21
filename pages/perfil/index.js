@@ -193,16 +193,20 @@ function ProfileForm({ user, onUpdated }) {
     setFeedback(null);
 
     try {
-      const savedUser = await requestAPI(`/api/v1/users/${encodeURIComponent(user.username)}`, {
-        method: "PATCH",
-        body: JSON.stringify(payload),
-      });
+      const savedUser = await requestAPI(
+        `/api/v1/users/${encodeURIComponent(user.username)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        },
+      );
 
       const updatedUser = {
         ...user,
         username: payload.username ?? user.username,
         email: payload.email ?? user.email,
-        profile_photo_url: savedUser.profile_photo_url ?? user.profile_photo_url,
+        profile_photo_url:
+          savedUser.profile_photo_url ?? user.profile_photo_url,
       };
 
       onUpdated(updatedUser);

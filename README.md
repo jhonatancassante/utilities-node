@@ -182,8 +182,8 @@ Para executar os testes continuamente, mantenha o ambiente ativo com `npm run de
 | `PASSWORD_PEPPER`                                                                     | Segredo usado no processamento das senhas                 |
 | `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`                                                  | Host e porta SMTP                                         |
 | `EMAIL_SMTP_USER`, `EMAIL_SMTP_PASSWORD`                                              | Credenciais SMTP; podem ficar vazias no Mailcatcher local |
-| `CLOUDINARY_CLOUD_NAME`                                                                | Identificação do ambiente Cloudinary                      |
-| `CLOUDINARY_API_KEY`                                                                   | Chave de API usada exclusivamente no servidor             |
+| `CLOUDINARY_CLOUD_NAME`                                                               | Identificação do ambiente Cloudinary                      |
+| `CLOUDINARY_API_KEY`                                                                  | Chave de API usada exclusivamente no servidor             |
 | `CLOUDINARY_API_SECRET`                                                               | Segredo de API usado exclusivamente no servidor           |
 
 Em `development` e `test`, o banco usa as variáveis `POSTGRES_*`. Nos demais ambientes, usa `DATABASE_URL` com `sslmode=verify-full`. A aplicação exige `PASSWORD_PEPPER` para criar ou comparar senhas.
@@ -198,17 +198,17 @@ As fotos de perfil são opcionais e usam o Cloudinary. Configure as três variá
 
 Todos os endpoints usam o prefixo `/api/v1`.
 
-| Método           | Caminho                       | Descrição                                                 |
-| ---------------- | ----------------------------- | --------------------------------------------------------- |
-| `GET`            | `/status`                     | Consulta o status do banco                                |
-| `GET`, `POST`    | `/migrations`                 | Lista e aplica migrations; exige features administrativas |
-| `POST`           | `/users`                      | Cadastra usuário e envia e-mail de ativação               |
-| `GET`, `PATCH`   | `/users/{username}`           | Consulta dados públicos e atualiza conforme autorização   |
-| `PATCH`          | `/activations/{token_id}`     | Ativa um cadastro com token válido                        |
-| `POST`, `DELETE` | `/sessions`                   | Cria e encerra sessões                                    |
-| `GET`            | `/user`                       | Retorna o usuário autenticado e renova a sessão           |
-| `GET`            | `/admin/audit/banned`         | Consulta a auditoria; exige `read:audit`                  |
-| `POST`, `DELETE` | `/admin/users/{username}/ban` | Bane e desbane contas; exige `update:user:others`         |
+| Método           | Caminho                         | Descrição                                                                |
+| ---------------- | ------------------------------- | ------------------------------------------------------------------------ |
+| `GET`            | `/status`                       | Consulta o status do banco                                               |
+| `GET`, `POST`    | `/migrations`                   | Lista e aplica migrations; exige features administrativas                |
+| `POST`           | `/users`                        | Cadastra usuário e envia e-mail de ativação                              |
+| `GET`, `PATCH`   | `/users/{username}`             | Consulta dados públicos e atualiza conforme autorização                  |
+| `PATCH`          | `/activations/{token_id}`       | Ativa um cadastro com token válido                                       |
+| `POST`, `DELETE` | `/sessions`                     | Cria e encerra sessões                                                   |
+| `GET`            | `/user`                         | Retorna o usuário autenticado e renova a sessão                          |
+| `GET`            | `/admin/audit/banned`           | Consulta a auditoria; exige `read:audit`                                 |
+| `POST`, `DELETE` | `/admin/users/{username}/ban`   | Bane e desbane contas; exige `update:user:others`                        |
 | `DELETE`         | `/admin/users/{username}/photo` | Remove a foto de perfil; exige `update:user:others` e `read:user:others` |
 
 A API usa autorização por _features_, não uma regra única de “estar logado”. Algumas operações são públicas, outras exigem sessão válida e outras exigem permissões específicas. Consulte o [guia da API](docs/api/README.md) e a [especificação OpenAPI](docs/api/openapi.yaml).

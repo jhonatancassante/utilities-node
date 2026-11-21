@@ -22,7 +22,10 @@ async function deleteHandler(request, response) {
     try {
       await deleteProfilePhoto(targetUser.profile_photo_public_id);
     } catch (error) {
-      console.error("Falha ao excluir a imagem de perfil do Cloudinary:", error);
+      console.error(
+        "Falha ao excluir a imagem de perfil do Cloudinary:",
+        error,
+      );
     }
   }
 

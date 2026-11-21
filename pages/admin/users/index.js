@@ -644,7 +644,9 @@ function UserEditor({
                 } catch (requestError) {
                   setFeedback({
                     type: "error",
-                    name: requestError.statusCode ? requestError.name : undefined,
+                    name: requestError.statusCode
+                      ? requestError.name
+                      : undefined,
                     message: requestError.message,
                     action: requestError.action,
                   });

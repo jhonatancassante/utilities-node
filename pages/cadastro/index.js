@@ -170,7 +170,11 @@ function RegistrationPage() {
                   onSubmit={handleSubmit}
                   noValidate
                 >
-                  <ProfilePhotoField value={profilePhoto} onChange={setProfilePhoto} disabled={isSubmitting} />
+                  <ProfilePhotoField
+                    value={profilePhoto}
+                    onChange={setProfilePhoto}
+                    disabled={isSubmitting}
+                  />
 
                   <div className={styles.field}>
                     <label className={shared.label} htmlFor="username">

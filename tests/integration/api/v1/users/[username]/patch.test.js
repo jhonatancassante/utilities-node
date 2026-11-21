@@ -55,7 +55,8 @@ describe("PATCH /api/v1/users/[username]", () => {
             Cookie: `session_id=${sessionObject.token}`,
           },
           body: JSON.stringify({
-            profile_photo: "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=",
+            profile_photo:
+              "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=",
           }),
         },
       );

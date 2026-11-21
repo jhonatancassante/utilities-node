@@ -43,7 +43,8 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
       }
       const reader = new FileReader();
       reader.onload = () => onChange(reader.result);
-      reader.onerror = () => setError("Não foi possível ler a imagem selecionada.");
+      reader.onerror = () =>
+        setError("Não foi possível ler a imagem selecionada.");
       reader.readAsDataURL(file);
     };
     image.onerror = () => {
@@ -84,10 +85,17 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
             />
           </label>
           <small>JPEG, PNG ou WebP · até 2 MB · 128–2048 px</small>
-          <small>Imagens serão exibidas em formato quadrado, com corte central automático.</small>
+          <small>
+            Imagens serão exibidas em formato quadrado, com corte central
+            automático.
+          </small>
         </div>
       </div>
-      {error && <small className={styles.error} role="alert">{error}</small>}
+      {error && (
+        <small className={styles.error} role="alert">
+          {error}
+        </small>
+      )}
     </div>
   );
 }

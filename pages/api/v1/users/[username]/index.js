@@ -2,7 +2,10 @@ import controller from "@/infra/controller.js";
 import user from "@/models/user.js";
 import authorization from "@/models/authorization.js";
 import { ForbiddenError, ValidationError } from "@/infra/errors.js";
-import { uploadProfilePhoto, deleteProfilePhoto } from "@/lib/server/cloudinary.js";
+import {
+  uploadProfilePhoto,
+  deleteProfilePhoto,
+} from "@/lib/server/cloudinary.js";
 
 export const config = {
   api: { bodyParser: { sizeLimit: "3mb" } },
@@ -32,7 +35,11 @@ async function getHandler(request, response) {
 
 async function patchHandler(request, response) {
   const username = request.query.username;
-  if (!request.body || typeof request.body !== "object" || Array.isArray(request.body)) {
+  if (
+    !request.body ||
+    typeof request.body !== "object" ||
+    Array.isArray(request.body)
+  ) {
     throw new ValidationError({
       message: "O corpo da requisição deve ser um objeto JSON.",
       action: "Envie um objeto com os campos a serem alterados.",

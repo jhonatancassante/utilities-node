@@ -1,7 +1,10 @@
 import controller from "@/infra/controller.js";
 import user from "@/models/user.js";
 import authorization from "@/models/authorization.js";
-import { uploadProfilePhoto, deleteProfilePhoto } from "@/lib/server/cloudinary.js";
+import {
+  uploadProfilePhoto,
+  deleteProfilePhoto,
+} from "@/lib/server/cloudinary.js";
 import { ValidationError } from "@/infra/errors.js";
 
 export const config = {
@@ -35,7 +38,11 @@ async function getHandler(request, response) {
 
 async function patchHandler(request, response) {
   const userTryingToUpdate = request.context.user;
-  if (!request.body || typeof request.body !== "object" || Array.isArray(request.body)) {
+  if (
+    !request.body ||
+    typeof request.body !== "object" ||
+    Array.isArray(request.body)
+  ) {
     throw new ValidationError({
       message: "O corpo da requisição deve ser um objeto JSON.",
       action: "Envie um objeto com os campos a serem alterados.",

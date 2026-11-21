@@ -68,7 +68,8 @@ describe("POST /api/v1/users", () => {
           username: "fotoformato",
           email: "fotoformato@example.com",
           password: validPassword,
-          profile_photo: "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=",
+          profile_photo:
+            "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=",
         }),
       });
 

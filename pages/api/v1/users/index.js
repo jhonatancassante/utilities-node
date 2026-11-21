@@ -2,7 +2,10 @@ import controller from "@/infra/controller.js";
 import activation from "@/models/activation.js";
 import user from "@/models/user.js";
 import authorization from "@/models/authorization.js";
-import { uploadProfilePhoto, deleteProfilePhoto } from "@/lib/server/cloudinary.js";
+import {
+  uploadProfilePhoto,
+  deleteProfilePhoto,
+} from "@/lib/server/cloudinary.js";
 
 export const config = {
   api: { bodyParser: { sizeLimit: "3mb" } },
