@@ -129,31 +129,8 @@ describe("models/authorization.js", () => {
     test(
       "`read:audit` retorna somente os campos previstos para auditoria",
       () => {
-      const auditor = { features: ["read:audit"] };
-      const event = {
-        id: "event-1",
-        user_id: "user-1",
-        actor_user_id: "admin-1",
-        action: "ban",
-        username: "usuario",
-        email: "usuario@example.com",
-        account_created_at: "2026-01-01T00:00:00Z",
-        actor_username: "admin",
-        actor_email: "admin@example.com",
-        created_at: "2026-02-01T00:00:00Z",
-        is_currently_banned: true,
-        current_banned_at: "2026-02-01T00:00:00Z",
-        password: "segredo",
-      };
-
-      const result = authorization.filterOutput(
-        auditor,
-        "read:audit",
-        [event],
-      );
-
-      expect(result).toEqual([
-        {
+        const auditor = { features: ["read:audit"] };
+        const event = {
           id: "event-1",
           user_id: "user-1",
           actor_user_id: "admin-1",
@@ -166,10 +143,34 @@ describe("models/authorization.js", () => {
           created_at: "2026-02-01T00:00:00Z",
           is_currently_banned: true,
           current_banned_at: "2026-02-01T00:00:00Z",
-        },
-      ]);
-      expect(result[0]).not.toHaveProperty("password");
-    });
+          password: "segredo",
+        };
+
+        const result = authorization.filterOutput(
+          auditor,
+          "read:audit",
+          [event],
+        );
+
+        expect(result).toEqual([
+          {
+            id: "event-1",
+            user_id: "user-1",
+            actor_user_id: "admin-1",
+            action: "ban",
+            username: "usuario",
+            email: "usuario@example.com",
+            account_created_at: "2026-01-01T00:00:00Z",
+            actor_username: "admin",
+            actor_email: "admin@example.com",
+            created_at: "2026-02-01T00:00:00Z",
+            is_currently_banned: true,
+            current_banned_at: "2026-02-01T00:00:00Z",
+          },
+        ]);
+        expect(result[0]).not.toHaveProperty("password");
+      },
+    );
 
     test("`read:session` não devolve o token da sessão", () => {
       const sessionOwner = { id: "user-1", features: ["read:session"] };

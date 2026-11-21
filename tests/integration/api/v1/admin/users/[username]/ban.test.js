@@ -117,7 +117,9 @@ describe("/api/v1/admin/users/[username]/ban", () => {
     });
 
     const searchResponse = await fetch(
-      `${orchestrator.API_URL}/admin/users?search=${encodeURIComponent(targetUser.username)}`,
+      `${orchestrator.API_URL}/admin/users?search=${encodeURIComponent(
+        targetUser.username,
+      )}`,
       { headers },
     );
     expect(searchResponse.status).toBe(200);
@@ -193,7 +195,9 @@ describe("/api/v1/admin/users/[username]/ban", () => {
     expect(loginAfterUnbanResponse.status).toBe(201);
   });
 
-  test("Não permite reutilizar username ou e-mail de uma conta banida", async () => {
+  test(
+    "Não permite reutilizar username ou e-mail de uma conta banida",
+    async () => {
     const { sessionObject } = await createPrivilegedSession();
     const targetUser = await orchestrator.createUser();
     const headers = {
@@ -236,11 +240,12 @@ describe("/api/v1/admin/users/[username]/ban", () => {
         }),
       },
     );
-    expect(duplicateEmailResponse.status).toBe(400);
-    expect(await duplicateEmailResponse.json()).toMatchObject({
-      message: "O email informado já está sendo utilizado.",
-    });
-  });
+      expect(duplicateEmailResponse.status).toBe(400);
+      expect(await duplicateEmailResponse.json()).toMatchObject({
+        message: "O email informado já está sendo utilizado.",
+      });
+    },
+  );
 
   test("Impede que o administrador bana a própria conta", async () => {
     const { privilegedUser, sessionObject } = await createPrivilegedSession();
