@@ -54,7 +54,6 @@ function LoginPage() {
     } catch (error) {
       setFeedback({
         type: "error",
-        name: error.statusCode ? error.name : undefined,
         message: error.message,
         action: error.action,
       });
