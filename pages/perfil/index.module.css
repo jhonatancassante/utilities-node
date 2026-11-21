@@ -202,10 +202,10 @@
 
 .profileAvatar {
   padding: 0;
-  cursor: zoom-in;
 }
 
 button.profileAvatar {
+  cursor: zoom-in;
   transition: transform var(--transition-fast);
 }
 
@@ -225,7 +225,7 @@ button.profileAvatar:hover {
 
 .photoPreviewDialog {
   position: relative;
-  width: min( min(80vw, 640px), 640px);
+  width: min(80vw, 640px);
   aspect-ratio: 1;
   overflow: hidden;
   border-radius: 50%;
