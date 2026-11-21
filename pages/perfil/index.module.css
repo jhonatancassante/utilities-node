@@ -352,12 +352,6 @@ button.profileAvatar:hover {
 }
 
 @media (max-width: 480px) {
-  .profileAvatarWrapper,
-  .profileAvatar {
-    width: 152px;
-    height: 152px;
-  }
-
   .editPhotoButton {
     right: 2px;
     bottom: 2px;
