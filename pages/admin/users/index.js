@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
-import AdminBackButton from "@/components/AdminBackButton";
 
+import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
@@ -395,6 +395,8 @@ function UserEditor({
     features: [...user.features],
   });
   const [featureSearch, setFeatureSearch] = useState("");
+  const [privilegedOnly, setPrivilegedOnly] = useState(false);
+  const [protectedOnly, setProtectedOnly] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUpdatingBan, setIsUpdatingBan] = useState(false);
   const [feedback, setFeedback] = useState(null);
@@ -438,12 +440,14 @@ function UserEditor({
     const term = featureSearch.trim().toLowerCase();
     return features.filter(
       (feature) =>
-        !term ||
-        feature.name.toLowerCase().includes(term) ||
-        feature.label.toLowerCase().includes(term) ||
-        feature.description.toLowerCase().includes(term),
+        (!privilegedOnly || feature.is_privileged) &&
+        (!protectedOnly || feature.is_protected) &&
+        (!term ||
+          feature.name.toLowerCase().includes(term) ||
+          feature.label.toLowerCase().includes(term) ||
+          feature.description.toLowerCase().includes(term)),
     );
-  }, [featureSearch, features]);
+  }, [featureSearch, features, privilegedOnly, protectedOnly]);
 
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
@@ -469,6 +473,8 @@ function UserEditor({
       features: [...user.features],
     });
     setFeatureSearch("");
+    setPrivilegedOnly(false);
+    setProtectedOnly(false);
     setFeedback(null);
     onCancel();
   }
@@ -690,6 +696,29 @@ function UserEditor({
             disabled={isSaving}
           />
 
+          <div className={styles.searchFilters}>
+            <label className={styles.filterSwitch}>
+              <input
+                type="checkbox"
+                checked={privilegedOnly}
+                onChange={(event) => setPrivilegedOnly(event.target.checked)}
+                disabled={isSaving}
+              />
+              <span className={styles.switch} aria-hidden="true"></span>
+              <span>Privilegiadas</span>
+            </label>
+            <label className={styles.filterSwitch}>
+              <input
+                type="checkbox"
+                checked={protectedOnly}
+                onChange={(event) => setProtectedOnly(event.target.checked)}
+                disabled={isSaving}
+              />
+              <span className={styles.switch} aria-hidden="true"></span>
+              <span>Protegidas</span>
+            </label>
+          </div>
+
           <div className={styles.featureGroups}>
             {featureGroups.map((group) => {
               const groupFeatures = filteredFeatures.filter(
@@ -797,7 +826,7 @@ function UserEditor({
 
           {filteredFeatures.length === 0 && (
             <p className={styles.emptyFeatures}>
-              Nenhuma feature corresponde à pesquisa.
+              Nenhuma feature corresponde à pesquisa ou aos filtros.
             </p>
           )}
         </div>

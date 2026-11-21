@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./index.module.css";
 
-function AdminBackButton() {
+function AdminBackButton({
+  href = "/admin",
+  label = "Voltar ao painel administrativo",
+}) {
   const [isStuck, setIsStuck] = useState(false);
 
   useEffect(() => {
@@ -26,10 +29,10 @@ function AdminBackButton() {
 
   return (
     <Link
-      href="/admin"
+      href={href}
       className={`${styles.button} ${isStuck ? styles.stuck : ""}`}
-      aria-label="Voltar ao painel administrativo"
-      title="Voltar ao painel administrativo"
+      aria-label={label}
+      title={label}
       data-admin-back-button
     >
       <i className="fas fa-arrow-left" aria-hidden="true"></i>

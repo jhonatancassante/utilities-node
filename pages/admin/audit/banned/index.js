@@ -225,7 +225,10 @@ export default function AdminBannedAuditPage() {
           <section
             className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
           >
-            <AdminBackButton />
+            <AdminBackButton
+              href="/admin/audit"
+              label="Voltar para auditoria"
+            />
 
             <header className={styles.header}>
               <div className={shared.icon} aria-hidden="true">

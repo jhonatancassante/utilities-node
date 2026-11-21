@@ -1,0 +1,133 @@
+.breadcrumb {
+  position: relative;
+  z-index: 110;
+  width: min(calc(100% - 48px), 1280px);
+  margin: 18px auto -14px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.item:not(:first-child)::before {
+  content: "/";
+  color: var(--text-faint);
+}
+
+.link,
+.current {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.current {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.moreButton {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.moreButton:hover,
+.moreButton[aria-expanded="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.moreButton:focus-visible,
+.link:focus-visible,
+.dropdownLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 120;
+  min-width: 190px;
+  max-width: min(280px, calc(100vw - 48px));
+  padding: 6px;
+  margin: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-md);
+  list-style: none;
+}
+
+.dropdownLink {
+  display: block;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.dropdownLink:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+@media (max-width: 600px) {
+  .breadcrumb {
+    width: calc(100% - 32px);
+    margin-top: 14px;
+    margin-bottom: -10px;
+    font-size: 12px;
+  }
+
+  .list {
+    gap: 6px;
+  }
+
+  .item {
+    gap: 6px;
+  }
+}
