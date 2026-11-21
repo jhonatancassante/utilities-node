@@ -297,10 +297,6 @@ button.profileAvatar:hover {
   line-height: 1.5;
 }
 
-.photoEditorDialog :global(.unused) {
-  display: none;
-}
-
 .photoEditorActions {
   display: flex;
   justify-content: flex-end;
@@ -353,4 +349,29 @@ button.profileAvatar:hover {
   background: rgba(0, 0, 0, 0.62);
   color: #ffffff;
   cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .profileAvatarWrapper,
+  .profileAvatar {
+    width: 152px;
+    height: 152px;
+  }
+
+  .editPhotoButton {
+    right: 2px;
+    bottom: 2px;
+  }
+
+  .photoEditorDialog {
+    padding: 18px;
+  }
+
+  .photoEditorActions {
+    flex-direction: column-reverse;
+  }
+
+  .photoEditorActions button {
+    width: 100%;
+  }
 }
