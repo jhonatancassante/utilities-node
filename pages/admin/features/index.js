@@ -21,6 +21,8 @@ function AdminFeaturesPage() {
   const { user, error, isLoading } = useUser();
   const [features, setFeatures] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [privilegedOnly, setPrivilegedOnly] = useState(false);
+  const [protectedOnly, setProtectedOnly] = useState(false);
   const [isLoadingFeatures, setIsLoadingFeatures] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -121,6 +123,8 @@ function AdminFeaturesPage() {
   const groupedFeatures = useMemo(() => {
     const term = searchTerm.trim().toLocaleLowerCase("pt-BR");
     const filteredFeatures = features.filter((feature) => {
+      if (privilegedOnly && !feature.is_privileged) return false;
+      if (protectedOnly && !feature.is_protected) return false;
       if (!term) return true;
 
       return [
@@ -138,7 +142,7 @@ function AdminFeaturesPage() {
       groups[feature.group_name].push(feature);
       return groups;
     }, Object.create(null));
-  }, [features, searchTerm]);
+  }, [features, searchTerm, privilegedOnly, protectedOnly]);
 
   const sortedGroups = Object.keys(groupedFeatures).sort((a, b) =>
     a.localeCompare(b, "pt-BR"),
@@ -307,6 +311,18 @@ function AdminFeaturesPage() {
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                 />
+                <div className={styles.searchFilters}>
+                  <label className={styles.filterSwitch}>
+                    <input type="checkbox" checked={privilegedOnly} onChange={(event) => setPrivilegedOnly(event.target.checked)} />
+                    <span className={styles.switch} aria-hidden="true"></span>
+                    <span>Privilegiadas</span>
+                  </label>
+                  <label className={styles.filterSwitch}>
+                    <input type="checkbox" checked={protectedOnly} onChange={(event) => setProtectedOnly(event.target.checked)} />
+                    <span className={styles.switch} aria-hidden="true"></span>
+                    <span>Protegidas</span>
+                  </label>
+                </div>
               </div>
               {canCreate && (
                 <Button
