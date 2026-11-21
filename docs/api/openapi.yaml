@@ -736,6 +736,14 @@ components:
             email:
               type: string
               format: email
+    AdminUser:
+      allOf:
+        - $ref: "#/components/schemas/PrivateUser"
+        - type: object
+          properties:
+            banned_at:
+              type: [string, "null"]
+              format: date-time
     SessionCreate:
       type: object
       required: [email, password]

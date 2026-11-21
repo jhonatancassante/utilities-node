@@ -67,7 +67,7 @@ Durante o desenvolvimento, a interface fica disponível em `http://localhost:300
 - `/tools/ar-generator`: Gerador de AR e Etiquetas.
 - `/status`: painel de monitoramento da conexão com o banco de dados.
 - `/admin`: painel administrativo, visível para usuários com ao menos uma feature privilegiada.
-- `/admin/usuarios`: pesquisa, edição de dados, gerenciamento de features, remoção e banimento/desbanimento de usuários; exige `update:user:others`.
+- `/admin/users`: pesquisa, edição de dados, gerenciamento de features, remoção e banimento/desbanimento de usuários; exige `update:user:others`.
 - `/admin/audit`: área de auditoria administrativa; exige `read:audit`.
 - `/admin/audit/banned`: histórico de banimentos e desbanimentos.
 - `/diario-oficial/edicao-0012026`: página de leitura e download da edição 001/2026 do Diário Oficial.

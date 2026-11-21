@@ -104,6 +104,14 @@ A área de gerenciamento de usuários exige `update:user:others` tanto na interf
 
 A seção de auditoria fica em `/admin/audit`, com a consulta em `/admin/audit/banned`. O endpoint `GET /api/v1/admin/audit/banned` exige `read:audit`. O model `models/audit.js` consulta `user_ban_events`, que mantém snapshots do usuário e do responsável pela ação; os eventos não são apagados junto com a conta. A API filtra os campos retornados e envia `Cache-Control: no-store`.
 
+### Metadados das features
+
+Cada registro do catálogo possui metadados para controlar o comportamento administrativo:
+
+- `is_self_removable`: impede que o próprio usuário remova a feature da própria conta; um administrador autorizado ainda pode removê-la de outra conta.
+- `is_privileged`: identifica permissões que dão acesso à área administrativa.
+- `is_protected`: impede alteração ou exclusão da definição da feature e participa da regra que impede a remoção da última cobertura administrativa protegida.
+
 ### Features conhecidas
 
 `create:user`, `read:user`, `read:user:self`, `update:user`, `update:user:others`, `create:session`, `read:session`, `read:activation_token`, `create:migration`, `read:migration`, `read:status`, `read:status:all` e `read:audit`. `read:audit` permite consultar a trilha de auditoria e é uma permissão privilegiada.

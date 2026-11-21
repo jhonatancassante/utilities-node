@@ -179,6 +179,9 @@ A lista de features de um usuário pode ser alterada pelo model `user.setFeature
 | Endpoint                        | Regra                                                                                             |
 | ------------------------------- | ------------------------------------------------------------------------------------------------- |
 | `GET /status`                   | Público; a versão do banco só aparece com `read:status:all`                                       |
+| `POST /admin/users/{username}/ban` | Exige `update:user:others`; bane outra conta                                                      |
+| `DELETE /admin/users/{username}/ban` | Exige `update:user:others`; desbane outra conta                                                 |
+| `GET /admin/audit/banned`         | Exige `read:audit`                                                                                 |
 | `POST /users`                   | Exige `create:user`; disponível ao visitante padrão                                               |
 | `GET /users/{username}`         | Público; retorna somente a representação pública                                                  |
 | `PATCH /users/{username}`       | Exige `update:user`; o model também verifica se é o próprio usuário ou se há `update:user:others` |
