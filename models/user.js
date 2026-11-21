@@ -250,7 +250,7 @@ async function update(
       text: `
         SELECT
           name,
-          is_removable,
+          is_self_removable,
           deleted_at
         FROM
           features
@@ -325,11 +325,11 @@ async function update(
         );
         if (removedFeatures.length) {
           const metadata = await client.query({
-            text: "SELECT name, is_removable FROM features WHERE name = ANY($1);",
+            text: "SELECT name, is_self_removable FROM features WHERE name = ANY($1);",
             values: [removedFeatures],
           });
           const locked = metadata.rows
-            .filter((item) => !item.is_removable)
+            .filter((item) => !item.is_self_removable)
             .map((item) => item.name);
           if (locked.length)
             throw new ValidationError({
