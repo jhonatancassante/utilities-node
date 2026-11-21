@@ -223,7 +223,10 @@ describe("models/user.js", () => {
       );
 
       expect(
-        getCallsContaining(querySpy, "SELECT name, is_self_removable FROM features"),
+        getCallsContaining(
+          querySpy,
+          "SELECT name, is_self_removable FROM features",
+        ),
       ).toEqual([]);
       expect(getCallsContaining(querySpy, "UPDATE users SET")).toHaveLength(1);
     });
