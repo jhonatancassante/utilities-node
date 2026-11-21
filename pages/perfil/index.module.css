@@ -228,7 +228,7 @@ button.profileAvatar:hover {
   width: min(80vw, 640px);
   aspect-ratio: 1;
   overflow: hidden;
-  border-radius: 50%;
+  border-radius: 0;
   background: var(--bg-card);
   box-shadow: var(--shadow-md);
 }
