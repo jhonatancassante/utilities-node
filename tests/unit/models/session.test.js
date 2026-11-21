@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
 
 import database from "@/infra/database.js";
-import { UnauthorizedError } from "@/infra/errors.js";
+import { BannedUserError, UnauthorizedError } from "@/infra/errors.js";
 import session from "@/models/session.js";
 
 function mockQuery(rows) {
@@ -47,8 +47,8 @@ describe("models/session.js", () => {
       });
       mockTransaction(querySpy);
 
-      await expect(session.create("user-1")).rejects.toThrow(
-        "Não foi possível autenticar seu usuário no sistema.",
+      await expect(session.create("user-1")).rejects.toBeInstanceOf(
+        BannedUserError,
       );
 
       expect(querySpy).toHaveBeenCalledTimes(1);

@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import database from "@/infra/database.js";
-import { UnauthorizedError } from "@/infra/errors.js";
+import { BannedUserError, UnauthorizedError } from "@/infra/errors.js";
 
 const EXPIRATION_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000; // 30 DIAS
 
@@ -14,12 +14,16 @@ async function create(userId) {
       values: [userId],
     });
 
-    if (userResults.rowCount === 0 || userResults.rows[0].banned_at) {
+    if (userResults.rowCount === 0) {
       throw new UnauthorizedError({
         message: "Não foi possível autenticar seu usuário no sistema.",
         action:
           "Verifique se digitou o e-mail e a senha corretamente e tente novamente.",
       });
+    }
+
+    if (userResults.rows[0].banned_at) {
+      throw new BannedUserError({});
     }
 
     const results = await client.query({
