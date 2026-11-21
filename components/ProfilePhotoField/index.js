@@ -7,7 +7,7 @@ const MAX_FILE_SIZE = 2 * 1024 * 1024;
 const MIN_DIMENSION = 128;
 const MAX_DIMENSION = 2048;
 const VIEWPORT_SIZE = 280;
-const OUTPUT_SIZE = 512;
+const OUTPUT_SIZE = 1024;
 
 function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
   const [error, setError] = useState("");
