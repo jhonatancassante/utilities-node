@@ -273,9 +273,20 @@ function AdminMigrationsPage() {
             <div className={styles.environment}>
               <span className={styles.environmentDot} aria-hidden="true"></span>
               <span>
-                Ambiente conectado: <strong>configuração do servidor</strong>
+                Ambiente da aplicação:{" "}
+                <strong>
+                  {{
+                    development: "Desenvolvimento",
+                    production: "Produção",
+                    test: "Testes",
+                  }[process.env.NODE_ENV] || "Desconhecido"}
+                </strong>
               </span>
-              <small>A conexão com o banco não é escolhida pelo navegador</small>
+              <small>
+                O ambiente é definido pela configuração de execução da
+                aplicação e não identifica diretamente o banco de dados
+                utilizado.
+              </small>
             </div>
 
             <div className={styles.summary}>
