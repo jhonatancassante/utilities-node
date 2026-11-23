@@ -21,6 +21,7 @@ function AdminMigrationsPage() {
   const { user, error, isLoading } = useUser();
   const [pendingMigrations, setPendingMigrations] = useState([]);
   const [isLoadingMigrations, setIsLoadingMigrations] = useState(false);
+  const [hasLoadError, setHasLoadError] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [feedback, setFeedback] = useState(null);
@@ -53,8 +54,10 @@ function AdminMigrationsPage() {
     try {
       const migrations = await requestAPI("/api/v1/migrations");
       setPendingMigrations(migrations);
+      setHasLoadError(false);
       return { success: true, migrations };
     } catch (requestError) {
+      setHasLoadError(true);
       if (showFeedback) {
         setFeedback({
           type: "error",
@@ -80,10 +83,14 @@ function AdminMigrationsPage() {
 
       try {
         const migrations = await requestAPI("/api/v1/migrations");
-        if (active) setPendingMigrations(migrations);
+        if (active) {
+          setPendingMigrations(migrations);
+          setHasLoadError(false);
+        }
       } catch (requestError) {
         if (!active) return;
 
+        setHasLoadError(true);
         setFeedback({
           type: "error",
           name: requestError.statusCode ? requestError.name : undefined,
@@ -273,11 +280,11 @@ function AdminMigrationsPage() {
 
             <div className={styles.summary}>
               <div>
-                <strong>{pendingMigrations.length}</strong>
+                <strong>{isLoadingMigrations ? "..." : hasLoadError ? "—" : pendingMigrations.length}</strong>
                 <span>Migrations pendentes</span>
               </div>
               <div>
-                <strong>{isLoadingMigrations ? "..." : pendingMigrations.length === 0 ? "Em dia" : "Ação necessária"}</strong>
+                <strong>{isLoadingMigrations ? "..." : hasLoadError ? "Indisponível" : pendingMigrations.length === 0 ? "Em dia" : "Ação necessária"}</strong>
                 <span>Estado da base de dados</span>
               </div>
             </div>
@@ -311,7 +318,8 @@ function AdminMigrationsPage() {
                   disabled={
                     isLoadingMigrations ||
                     isExecuting ||
-                    pendingMigrations.length === 0
+                    pendingMigrations.length === 0 ||
+                    hasLoadError
                   }
                 >
                   Executar migrations
@@ -327,6 +335,10 @@ function AdminMigrationsPage() {
 
               {isLoadingMigrations ? (
                 <p className={styles.empty}>Consultando o banco de dados...</p>
+              ) : hasLoadError ? (
+                <p className={styles.empty}>
+                  Não foi possível consultar o estado das migrations.
+                </p>
               ) : pendingMigrations.length === 0 ? (
                 <p className={styles.empty}>
                   Nenhuma migration pendente. O banco está atualizado.
