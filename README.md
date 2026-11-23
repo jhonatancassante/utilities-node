@@ -215,7 +215,7 @@ A API usa autorização por _features_, não uma regra única de “estar logado
 
 ## Administração e segurança
 
-O painel administrativo permite gerenciar usuários, atribuir permissões e banir ou desbanir contas. O banimento bloqueia novos logins, invalida sessões existentes e registra uma trilha de auditoria persistente, consultável por usuários com `read:audit`. A proteção contra auto banimento é aplicada no servidor.
+O painel administrativo permite gerenciar usuários, atribuir permissões, consultar e aplicar migrations pendentes e banir ou desbanir contas. O banimento bloqueia novos logins, invalida sessões existentes e registra uma trilha de auditoria persistente, consultável por usuários com `read:audit`. A proteção contra auto banimento é aplicada no servidor.
 
 A cobertura automatizada pode ser gerada com `npm run test:coverage`. O relatório inclui instruções, ramificações, funções e linhas dos módulos instrumentados. As rotas da API continuam sendo exercitadas pelos testes de integração, mas não entram no percentual de cobertura do Jest porque são executadas pelo processo separado do Next.js.
 
