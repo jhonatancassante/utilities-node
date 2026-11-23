@@ -11,7 +11,7 @@ export default controller.createController(
       deleteHandler,
     ],
   },
-  { middlewares: [controller.injectUserOrAnonymousOnInvalidSession] },
+  { middlewares: [controller.injectAnonymousOrUser] },
 );
 
 async function deleteHandler(request, response) {
