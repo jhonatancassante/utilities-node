@@ -61,7 +61,7 @@ export function normalizeScryfallCard(card, slot) {
   const imageUris = getCardImageUris(card);
   const useWebp = new Date() >= new Date("2027-01-01T00:00:00Z");
   const image = useWebp
-    ? imageUris?.display || imageUris?.large || imageUris?.normal
+    ? imageUris?.display || imageUris?.jpeg
     : imageUris?.large || imageUris?.normal || imageUris?.jpeg;
 
   if (!image) {

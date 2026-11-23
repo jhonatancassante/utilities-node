@@ -25,6 +25,22 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
       );
     });
 
+    it("filtra o cenário por terreno e exclui terrenos básicos", () => {
+      expect(buildScryfallQuery(ADVENTURE_SLOTS[1], "pt")).toBe(
+        "t:land -t:basic lang:pt",
+      );
+    });
+
+    it("filtra a solução por artefato ou feitiço", () => {
+      expect(buildScryfallQuery(ADVENTURE_SLOTS[2], "pt")).toBe(
+        "(t:artifact OR t:sorcery) lang:pt",
+      );
+    });
+
+    it("filtra ajudante e antagonista como criaturas", () => {
+      expect(ADVENTURE_SLOTS.slice(3).every((slot) => slot.query === "t:creature")).toBe(true);
+    });
+
     it("exclui cartas já escolhidas pelo identificador Oracle", () => {
       expect(
         buildScryfallQuery(ADVENTURE_SLOTS[3], "en", ["oracle-1", "oracle-2"]),
