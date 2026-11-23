@@ -14,7 +14,7 @@ async function create(userId) {
 
   return database.transaction(async (client) => {
     const userResults = await client.query({
-      text: "SELECT banned_at, timeout_until FROM users WHERE id = $1 FOR UPDATE;",
+      text: "SELECT banned_at, timeout_until > NOW() AS timeout_active FROM users WHERE id = $1 FOR UPDATE;",
       values: [userId],
     });
 
@@ -31,8 +31,7 @@ async function create(userId) {
     }
 
     if (
-      userResults.rows[0].timeout_until &&
-      new Date(userResults.rows[0].timeout_until) > new Date()
+      userResults.rows[0].timeout_active
     ) {
       throw new TimedOutUserError({});
     }
@@ -97,7 +96,7 @@ async function renew(sessionId) {
       text: `
         SELECT
           users.banned_at,
-          users.timeout_until
+          users.timeout_until > NOW() AS timeout_active
         FROM
           sessions
         INNER JOIN
@@ -113,8 +112,7 @@ async function renew(sessionId) {
     if (
       userResults.rowCount === 0 ||
       userResults.rows[0].banned_at ||
-      (userResults.rows[0].timeout_until &&
-        new Date(userResults.rows[0].timeout_until) > new Date())
+      userResults.rows[0].timeout_active
     ) {
       throw new UnauthorizedError({
         message: "Usuário não possui sessão ativa.",

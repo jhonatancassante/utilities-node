@@ -558,7 +558,12 @@ function UserEditor({
 
   async function handleTimeoutSubmit(event) {
     event.preventDefault();
-    if (!canManageUserStatus || isEditingSelf || isUpdatingTimeout) return;
+    if (
+      !canManageUserStatus ||
+      isEditingSelf ||
+      isUpdatingTimeout ||
+      user.banned_at
+    ) return;
 
     let expiresAt;
     if (timeoutMode === "date") {
@@ -749,7 +754,7 @@ function UserEditor({
                 : "Banir usuário"}
           </Button>
           <Button
-            variant="secondary"
+            variant="outline"
             icon="fa-clock"
             onClick={() => setIsTimeoutModalOpen(true)}
             disabled={
@@ -757,11 +762,12 @@ function UserEditor({
               isSaving ||
               isUpdatingBan ||
               isUpdatingTimeout ||
-              Boolean(user.banned_at)
+              Boolean(user.banned_at) &&
+              !(user.timeout_until && new Date(user.timeout_until) > new Date())
             }
           >
             {user.timeout_until && new Date(user.timeout_until) > new Date()
-              ? "Alterar timeout"
+              ? "Gerenciar timeout"
               : "Aplicar timeout"}
           </Button>
           {isEditingSelf && (
@@ -1125,6 +1131,8 @@ function UserEditor({
             <p>
               O usuário ficará sem acesso até o prazo escolhido. As sessões
               atuais serão encerradas e não serão reativadas automaticamente.
+              {user.banned_at &&
+                " A conta também está banida; o timeout poderá ser removido, mas o banimento continuará ativo."}
             </p>
 
             <div className={styles.timeoutMode}>
@@ -1218,7 +1226,11 @@ function UserEditor({
             )}
 
             <div className={styles.timeoutActions}>
-              <Button type="submit" icon="fa-clock" disabled={isUpdatingTimeout}>
+              <Button
+                type="submit"
+                icon="fa-clock"
+                disabled={isUpdatingTimeout || Boolean(user.banned_at)}
+              >
                 {isUpdatingTimeout ? "Aplicando..." : "Aplicar timeout"}
               </Button>
               {user.timeout_until && new Date(user.timeout_until) > new Date() && (
@@ -1234,7 +1246,7 @@ function UserEditor({
               )}
               <Button
                 type="button"
-                variant="secondary"
+                variant="outline"
                 onClick={() => setIsTimeoutModalOpen(false)}
                 disabled={isUpdatingTimeout}
               >
