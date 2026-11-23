@@ -414,6 +414,74 @@ paths:
         "500":
           $ref: "#/components/responses/InternalServerError"
 
+  /api/v1/admin/users/{username}/timeout:
+    parameters:
+      - $ref: "#/components/parameters/Username"
+    post:
+      tags: [Admin]
+      operationId: applyAdminUserTimeout
+      summary: Aplica suspensão temporária a uma conta
+      description: Exige sessão válida, update:user:status e read:user:others. Recebe timeout_until como data/hora ISO 8601 futura. Não permite suspender a própria conta nem uma conta banida. Encerra as sessões existentes e bloqueia login, renovação e uso de sessões até o prazo. A liberação é automática, mas exige novo login.
+      x-required-feature: update:user:status
+      security:
+        - SessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [timeout_until]
+              properties:
+                timeout_until:
+                  type: string
+                  format: date-time
+      responses:
+        "200":
+          description: Suspensão temporária aplicada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "400":
+          $ref: "#/components/responses/Validation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: [Admin]
+      operationId: removeAdminUserTimeout
+      summary: Remove suspensão temporária de uma conta
+      description: Exige sessão válida, update:user:status e read:user:others. Não reativa sessões expiradas anteriormente.
+      x-required-feature: update:user:status
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Suspensão temporária removida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
   /api/v1/admin/users/{username}/photo:
     parameters:
       - $ref: "#/components/parameters/Username"
@@ -869,6 +937,10 @@ components:
             banned_at:
               type: [string, "null"]
               format: date-time
+            timeout_until:
+              type: [string, "null"]
+              format: date-time
+              description: Data e hora até quando a conta permanece suspensa temporariamente.
     SessionCreate:
       type: object
       required: [email, password]
@@ -957,6 +1029,15 @@ components:
           properties:
             name:
               const: ForbiddenError
+            status_code:
+              const: 403
+    TimedOutUserError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: TimedOutUserError
             status_code:
               const: 403
     NotFoundError:

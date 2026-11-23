@@ -26,6 +26,8 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 | `PATCH`  | `/api/v1/admin/users/{username}`     | `update:user:others`; features exigem também `update:user:features` |
 | `POST`   | `/api/v1/admin/users/{username}/ban` | Features `update:user:status` e `read:user:others`; bane a conta |
 | `DELETE` | `/api/v1/admin/users/{username}/ban` | Features `update:user:status` e `read:user:others`; desbane a conta |
+| `POST`   | `/api/v1/admin/users/{username}/timeout` | Features `update:user:status` e `read:user:others`; aplica suspensão temporária |
+| `DELETE` | `/api/v1/admin/users/{username}/timeout` | Features `update:user:status` e `read:user:others`; remove suspensão temporária |
 | `GET`    | `/api/v1/admin/audit/banned`         | Feature `read:audit`; consulta a trilha de auditoria           |
 | `GET`    | `/api/v1/admin/audit/migrations`     | Feature `read:audit`; consulta migrations aplicadas            |
 | `PATCH`  | `/api/v1/users/{username}`           | Feature `update:user`; próprio usuário ou `update:user:others` |
@@ -53,6 +55,7 @@ Os erros seguem o formato:
 | `400`  | `ValidationError`       | Dados inválidos ou duplicados                             |
 | `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão inválida/expirada         |
 | `403`  | `ForbiddenError`        | Feature necessária não concedida                          |
+| `403`  | `TimedOutUserError`     | Conta suspensa temporariamente                             |
 | `409`  | `ConflictError`         | Operação incompatível em andamento                        |
 | `404`  | `NotFoundError`         | Usuário ou token não encontrado, expirado ou já utilizado |
 | `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`             |
@@ -126,7 +129,7 @@ Respostas relevantes: `201` criado; `400` dados obrigatórios ausentes, username
 
 ## Administração de usuários
 
-Os endpoints administrativos de consulta e edição de dados gerais exigem uma sessão válida e a feature `update:user:others`. A alteração do campo `features` exige `update:user:features` e `read:user:others`; quando a mesma requisição altera dados gerais e features, exige também `update:user:others`. O banimento e o desbanimento são operações separadas: exigem `update:user:status` e `read:user:others`. A autorização é sempre verificada no servidor; ocultar controles na interface não substitui essa validação.
+Os endpoints administrativos de consulta e edição de dados gerais exigem uma sessão válida e a feature `update:user:others`. A alteração do campo `features` exige `update:user:features` e `read:user:others`; quando a mesma requisição altera dados gerais e features, exige também `update:user:others`. O banimento, o desbanimento e o gerenciamento de timeout são operações separadas: exigem `update:user:status` e `read:user:others`. A autorização é sempre verificada no servidor; ocultar controles na interface não substitui essa validação.
 
 ### `GET /api/v1/admin/users?search=...`
 
@@ -140,7 +143,7 @@ Consulta os dados administrativos de uma conta, incluindo e-mail e features, mas
 
 Permite alterar `username`, `email`, `password` e, com a autorização específica, `features` de qualquer conta, inclusive a própria conta do administrador. Os campos gerais exigem `update:user:others`; o campo `features` exige `update:user:features` e `read:user:others`. Requisições que misturam os dois tipos de alteração exigem ambas as permissões de atualização. Também aceita `profile_photo` com uma imagem em Data URL nos formatos JPEG, PNG ou WebP, estática, com até 2 MB e dimensões entre 128 e 2048 pixels por lado. A imagem é enviada ao Cloudinary com o identificador estável `profile-photos/{user_id}` e `overwrite: true`, substituindo a foto anterior e invalidando o cache. Quando a conta ainda possui uma foto legada com identificador aleatório, ela é excluída após a persistência da nova referência. A senha segue as mesmas regras de validação e hash do fluxo de edição do perfil. A lista de features é validada contra o catálogo central em `configs/features.js`; valores desconhecidos são rejeitados com `400 ValidationError`. A lista enviada substitui integralmente as permissões atuais, inclusive quando vazia. Campos omitidos permanecem inalterados.
 
-Os endpoints de consulta e edição de dados gerais retornam `403` quando falta `update:user:others`; alterações de features retornam `403` quando falta `update:user:features` ou `read:user:others`. Requisições mistas exigem ambas as permissões de atualização. Os endpoints de banimento e desbanimento retornam `403` quando falta `update:user:status` ou `read:user:others`. As operações retornam `404` quando o usuário alvo não existe e `400` quando a pesquisa ou os dados enviados são inválidos.
+Os endpoints de consulta e edição de dados gerais retornam `403` quando falta `update:user:others`; alterações de features retornam `403` quando falta `update:user:features` ou `read:user:others`. Requisições mistas exigem ambas as permissões de atualização. Os endpoints de banimento, desbanimento e timeout retornam `403` quando falta `update:user:status` ou `read:user:others`. As operações retornam `404` quando o usuário alvo não existe e `400` quando a pesquisa ou os dados enviados são inválidos.
 
 ### `DELETE /api/v1/admin/users/{username}/photo`
 
@@ -151,6 +154,12 @@ Remove a foto de perfil do usuário. Exige simultaneamente `update:user:others` 
 `POST /api/v1/admin/users/{username}/ban` exige `update:user:status` e `read:user:others` e bane a conta indicada. O próprio administrador não pode banir a própria conta. A operação atualiza `users.banned_at`, expira todas as sessões existentes e registra o evento na mesma transação. Operações repetidas que não alteram o estado não criam eventos duplicados.
 
 `DELETE /api/v1/admin/users/{username}/ban` exige as mesmas features e remove o banimento, registrando o evento de desbanimento. Sessões expiradas pelo banimento não são reativadas; o usuário precisa entrar novamente. Ambos os endpoints retornam `200` com os dados administrativos atualizados, sem hash de senha.
+
+### Timeout (suspensão temporária)
+
+`POST /api/v1/admin/users/{username}/timeout` exige `update:user:status` e `read:user:others`. Recebe `timeout_until` como data/hora ISO 8601 futura. A operação não permite suspender a própria conta nem uma conta já banida. O prazo é armazenado em `users.timeout_until`, as sessões existentes são encerradas e o sistema bloqueia novos logins, a renovação e o uso de sessões enquanto o prazo estiver ativo. Ao atingir a data, o acesso é liberado automaticamente; por segurança, o usuário precisa iniciar uma nova sessão.
+
+`DELETE /api/v1/admin/users/{username}/timeout` exige as mesmas features e remove a suspensão antes do prazo. Sessões encerradas não são reativadas. O timeout não altera `banned_at`; uma conta banida continua banida mesmo que seu timeout seja removido.
 
 ### `GET /api/v1/admin/audit/banned`
 
