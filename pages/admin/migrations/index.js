@@ -330,7 +330,7 @@ function AdminMigrationsPage() {
             <section className={styles.migrations}>
               <div className={styles.sectionHeading}>
                 <h2>Migrations pendentes</h2>
-                <span>{pendingMigrations.length} item(ns)</span>
+                <span>{hasLoadError ? "Estado indisponível" : `${pendingMigrations.length} item(ns)`}</span>
               </div>
 
               {isLoadingMigrations ? (
