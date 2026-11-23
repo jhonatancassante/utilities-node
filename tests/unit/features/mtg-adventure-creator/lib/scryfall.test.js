@@ -60,50 +60,6 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
   });
 
   describe("normalizeScryfallCard()", () => {
-    it("usa o texto impresso em português quando disponível", () => {
-      const card = {
-        id: "card-id",
-        oracle_id: "oracle-id",
-        name: "English Name",
-        printed_name: "Nome em português",
-        type_line: "Creature",
-        printed_type_line: "Criatura",
-        oracle_text: "English rules text.",
-        printed_text: "Texto localizado.",
-        lang: "pt",
-        scryfall_uri: "https://scryfall.com/card/example",
-        image_uris: {
-          normal: "https://example.com/card.jpg",
-        },
-      };
-
-      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).oracleText).toBe(
-        "Texto localizado.",
-      );
-    });
-
-    it("combina o texto localizado das faces de uma carta dupla", () => {
-      const card = {
-        id: "card-id",
-        oracle_id: "oracle-id",
-        name: "Front // Back",
-        type_line: "Creature // Creature",
-        lang: "pt",
-        scryfall_uri: "https://scryfall.com/card/example",
-        card_faces: [
-          { printed_text: "Texto da frente.", oracle_text: "Front text." },
-          { printed_text: "Texto do verso.", oracle_text: "Back text." },
-        ],
-        image_uris: {
-          normal: "https://example.com/card.jpg",
-        },
-      };
-
-      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).oracleText).toBe(
-        "Texto da frente.\n\nTexto do verso.",
-      );
-    });
-
     it("prioriza nome e tipo impressos na edição localizada", () => {
       const card = {
         id: "card-id",
@@ -124,7 +80,6 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
       expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0])).toMatchObject({
         name: "Nome em português",
         typeLine: "Criatura",
-        oracleText: "Texto impresso em português.",
         language: "pt",
         slotId: "problem",
       });
