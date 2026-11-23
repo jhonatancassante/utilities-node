@@ -16,15 +16,91 @@ const fetcher = async (url) => {
   return response.json();
 };
 
+function AdventureCard({ card, slot, index, onSelect }) {
+  const [imageStatus, setImageStatus] = useState("loading");
+
+  return (
+    <li className={styles.slot}>
+      <div className={styles.slotHeading}>
+        <span className={styles.slotNumber}>
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <h3>{slot.title}</h3>
+      </div>
+
+      <button
+        type="button"
+        className={styles.cardButton}
+        onClick={() => onSelect(card)}
+        aria-label={`Ampliar a carta ${card.name}`}
+        disabled={imageStatus !== "loaded"}
+      >
+        {imageStatus === "loading" && (
+          <span className={styles.cardImagePlaceholder} role="status">
+            <span className={styles.cardImageLoader}></span>
+            <span>Carregando imagem...</span>
+          </span>
+        )}
+        {imageStatus === "error" && (
+          <span className={styles.cardImageError} role="status">
+            <i className="fas fa-image" aria-hidden="true"></i>
+            Imagem indisponível
+          </span>
+        )}
+        <Image
+          className={`${styles.cardImage} ${imageStatus === "loaded" ? styles.cardImageLoaded : ""}`}
+          src={card.image}
+          alt={`Carta ${card.name}, ${card.typeLine}`}
+          width={488}
+          height={680}
+          unoptimized
+          onLoad={() => setImageStatus("loaded")}
+          onError={() => setImageStatus("error")}
+        />
+      </button>
+
+      <div className={styles.cardCaption}>
+        <h4>{card.name}</h4>
+        <span>{card.typeLine}</span>
+        {card.language !== "pt" && (
+          <span className={styles.languageNotice}>
+            <i className="fas fa-language" aria-hidden="true"></i>
+            Edição em inglês
+          </span>
+        )}
+      </div>
+
+      {card.flavorText && (
+        <blockquote className={styles.flavorText}>
+          {card.flavorText}
+        </blockquote>
+      )}
+
+      <p className={styles.slotDescription}>{slot.description}</p>
+    </li>
+  );
+}
+
 function MtgAdventureCreator() {
   const [selectedCard, setSelectedCard] = useState(null);
+  const [cards, setCards] = useState([]);
   const {
-    data,
     error,
     isMutating,
     trigger: generateAdventure,
   } = useSWRMutation("/api/v1/entertainment/mtg-adventure", fetcher);
-  const cards = data?.cards || [];
+
+  async function handleGenerateAdventure() {
+    setCards([]);
+    setSelectedCard(null);
+
+    try {
+      const result = await generateAdventure();
+      setCards(result.cards || []);
+    } catch {
+      // O erro é apresentado pelo estado de erro do SWR.
+    }
+  }
 
   useEffect(() => {
     if (!selectedCard) return undefined;
@@ -52,7 +128,7 @@ function MtgAdventureCreator() {
         <button
           type="button"
           className={styles.generateButton}
-          onClick={() => generateAdventure()}
+          onClick={handleGenerateAdventure}
           disabled={isMutating}
         >
           <i
@@ -71,20 +147,54 @@ function MtgAdventureCreator() {
         <div className={styles.error} role="alert">
           <i className="fas fa-exclamation-circle" aria-hidden="true"></i>
           <span>{error.message}</span>
-          <button type="button" onClick={() => generateAdventure()}>
+          <button
+            type="button"
+            onClick={handleGenerateAdventure}
+            disabled={isMutating}
+          >
             Tentar novamente
           </button>
         </div>
       )}
 
       {isMutating && (
-        <div className={styles.loading} role="status" aria-live="polite">
-          <span className={styles.loader}></span>
-          <p>Reunindo os elementos da sua próxima aventura...</p>
-        </div>
+        <section
+          className={styles.results}
+          aria-label="Carregando cartas da aventura"
+          aria-live="polite"
+        >
+          <div className={styles.resultsHeading}>
+            <div>
+              <span className={styles.sectionEyebrow}>Preparando sua história</span>
+              <h2>Os cinco elementos da aventura</h2>
+            </div>
+            <span className={styles.cardCount}>05 CARTAS</span>
+          </div>
+          <ol className={styles.cardGrid}>
+            {ADVENTURE_SLOTS.map((slot, index) => (
+              <li className={styles.slot} key={slot.id}>
+                <div className={styles.slotHeading}>
+                  <span className={styles.slotNumber}>
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <h3>{slot.title}</h3>
+                </div>
+                <div className={styles.cardImagePlaceholder}>
+                  <span className={styles.cardImageLoader}></span>
+                  <span>Buscando carta...</span>
+                </div>
+                <div className={styles.skeletonCaption}>
+                  <span></span>
+                  <span></span>
+                </div>
+                <p className={styles.slotDescription}>{slot.description}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
       )}
 
-      {cards.length > 0 && (
+      {!isMutating && cards.length > 0 && (
         <section className={styles.results} aria-label="Cartas da aventura">
           <div className={styles.resultsHeading}>
             <div>
@@ -100,49 +210,13 @@ function MtgAdventureCreator() {
               if (!card) return null;
 
               return (
-                <li className={styles.slot} key={slot.id}>
-                  <div className={styles.slotHeading}>
-                    <span className={styles.slotNumber}>
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <h3>{slot.title}</h3>
-                  </div>
-
-                  <button
-                    type="button"
-                    className={styles.cardButton}
-                    onClick={() => setSelectedCard(card)}
-                    aria-label={`Ampliar a carta ${card.name}`}
-                  >
-                    <Image
-                      className={styles.cardImage}
-                      src={card.image}
-                      alt={`Carta ${card.name}, ${card.typeLine}`}
-                      width={488}
-                      height={680}
-                      unoptimized
-                    />
-                  </button>
-
-                  <div className={styles.cardCaption}>
-                    <h4>{card.name}</h4>
-                    <span>{card.typeLine}</span>
-                    {card.language !== "pt" && (
-                      <span className={styles.languageNotice}>
-                        <i className="fas fa-language" aria-hidden="true"></i>
-                        Edição em inglês
-                      </span>
-                    )}
-                  </div>
-
-                  {card.flavorText && (
-                    <blockquote className={styles.flavorText}>
-                      {card.flavorText}
-                    </blockquote>
-                  )}
-
-                  <p className={styles.slotDescription}>{slot.description}</p>
-                </li>
+                <AdventureCard
+                  key={`${slot.id}-${card.image}`}
+                  card={card}
+                  slot={slot}
+                  index={index}
+                  onSelect={setSelectedCard}
+                />
               );
             })}
           </ol>
