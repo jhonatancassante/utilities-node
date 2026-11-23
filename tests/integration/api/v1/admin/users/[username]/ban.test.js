@@ -111,7 +111,9 @@ describe("POST /api/v1/admin/users/[username]/ban", () => {
       const targetUser = await orchestrator.createUser();
       const headers = { Cookie: "session_id=" + sessionObject.token };
 
-      expect(statusManager.features).not.toContain("update:user:others");
+      const persistedStatusManager = await user.findOneById(statusManager.id);
+      expect(persistedStatusManager.features).toContain("update:user:status");
+      expect(persistedStatusManager.features).not.toContain("update:user:others");
 
       const banResponse = await fetch(adminUserBanUrl(targetUser.username), {
         method: "POST",
