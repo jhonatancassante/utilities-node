@@ -372,7 +372,7 @@ function AdminUsersPage() {
                                 ? "Banido"
                                 : result.timeout_until &&
                                     new Date(result.timeout_until) > new Date()
-                                  ? "Suspenso temporariamente"
+                                  ? "Suspenso"
                                   : "Ativo"}
                             </span>
                           </span>
@@ -558,15 +558,35 @@ function UserEditor({
     }
   }
 
-  function handleOpenTimeoutModal() {
-    const date = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    setTimeoutDate(
-      new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16),
-    );
+  async function handleOpenTimeoutModal() {
+    if (!canManageUserStatus || isEditingSelf || isUpdatingTimeout) return;
+
+    setIsUpdatingTimeout(true);
     setFeedback(null);
-    setIsTimeoutModalOpen(true);
+
+    try {
+      await requestAPI(
+        `/api/v1/admin/users/${encodeURIComponent(user.username)}/timeout`,
+      );
+
+      const date = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      setTimeoutDate(
+        new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 16),
+      );
+      setIsTimeoutModalOpen(true);
+    } catch (requestError) {
+      setFeedback({
+        id: (feedback?.id ?? 0) + 1,
+        type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
+        message: requestError.message,
+        action: requestError.action,
+      });
+    } finally {
+      setIsUpdatingTimeout(false);
+    }
   }
 
   async function handleTimeoutSubmit(event) {
@@ -785,11 +805,11 @@ function UserEditor({
           >
             {user.timeout_until && new Date(user.timeout_until) > new Date()
               ? "Gerenciar suspensão"
-              : "Suspender temporariamente"}
+              : "Suspender"}
           </Button>
           {isEditingSelf && (
             <small>
-              Não é permitido banir ou suspender temporariamente a própria conta
+              Não é permitido banir ou suspender a própria conta
               administrativa.
             </small>
           )}
@@ -1140,7 +1160,7 @@ function UserEditor({
 
       {isTimeoutModalOpen && (
         <Modal
-          title="Gerenciar suspensão temporária"
+          title="Gerenciar suspensão"
           onClose={() => {
             if (!isUpdatingTimeout) setIsTimeoutModalOpen(false);
           }}
