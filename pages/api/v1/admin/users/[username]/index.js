@@ -20,7 +20,7 @@ export default controller.createController(
       patchHandler,
     ],
   },
-  { middlewares: [controller.injectUserOrAnonymousOnInvalidSession] },
+  { middlewares: [controller.injectAnonymousOrUser] },
 );
 
 async function getHandler(request, response) {
