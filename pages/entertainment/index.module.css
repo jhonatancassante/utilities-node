@@ -5,53 +5,23 @@
   padding: 48px 24px;
 }
 
-.hero {
+.intro {
   margin-bottom: 40px;
   text-align: center;
 }
 
-.hero h1 {
+.intro h1 {
   margin-bottom: 12px;
   font-size: clamp(1.8rem, 3vw + 1rem, 2.6rem);
   line-height: 1.2;
 }
 
-.hero p {
-  max-width: 620px;
+.intro p {
+  max-width: 520px;
   margin: 0 auto;
   color: var(--text-secondary);
   font-size: 17px;
   line-height: 1.6;
-}
-
-.sectionHeading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 22px;
-}
-
-.sectionEyebrow {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.sectionHeading h2 {
-  font-size: clamp(1.35rem, 3vw, 1.8rem);
-}
-
-.count {
-  flex-shrink: 0;
-  color: var(--text-faint);
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
 }
 
 .grid {
@@ -130,7 +100,7 @@
   font-size: 22px;
 }
 
-.card h3 {
+.card h2 {
   font-size: 1.15rem;
   line-height: 1.3;
 }
@@ -144,15 +114,5 @@
 @media (max-width: 600px) {
   .main {
     padding: 38px 16px 52px;
-  }
-
-  .hero {
-    margin-bottom: 40px;
-  }
-
-  .sectionHeading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
   }
 }
