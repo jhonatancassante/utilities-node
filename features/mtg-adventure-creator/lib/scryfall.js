@@ -59,9 +59,10 @@ export function getCardImageUris(card) {
 
 export function normalizeScryfallCard(card, slot) {
   const imageUris = getCardImageUris(card);
-  const image = imageUris?.grid || imageUris?.thumb;
+  const thumbnailImage = imageUris?.thumb || imageUris?.grid;
+  const expandedImage = imageUris?.grid || imageUris?.thumb;
 
-  if (!image) {
+  if (!thumbnailImage || !expandedImage) {
     throw new Error("A Scryfall não retornou uma imagem para esta carta.");
   }
 
@@ -78,7 +79,8 @@ export function normalizeScryfallCard(card, slot) {
     name: card.printed_name || card.name,
     typeLine: card.printed_type_line || card.type_line,
     flavorText,
-    image,
+    thumbnailImage,
+    expandedImage,
     scryfallUri: card.scryfall_uri,
     language: card.lang,
     slotId: slot.id,
