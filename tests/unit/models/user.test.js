@@ -508,6 +508,7 @@ describe("models/user.js", () => {
       const actor = { username: "Administrador", email: "admin@example.com" };
       const querySpy = mockQueries([
         ["LOWER(users.username) = LOWER($1)", [lockedUser]],
+        ["SELECT name", []],
         ["pg_advisory_xact_lock", []],
         ["SELECT * FROM users WHERE id = $1 FOR UPDATE;", [lockedUser]],
         ["UPDATE\n          users", [bannedUser]],
