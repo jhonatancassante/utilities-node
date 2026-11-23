@@ -6,7 +6,7 @@ export default controller.createController(
   {
     GET: [controller.canRequest("read:feature"), getHandler],
   },
-  { middlewares: [controller.injectUserOrAnonymousOnInvalidSession] },
+  { middlewares: [controller.injectAnonymousOrUser] },
 );
 
 async function getHandler(request, response) {
