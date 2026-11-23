@@ -371,7 +371,7 @@ function AdminUsersPage() {
                                 ? "Banido"
                                 : result.timeout_until &&
                                     new Date(result.timeout_until) > new Date()
-                                  ? "Em timeout"
+                                  ? "Suspenso temporariamente"
                                   : "Ativo"}
                             </span>
                           </span>
@@ -628,7 +628,7 @@ function UserEditor({
       setIsTimeoutModalOpen(false);
       await onBanStatusChanged(
         updatedUser,
-        "Timeout aplicado com sucesso. As sessões anteriores foram encerradas.",
+        "Suspensão aplicada com sucesso. As sessões anteriores foram encerradas.",
       );
     } catch (requestError) {
       setFeedback({
@@ -655,7 +655,7 @@ function UserEditor({
       setIsTimeoutModalOpen(false);
       await onBanStatusChanged(
         updatedUser,
-        "Timeout removido. O usuário poderá entrar novamente, mas precisará fazer login.",
+        "Suspensão removida. O usuário poderá entrar novamente, mas precisará fazer login.",
       );
     } catch (requestError) {
       setFeedback({
@@ -778,12 +778,12 @@ function UserEditor({
             }
           >
             {user.timeout_until && new Date(user.timeout_until) > new Date()
-              ? "Gerenciar timeout"
-              : "Aplicar timeout"}
+              ? "Gerenciar suspensão"
+              : "Suspender temporariamente"}
           </Button>
           {isEditingSelf && (
             <small>
-              Não é permitido banir ou aplicar timeout à própria conta administrativa.
+              Não é permitido banir ou suspender temporariamente a própria conta administrativa.
             </small>
           )}
         </div>
@@ -1121,7 +1121,7 @@ function UserEditor({
 
       {isTimeoutModalOpen && (
         <Modal
-          title="Gerenciar timeout"
+          title="Gerenciar suspensão temporária"
           onClose={() => {
             if (!isUpdatingTimeout) setIsTimeoutModalOpen(false);
           }}
@@ -1130,7 +1130,7 @@ function UserEditor({
         >
           {user.timeout_until && new Date(user.timeout_until) > new Date() && (
             <div className={styles.timeoutCurrent}>
-              <strong>Timeout ativo</strong>
+              <strong>Suspensão ativa</strong>
               <span>
                 Acesso suspenso até{" "}
                 {new Date(user.timeout_until).toLocaleString("pt-BR")}
@@ -1143,7 +1143,7 @@ function UserEditor({
               O usuário ficará sem acesso até o prazo escolhido. As sessões
               atuais serão encerradas e não serão reativadas automaticamente.
               {user.banned_at &&
-                " A conta também está banida; o timeout poderá ser removido, mas o banimento continuará ativo."}
+                " A conta também está banida; o suspensão poderá ser removida, mas o banimento continuará ativo."}
             </p>
 
             <div className={styles.timeoutMode}>
@@ -1252,7 +1252,7 @@ function UserEditor({
                   onClick={handleRemoveTimeout}
                   disabled={isUpdatingTimeout}
                 >
-                  Remover timeout
+                  Remover suspensão
                 </Button>
               )}
               <Button
