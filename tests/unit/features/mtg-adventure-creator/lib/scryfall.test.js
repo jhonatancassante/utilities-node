@@ -130,7 +130,7 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
         lang: "pt",
         scryfall_uri: "https://scryfall.com/card/example",
         image_uris: {
-          large: "https://example.com/card.jpg",
+          normal: "https://example.com/card.jpg",
         },
       };
 
