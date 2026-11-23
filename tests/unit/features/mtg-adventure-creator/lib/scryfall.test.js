@@ -60,6 +60,15 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
   });
 
   describe("normalizeScryfallCard()", () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date("2026-11-23T12:00:00.000Z"));
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
     it("preserva o texto de ambientação da carta", () => {
       const card = {
         id: "card-id",
@@ -140,6 +149,46 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
         language: "pt",
         slotId: "problem",
       });
+    });
+
+    it("prioriza a imagem WebP grid a partir de 2027", () => {
+      jest.setSystemTime(new Date("2027-01-01T00:00:00.000Z"));
+
+      const card = {
+        id: "card-id",
+        name: "WebP Card",
+        type_line: "Creature",
+        lang: "en",
+        image_uris: {
+          normal: "https://example.com/card.jpg",
+          large: "https://example.com/card-large.jpg",
+          grid: "https://example.com/card.webp",
+          display: "https://example.com/card-display.webp",
+        },
+      };
+
+      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).image).toBe(
+        "https://example.com/card.webp",
+      );
+    });
+
+    it("usa a imagem JPEG normal como fallback quando grid não está disponível", () => {
+      jest.setSystemTime(new Date("2027-01-01T00:00:00.000Z"));
+
+      const card = {
+        id: "card-id",
+        name: "Fallback Card",
+        type_line: "Creature",
+        lang: "en",
+        image_uris: {
+          normal: "https://example.com/card.jpg",
+          thumb: "https://example.com/card-thumb.webp",
+        },
+      };
+
+      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).image).toBe(
+        "https://example.com/card.jpg",
+      );
     });
   });
 });
