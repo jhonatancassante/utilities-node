@@ -5,12 +5,12 @@ import authorization from "@/models/authorization.js";
 export default controller.createController(
   {
     POST: [
-      controller.canRequest("update:user:others"),
+      controller.canRequest("update:user:status"),
       controller.canRequest("read:user:others"),
       postHandler,
     ],
     DELETE: [
-      controller.canRequest("update:user:others"),
+      controller.canRequest("update:user:status"),
       controller.canRequest("read:user:others"),
       deleteHandler,
     ],
