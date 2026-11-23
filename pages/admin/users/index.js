@@ -811,8 +811,7 @@ function UserEditor({
           </Button>
           {isEditingSelf && (
             <small>
-              Não é permitido banir ou suspender a própria conta
-              administrativa.
+              Não é permitido banir ou suspender a própria conta administrativa.
             </small>
           )}
         </div>

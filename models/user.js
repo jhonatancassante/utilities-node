@@ -480,9 +480,7 @@ async function ensurePrivilegedFeaturesCoverage(client, targetUserId) {
     ;`,
     values: [targetUserId],
   });
-  const privilegedFeatureNames = targetFeatures.rows.map(
-    (item) => item.name,
-  );
+  const privilegedFeatureNames = targetFeatures.rows.map((item) => item.name);
 
   if (privilegedFeatureNames.length === 0) return;
 
