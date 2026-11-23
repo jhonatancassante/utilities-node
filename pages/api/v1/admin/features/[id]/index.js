@@ -15,7 +15,7 @@ export default controller.createController(
       deleteHandler,
     ],
   },
-  { middlewares: [controller.injectUserOrAnonymousOnInvalidSession] },
+  { middlewares: [controller.injectAnonymousOrUser] },
 );
 
 async function patchHandler(request, response) {

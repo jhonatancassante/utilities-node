@@ -37,7 +37,7 @@ async function findMigrationEvents() {
       SELECT
         id,
         name,
-        run_on
+        run_on AT TIME ZONE 'UTC' AS run_on
       FROM
         pgmigrations
       ORDER BY

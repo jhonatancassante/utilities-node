@@ -11,13 +11,14 @@ export const config = {
   api: { bodyParser: { sizeLimit: "3mb" } },
 };
 
-export default controller.createController(
-  {
-    GET: getHandler,
-    PATCH: [controller.canRequest("update:user"), patchHandler],
-  },
-  { middlewares: [controller.injectAnonymousOrUser] },
-);
+export default controller.createController({
+  GET: [controller.injectUserOrAnonymousOnInvalidSession, getHandler],
+  PATCH: [
+    controller.injectAnonymousOrUser,
+    controller.canRequest("update:user"),
+    patchHandler,
+  ],
+});
 
 async function getHandler(request, response) {
   const userTryingToGet = request.context.user;

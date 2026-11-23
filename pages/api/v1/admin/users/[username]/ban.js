@@ -7,22 +7,22 @@ export default controller.createController(
     POST: [
       controller.canRequest("update:user:others"),
       controller.canRequest("read:user:others"),
-      banHandler,
+      postHandler,
     ],
     DELETE: [
       controller.canRequest("update:user:others"),
       controller.canRequest("read:user:others"),
-      unbanHandler,
+      deleteHandler,
     ],
   },
-  { middlewares: [controller.injectUserOrAnonymousOnInvalidSession] },
+  { middlewares: [controller.injectAnonymousOrUser] },
 );
 
-async function banHandler(request, response) {
+async function postHandler(request, response) {
   return updateBanStatus(request, response, true);
 }
 
-async function unbanHandler(request, response) {
+async function deleteHandler(request, response) {
   return updateBanStatus(request, response, false);
 }
 

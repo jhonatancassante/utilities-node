@@ -21,6 +21,7 @@ function formatDate(value) {
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
     timeStyle: "medium",
+    timeZone: "America/Sao_Paulo",
   }).format(date);
 }
 

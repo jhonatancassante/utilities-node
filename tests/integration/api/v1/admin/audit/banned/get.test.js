@@ -40,6 +40,23 @@ describe("GET /api/v1/admin/audit/banned", () => {
     });
   });
 
+  describe("Sessão inválida", () => {
+    test("Rejeita a sessão e limpa o cookie", async () => {
+      const response = await fetch(auditUrl(), {
+        headers: { Cookie: "session_id=invalid-session-token" },
+      });
+
+      expect(response.status).toBe(401);
+      expect(response.headers.get("Set-Cookie")).toContain(
+        "session_id=invalid",
+      );
+      expect(await response.json()).toMatchObject({
+        name: "UnauthorizedError",
+        message: "Usuário não possui sessão ativa.",
+      });
+    });
+  });
+
   describe("Usuário padrão", () => {
     test("Consultando a auditoria sem a feature read:audit", async () => {
       const sessionObject = await createStandardSession();
