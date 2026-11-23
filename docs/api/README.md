@@ -133,7 +133,7 @@ Os endpoints administrativos de consulta e edição de dados gerais exigem uma s
 
 ### `GET /api/v1/admin/users?search=...`
 
-Pesquisa usuários por trecho do nome de usuário ou do e-mail, sem diferenciar maiúsculas de minúsculas. O parâmetro `search` é obrigatório e deve conter ao menos dois caracteres. Retorna até 10 resultados com `id`, `username`, `email`, `features`, `created_at` e `updated_at`; pode incluir a própria conta do administrador e nunca inclui o hash de senha.
+Pesquisa usuários por trecho do nome de usuário ou do e-mail, sem diferenciar maiúsculas de minúsculas. O parâmetro `search` é obrigatório e deve conter ao menos dois caracteres. Retorna até 10 resultados com `id`, `username`, `email`, `features`, `banned_at`, `timeout_until`, `created_at` e `updated_at`; pode incluir a própria conta do administrador e nunca inclui o hash de senha.
 
 ### `GET /api/v1/admin/users/{username}`
 
