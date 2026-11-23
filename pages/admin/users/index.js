@@ -577,13 +577,13 @@ function UserEditor({
       );
       setIsTimeoutModalOpen(true);
     } catch (requestError) {
-      setFeedback({
-        id: (feedback?.id ?? 0) + 1,
+      setFeedback((currentFeedback) => ({
+        id: (currentFeedback?.id ?? 0) + 1,
         type: "error",
         name: requestError.statusCode ? requestError.name : undefined,
         message: requestError.message,
         action: requestError.action,
-      });
+      }));
     } finally {
       setIsUpdatingTimeout(false);
     }
@@ -1282,8 +1282,8 @@ function UserEditor({
                 disabled={isUpdatingTimeout || Boolean(user.banned_at)}
               >
                 {isUpdatingTimeout
-                  ? "Aplicando..."
-                  : "Suspender temporariamente"}
+                  ? "Verificando..."
+                  : "Suspender"}
               </Button>
               {user.timeout_until &&
                 new Date(user.timeout_until) > new Date() && (
