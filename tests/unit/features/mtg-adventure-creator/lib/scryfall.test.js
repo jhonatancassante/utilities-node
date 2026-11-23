@@ -100,7 +100,7 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
       };
 
       expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).oracleText).toBe(
-        "Texto da frente.\\n\\nTexto do verso.",
+        "Texto da frente.\n\nTexto do verso.",
       );
     });
 
