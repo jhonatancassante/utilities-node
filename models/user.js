@@ -514,6 +514,14 @@ async function ensurePrivilegedFeaturesCoverage(client, targetUserId) {
   }
 }
 
+async function validateStatusChangeEligibility(username) {
+  const targetUser = await findOneByUsername(username);
+
+  await database.transaction(async (client) => {
+    await ensurePrivilegedFeaturesCoverage(client, targetUser.id);
+  });
+}
+
 async function setBanStatus(username, isBanned, actorUserId) {
   if (typeof isBanned !== "boolean") {
     throw new ValidationError({
@@ -823,6 +831,7 @@ const user = {
   findOneByEmail,
   update,
   setBanStatus,
+  validateStatusChangeEligibility,
   setTimeoutStatus,
   setProfilePhoto,
   setFeatures,
