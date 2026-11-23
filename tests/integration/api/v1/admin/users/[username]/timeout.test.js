@@ -2,6 +2,7 @@ import { jest } from "@jest/globals";
 
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
+import feature from "@/models/feature.js";
 import database from "@/infra/database.js";
 import session from "@/models/session.js";
 
@@ -161,6 +162,37 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
     });
 
     expect(loginResponse.status).toBe(201);
+  });
+
+  test("Impede suspender o único usuário que possui permissões privilegiadas", async () => {
+    const { sessionObject } = await createStatusManagerSession();
+    const privilegedFeatures = (await feature.findAll())
+      .filter((item) => item.is_privileged)
+      .map((item) => item.name);
+    const lastPrivilegedUser = await orchestrator.createUser();
+    await orchestrator.addFeaturesToUser(
+      lastPrivilegedUser,
+      privilegedFeatures,
+    );
+
+    const response = await fetch(
+      adminUserTimeoutUrl(lastPrivilegedUser.username),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: "session_id=" + sessionObject.token,
+        },
+        body: JSON.stringify({
+          timeout_until: getFutureTimeout(),
+        }),
+      },
+    );
+
+    expect(response.status).toBe(409);
+    expect(
+      (await user.findOneById(lastPrivilegedUser.id)).timeout_until,
+    ).toBeNull();
   });
 
   test("não permite suspender a própria conta administrativa", async () => {
