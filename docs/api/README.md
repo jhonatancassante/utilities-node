@@ -23,7 +23,7 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 | `GET`    | `/api/v1/users/{username}`           | Público; saída filtrada                                        |
 | `GET`    | `/api/v1/admin/users?search=...`     | Feature `update:user:others`                                   |
 | `GET`    | `/api/v1/admin/users/{username}`     | Feature `update:user:others`                                   |
-| `PATCH`  | `/api/v1/admin/users/{username}`     | Feature `update:user:others`; inclui alteração de features     |
+| `PATCH`  | `/api/v1/admin/users/{username}`     | `update:user:others`; features exigem também `update:user:features` |
 | `POST`   | `/api/v1/admin/users/{username}/ban` | Features `update:user:status` e `read:user:others`; bane a conta |
 | `DELETE` | `/api/v1/admin/users/{username}/ban` | Features `update:user:status` e `read:user:others`; desbane a conta |
 | `GET`    | `/api/v1/admin/audit/banned`         | Feature `read:audit`; consulta a trilha de auditoria           |
@@ -126,7 +126,7 @@ Respostas relevantes: `201` criado; `400` dados obrigatórios ausentes, username
 
 ## Administração de usuários
 
-Os endpoints administrativos de consulta e edição de usuários exigem uma sessão válida e a feature `update:user:others`. O banimento e o desbanimento são operações separadas: exigem `update:user:status` e `read:user:others`. A autorização é sempre verificada no servidor; ocultar controles na interface não substitui essa validação.
+Os endpoints administrativos de consulta e edição de dados gerais exigem uma sessão válida e a feature `update:user:others`. A alteração do campo `features` exige `update:user:features` e `read:user:others`; quando a mesma requisição altera dados gerais e features, exige também `update:user:others`. O banimento e o desbanimento são operações separadas: exigem `update:user:status` e `read:user:others`. A autorização é sempre verificada no servidor; ocultar controles na interface não substitui essa validação.
 
 ### `GET /api/v1/admin/users?search=...`
 
@@ -138,9 +138,9 @@ Consulta os dados administrativos de uma conta, incluindo e-mail e features, mas
 
 ### `PATCH /api/v1/admin/users/{username}`
 
-Permite alterar `username`, `email`, `password` e `features` de qualquer conta, inclusive a própria conta do administrador. Também aceita `profile_photo` com uma imagem em Data URL nos formatos JPEG, PNG ou WebP, estática, com até 2 MB e dimensões entre 128 e 2048 pixels por lado. A imagem é enviada ao Cloudinary com o identificador estável `profile-photos/{user_id}` e `overwrite: true`, substituindo a foto anterior e invalidando o cache. Quando a conta ainda possui uma foto legada com identificador aleatório, ela é excluída após a persistência da nova referência. A senha segue as mesmas regras de validação e hash do fluxo de edição do perfil. A lista de features é validada contra o catálogo central em `configs/features.js`; valores desconhecidos são rejeitados com `400 ValidationError`. A lista enviada substitui integralmente as permissões atuais, inclusive quando vazia. Campos omitidos permanecem inalterados.
+Permite alterar `username`, `email`, `password` e, com a autorização específica, `features` de qualquer conta, inclusive a própria conta do administrador. Os campos gerais exigem `update:user:others`; o campo `features` exige `update:user:features` e `read:user:others`. Requisições que misturam os dois tipos de alteração exigem ambas as permissões de atualização. Também aceita `profile_photo` com uma imagem em Data URL nos formatos JPEG, PNG ou WebP, estática, com até 2 MB e dimensões entre 128 e 2048 pixels por lado. A imagem é enviada ao Cloudinary com o identificador estável `profile-photos/{user_id}` e `overwrite: true`, substituindo a foto anterior e invalidando o cache. Quando a conta ainda possui uma foto legada com identificador aleatório, ela é excluída após a persistência da nova referência. A senha segue as mesmas regras de validação e hash do fluxo de edição do perfil. A lista de features é validada contra o catálogo central em `configs/features.js`; valores desconhecidos são rejeitados com `400 ValidationError`. A lista enviada substitui integralmente as permissões atuais, inclusive quando vazia. Campos omitidos permanecem inalterados.
 
-Os endpoints de consulta e edição retornam `403` quando a sessão não possui `update:user:others`; os endpoints de banimento e desbanimento retornam `403` quando falta `update:user:status` ou `read:user:others`. As operações retornam `404` quando o usuário alvo não existe e `400` quando a pesquisa ou os dados enviados são inválidos.
+Os endpoints de consulta e edição de dados gerais retornam `403` quando falta `update:user:others`; alterações de features retornam `403` quando falta `update:user:features` ou `read:user:others`. Requisições mistas exigem ambas as permissões de atualização. Os endpoints de banimento e desbanimento retornam `403` quando falta `update:user:status` ou `read:user:others`. As operações retornam `404` quando o usuário alvo não existe e `400` quando a pesquisa ou os dados enviados são inválidos.
 
 ### `DELETE /api/v1/admin/users/{username}/photo`
 
@@ -242,7 +242,7 @@ A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica c
 - No cadastro, o e-mail é armazenado com a capitalização enviada (após `trim()`); a unicidade é verificada sem diferenciar maiúsculas de minúsculas.
 - Um JSON sintaticamente inválido pode ser rejeitado pelo parser de corpo do Next.js antes de chegar ao controller; nesse caso, a resposta `400` pode não usar o envelope JSON padronizado da API.
 - A feature `read:status` consta no catálogo e é usada nos testes, mas a rota de status não possui middleware `canRequest`; o acesso ao endpoint permanece público. A feature `read:status:all` controla apenas a inclusão da versão do banco.
-- A administração de features é restrita aos endpoints administrativos e à feature `update:user:others`. O catálogo central em `configs/features.js` alimenta a validação do backend e a interface de seleção.
+- A administração de features exige `update:user:features` (além de `read:user:others`); a edição de dados gerais continua exigindo `update:user:others`. O catálogo central em `configs/features.js` alimenta a validação do backend e a interface de seleção.
 - Contas banidas não conseguem iniciar sessão; sessões existentes são expiradas no banimento. O desbanimento não restaura sessões anteriores.
 - `read:audit` permite consultar os eventos de banimento e desbanimento e o histórico de migrations aplicadas, sem conceder acesso às demais operações administrativas.
 
