@@ -154,9 +154,10 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
         },
       };
 
-      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).image).toBe(
-        "https://example.com/card-grid.webp",
-      );
+      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0])).toMatchObject({
+        thumbnailImage: "https://example.com/card-thumb.webp",
+        expandedImage: "https://example.com/card-grid.webp",
+      });
     });
 
     it("usa a imagem WebP thumb quando grid não está disponível", () => {
@@ -170,9 +171,10 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
         },
       };
 
-      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).image).toBe(
-        "https://example.com/card-thumb.webp",
-      );
+      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0])).toMatchObject({
+        thumbnailImage: "https://example.com/card-thumb.webp",
+        expandedImage: "https://example.com/card-thumb.webp",
+      });
     });
 
     it("informa quando a carta não possui imagens WebP", () => {
