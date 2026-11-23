@@ -50,6 +50,42 @@ async function createLegacyAdminSession() {
   return { legacyAdmin, sessionObject };
 }
 
+describe("GET /api/v1/admin/users/[username]/timeout", () => {
+  test("permite abrir o modal quando o usuário pode receber suspensão", async () => {
+    const { sessionObject } = await createStatusManagerSession();
+    const targetUser = await orchestrator.createUser();
+
+    const response = await fetch(adminUserTimeoutUrl(targetUser.username), {
+      headers: { Cookie: "session_id=" + sessionObject.token },
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ allowed: true });
+  });
+
+  test("impede abrir o modal para o único titular de permissões privilegiadas", async () => {
+    const { sessionObject } = await createStatusManagerSession();
+    const privilegedFeatures = (await feature.findAll())
+      .filter((item) => item.is_privileged)
+      .map((item) => item.name);
+    const lastPrivilegedUser = await orchestrator.createUser();
+    await orchestrator.addFeaturesToUser(
+      lastPrivilegedUser,
+      privilegedFeatures,
+    );
+
+    const response = await fetch(
+      adminUserTimeoutUrl(lastPrivilegedUser.username),
+      { headers: { Cookie: "session_id=" + sessionObject.token } },
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      name: "ConflictError",
+    });
+  });
+});
+
 describe("POST /api/v1/admin/users/[username]/timeout", () => {
   test("aplica timeout, encerra sessões existentes e bloqueia novo login", async () => {
     const { sessionObject } = await createStatusManagerSession();
