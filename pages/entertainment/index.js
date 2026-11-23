@@ -36,17 +36,17 @@ function EntertainmentPage() {
             </div>
 
             <ul className={styles.grid}>
-            {entertainmentApps.map((app) => (
-              <li key={app.slug}>
-                <Link href={app.href} className={styles.card}>
-                  <span className={styles.icon} aria-hidden="true">
-                    <i className={`fas ${app.icon}`}></i>
-                  </span>
-                  <h2>{app.title}</h2>
-                  <p>{app.description}</p>
-                </Link>
-              </li>
-            ))}
+              {entertainmentApps.map((app) => (
+                <li key={app.slug}>
+                  <Link href={app.href} className={styles.card}>
+                    <span className={styles.icon} aria-hidden="true">
+                      <i className={`fas ${app.icon}`}></i>
+                    </span>
+                    <h2>{app.title}</h2>
+                    <p>{app.description}</p>
+                  </Link>
+                </li>
+              ))}
             </ul>
           </section>
         </main>
