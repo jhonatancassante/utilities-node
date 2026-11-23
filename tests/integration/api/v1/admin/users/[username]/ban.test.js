@@ -133,6 +133,33 @@ describe("POST /api/v1/admin/users/[username]/ban", () => {
     });
   });
 
+  describe("Proteção das permissões privilegiadas", () => {
+    test("Impede banir o único usuário que possui permissões privilegiadas", async () => {
+      const { sessionObject } = await createStatusManagerSession();
+      const privilegedFeatures = (await feature.findAll())
+        .filter((item) => item.is_privileged)
+        .map((item) => item.name);
+      const lastPrivilegedUser = await orchestrator.createUser();
+      await orchestrator.addFeaturesToUser(
+        lastPrivilegedUser,
+        privilegedFeatures,
+      );
+
+      const response = await fetch(
+        adminUserBanUrl(lastPrivilegedUser.username),
+        {
+          method: "POST",
+          headers: { Cookie: "session_id=" + sessionObject.token },
+        },
+      );
+
+      expect(response.status).toBe(409);
+      expect(
+        (await user.findOneById(lastPrivilegedUser.id)).banned_at,
+      ).toBeNull();
+    });
+  });
+
   describe("Usuário privilegiado", () => {
     test("Banindo outro usuário, encerrando suas sessões e bloqueando o login", async () => {
       const { privilegedUser, sessionObject } = await createPrivilegedSession();
