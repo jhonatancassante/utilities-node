@@ -40,7 +40,9 @@ function Header() {
   const isAccountOpen = openMenu === MENU.account;
   const isToolsRoute = router.pathname.startsWith(TOOLS_BASE_PATH);
   const isEntertainmentOpen = isEntertainmentExpanded;
-  const isEntertainmentRoute = router.pathname.startsWith(ENTERTAINMENT_BASE_PATH);
+  const isEntertainmentRoute = router.pathname.startsWith(
+    ENTERTAINMENT_BASE_PATH,
+  );
 
   useEffect(() => {
     const close = () => {

@@ -71,9 +71,7 @@ function AdventureCard({ card, slot, index, onSelect }) {
       </div>
 
       {card.flavorText && (
-        <blockquote className={styles.flavorText}>
-          {card.flavorText}
-        </blockquote>
+        <blockquote className={styles.flavorText}>{card.flavorText}</blockquote>
       )}
 
       <p className={styles.slotDescription}>{slot.description}</p>
@@ -83,7 +81,8 @@ function AdventureCard({ card, slot, index, onSelect }) {
 
 function MtgAdventureCreator() {
   const [selectedCard, setSelectedCard] = useState(null);
-  const [selectedCardImageStatus, setSelectedCardImageStatus] = useState("loading");
+  const [selectedCardImageStatus, setSelectedCardImageStatus] =
+    useState("loading");
   const [cards, setCards] = useState([]);
   const {
     error,
@@ -171,7 +170,9 @@ function MtgAdventureCreator() {
         >
           <div className={styles.resultsHeading}>
             <div>
-              <span className={styles.sectionEyebrow}>Preparando sua história</span>
+              <span className={styles.sectionEyebrow}>
+                Preparando sua história
+              </span>
               <h2>Os cinco elementos da aventura</h2>
             </div>
             <span className={styles.cardCount}>05 CARTAS</span>
@@ -204,7 +205,9 @@ function MtgAdventureCreator() {
         <section className={styles.results} aria-label="Cartas da aventura">
           <div className={styles.resultsHeading}>
             <div>
-              <span className={styles.sectionEyebrow}>Sua história começa aqui</span>
+              <span className={styles.sectionEyebrow}>
+                Sua história começa aqui
+              </span>
               <h2>Os cinco elementos da aventura</h2>
             </div>
             <span className={styles.cardCount}>05 CARTAS</span>

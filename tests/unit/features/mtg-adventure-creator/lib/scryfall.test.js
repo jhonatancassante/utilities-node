@@ -38,7 +38,9 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
     });
 
     it("filtra ajudante e antagonista como criaturas", () => {
-      expect(ADVENTURE_SLOTS.slice(3).every((slot) => slot.query === "t:creature")).toBe(true);
+      expect(
+        ADVENTURE_SLOTS.slice(3).every((slot) => slot.query === "t:creature"),
+      ).toBe(true);
     });
 
     it("exclui cartas já escolhidas pelo identificador Oracle", () => {
@@ -114,7 +116,9 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
         },
       };
 
-      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).flavorText).toBeUndefined();
+      expect(
+        normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).flavorText,
+      ).toBeUndefined();
     });
 
     it("prioriza nome e tipo impressos na edição localizada", () => {

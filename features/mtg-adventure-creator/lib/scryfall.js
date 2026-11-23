@@ -45,9 +45,7 @@ export function buildScryfallQuery(slot, language, excludedOracleIds = []) {
     .map((oracleId) => "-oracleid:" + oracleId)
     .join(" ");
 
-  return [slot.query, "lang:" + language, exclusions]
-    .filter(Boolean)
-    .join(" ");
+  return [slot.query, "lang:" + language, exclusions].filter(Boolean).join(" ");
 }
 
 export function getCardImageUris(card) {
@@ -102,7 +100,9 @@ async function requestRandomCard(query) {
   });
 
   if (!response.ok) {
-    const error = new Error("A Scryfall não encontrou uma carta para esta seleção.");
+    const error = new Error(
+      "A Scryfall não encontrou uma carta para esta seleção.",
+    );
     error.status = response.status;
     throw error;
   }

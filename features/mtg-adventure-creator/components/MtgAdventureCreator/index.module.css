@@ -135,8 +135,7 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   background:
-    linear-gradient(155deg, var(--accent-soft), transparent 40%),
-    var(--bg-card);
+    linear-gradient(155deg, var(--accent-soft), transparent 40%), var(--bg-card);
   box-shadow: var(--shadow-sm);
   text-align: center;
 }
@@ -194,7 +193,6 @@
     filter var(--transition-fast);
 }
 
-
 .cardButton {
   position: relative;
 }
@@ -213,7 +211,6 @@
 }
 
 .cardImagePlaceholder,
-
 .cardLoadingPlaceholder {
   width: min(100%, 245px);
   aspect-ratio: 488 / 680;
