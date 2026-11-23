@@ -74,6 +74,22 @@ export default function AdminAuditPage() {
                   </span>
                   <i className="fas fa-chevron-right" aria-hidden="true"></i>
                 </Link>
+                <Link
+                  href="/admin/audit/migrations"
+                  className={styles.menuItem}
+                >
+                  <span className={styles.menuIcon} aria-hidden="true">
+                    <i className="fas fa-database"></i>
+                  </span>
+                  <span>
+                    <strong>Migrations executadas</strong>
+                    <small>
+                      Consulte o histórico de alterações aplicadas ao banco de
+                      dados.
+                    </small>
+                  </span>
+                  <i className="fas fa-chevron-right" aria-hidden="true"></i>
+                </Link>
               </nav>
             ) : null}
           </section>
