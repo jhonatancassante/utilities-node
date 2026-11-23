@@ -61,18 +61,26 @@ export function normalizeScryfallCard(card, slot) {
   const imageUris = getCardImageUris(card);
   const useWebp = new Date() >= new Date("2027-01-01T00:00:00Z");
   const image = useWebp
-    ? imageUris?.display || imageUris?.jpeg
-    : imageUris?.large || imageUris?.normal || imageUris?.jpeg;
+    ? imageUris?.grid || imageUris?.display || imageUris?.normal
+    : imageUris?.normal || imageUris?.small;
 
   if (!image) {
     throw new Error("A Scryfall não retornou uma imagem para esta carta.");
   }
+
+  const oracleText = card.card_faces
+    ? card.card_faces
+        .map((face) => face.printed_text || face.oracle_text)
+        .filter(Boolean)
+        .join("\\n\\n")
+    : card.printed_text || card.oracle_text;
 
   return {
     id: card.id,
     oracleId: card.oracle_id,
     name: card.printed_name || card.name,
     typeLine: card.printed_type_line || card.type_line,
+    oracleText,
     image,
     scryfallUri: card.scryfall_uri,
     language: card.lang,
