@@ -1120,7 +1120,7 @@ function UserEditor({
             </div>
           ))}
 
-        {(canManageUserData || canManageUserFeatures) && (
+        {canManageUserFeatures && (
           <div className={styles.formActions}>
             <Button type="submit" icon="fa-save" disabled={isSaving}>
               {isSaving ? "Salvando..." : "Salvar alterações"}
