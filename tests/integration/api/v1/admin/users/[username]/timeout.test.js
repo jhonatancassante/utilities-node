@@ -74,10 +74,7 @@ describe("GET /api/v1/admin/users/[username]/timeout", () => {
       expect.arrayContaining(protectedFeatures),
     );
     const lastPrivilegedUser = await orchestrator.createUser();
-    await orchestrator.addFeaturesToUser(
-      lastPrivilegedUser,
-      protectedFeatures,
-    );
+    await orchestrator.addFeaturesToUser(lastPrivilegedUser, protectedFeatures);
 
     const response = await fetch(
       adminUserTimeoutUrl(lastPrivilegedUser.username),
@@ -219,10 +216,7 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
       expect.arrayContaining(protectedFeatures),
     );
     const lastPrivilegedUser = await orchestrator.createUser();
-    await orchestrator.addFeaturesToUser(
-      lastPrivilegedUser,
-      protectedFeatures,
-    );
+    await orchestrator.addFeaturesToUser(lastPrivilegedUser, protectedFeatures);
 
     const response = await fetch(
       adminUserTimeoutUrl(lastPrivilegedUser.username),
