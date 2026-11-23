@@ -60,6 +60,63 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
   });
 
   describe("normalizeScryfallCard()", () => {
+    it("preserva o texto de ambientação da carta", () => {
+      const card = {
+        id: "card-id",
+        oracle_id: "oracle-id",
+        name: "Xorn",
+        type_line: "Creature",
+        flavor_text: "Xorns are native to the Elemental Plane of Earth.",
+        lang: "en",
+        scryfall_uri: "https://scryfall.com/card/example",
+        image_uris: {
+          normal: "https://example.com/card.jpg",
+        },
+      };
+
+      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).flavorText).toBe(
+        "Xorns are native to the Elemental Plane of Earth.",
+      );
+    });
+
+    it("combina o texto de ambientação das faces de uma carta dupla", () => {
+      const card = {
+        id: "card-id",
+        oracle_id: "oracle-id",
+        name: "Front // Back",
+        type_line: "Creature // Creature",
+        lang: "en",
+        scryfall_uri: "https://scryfall.com/card/example",
+        card_faces: [
+          { flavor_text: "Flavor text from the front." },
+          { flavor_text: "Flavor text from the back." },
+        ],
+        image_uris: {
+          normal: "https://example.com/card.jpg",
+        },
+      };
+
+      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).flavorText).toBe(
+        "Flavor text from the front.\\n\\nFlavor text from the back.",
+      );
+    });
+
+    it("não inventa texto de ambientação quando a carta não possui um", () => {
+      const card = {
+        id: "card-id",
+        oracle_id: "oracle-id",
+        name: "Card without flavor text",
+        type_line: "Creature",
+        lang: "en",
+        scryfall_uri: "https://scryfall.com/card/example",
+        image_uris: {
+          normal: "https://example.com/card.jpg",
+        },
+      };
+
+      expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).flavorText).toBeUndefined();
+    });
+
     it("prioriza nome e tipo impressos na edição localizada", () => {
       const card = {
         id: "card-id",
