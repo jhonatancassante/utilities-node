@@ -224,7 +224,7 @@ Com sucesso, responde `201`, cria uma sessão de 30 dias e define o cookie `sess
 Set-Cookie: session_id=<token>; Max-Age=2592000; Path=/; HttpOnly; SameSite=Lax
 ```
 
-Em produção, inclui `Secure`. O corpo inclui os dados da sessão, sem o token, que só existe no cookie `HttpOnly`. Credenciais incorretas respondem `401` com mensagem genérica; dados de entrada ausentes ou com formato/tipo inválido respondem `400`. Se a requisição trouxer um cookie antigo inválido ou expirado, ele é ignorado durante o login e substituído pelo novo cookie quando a autenticação tem sucesso.
+Em produção, inclui `Secure`. O corpo inclui os dados da sessão, sem o token, que só existe no cookie `HttpOnly`. Credenciais incorretas respondem `401` com mensagem genérica; contas banidas ou com timeout ativo respondem `403`. Dados de entrada ausentes ou com formato/tipo inválido respondem `400`. Se a requisição trouxer um cookie antigo inválido ou expirado, ele é ignorado durante o login e substituído pelo novo cookie quando a autenticação tem sucesso.
 
 ## `DELETE /api/v1/sessions`
 

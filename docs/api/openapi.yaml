@@ -658,6 +658,7 @@ paths:
         retorna ValidationError (400). Espaços no início e no fim do e-mail
         são removidos antes da consulta. Credenciais incorretas retornam uma
         mensagem genérica, sem distinguir e-mail inexistente de senha errada.
+        Contas banidas ou com timeout ativo recebem 403 e não iniciam sessão.
       x-required-feature: create:session
       requestBody:
         required: true
@@ -1040,6 +1041,15 @@ components:
               const: TimedOutUserError
             status_code:
               const: 403
+    BannedUserError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: BannedUserError
+            status_code:
+              const: 403
     NotFoundError:
       allOf:
         - $ref: "#/components/schemas/Error"
@@ -1081,11 +1091,14 @@ components:
           schema:
             $ref: "#/components/schemas/UnauthorizedError"
     Forbidden:
-      description: Usuário não possui a feature necessária.
+      description: Feature necessária ausente ou conta banida/suspensa temporariamente.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ForbiddenError"
+            oneOf:
+              - $ref: "#/components/schemas/ForbiddenError"
+              - $ref: "#/components/schemas/BannedUserError"
+              - $ref: "#/components/schemas/TimedOutUserError"
     UserNotFound:
       description: Usuário não encontrado.
       content:
