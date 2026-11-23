@@ -367,8 +367,8 @@ paths:
       tags: [Admin]
       operationId: banAdminUser
       summary: Bane uma conta
-      description: Exige sessão válida e update:user:others. Não permite auto banimento. Expira sessões e registra o evento na mesma transação.
-      x-required-feature: update:user:others
+      description: Exige sessão válida, update:user:status e read:user:others. Não permite auto banimento. Expira sessões e registra o evento na mesma transação.
+      x-required-feature: update:user:status
       security:
         - SessionCookie: []
       responses:
@@ -392,8 +392,8 @@ paths:
       tags: [Admin]
       operationId: unbanAdminUser
       summary: Remove o banimento de uma conta
-      description: Exige sessão válida e update:user:others. Não reativa sessões antigas.
-      x-required-feature: update:user:others
+      description: Exige sessão válida, update:user:status e read:user:others. Não reativa sessões antigas.
+      x-required-feature: update:user:status
       security:
         - SessionCookie: []
       responses:
