@@ -241,6 +241,21 @@
   font-weight: 600;
 }
 
+.flavorText {
+  width: 100%;
+  margin: 16px 0 0;
+  padding: 13px 15px;
+  border-left: 3px solid var(--slot-accent, var(--accent));
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  font-style: italic;
+  line-height: 1.7;
+  text-align: left;
+}
+
 .slotDescription {
   margin-top: 17px;
   padding-top: 15px;
