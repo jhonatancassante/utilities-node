@@ -20,7 +20,18 @@ function Home() {
             </p>
           </section>
 
-          <ul className={styles.grid}>
+          <section className={styles.section} aria-labelledby="tools-title">
+            <div className={styles.sectionHeading}>
+              <div>
+                <span className={styles.sectionEyebrow}>Utilitários</span>
+                <h2 id="tools-title">Encontre a ferramenta certa para sua tarefa</h2>
+              </div>
+              <span className={styles.count}>
+                {tools.length} ferramentas
+              </span>
+            </div>
+
+            <ul className={styles.grid}>
             {tools.map((tool) => (
               <li key={tool.slug}>
                 {tool.isAvailable ? (
@@ -37,7 +48,8 @@ function Home() {
                 )}
               </li>
             ))}
-          </ul>
+            </ul>
+          </section>
         </main>
       </Layout>
     </>
