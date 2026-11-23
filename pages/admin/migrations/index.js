@@ -173,12 +173,16 @@ function AdminMigrationsPage() {
       const noLongerPending = migrationsBeforeExecution.filter(
         (migration) => !remainingPaths.has(migration.path),
       );
+      const appliedNames = noLongerPending.map((migration) => migration.name);
+      const pendingNames = refreshResult.migrations.map(
+        (migration) => migration.name,
+      );
 
       setFeedback({
         type: "error",
         name: requestError.statusCode ? requestError.name : undefined,
         message: noLongerPending.length
-          ? `A execução foi interrompida. ${noLongerPending.length} migration(s) deixaram de constar como pendentes; ${refreshResult.migrations.length} continuam pendentes.`
+          ? `A execução foi interrompida. Deixaram de constar como pendentes: ${appliedNames.join(", ")}. Ainda pendentes: ${pendingNames.join(", ") || "nenhuma"}.`
           : requestError.message,
         action: noLongerPending.length
           ? "O estado foi consultado novamente. Confira a lista atual antes de qualquer nova tentativa."
