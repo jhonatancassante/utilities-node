@@ -49,10 +49,10 @@ function AdventureCard({ card, slot, index, onSelect }) {
         )}
         <Image
           className={`${styles.cardImage} ${imageStatus === "loaded" ? styles.cardImageLoaded : ""}`}
-          src={card.image}
+          src={card.thumbnailImage}
           alt={`Carta ${card.name}, ${card.typeLine}`}
-          width={488}
-          height={680}
+          width={146}
+          height={204}
           unoptimized
           onLoad={() => setImageStatus("loaded")}
           onError={() => setImageStatus("error")}
@@ -211,7 +211,7 @@ function MtgAdventureCreator() {
 
               return (
                 <AdventureCard
-                  key={`${slot.id}-${card.image}`}
+                  key={`${slot.id}-${card.thumbnailImage}`}
                   card={card}
                   slot={slot}
                   index={index}
@@ -246,7 +246,7 @@ function MtgAdventureCreator() {
             </button>
             <Image
               className={styles.imageModalImage}
-              src={selectedCard.image}
+              src={selectedCard.expandedImage}
               alt={`Carta ${selectedCard.name}, ${selectedCard.typeLine}`}
               width={488}
               height={680}
