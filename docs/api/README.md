@@ -52,6 +52,7 @@ Os erros seguem o formato:
 | `400`  | `ValidationError`       | Dados inválidos ou duplicados                             |
 | `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão inválida/expirada         |
 | `403`  | `ForbiddenError`        | Feature necessária não concedida                          |
+| `409`  | `ConflictError`         | Operação incompatível em andamento                        |
 | `404`  | `NotFoundError`         | Usuário ou token não encontrado, expirado ou já utilizado |
 | `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`             |
 | `500`  | `InternalServerError`   | Falha inesperada; detalhes ficam no log                   |
@@ -84,7 +85,7 @@ Exige `read:migration`. Lista migrations pendentes em modo `dry-run`, sem altera
 
 ## `POST /api/v1/migrations`
 
-Exige `create:migration`. Aplica migrations pendentes em ordem:
+Exige `create:migration`. Aplica migrations pendentes em ordem. A execução utiliza um bloqueio consultivo no PostgreSQL para impedir que duas solicitações executem migrations simultaneamente; uma segunda solicitação recebe `409 ConflictError`.
 
 - `201`: uma ou mais migrations foram aplicadas.
 - `200`: nenhuma migration estava pendente; retorna `[]`.
