@@ -221,7 +221,7 @@ function Header() {
 
             <li className={styles.group}>
               <div
-                className={\`${styles.splitItem} ${isEntertainmentRoute ? styles.navItemActive : ""}\`}
+                className={`${styles.splitItem} ${isEntertainmentRoute ? styles.navItemActive : ""}`}
               >
                 <Link
                   href={ENTERTAINMENT_BASE_PATH}
@@ -254,7 +254,7 @@ function Header() {
 
               <ul
                 id="entertainment-menu"
-                className={\`${styles.dropdown} ${isEntertainmentOpen ? styles.dropdownOpen : ""}\`}
+                className={`${styles.dropdown} ${isEntertainmentOpen ? styles.dropdownOpen : ""}`}
               >
                 {entertainmentApps.map((app) => (
                   <li key={app.slug}>
@@ -266,7 +266,7 @@ function Header() {
                       }
                       onClick={closeMenus}
                     >
-                      <i className={\`fas ${app.icon}\`} aria-hidden="true"></i>
+                      <i className={`fas ${app.icon}`} aria-hidden="true"></i>
                       <span>{app.title}</span>
                     </Link>
                   </li>

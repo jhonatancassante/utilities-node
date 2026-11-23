@@ -53,7 +53,7 @@ function MtgAdventureCreator() {
           disabled={isLoading}
         >
           <i
-            className={\`fas ${isLoading ? "fa-spinner fa-spin" : "fa-wand-magic-sparkles"}\`}
+            className={`fas ${isLoading ? "fa-spinner fa-spin" : "fa-wand-magic-sparkles"}`}
             aria-hidden="true"
           ></i>
           {isLoading ? "Consultando a biblioteca..." : "Gerar nova aventura"}
@@ -106,12 +106,12 @@ function MtgAdventureCreator() {
                     href={card.scryfallUri}
                     target="_blank"
                     rel="noreferrer"
-                    aria-label={\`Ver ${card.name} no site da Scryfall\`}
+                    aria-label={`Ver ${card.name} no site da Scryfall`}
                   >
                     <Image
                       className={styles.cardImage}
                       src={card.image}
-                      alt={\`Carta ${card.name}, ${card.typeLine}\`}
+                      alt={`Carta ${card.name}, ${card.typeLine}`}
                       width={488}
                       height={680}
                       unoptimized

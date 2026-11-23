@@ -44,7 +44,7 @@ function EntertainmentPage() {
                 <li key={app.slug}>
                   <Link href={app.href} className={styles.card}>
                     <span className={styles.cardIcon} aria-hidden="true">
-                      <i className={\`fas ${app.icon}\`}></i>
+                      <i className={`fas ${app.icon}`}></i>
                     </span>
                     <span className={styles.cardEyebrow}>
                       Magic: The Gathering
