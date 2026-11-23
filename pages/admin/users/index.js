@@ -381,6 +381,7 @@ function AdminUsersPage() {
                 onUpdated={handleUserUpdated}
                 onBanStatusChanged={handleBanStatusChanged}
                 canManageUserStatus={user.features.includes("update:user:status")}
+                canManageUserFeatures={user.features.includes("update:user:features")}
                 onCancel={() => setSelectedUser(null)}
               />
             )}
@@ -397,6 +398,7 @@ function UserEditor({
   onUpdated,
   onBanStatusChanged,
   canManageUserStatus,
+  canManageUserFeatures,
   onCancel,
 }) {
   const isEditingSelf = user.id === currentUserId;
@@ -414,9 +416,13 @@ function UserEditor({
   const [isUpdatingBan, setIsUpdatingBan] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [features, setFeatures] = useState([]);
-  const [isLoadingFeatures, setIsLoadingFeatures] = useState(true);
+  const [isLoadingFeatures, setIsLoadingFeatures] = useState(
+    canManageUserFeatures,
+  );
 
   useEffect(() => {
+    if (!canManageUserFeatures) return undefined;
+
     let isMounted = true;
 
     requestAPI("/api/v1/admin/users/features")
@@ -439,7 +445,7 @@ function UserEditor({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [canManageUserFeatures]);
 
   const featureGroups = useMemo(
     () =>
@@ -553,10 +559,12 @@ function UserEditor({
     }
     if (form.password) payload.password = form.password;
 
-    const currentFeatures = [...user.features].sort();
-    const nextFeatures = [...new Set(form.features)].sort();
-    if (JSON.stringify(currentFeatures) !== JSON.stringify(nextFeatures)) {
-      payload.features = nextFeatures;
+    if (canManageUserFeatures) {
+      const currentFeatures = [...user.features].sort();
+      const nextFeatures = [...new Set(form.features)].sort();
+      if (JSON.stringify(currentFeatures) !== JSON.stringify(nextFeatures)) {
+        payload.features = nextFeatures;
+      }
     }
 
     if (Object.keys(payload).length === 0) {
@@ -752,165 +760,167 @@ function UserEditor({
           </Button>
         </div>
 
-        <div className={styles.featureSection}>
-          <div className={styles.sectionHeading}>
-            <div>
-              <h3>Permissões e features</h3>
-              <span>
-                Selecione as permissões que esta conta poderá utilizar.
+        {canManageUserFeatures && (
+          <div className={styles.featureSection}>
+            <div className={styles.sectionHeading}>
+              <div>
+                <h3>Permissões e features</h3>
+                <span>
+                  Selecione as permissões que esta conta poderá utilizar.
+                </span>
+              </div>
+              <span className={styles.featureCount}>
+                {form.features.length} selecionada(s)
               </span>
             </div>
-            <span className={styles.featureCount}>
-              {form.features.length} selecionada(s)
-            </span>
-          </div>
-
-          {isLoadingFeatures && <p>Carregando permissões disponíveis...</p>}
-
-          <input
-            className={shared.input}
-            type="search"
-            aria-label="Pesquisar features"
-            placeholder="Pesquisar por nome ou descrição da feature"
-            value={featureSearch}
-            onChange={(event) => setFeatureSearch(event.target.value)}
-            disabled={isSaving}
-          />
-
-          <div className={styles.searchFilters}>
-            <label className={styles.filterSwitch}>
-              <input
-                type="checkbox"
-                checked={privilegedOnly}
-                onChange={(event) => setPrivilegedOnly(event.target.checked)}
-                disabled={isSaving}
-              />
-              <span className={styles.switch} aria-hidden="true"></span>
-              <span>Privilegiadas</span>
-            </label>
-            <label className={styles.filterSwitch}>
-              <input
-                type="checkbox"
-                checked={protectedOnly}
-                onChange={(event) => setProtectedOnly(event.target.checked)}
-                disabled={isSaving}
-              />
-              <span className={styles.switch} aria-hidden="true"></span>
-              <span>Protegidas</span>
-            </label>
-          </div>
-
-          <div className={styles.featureGroups}>
-            {featureGroups.map((group) => {
-              const groupFeatures = filteredFeatures.filter(
-                (feature) => feature.group_name === group,
-              );
-              if (groupFeatures.length === 0) return null;
-
-              return (
-                <div className={styles.featureGroup} key={group}>
-                  <h4>{group}</h4>
-                  <div className={styles.featureList}>
-                    {groupFeatures.map((feature) => {
-                      const isLockedForSelf =
-                        isEditingSelf && feature.is_self_removable === false;
-
-                      return (
-                        <label
-                          className={`${styles.featureOption} ${
-                            isLockedForSelf ? styles.featureOptionLocked : ""
-                          } ${
-                            feature.is_privileged ||
-                            feature.is_protected ||
-                            feature.is_self_removable === false
-                              ? styles.featureOptionBadged
-                              : ""
-                          }`}
-                          key={feature.name}
-                          title={
-                            isLockedForSelf &&
-                            form.features.includes(feature.name)
-                              ? "Esta feature não pode ser removida pelo próprio usuário"
-                              : undefined
-                          }
-                        >
-                          <span className={styles.featureBadges}>
-                            {feature.is_privileged && (
-                              <span
-                                className={`${styles.featureBadge} ${styles.privilegedBadge}`}
-                                title="Permissão privilegiada"
-                                role="img"
-                                aria-label="Permissão privilegiada"
-                              >
-                                <i
-                                  className="fas fa-crown"
-                                  aria-hidden="true"
-                                ></i>
-                              </span>
-                            )}
-                            {feature.is_protected && (
-                              <span
-                                className={`${styles.featureBadge} ${styles.protectedFeatureBadge}`}
-                                title="Feature protegida: não pode ser alterada ou excluída"
-                                role="img"
-                                aria-label="Feature protegida"
-                              >
-                                <i
-                                  className="fas fa-shield-alt"
-                                  aria-hidden="true"
-                                ></i>
-                              </span>
-                            )}
-                            {feature.is_self_removable === false && (
-                              <span
-                                className={`${styles.featureBadge} ${styles.protectedBadge}`}
-                                title="Não pode ser removida pelo próprio usuário"
-                                role="img"
-                                aria-label="Não pode ser removida pelo próprio usuário"
-                              >
-                                <i
-                                  className="fas fa-ban"
-                                  aria-hidden="true"
-                                ></i>
-                              </span>
-                            )}
-                          </span>
-                          <input
-                            type="checkbox"
-                            checked={form.features.includes(feature.name)}
-                            onChange={() => toggleFeature(feature.name)}
-                            disabled={
-                              isSaving ||
-                              (isLockedForSelf &&
-                                form.features.includes(feature.name))
-                            }
-                          />
-                          <span
-                            className={`${styles.switch} ${
-                              isLockedForSelf ? styles.switchLocked : ""
+  
+            {isLoadingFeatures && <p>Carregando permissões disponíveis...</p>}
+  
+            <input
+              className={shared.input}
+              type="search"
+              aria-label="Pesquisar features"
+              placeholder="Pesquisar por nome ou descrição da feature"
+              value={featureSearch}
+              onChange={(event) => setFeatureSearch(event.target.value)}
+              disabled={isSaving}
+            />
+  
+            <div className={styles.searchFilters}>
+              <label className={styles.filterSwitch}>
+                <input
+                  type="checkbox"
+                  checked={privilegedOnly}
+                  onChange={(event) => setPrivilegedOnly(event.target.checked)}
+                  disabled={isSaving}
+                />
+                <span className={styles.switch} aria-hidden="true"></span>
+                <span>Privilegiadas</span>
+              </label>
+              <label className={styles.filterSwitch}>
+                <input
+                  type="checkbox"
+                  checked={protectedOnly}
+                  onChange={(event) => setProtectedOnly(event.target.checked)}
+                  disabled={isSaving}
+                />
+                <span className={styles.switch} aria-hidden="true"></span>
+                <span>Protegidas</span>
+              </label>
+            </div>
+  
+            <div className={styles.featureGroups}>
+              {featureGroups.map((group) => {
+                const groupFeatures = filteredFeatures.filter(
+                  (feature) => feature.group_name === group,
+                );
+                if (groupFeatures.length === 0) return null;
+  
+                return (
+                  <div className={styles.featureGroup} key={group}>
+                    <h4>{group}</h4>
+                    <div className={styles.featureList}>
+                      {groupFeatures.map((feature) => {
+                        const isLockedForSelf =
+                          isEditingSelf && feature.is_self_removable === false;
+  
+                        return (
+                          <label
+                            className={`${styles.featureOption} ${
+                              isLockedForSelf ? styles.featureOptionLocked : ""
+                            } ${
+                              feature.is_privileged ||
+                              feature.is_protected ||
+                              feature.is_self_removable === false
+                                ? styles.featureOptionBadged
+                                : ""
                             }`}
-                            aria-hidden="true"
-                          ></span>
-                          <span className={styles.featureText}>
-                            <strong>{feature.label}</strong>
-                            <small>{feature.description}</small>
-                            <code>{feature.name}</code>
-                          </span>
-                        </label>
-                      );
-                    })}
+                            key={feature.name}
+                            title={
+                              isLockedForSelf &&
+                              form.features.includes(feature.name)
+                                ? "Esta feature não pode ser removida pelo próprio usuário"
+                                : undefined
+                            }
+                          >
+                            <span className={styles.featureBadges}>
+                              {feature.is_privileged && (
+                                <span
+                                  className={`${styles.featureBadge} ${styles.privilegedBadge}`}
+                                  title="Permissão privilegiada"
+                                  role="img"
+                                  aria-label="Permissão privilegiada"
+                                >
+                                  <i
+                                    className="fas fa-crown"
+                                    aria-hidden="true"
+                                  ></i>
+                                </span>
+                              )}
+                              {feature.is_protected && (
+                                <span
+                                  className={`${styles.featureBadge} ${styles.protectedFeatureBadge}`}
+                                  title="Feature protegida: não pode ser alterada ou excluída"
+                                  role="img"
+                                  aria-label="Feature protegida"
+                                >
+                                  <i
+                                    className="fas fa-shield-alt"
+                                    aria-hidden="true"
+                                  ></i>
+                                </span>
+                              )}
+                              {feature.is_self_removable === false && (
+                                <span
+                                  className={`${styles.featureBadge} ${styles.protectedBadge}`}
+                                  title="Não pode ser removida pelo próprio usuário"
+                                  role="img"
+                                  aria-label="Não pode ser removida pelo próprio usuário"
+                                >
+                                  <i
+                                    className="fas fa-ban"
+                                    aria-hidden="true"
+                                  ></i>
+                                </span>
+                              )}
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={form.features.includes(feature.name)}
+                              onChange={() => toggleFeature(feature.name)}
+                              disabled={
+                                isSaving ||
+                                (isLockedForSelf &&
+                                  form.features.includes(feature.name))
+                              }
+                            />
+                            <span
+                              className={`${styles.switch} ${
+                                isLockedForSelf ? styles.switchLocked : ""
+                              }`}
+                              aria-hidden="true"
+                            ></span>
+                            <span className={styles.featureText}>
+                              <strong>{feature.label}</strong>
+                              <small>{feature.description}</small>
+                              <code>{feature.name}</code>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+  
+            {filteredFeatures.length === 0 && (
+              <p className={styles.emptyFeatures}>
+                Nenhuma feature corresponde à pesquisa ou aos filtros.
+              </p>
+            )}
           </div>
-
-          {filteredFeatures.length === 0 && (
-            <p className={styles.emptyFeatures}>
-              Nenhuma feature corresponde à pesquisa ou aos filtros.
-            </p>
-          )}
-        </div>
+        )}
 
         {feedback &&
           (feedback.type === "critical" ? (
