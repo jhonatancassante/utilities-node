@@ -146,6 +146,7 @@ function Header() {
                 active={router.pathname === "/"}
                 onNavigate={closeMenus}
               >
+                <i className="fas fa-home" aria-hidden="true"></i>
                 Início
               </NavLink>
             </li>
