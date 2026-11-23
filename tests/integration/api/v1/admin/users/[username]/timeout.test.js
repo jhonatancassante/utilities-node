@@ -88,6 +88,9 @@ describe("GET /api/v1/admin/users/[username]/timeout", () => {
     expect(await response.json()).toMatchObject({
       name: "ConflictError",
     });
+
+    // Evita que este administrador afete os testes seguintes da mesma suíte.
+    await user.setFeatures(lastPrivilegedUser.id, []);
   });
 });
 
