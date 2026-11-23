@@ -5,6 +5,11 @@ import { ValidationError } from "@/infra/errors.js";
 
 export default controller.createController(
   {
+    GET: [
+      controller.canRequest("update:user:status"),
+      controller.canRequest("read:user:others"),
+      getHandler,
+    ],
     POST: [
       controller.canRequest("update:user:status"),
       controller.canRequest("read:user:others"),
@@ -18,6 +23,11 @@ export default controller.createController(
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );
+
+async function getHandler(request, response) {
+  await user.validateStatusChangeEligibility(request.query.username);
+  return response.status(200).json({ allowed: true });
+}
 
 async function postHandler(request, response) {
   if (
