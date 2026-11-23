@@ -63,6 +63,7 @@ function filterOutput(user, feature, resource) {
       features: userObject.features,
       privileged_features: userObject.privileged_features ?? [],
       banned_at: userObject.banned_at,
+      timeout_until: userObject.timeout_until,
       ...(userObject.profile_photo_url
         ? { profile_photo_url: userObject.profile_photo_url }
         : {}),

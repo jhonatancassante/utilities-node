@@ -3,6 +3,7 @@ import user from "@/models/user.js";
 import password from "@/models/password.js";
 import {
   BannedUserError,
+  TimedOutUserError,
   NotFoundError,
   UnauthorizedError,
 } from "@/infra/errors.js";
@@ -32,6 +33,15 @@ async function getUser(providedEmail, providedPassword) {
 
     if (storedUser.banned_at) {
       throw new BannedUserError({});
+    }
+
+    if (
+      storedUser.timeout_until &&
+      new Date(storedUser.timeout_until) > new Date()
+    ) {
+      throw new TimedOutUserError({
+        message: `Esta conta está suspensa até ${new Date(storedUser.timeout_until).toLocaleString("pt-BR")}.`,
+      });
     }
 
     return storedUser;

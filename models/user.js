@@ -188,6 +188,7 @@ async function search(searchTerm) {
         email,
         features,
         banned_at,
+        timeout_until,
         profile_photo_url,
         created_at,
         updated_at
@@ -560,6 +561,77 @@ async function setBanStatus(username, isBanned, actorUserId) {
   });
 }
 
+async function setTimeoutStatus(username, timeoutUntil, actorUserId) {
+  const currentUser = await findOneByUsername(username);
+
+  if (currentUser.id === actorUserId) {
+    throw new ForbiddenError({
+      message: "Não é permitido aplicar ou remover timeout da própria conta administrativa.",
+      action: "Selecione outro usuário para realizar esta operação.",
+    });
+  }
+
+  let normalizedTimeout = null;
+  if (timeoutUntil !== null) {
+    if (typeof timeoutUntil !== "string") {
+      throw new ValidationError({
+        message: "A data e hora do timeout devem ser informadas como texto.",
+        action: "Envie uma data e hora ISO 8601 futura.",
+      });
+    }
+
+    normalizedTimeout = new Date(timeoutUntil);
+    if (
+      Number.isNaN(normalizedTimeout.getTime()) ||
+      normalizedTimeout <= new Date()
+    ) {
+      throw new ValidationError({
+        message: "A data e hora do timeout devem ser válidas e futuras.",
+        action: "Informe uma data e hora posteriores ao momento atual.",
+      });
+    }
+  }
+
+  return database.transaction(async (client) => {
+    const lockedUser = await client.query({
+      text: "SELECT id, banned_at FROM users WHERE id = $1 FOR UPDATE;",
+      values: [currentUser.id],
+    });
+
+    if (lockedUser.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O usuário não foi encontrado.",
+        action: "Atualize a lista e tente novamente.",
+      });
+    }
+
+    if (normalizedTimeout && lockedUser.rows[0].banned_at) {
+      throw new ForbiddenError({
+        message: "Não é possível aplicar timeout a uma conta que já está banida.",
+        action: "Remova o banimento antes de aplicar uma suspensão temporária.",
+      });
+    }
+
+    const result = await client.query({
+      text: `
+        UPDATE users
+        SET
+          timeout_until = $2,
+          updated_at = timezone('utc', now())
+        WHERE id = $1
+        RETURNING *
+      ;`,
+      values: [currentUser.id, normalizedTimeout],
+    });
+
+    if (normalizedTimeout) {
+      await session.expireAllByUserId(currentUser.id, client);
+    }
+
+    return result.rows[0];
+  });
+}
+
 async function setFeatures(userId, userFeatures) {
   const updatedUser = await runUpdateQuery(userId, userFeatures);
   return updatedUser;
@@ -680,6 +752,7 @@ const user = {
   findOneByEmail,
   update,
   setBanStatus,
+  setTimeoutStatus,
   setProfilePhoto,
   setFeatures,
   addFeatures,
