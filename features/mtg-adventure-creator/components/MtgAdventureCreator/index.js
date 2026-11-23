@@ -83,12 +83,18 @@ function AdventureCard({ card, slot, index, onSelect }) {
 
 function MtgAdventureCreator() {
   const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedCardImageStatus, setSelectedCardImageStatus] = useState("loading");
   const [cards, setCards] = useState([]);
   const {
     error,
     isMutating,
     trigger: generateAdventure,
   } = useSWRMutation("/api/v1/entertainment/mtg-adventure", fetcher);
+
+  function handleSelectCard(card) {
+    setSelectedCardImageStatus("loading");
+    setSelectedCard(card);
+  }
 
   async function handleGenerateAdventure() {
     setCards([]);
@@ -215,7 +221,7 @@ function MtgAdventureCreator() {
                   card={card}
                   slot={slot}
                   index={index}
-                  onSelect={setSelectedCard}
+                  onSelect={handleSelectCard}
                 />
               );
             })}
@@ -244,14 +250,28 @@ function MtgAdventureCreator() {
             >
               <i className="fas fa-times" aria-hidden="true"></i>
             </button>
+            {selectedCardImageStatus === "loading" && (
+              <div className={styles.imageModalLoading} role="status">
+                <span className={styles.cardImageLoader}></span>
+                <span>Carregando ampliação...</span>
+              </div>
+            )}
+            {selectedCardImageStatus === "error" && (
+              <div className={styles.imageModalError} role="alert">
+                <i className="fas fa-image" aria-hidden="true"></i>
+                <span>Não foi possível carregar a imagem ampliada.</span>
+              </div>
+            )}
             <Image
-              className={styles.imageModalImage}
+              className={`${styles.imageModalImage} ${selectedCardImageStatus === "loaded" ? styles.imageModalImageLoaded : ""}`}
               src={selectedCard.expandedImage}
               alt={`Carta ${selectedCard.name}, ${selectedCard.typeLine}`}
               width={488}
               height={680}
               unoptimized
               priority
+              onLoad={() => setSelectedCardImageStatus("loaded")}
+              onError={() => setSelectedCardImageStatus("error")}
             />
           </div>
         </div>
