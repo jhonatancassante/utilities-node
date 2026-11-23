@@ -59,10 +59,7 @@ export function getCardImageUris(card) {
 
 export function normalizeScryfallCard(card, slot) {
   const imageUris = getCardImageUris(card);
-  const useWebp = new Date() >= new Date("2027-01-01T00:00:00Z");
-  const image = useWebp
-    ? imageUris?.grid || imageUris?.normal || imageUris?.thumb || imageUris?.small
-    : imageUris?.normal || imageUris?.small;
+  const image = imageUris?.grid || imageUris?.thumb;
 
   if (!image) {
     throw new Error("A Scryfall não retornou uma imagem para esta carta.");
