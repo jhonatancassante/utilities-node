@@ -305,8 +305,8 @@ paths:
       tags: [Admin]
       operationId: getAdminUser
       summary: Consulta os dados administrativos de um usuário
-      description: Exige sessão válida e update:user:others. Inclui e-mail e features, mas nunca o hash da senha.
-      x-required-feature: update:user:others
+      description: Exige sessão válida e read:user:others. Inclui e-mail e features, mas nunca o hash da senha.
+      x-required-feature: read:user:others
       security:
         - SessionCookie: []
       responses:

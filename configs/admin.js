@@ -2,7 +2,7 @@ export const adminSections = [
   {
     id: "users",
     title: "Gerenciar usuários",
-    description: "Pesquise contas e altere dados, senhas e permissões.",
+    description: "Consulte contas e gerencie dados, status e permissões conforme suas autorizações.",
     href: "/admin/users",
     icon: "fa-users-cog",
     requiredFeature: "read:user:others",

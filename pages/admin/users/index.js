@@ -1113,8 +1113,9 @@ function UserEditor({
             </div>
           ))}
 
-        <div className={styles.formActions}>
-          <Button type="submit" icon="fa-save" disabled={isSaving}>
+        {(canManageUserData || canManageUserFeatures) && (
+          <div className={styles.formActions}>
+            <Button type="submit" icon="fa-save" disabled={isSaving}>
             {isSaving ? "Salvando..." : "Salvar alterações"}
           </Button>
           <Button
@@ -1125,8 +1126,9 @@ function UserEditor({
             disabled={isSaving}
           >
             Cancelar
-          </Button>
-        </div>
+            </Button>
+          </div>
+        )}
       </form>
 
       {isTimeoutModalOpen && (

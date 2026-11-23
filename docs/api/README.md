@@ -22,7 +22,7 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 | `POST`   | `/api/v1/users`                      | Feature `create:user` (visitante padrão)                       |
 | `GET`    | `/api/v1/users/{username}`           | Público; saída filtrada                                        |
 | `GET`    | `/api/v1/admin/users?search=...`     | Feature `read:user:others`                                     |
-| `GET`    | `/api/v1/admin/users/{username}`     | Feature `update:user:others`                                   |
+| `GET`    | `/api/v1/admin/users/{username}`     | Feature `read:user:others`                                     |
 | `PATCH`  | `/api/v1/admin/users/{username}`     | `update:user:others`; features exigem também `update:user:features` |
 | `POST`   | `/api/v1/admin/users/{username}/ban` | Features `update:user:status` e `read:user:others`; bane a conta |
 | `DELETE` | `/api/v1/admin/users/{username}/ban` | Features `update:user:status` e `read:user:others`; desbane a conta |
