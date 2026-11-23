@@ -24,7 +24,18 @@ function EntertainmentPage() {
             </p>
           </section>
 
-          <ul className={styles.grid}>
+          <section className={styles.section} aria-labelledby="apps-title">
+            <div className={styles.sectionHeading}>
+              <div>
+                <span className={styles.sectionEyebrow}>Experiências</span>
+                <h2 id="apps-title">Escolha sua próxima aventura</h2>
+              </div>
+              <span className={styles.count}>
+                {entertainmentApps.length} aplicação
+              </span>
+            </div>
+
+            <ul className={styles.grid}>
             {entertainmentApps.map((app) => (
               <li key={app.slug}>
                 <Link href={app.href} className={styles.card}>
@@ -36,7 +47,8 @@ function EntertainmentPage() {
                 </Link>
               </li>
             ))}
-          </ul>
+            </ul>
+          </section>
         </main>
       </Layout>
     </>
