@@ -207,7 +207,8 @@ Todos os endpoints usam o prefixo `/api/v1`.
 | `PATCH`          | `/activations/{token_id}`       | Ativa um cadastro com token válido                                       |
 | `POST`, `DELETE` | `/sessions`                     | Cria e encerra sessões                                                   |
 | `GET`            | `/user`                         | Retorna o usuário autenticado e renova a sessão                          |
-| `GET`            | `/admin/audit/banned`           | Consulta a auditoria; exige `read:audit`                                 |
+| `GET`            | `/admin/audit/banned`           | Consulta banimentos; exige `read:audit`                                  |
+| `GET`            | `/admin/audit/migrations`       | Consulta migrations aplicadas; exige `read:audit`                        |
 | `POST`, `DELETE` | `/admin/users/{username}/ban`   | Bane e desbane contas; exige `update:user:others`                        |
 | `DELETE`         | `/admin/users/{username}/photo` | Remove a foto de perfil; exige `update:user:others` e `read:user:others` |
 
@@ -215,7 +216,7 @@ A API usa autorização por _features_, não uma regra única de “estar logado
 
 ## Administração e segurança
 
-O painel administrativo permite gerenciar usuários, atribuir permissões, consultar e aplicar migrations pendentes e banir ou desbanir contas. O banimento bloqueia novos logins, invalida sessões existentes e registra uma trilha de auditoria persistente, consultável por usuários com `read:audit`. A proteção contra auto banimento é aplicada no servidor.
+O painel administrativo permite gerenciar usuários, atribuir permissões, consultar e aplicar migrations pendentes e banir ou desbanir contas. A auditoria reúne o histórico de banimentos e desbanimentos e as migrations aplicadas, consultáveis por usuários com `read:audit`. O histórico de migrations é lido da tabela `pgmigrations`. O banimento bloqueia novos logins, invalida sessões existentes e registra uma trilha persistente. A proteção contra auto banimento é aplicada no servidor.
 
 A cobertura automatizada pode ser gerada com `npm run test:coverage`. O relatório inclui instruções, ramificações, funções e linhas dos módulos instrumentados. As rotas da API continuam sendo exercitadas pelos testes de integração, mas não entram no percentual de cobertura do Jest porque são executadas pelo processo separado do Next.js.
 
