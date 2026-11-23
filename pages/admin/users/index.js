@@ -380,6 +380,7 @@ function AdminUsersPage() {
                 currentUserId={user.id}
                 onUpdated={handleUserUpdated}
                 onBanStatusChanged={handleBanStatusChanged}
+                canManageUserStatus={user.features.includes("update:user:status")}
                 onCancel={() => setSelectedUser(null)}
               />
             )}
@@ -395,6 +396,7 @@ function UserEditor({
   currentUserId,
   onUpdated,
   onBanStatusChanged,
+  canManageUserStatus,
   onCancel,
 }) {
   const isEditingSelf = user.id === currentUserId;
@@ -491,7 +493,13 @@ function UserEditor({
   }
 
   async function handleToggleBan() {
-    if (isEditingSelf || isUpdatingBan || isSaving) return;
+    if (
+      !canManageUserStatus ||
+      isEditingSelf ||
+      isUpdatingBan ||
+      isSaving
+    )
+      return;
 
     const isBanned = Boolean(user.banned_at);
     setIsUpdatingBan(true);
@@ -591,25 +599,27 @@ function UserEditor({
         <span className={styles.userId}>ID: {user.id}</span>
       </div>
 
-      <div className={styles.banActions}>
-        <Button
-          variant={user.banned_at ? "success" : "danger"}
-          icon={user.banned_at ? "fa-unlock" : "fa-ban"}
-          onClick={handleToggleBan}
-          disabled={isEditingSelf || isSaving || isUpdatingBan}
-        >
-          {isUpdatingBan
-            ? user.banned_at
-              ? "Desbanindo..."
-              : "Banindo..."
-            : user.banned_at
-              ? "Desbanir usuário"
-              : "Banir usuário"}
-        </Button>
-        {isEditingSelf && (
-          <small>Não é permitido banir a própria conta administrativa.</small>
-        )}
-      </div>
+      {canManageUserStatus && (
+        <div className={styles.banActions}>
+          <Button
+            variant={user.banned_at ? "success" : "danger"}
+            icon={user.banned_at ? "fa-unlock" : "fa-ban"}
+            onClick={handleToggleBan}
+            disabled={isEditingSelf || isSaving || isUpdatingBan}
+          >
+            {isUpdatingBan
+              ? user.banned_at
+                ? "Desbanindo..."
+                : "Banindo..."
+              : user.banned_at
+                ? "Desbanir usuário"
+                : "Banir usuário"}
+          </Button>
+          {isEditingSelf && (
+            <small>Não é permitido banir a própria conta administrativa.</small>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} noValidate>
         {user.profile_photo_url && (
