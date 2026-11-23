@@ -139,6 +139,12 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: Outra execução de migrations já está em andamento.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "405":
           $ref: "#/components/responses/MethodNotAllowed"
         "500":
@@ -479,6 +485,48 @@ paths:
                     is_currently_banned: { type: boolean }
                     current_banned_at:
                       { type: [string, "null"], format: date-time }
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/admin/audit/migrations:
+    get:
+      tags: [Admin]
+      operationId: listMigrationAuditEvents
+      summary: Consulta o histórico de migrations aplicadas
+      description: Exige sessão válida e read:audit. Retorna os registros da tabela pgmigrations em ordem cronológica decrescente.
+      x-required-feature: read:audit
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Histórico de migrations aplicadas.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [id, name, run_on]
+                  properties:
+                    id:
+                      type: integer
+                      description: Identificador sequencial do registro.
+                    name:
+                      type: string
+                      description: Nome da migration registrada.
+                    run_on:
+                      type: string
+                      format: date-time
+                      description: Data e hora em que a migration foi aplicada.
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":

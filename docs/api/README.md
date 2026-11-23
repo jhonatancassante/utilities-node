@@ -27,6 +27,7 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 | `POST`   | `/api/v1/admin/users/{username}/ban` | Feature `update:user:others`; bane a conta                     |
 | `DELETE` | `/api/v1/admin/users/{username}/ban` | Feature `update:user:others`; desbane a conta                  |
 | `GET`    | `/api/v1/admin/audit/banned`         | Feature `read:audit`; consulta a trilha de auditoria           |
+| `GET`    | `/api/v1/admin/audit/migrations`     | Feature `read:audit`; consulta migrations aplicadas            |
 | `PATCH`  | `/api/v1/users/{username}`           | Feature `update:user`; próprio usuário ou `update:user:others` |
 | `PATCH`  | `/api/v1/activations/{token_id}`     | Feature `read:activation_token`                                |
 | `POST`   | `/api/v1/sessions`                   | Feature `create:session`                                       |
@@ -52,6 +53,7 @@ Os erros seguem o formato:
 | `400`  | `ValidationError`       | Dados inválidos ou duplicados                             |
 | `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão inválida/expirada         |
 | `403`  | `ForbiddenError`        | Feature necessária não concedida                          |
+| `409`  | `ConflictError`         | Operação incompatível em andamento                        |
 | `404`  | `NotFoundError`         | Usuário ou token não encontrado, expirado ou já utilizado |
 | `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`             |
 | `500`  | `InternalServerError`   | Falha inesperada; detalhes ficam no log                   |
@@ -84,7 +86,7 @@ Exige `read:migration`. Lista migrations pendentes em modo `dry-run`, sem altera
 
 ## `POST /api/v1/migrations`
 
-Exige `create:migration`. Aplica migrations pendentes em ordem:
+Exige `create:migration`. Aplica migrations pendentes em ordem. A execução utiliza um bloqueio consultivo no PostgreSQL para impedir que duas solicitações executem migrations simultaneamente; uma segunda solicitação recebe `409 ConflictError`.
 
 - `201`: uma ou mais migrations foram aplicadas.
 - `200`: nenhuma migration estava pendente; retorna `[]`.
@@ -153,6 +155,10 @@ Remove a foto de perfil do usuário. Exige simultaneamente `update:user:others` 
 ### `GET /api/v1/admin/audit/banned`
 
 Exige sessão válida e `read:audit`. Retorna os eventos em ordem cronológica decrescente, com snapshots do usuário e do responsável pela ação quando disponíveis, data de criação da conta, data do evento e situação atual. Eventos anteriores à implantação da auditoria podem não identificar o responsável. A resposta usa `Cache-Control: no-store` e a saída é filtrada para expor somente os campos previstos. Os snapshots preservam o histórico mesmo após a exclusão da conta.
+
+### `GET /api/v1/admin/audit/migrations`
+
+Exige sessão válida e `read:audit`. Retorna os registros da tabela `pgmigrations` em ordem cronológica decrescente, com `id`, `name` e `run_on`. A consulta reflete o histórico registrado pelo `node-pg-migrate` no banco utilizado pela aplicação; não identifica o usuário que iniciou cada execução. A resposta usa `Cache-Control: no-store`.
 
 ## `PATCH /api/v1/activations/{token_id}`
 
@@ -238,7 +244,7 @@ A cada consulta, renova a sessão para mais 30 dias, reenvia o cookie e aplica c
 - A feature `read:status` consta no catálogo e é usada nos testes, mas a rota de status não possui middleware `canRequest`; o acesso ao endpoint permanece público. A feature `read:status:all` controla apenas a inclusão da versão do banco.
 - A administração de features é restrita aos endpoints administrativos e à feature `update:user:others`. O catálogo central em `configs/features.js` alimenta a validação do backend e a interface de seleção.
 - Contas banidas não conseguem iniciar sessão; sessões existentes são expiradas no banimento. O desbanimento não restaura sessões anteriores.
-- `read:audit` permite consultar os eventos de banimento e desbanimento, sem conceder acesso às demais operações administrativas.
+- `read:audit` permite consultar os eventos de banimento e desbanimento e o histórico de migrations aplicadas, sem conceder acesso às demais operações administrativas.
 
 ## Visualizar e validar o OpenAPI
 

@@ -31,8 +31,28 @@ async function findBanEvents() {
   return results.rows;
 }
 
+async function findMigrationEvents() {
+  const results = await database.query({
+    text: `
+      SELECT
+        id,
+        name,
+        run_on
+      FROM
+        pgmigrations
+      ORDER BY
+        run_on DESC,
+        id DESC
+      ;
+    `,
+  });
+
+  return results.rows;
+}
+
 const audit = {
   findBanEvents,
+  findMigrationEvents,
 };
 
 export default audit;

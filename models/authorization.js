@@ -124,20 +124,30 @@ function filterOutput(user, feature, resource) {
   }
 
   if (feature === "read:audit") {
-    const filterEvent = (event) => ({
-      id: event.id,
-      user_id: event.user_id,
-      actor_user_id: event.actor_user_id,
-      action: event.action,
-      username: event.username,
-      email: event.email,
-      account_created_at: event.account_created_at,
-      actor_username: event.actor_username,
-      actor_email: event.actor_email,
-      created_at: event.created_at,
-      is_currently_banned: event.is_currently_banned,
-      current_banned_at: event.current_banned_at,
-    });
+    const filterEvent = (event) => {
+      if ("name" in event && "run_on" in event) {
+        return {
+          id: event.id,
+          name: event.name,
+          run_on: event.run_on,
+        };
+      }
+
+      return {
+        id: event.id,
+        user_id: event.user_id,
+        actor_user_id: event.actor_user_id,
+        action: event.action,
+        username: event.username,
+        email: event.email,
+        account_created_at: event.account_created_at,
+        actor_username: event.actor_username,
+        actor_email: event.actor_email,
+        created_at: event.created_at,
+        is_currently_banned: event.is_currently_banned,
+        current_banned_at: event.current_banned_at,
+      };
+    };
 
     return Array.isArray(resource)
       ? resource.map(filterEvent)

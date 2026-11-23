@@ -471,6 +471,15 @@ describe("models/authorization.js", () => {
       ).toBe(true);
     });
 
+    test("Usuário com a feature de migrations acessa a seção", () => {
+      expect(
+        authorization.hasAdminSectionAccess(
+          { features: ["read:migration"] },
+          "migrations",
+        ),
+      ).toBe(true);
+    });
+
     test("Seção inexistente", () => {
       expect(
         authorization.hasAdminSectionAccess({ features: [] }, "unknown"),
@@ -501,6 +510,14 @@ describe("models/authorization.js", () => {
           })
           .map((section) => section.id),
       ).toEqual(["users", "status"]);
+    });
+
+    test("Disponibiliza a seção de migrations para quem possui read:migration", () => {
+      expect(
+        authorization
+          .getAvailableAdminSections({ features: ["read:migration"] })
+          .map((section) => section.id),
+      ).toEqual(["migrations"]);
     });
 
     test("Não disponibiliza seções para usuário sem permissões", () => {

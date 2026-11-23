@@ -20,12 +20,55 @@ async function getHandler(request, response) {
     pendingMigrations,
   );
 
+  response.setHeader("Cache-Control", "no-store");
+
   return response.status(200).json(secureOutputValues);
 }
 
 async function postHandler(request, response) {
   const userTryingToPost = request.context.user;
-  const appliedMigrations = await migrator.runPendingMigrations();
+  const startedAt = new Date().toISOString();
+  let appliedMigrations;
+
+  try {
+    appliedMigrations = await migrator.runPendingMigrations();
+
+    console.info("Execução de migrations concluída.", {
+      actor_user_id: userTryingToPost.id,
+      actor_username: userTryingToPost.username,
+      started_at: startedAt,
+      finished_at: new Date().toISOString(),
+      status: "success",
+      migrations: appliedMigrations.map(({ name, path }) => ({ name, path })),
+    });
+  } catch (error) {
+    let pendingMigrations = null;
+
+    try {
+      pendingMigrations = await migrator.listPendingMigrations();
+    } catch (inspectionError) {
+      console.error(
+        "Não foi possível consultar as migrations após uma falha de execução.",
+        inspectionError,
+      );
+    }
+
+    console.error("Falha na execução de migrations.", {
+      actor_user_id: userTryingToPost.id,
+      actor_username: userTryingToPost.username,
+      started_at: startedAt,
+      finished_at: new Date().toISOString(),
+      status: "failure",
+      error_name: error.name,
+      pending_migrations: pendingMigrations?.map(({ name, path }) => ({
+        name,
+        path,
+      })),
+    });
+
+    throw error;
+  }
+
   const statusCode = appliedMigrations.length > 0 ? 201 : 200;
 
   const secureOutputValues = authorization.filterOutput(
@@ -33,6 +76,8 @@ async function postHandler(request, response) {
     "read:migration",
     appliedMigrations,
   );
+
+  response.setHeader("Cache-Control", "no-store");
 
   return response.status(statusCode).json(secureOutputValues);
 }

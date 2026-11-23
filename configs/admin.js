@@ -16,6 +16,15 @@ export const adminSections = [
     requiredFeature: "read:feature",
   },
   {
+    id: "migrations",
+    title: "Gerenciar migrations",
+    description:
+      "Consulte e aplique as alterações pendentes do banco de dados.",
+    href: "/admin/migrations",
+    icon: "fa-database",
+    requiredFeature: "read:migration",
+  },
+  {
     id: "audit",
     title: "Auditoria",
     description: "Consulte ações administrativas e de segurança do sistema.",

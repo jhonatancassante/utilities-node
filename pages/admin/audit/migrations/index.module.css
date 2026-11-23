@@ -1,0 +1,103 @@
+.card {
+  width: 100%;
+  max-width: 1240px;
+}
+
+.header {
+  margin: 18px 0 28px;
+  text-align: center;
+}
+
+.header h1 {
+  margin: 10px 0;
+  color: var(--text-primary);
+  font-size: 30px;
+}
+
+.header p {
+  max-width: 760px;
+  margin: 0 auto;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.summary > div {
+  display: grid;
+  gap: 5px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  text-align: center;
+}
+
+.summary strong {
+  color: var(--text-primary);
+  font-size: 25px;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary span,
+.footnote {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.table th,
+.table td {
+  padding: 13px 12px;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.table th {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.table td {
+  color: var(--text-primary);
+}
+
+.table td:first-child {
+  width: 70px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.table td strong {
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  padding: 24px;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.footnote {
+  margin-top: 16px;
+  line-height: 1.5;
+}
