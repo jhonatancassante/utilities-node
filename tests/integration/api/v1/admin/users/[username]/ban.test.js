@@ -113,7 +113,9 @@ describe("POST /api/v1/admin/users/[username]/ban", () => {
 
       const persistedStatusManager = await user.findOneById(statusManager.id);
       expect(persistedStatusManager.features).toContain("update:user:status");
-      expect(persistedStatusManager.features).not.toContain("update:user:others");
+      expect(persistedStatusManager.features).not.toContain(
+        "update:user:others",
+      );
 
       const banResponse = await fetch(adminUserBanUrl(targetUser.username), {
         method: "POST",
@@ -334,7 +336,9 @@ describe("DELETE /api/v1/admin/users/[username]/ban", () => {
       });
 
       expect(response.status).toBe(403);
-      expect(Date.parse((await user.findOneById(targetUser.id)).banned_at)).not.toBeNaN();
+      expect(
+        Date.parse((await user.findOneById(targetUser.id)).banned_at),
+      ).not.toBeNaN();
     });
   });
 

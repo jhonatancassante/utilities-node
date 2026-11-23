@@ -30,9 +30,7 @@ async function create(userId) {
       throw new BannedUserError({});
     }
 
-    if (
-      userResults.rows[0].timeout_active
-    ) {
+    if (userResults.rows[0].timeout_active) {
       throw new TimedOutUserError({});
     }
 

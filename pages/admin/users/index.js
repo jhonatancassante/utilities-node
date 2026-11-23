@@ -362,7 +362,8 @@ function AdminUsersPage() {
                                 result.banned_at
                                   ? styles.userStatusBanned
                                   : result.timeout_until &&
-                                      new Date(result.timeout_until) > new Date()
+                                      new Date(result.timeout_until) >
+                                        new Date()
                                     ? styles.userStatusTimeout
                                     : styles.userStatusActive
                               }`}
@@ -395,9 +396,13 @@ function AdminUsersPage() {
                 currentUserId={user.id}
                 onUpdated={handleUserUpdated}
                 onBanStatusChanged={handleBanStatusChanged}
-                canManageUserStatus={user.features.includes("update:user:status")}
+                canManageUserStatus={user.features.includes(
+                  "update:user:status",
+                )}
                 canManageUserData={user.features.includes("update:user:others")}
-                canManageUserFeatures={user.features.includes("update:user:features")}
+                canManageUserFeatures={user.features.includes(
+                  "update:user:features",
+                )}
                 onCancel={() => setSelectedUser(null)}
               />
             )}
@@ -527,12 +532,7 @@ function UserEditor({
   }
 
   async function handleToggleBan() {
-    if (
-      !canManageUserStatus ||
-      isEditingSelf ||
-      isUpdatingBan ||
-      isSaving
-    )
+    if (!canManageUserStatus || isEditingSelf || isUpdatingBan || isSaving)
       return;
 
     const isBanned = Boolean(user.banned_at);
@@ -576,7 +576,8 @@ function UserEditor({
       isEditingSelf ||
       isUpdatingTimeout ||
       user.banned_at
-    ) return;
+    )
+      return;
 
     let expiresAt;
     if (timeoutMode === "date") {
@@ -775,8 +776,11 @@ function UserEditor({
               isSaving ||
               isUpdatingBan ||
               isUpdatingTimeout ||
-              Boolean(user.banned_at) &&
-              !(user.timeout_until && new Date(user.timeout_until) > new Date())
+              (Boolean(user.banned_at) &&
+                !(
+                  user.timeout_until &&
+                  new Date(user.timeout_until) > new Date()
+                ))
             }
           >
             {user.timeout_until && new Date(user.timeout_until) > new Date()
@@ -785,7 +789,8 @@ function UserEditor({
           </Button>
           {isEditingSelf && (
             <small>
-              Não é permitido banir ou suspender temporariamente a própria conta administrativa.
+              Não é permitido banir ou suspender temporariamente a própria conta
+              administrativa.
             </small>
           )}
         </div>
@@ -809,30 +814,30 @@ function UserEditor({
                   type="button"
                   variant="danger"
                   icon="fa-trash"
-                disabled={isSaving}
-                onClick={async () => {
-                  setIsSaving(true);
-                  setFeedback(null);
-                  try {
-                    const updatedUser = await requestAPI(
-                      `/api/v1/admin/users/${encodeURIComponent(user.username)}/photo`,
-                      { method: "DELETE" },
-                    );
-                    await onUpdated(updatedUser);
-                  } catch (requestError) {
-                    setFeedback({
-                      type: "error",
-                      name: requestError.statusCode
-                        ? requestError.name
-                        : undefined,
-                      message: requestError.message,
-                      action: requestError.action,
-                    });
-                  } finally {
-                    setIsSaving(false);
-                  }
-                }}
-              >
+                  disabled={isSaving}
+                  onClick={async () => {
+                    setIsSaving(true);
+                    setFeedback(null);
+                    try {
+                      const updatedUser = await requestAPI(
+                        `/api/v1/admin/users/${encodeURIComponent(user.username)}/photo`,
+                        { method: "DELETE" },
+                      );
+                      await onUpdated(updatedUser);
+                    } catch (requestError) {
+                      setFeedback({
+                        type: "error",
+                        name: requestError.statusCode
+                          ? requestError.name
+                          : undefined,
+                        message: requestError.message,
+                        action: requestError.action,
+                      });
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }}
+                >
                   Remover foto de perfil
                 </Button>
               )}
@@ -843,89 +848,91 @@ function UserEditor({
           <div className={styles.formGrid}>
             <div className={styles.field}>
               <label className={shared.label} htmlFor="edit-username">
-              Nome de usuário
-            </label>
-            <input
-              className={shared.input}
-              id="edit-username"
-              value={form.username}
-              onChange={(event) => updateField("username", event.target.value)}
-              disabled={isSaving}
-            />
-          </div>
-          <div className={styles.field}>
-            <label className={shared.label} htmlFor="edit-email">
-              E-mail
-            </label>
-            <input
-              className={shared.input}
-              id="edit-email"
-              type="email"
-              value={form.email}
-              onChange={(event) => updateField("email", event.target.value)}
-              disabled={isSaving}
-            />
+                Nome de usuário
+              </label>
+              <input
+                className={shared.input}
+                id="edit-username"
+                value={form.username}
+                onChange={(event) =>
+                  updateField("username", event.target.value)
+                }
+                disabled={isSaving}
+              />
+            </div>
+            <div className={styles.field}>
+              <label className={shared.label} htmlFor="edit-email">
+                E-mail
+              </label>
+              <input
+                className={shared.input}
+                id="edit-email"
+                type="email"
+                value={form.email}
+                onChange={(event) => updateField("email", event.target.value)}
+                disabled={isSaving}
+              />
             </div>
           </div>
         )}
 
         {canManageUserData && (
           <div className={styles.passwordSection}>
-          <h3>Alterar senha</h3>
-          <p>Deixe os campos em branco para manter a senha atual.</p>
-          <div className={styles.formGrid}>
-            <div className={styles.field}>
-              <label className={shared.label} htmlFor="edit-password">
-                Nova senha
-              </label>
-              <input
-                className={shared.input}
-                id="edit-password"
-                type="password"
-                autoComplete="new-password"
-                value={form.password}
-                onChange={(event) =>
-                  updateField("password", event.target.value)
-                }
-                disabled={isSaving}
-              />
+            <h3>Alterar senha</h3>
+            <p>Deixe os campos em branco para manter a senha atual.</p>
+            <div className={styles.formGrid}>
+              <div className={styles.field}>
+                <label className={shared.label} htmlFor="edit-password">
+                  Nova senha
+                </label>
+                <input
+                  className={shared.input}
+                  id="edit-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={form.password}
+                  onChange={(event) =>
+                    updateField("password", event.target.value)
+                  }
+                  disabled={isSaving}
+                />
+              </div>
+              <div className={styles.field}>
+                <label
+                  className={shared.label}
+                  htmlFor="edit-password-confirmation"
+                >
+                  Confirmar nova senha
+                </label>
+                <input
+                  className={shared.input}
+                  id="edit-password-confirmation"
+                  type="password"
+                  autoComplete="new-password"
+                  value={form.passwordConfirmation}
+                  onChange={(event) =>
+                    updateField("passwordConfirmation", event.target.value)
+                  }
+                  disabled={isSaving}
+                />
+              </div>
             </div>
-            <div className={styles.field}>
-              <label
-                className={shared.label}
-                htmlFor="edit-password-confirmation"
-              >
-                Confirmar nova senha
-              </label>
-              <input
-                className={shared.input}
-                id="edit-password-confirmation"
-                type="password"
-                autoComplete="new-password"
-                value={form.passwordConfirmation}
-                onChange={(event) =>
-                  updateField("passwordConfirmation", event.target.value)
-                }
-                disabled={isSaving}
-              />
-            </div>
-          </div>
           </div>
         )}
 
         {canManageUserData && (
           <div className={styles.formActions}>
             <Button type="submit" icon="fa-save" disabled={isSaving}>
-            {isSaving ? "Salvando..." : "Salvar alterações"}
-          </Button>
-          <Button
-            type="button"
-            variant="danger"
-            icon="fa-times"
-            onClick={handleCancel}
-            disabled={isSaving}
-          >
-            Cancelar
+              {isSaving ? "Salvando..." : "Salvar alterações"}
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              icon="fa-times"
+              onClick={handleCancel}
+              disabled={isSaving}
+            >
+              Cancelar
             </Button>
           </div>
         )}
@@ -943,9 +950,9 @@ function UserEditor({
                 {form.features.length} selecionada(s)
               </span>
             </div>
-  
+
             {isLoadingFeatures && <p>Carregando permissões disponíveis...</p>}
-  
+
             <input
               className={shared.input}
               type="search"
@@ -955,7 +962,7 @@ function UserEditor({
               onChange={(event) => setFeatureSearch(event.target.value)}
               disabled={isSaving}
             />
-  
+
             <div className={styles.searchFilters}>
               <label className={styles.filterSwitch}>
                 <input
@@ -978,14 +985,14 @@ function UserEditor({
                 <span>Protegidas</span>
               </label>
             </div>
-  
+
             <div className={styles.featureGroups}>
               {featureGroups.map((group) => {
                 const groupFeatures = filteredFeatures.filter(
                   (feature) => feature.group_name === group,
                 );
                 if (groupFeatures.length === 0) return null;
-  
+
                 return (
                   <div className={styles.featureGroup} key={group}>
                     <h4>{group}</h4>
@@ -993,7 +1000,7 @@ function UserEditor({
                       {groupFeatures.map((feature) => {
                         const isLockedForSelf =
                           isEditingSelf && feature.is_self_removable === false;
-  
+
                         return (
                           <label
                             className={`${styles.featureOption} ${
@@ -1083,7 +1090,7 @@ function UserEditor({
                 );
               })}
             </div>
-  
+
             {filteredFeatures.length === 0 && (
               <p className={styles.emptyFeatures}>
                 Nenhuma feature corresponde à pesquisa ou aos filtros.
@@ -1116,16 +1123,16 @@ function UserEditor({
         {(canManageUserData || canManageUserFeatures) && (
           <div className={styles.formActions}>
             <Button type="submit" icon="fa-save" disabled={isSaving}>
-            {isSaving ? "Salvando..." : "Salvar alterações"}
-          </Button>
-          <Button
-            type="button"
-            variant="danger"
-            icon="fa-times"
-            onClick={handleCancel}
-            disabled={isSaving}
-          >
-            Cancelar
+              {isSaving ? "Salvando..." : "Salvar alterações"}
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              icon="fa-times"
+              onClick={handleCancel}
+              disabled={isSaving}
+            >
+              Cancelar
             </Button>
           </div>
         )}
@@ -1254,19 +1261,22 @@ function UserEditor({
                 icon="fa-clock"
                 disabled={isUpdatingTimeout || Boolean(user.banned_at)}
               >
-                {isUpdatingTimeout ? "Aplicando..." : "Suspender temporariamente"}
+                {isUpdatingTimeout
+                  ? "Aplicando..."
+                  : "Suspender temporariamente"}
               </Button>
-              {user.timeout_until && new Date(user.timeout_until) > new Date() && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  icon="fa-unlock"
-                  onClick={handleRemoveTimeout}
-                  disabled={isUpdatingTimeout}
-                >
-                  Remover suspensão
-                </Button>
-              )}
+              {user.timeout_until &&
+                new Date(user.timeout_until) > new Date() && (
+                  <Button
+                    type="button"
+                    variant="danger"
+                    icon="fa-unlock"
+                    onClick={handleRemoveTimeout}
+                    disabled={isUpdatingTimeout}
+                  >
+                    Remover suspensão
+                  </Button>
+                )}
               <Button
                 type="button"
                 variant="outline"

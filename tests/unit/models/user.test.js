@@ -63,9 +63,7 @@ describe("models/user.js", () => {
   describe(".setTimeoutStatus()", () => {
     test("Rejeita um prazo vencido usando o relógio controlado", async () => {
       jest.useFakeTimers({ now: new Date("2026-01-01T12:00:00.000Z") });
-      mockQueries([
-        ["LOWER(users.username) = LOWER($1)", [existingUser]],
-      ]);
+      mockQueries([["LOWER(users.username) = LOWER($1)", [existingUser]]]);
 
       await expect(
         user.setTimeoutStatus(

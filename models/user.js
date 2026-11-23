@@ -566,7 +566,8 @@ async function setTimeoutStatus(username, timeoutUntil, actorUserId) {
 
   if (currentUser.id === actorUserId) {
     throw new ForbiddenError({
-      message: "Não é permitido aplicar ou remover timeout da própria conta administrativa.",
+      message:
+        "Não é permitido aplicar ou remover timeout da própria conta administrativa.",
       action: "Selecione outro usuário para realizar esta operação.",
     });
   }
@@ -607,7 +608,8 @@ async function setTimeoutStatus(username, timeoutUntil, actorUserId) {
 
     if (normalizedTimeout && lockedUser.rows[0].banned_at) {
       throw new ForbiddenError({
-        message: "Não é possível aplicar timeout a uma conta que já está banida.",
+        message:
+          "Não é possível aplicar timeout a uma conta que já está banida.",
         action: "Remova o banimento antes de aplicar uma suspensão temporária.",
       });
     }

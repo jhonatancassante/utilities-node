@@ -39,7 +39,9 @@ async function getHandler(request, response) {
 function authorizePatch(request, response, next) {
   const body = request.body ?? {};
   const hasFeatures = Object.hasOwn(body, "features");
-  const hasOtherFields = Object.keys(body).some((field) => field !== "features");
+  const hasOtherFields = Object.keys(body).some(
+    (field) => field !== "features",
+  );
   const requiredFeatures = [];
 
   if (hasFeatures) requiredFeatures.push("update:user:features");

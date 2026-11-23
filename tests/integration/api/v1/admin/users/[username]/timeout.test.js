@@ -71,7 +71,9 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
     expect(response.status).toBe(200);
     const timedOutUser = await response.json();
     expect(timedOutUser.id).toBe(targetUser.id);
-    expect(Date.parse(timedOutUser.timeout_until)).toBe(Date.parse(timeoutUntil));
+    expect(Date.parse(timedOutUser.timeout_until)).toBe(
+      Date.parse(timeoutUntil),
+    );
 
     const persistedTimeout = await database.query({
       text: "SELECT EXTRACT(EPOCH FROM timeout_until) * 1000 AS timeout_until_ms FROM users WHERE id = $1;",
@@ -162,21 +164,17 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
   });
 
   test("não permite suspender a própria conta administrativa", async () => {
-    const { statusManager, sessionObject } =
-      await createStatusManagerSession();
-    const response = await fetch(
-      adminUserTimeoutUrl(statusManager.username),
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: "session_id=" + sessionObject.token,
-        },
-        body: JSON.stringify({
-          timeout_until: getFutureTimeout(),
-        }),
+    const { statusManager, sessionObject } = await createStatusManagerSession();
+    const response = await fetch(adminUserTimeoutUrl(statusManager.username), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: "session_id=" + sessionObject.token,
       },
-    );
+      body: JSON.stringify({
+        timeout_until: getFutureTimeout(),
+      }),
+    });
 
     expect(response.status).toBe(403);
     expect(await response.json()).toMatchObject({

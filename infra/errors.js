@@ -23,7 +23,8 @@ export class BannedUserError extends Error {
 export class TimedOutUserError extends Error {
   constructor({ cause, message, action } = {}) {
     super(
-      message || "Esta conta está suspensa temporariamente e não pode acessar o sistema.",
+      message ||
+        "Esta conta está suspensa temporariamente e não pode acessar o sistema.",
       { cause },
     );
     this.name = "TimedOutUserError";

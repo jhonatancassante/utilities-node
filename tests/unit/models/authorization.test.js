@@ -521,7 +521,11 @@ describe("models/authorization.js", () => {
       expect(
         authorization
           .getAvailableAdminSections({
-            features: ["read:user:others", "update:user:others", "read:status:all"],
+            features: [
+              "read:user:others",
+              "update:user:others",
+              "read:status:all",
+            ],
           })
           .map((section) => section.id),
       ).toEqual(["users", "status"]);

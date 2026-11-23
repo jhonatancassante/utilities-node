@@ -14,26 +14,26 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 
 ## Resumo dos endpoints
 
-| Método   | Caminho                              | Acesso                                                         |
-| -------- | ------------------------------------ | -------------------------------------------------------------- |
-| `GET`    | `/api/v1/status`                     | Público; detalhes de versão condicionados a `read:status:all`  |
-| `GET`    | `/api/v1/migrations`                 | Feature `read:migration`                                       |
-| `POST`   | `/api/v1/migrations`                 | Feature `create:migration`                                     |
-| `POST`   | `/api/v1/users`                      | Feature `create:user` (visitante padrão)                       |
-| `GET`    | `/api/v1/users/{username}`           | Público; saída filtrada                                        |
-| `GET`    | `/api/v1/admin/users?search=...`     | Feature `read:user:others`                                     |
-| `GET`    | `/api/v1/admin/users/{username}`     | Feature `read:user:others`                                     |
-| `PATCH`  | `/api/v1/admin/users/{username}`     | `update:user:others`; features exigem também `update:user:features` |
-| `POST`   | `/api/v1/admin/users/{username}/ban` | Features `update:user:status` e `read:user:others`; bane a conta |
-| `DELETE` | `/api/v1/admin/users/{username}/ban` | Features `update:user:status` e `read:user:others`; desbane a conta |
+| Método   | Caminho                                  | Acesso                                                                          |
+| -------- | ---------------------------------------- | ------------------------------------------------------------------------------- |
+| `GET`    | `/api/v1/status`                         | Público; detalhes de versão condicionados a `read:status:all`                   |
+| `GET`    | `/api/v1/migrations`                     | Feature `read:migration`                                                        |
+| `POST`   | `/api/v1/migrations`                     | Feature `create:migration`                                                      |
+| `POST`   | `/api/v1/users`                          | Feature `create:user` (visitante padrão)                                        |
+| `GET`    | `/api/v1/users/{username}`               | Público; saída filtrada                                                         |
+| `GET`    | `/api/v1/admin/users?search=...`         | Feature `read:user:others`                                                      |
+| `GET`    | `/api/v1/admin/users/{username}`         | Feature `read:user:others`                                                      |
+| `PATCH`  | `/api/v1/admin/users/{username}`         | `update:user:others`; features exigem também `update:user:features`             |
+| `POST`   | `/api/v1/admin/users/{username}/ban`     | Features `update:user:status` e `read:user:others`; bane a conta                |
+| `DELETE` | `/api/v1/admin/users/{username}/ban`     | Features `update:user:status` e `read:user:others`; desbane a conta             |
 | `POST`   | `/api/v1/admin/users/{username}/timeout` | Features `update:user:status` e `read:user:others`; aplica suspensão temporária |
 | `DELETE` | `/api/v1/admin/users/{username}/timeout` | Features `update:user:status` e `read:user:others`; remove suspensão temporária |
-| `GET`    | `/api/v1/admin/audit/banned`         | Feature `read:audit`; consulta a trilha de auditoria           |
-| `GET`    | `/api/v1/admin/audit/migrations`     | Feature `read:audit`; consulta migrations aplicadas            |
-| `PATCH`  | `/api/v1/users/{username}`           | Feature `update:user`; próprio usuário ou `update:user:others` |
-| `PATCH`  | `/api/v1/activations/{token_id}`     | Feature `read:activation_token`                                |
-| `POST`   | `/api/v1/sessions`                   | Feature `create:session`                                       |
-| `GET`    | `/api/v1/user`                       | Sessão válida e feature `read:session`                         |
+| `GET`    | `/api/v1/admin/audit/banned`             | Feature `read:audit`; consulta a trilha de auditoria                            |
+| `GET`    | `/api/v1/admin/audit/migrations`         | Feature `read:audit`; consulta migrations aplicadas                             |
+| `PATCH`  | `/api/v1/users/{username}`               | Feature `update:user`; próprio usuário ou `update:user:others`                  |
+| `PATCH`  | `/api/v1/activations/{token_id}`         | Feature `read:activation_token`                                                 |
+| `POST`   | `/api/v1/sessions`                       | Feature `create:session`                                                        |
+| `GET`    | `/api/v1/user`                           | Sessão válida e feature `read:session`                                          |
 
 ## Autorização e erros
 
@@ -55,8 +55,8 @@ Os erros seguem o formato:
 | `400`  | `ValidationError`       | Dados inválidos ou duplicados                             |
 | `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão inválida/expirada         |
 | `403`  | `ForbiddenError`        | Feature necessária não concedida                          |
-| `403`  | `BannedUserError`       | Conta banida                                                |
-| `403`  | `TimedOutUserError`     | Conta suspensa temporariamente                             |
+| `403`  | `BannedUserError`       | Conta banida                                              |
+| `403`  | `TimedOutUserError`     | Conta suspensa temporariamente                            |
 | `409`  | `ConflictError`         | Operação incompatível em andamento                        |
 | `404`  | `NotFoundError`         | Usuário ou token não encontrado, expirado ou já utilizado |
 | `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`             |
