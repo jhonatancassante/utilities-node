@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import useSWRMutation from "swr/mutation";
 import Image from "next/image";
 import { ADVENTURE_SLOTS } from "@/features/mtg-adventure-creator/lib/scryfall.js";
@@ -16,6 +17,7 @@ const fetcher = async (url) => {
 };
 
 function MtgAdventureCreator() {
+  const [selectedCard, setSelectedCard] = useState(null);
   const {
     data,
     error,
@@ -23,6 +25,17 @@ function MtgAdventureCreator() {
     trigger: generateAdventure,
   } = useSWRMutation("/api/v1/entertainment/mtg-adventure", fetcher);
   const cards = data?.cards || [];
+
+  useEffect(() => {
+    if (!selectedCard) return undefined;
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") setSelectedCard(null);
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedCard]);
 
   return (
     <main className={styles.main}>
@@ -95,12 +108,11 @@ function MtgAdventureCreator() {
                     <h3>{slot.title}</h3>
                   </div>
 
-                  <a
-                    className={styles.cardLink}
-                    href={card.scryfallUri}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`Ver ${card.name} no site da Scryfall`}
+                  <button
+                    type="button"
+                    className={styles.cardButton}
+                    onClick={() => setSelectedCard(card)}
+                    aria-label={`Ampliar a carta ${card.name}`}
                   >
                     <Image
                       className={styles.cardImage}
@@ -110,7 +122,7 @@ function MtgAdventureCreator() {
                       height={680}
                       unoptimized
                     />
-                  </a>
+                  </button>
 
                   <div className={styles.cardCaption}>
                     <h4>{card.name}</h4>
@@ -123,16 +135,46 @@ function MtgAdventureCreator() {
                     )}
                   </div>
 
-                  {card.oracleText && (
-                    <p className={styles.cardText}>{card.oracleText}</p>
-                  )}
-
                   <p className={styles.slotDescription}>{slot.description}</p>
                 </li>
               );
             })}
           </ol>
         </section>
+      )}
+
+      {selectedCard && (
+        <div
+          className={styles.imageModal}
+          role="presentation"
+          onClick={() => setSelectedCard(null)}
+        >
+          <div
+            className={styles.imageModalContent}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Carta ampliada: ${selectedCard.name}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className={styles.imageModalClose}
+              onClick={() => setSelectedCard(null)}
+              aria-label="Fechar visualização da carta"
+            >
+              <i className="fas fa-times" aria-hidden="true"></i>
+            </button>
+            <Image
+              className={styles.imageModalImage}
+              src={selectedCard.image}
+              alt={`Carta ${selectedCard.name}, ${selectedCard.typeLine}`}
+              width={488}
+              height={680}
+              unoptimized
+              priority
+            />
+          </div>
+        </div>
       )}
 
       <footer className={styles.attribution}>
