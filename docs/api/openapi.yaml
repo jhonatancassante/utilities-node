@@ -105,12 +105,6 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "409":
-          description: Outra execução de migrations já está em andamento.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
         "405":
           $ref: "#/components/responses/MethodNotAllowed"
         "500":
@@ -145,6 +139,12 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: Outra execução de migrations já está em andamento.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "405":
           $ref: "#/components/responses/MethodNotAllowed"
         "500":
