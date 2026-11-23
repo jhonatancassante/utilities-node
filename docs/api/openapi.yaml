@@ -331,7 +331,7 @@ paths:
       operationId: updateAdminUser
       summary: Atualiza dados e permissões de um usuário
       description: Exige read:user:others. Alterações de username, email, password e profile_photo exigem update:user:others; alterações de features exigem update:user:features. Requisições que alteram ambos os grupos exigem as duas features. Permite alterar qualquer conta, inclusive a própria conta do administrador. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
-      x-required-feature: update:user:features (when features is present); otherwise update:user:others
+      x-required-feature: update:user:others (general fields) / update:user:features (features)
       security:
         - SessionCookie: []
       requestBody:
