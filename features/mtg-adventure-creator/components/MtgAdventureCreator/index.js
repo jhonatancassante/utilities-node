@@ -1,38 +1,28 @@
-import { useCallback, useEffect, useState } from "react";
+import useSWR from "swr";
 import Image from "next/image";
 import { ADVENTURE_SLOTS } from "@/features/mtg-adventure-creator/lib/scryfall.js";
 import styles from "./index.module.css";
 
+const fetcher = async (url) => {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(
+      "Não foi possível buscar as cartas agora. Tente novamente em instantes.",
+    );
+  }
+
+  return response.json();
+};
+
 function MtgAdventureCreator() {
-  const [cards, setCards] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const generateAdventure = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch("/api/v1/entertainment/mtg-adventure");
-
-      if (!response.ok) {
-        throw new Error(
-          "Não foi possível buscar as cartas agora. Tente novamente em instantes.",
-        );
-      }
-
-      const result = await response.json();
-      setCards(result.cards);
-    } catch (requestError) {
-      setError(requestError.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    generateAdventure();
-  }, [generateAdventure]);
+  const {
+    data,
+    error,
+    isLoading,
+    mutate: generateAdventure,
+  } = useSWR("/api/v1/entertainment/mtg-adventure", fetcher);
+  const cards = data?.cards || [];
 
   return (
     <main className={styles.main}>
@@ -49,7 +39,7 @@ function MtgAdventureCreator() {
         <button
           type="button"
           className={styles.generateButton}
-          onClick={generateAdventure}
+          onClick={() => generateAdventure()}
           disabled={isLoading}
         >
           <i
@@ -63,8 +53,8 @@ function MtgAdventureCreator() {
       {error && (
         <div className={styles.error} role="alert">
           <i className="fas fa-exclamation-circle" aria-hidden="true"></i>
-          <span>{error}</span>
-          <button type="button" onClick={generateAdventure}>
+          <span>{error.message}</span>
+          <button type="button" onClick={() => generateAdventure()}>
             Tentar novamente
           </button>
         </div>
