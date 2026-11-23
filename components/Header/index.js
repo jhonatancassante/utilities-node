@@ -6,6 +6,10 @@ import { useRouter } from "next/router";
 import ThemeToggle from "@/components/ThemeToggle";
 import headConfigs from "@/configs/head.js";
 import { tools, TOOLS_BASE_PATH } from "@/configs/tools.js";
+import {
+  entertainmentApps,
+  ENTERTAINMENT_BASE_PATH,
+} from "@/configs/entertainment.js";
 import { hasAdminAccess } from "@/models/authorization.js";
 import useUser from "@/hooks/use-user.js";
 import session from "@/lib/client/session.js";
@@ -22,34 +26,40 @@ function Header() {
   const headerRef = useRef(null);
   const [openMenu, setOpenMenu] = useState(null);
   const [isToolsExpanded, setIsToolsExpanded] = useState(false);
+  const [isEntertainmentExpanded, setIsEntertainmentExpanded] = useState(false);
   const [logoutError, setLogoutError] = useState("");
   const { user, clearUser } = useUser();
 
   const closeMenus = () => {
     setOpenMenu(null);
     setIsToolsExpanded(false);
+    setIsEntertainmentExpanded(false);
   };
   const isMobileOpen = openMenu === MENU.mobile;
   const isToolsOpen = isToolsExpanded;
   const isAccountOpen = openMenu === MENU.account;
   const isToolsRoute = router.pathname.startsWith(TOOLS_BASE_PATH);
+  const isEntertainmentOpen = isEntertainmentExpanded;
+  const isEntertainmentRoute = router.pathname.startsWith(ENTERTAINMENT_BASE_PATH);
 
   useEffect(() => {
     const close = () => {
       setOpenMenu(null);
       setIsToolsExpanded(false);
+      setIsEntertainmentExpanded(false);
     };
     router.events.on("routeChangeStart", close);
     return () => router.events.off("routeChangeStart", close);
   }, [router.events]);
 
   useEffect(() => {
-    if (!openMenu && !isToolsExpanded) return;
+    if (!openMenu && !isToolsExpanded && !isEntertainmentExpanded) return;
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {
         setOpenMenu(null);
         setIsToolsExpanded(false);
+        setIsEntertainmentExpanded(false);
       }
     }
 
@@ -57,6 +67,7 @@ function Header() {
       if (!headerRef.current?.contains(event.target)) {
         setOpenMenu(null);
         setIsToolsExpanded(false);
+        setIsEntertainmentExpanded(false);
       }
     }
 
@@ -67,7 +78,7 @@ function Header() {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("pointerdown", handlePointerDown);
     };
-  }, [openMenu, isToolsExpanded]);
+  }, [openMenu, isToolsExpanded, isEntertainmentExpanded]);
 
   function toggleMenu(menu) {
     setOpenMenu((current) => (current === menu ? null : menu));
@@ -76,6 +87,12 @@ function Header() {
 
   function toggleTools() {
     setIsToolsExpanded((current) => !current);
+    setIsEntertainmentExpanded(false);
+  }
+
+  function toggleEntertainment() {
+    setIsEntertainmentExpanded((current) => !current);
+    setIsToolsExpanded(false);
   }
 
   async function handleLogout() {
@@ -100,7 +117,10 @@ function Header() {
           aria-label={isMobileOpen ? "Fechar menu" : "Abrir menu"}
           onClick={() => {
             toggleMenu(MENU.mobile);
-            if (isMobileOpen) setIsToolsExpanded(false);
+            if (isMobileOpen) {
+              setIsToolsExpanded(false);
+              setIsEntertainmentExpanded(false);
+            }
           }}
         >
           <i
@@ -194,6 +214,61 @@ function Header() {
                         <small className={styles.soonTag}>Em breve</small>
                       </span>
                     )}
+                  </li>
+                ))}
+              </ul>
+            </li>
+
+            <li className={styles.group}>
+              <div
+                className={\`${styles.splitItem} ${isEntertainmentRoute ? styles.navItemActive : ""}\`}
+              >
+                <Link
+                  href={ENTERTAINMENT_BASE_PATH}
+                  className={styles.navItem}
+                  aria-current={
+                    router.pathname === ENTERTAINMENT_BASE_PATH
+                      ? "page"
+                      : undefined
+                  }
+                  onClick={closeMenus}
+                >
+                  <i className="fas fa-gamepad" aria-hidden="true"></i>
+                  Entretenimento
+                </Link>
+                <button
+                  type="button"
+                  className={styles.chevronButton}
+                  aria-expanded={isEntertainmentOpen}
+                  aria-controls="entertainment-menu"
+                  aria-label={
+                    isEntertainmentOpen
+                      ? "Recolher lista de entretenimento"
+                      : "Expandir lista de entretenimento"
+                  }
+                  onClick={toggleEntertainment}
+                >
+                  <i className="fas fa-chevron-down" aria-hidden="true"></i>
+                </button>
+              </div>
+
+              <ul
+                id="entertainment-menu"
+                className={\`${styles.dropdown} ${isEntertainmentOpen ? styles.dropdownOpen : ""}\`}
+              >
+                {entertainmentApps.map((app) => (
+                  <li key={app.slug}>
+                    <Link
+                      href={app.href}
+                      className={styles.toolItem}
+                      aria-current={
+                        router.asPath === app.href ? "page" : undefined
+                      }
+                      onClick={closeMenus}
+                    >
+                      <i className={\`fas ${app.icon}\`} aria-hidden="true"></i>
+                      <span>{app.title}</span>
+                    </Link>
                   </li>
                 ))}
               </ul>

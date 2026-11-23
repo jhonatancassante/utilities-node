@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { getToolBySlug } from "@/configs/tools.js";
+import { getEntertainmentAppBySlug } from "@/configs/entertainment.js";
 import styles from "./index.module.css";
 
 const ROUTE_LABELS = Object.freeze({
@@ -17,6 +18,7 @@ const ROUTE_LABELS = Object.freeze({
   "/admin/features": "Gerenciar features",
   "/admin/users": "Gerenciar usuários",
   "/tools": "Ferramentas",
+  "/entertainment": "Entretenimento",
   "/diario-oficial": "Diário Oficial",
 });
 
@@ -26,6 +28,11 @@ function getRouteLabel(path, segment) {
   if (path.startsWith("/tools/")) {
     const tool = getToolBySlug(segment);
     if (tool) return tool.title;
+  }
+
+  if (path.startsWith("/entertainment/")) {
+    const app = getEntertainmentAppBySlug(segment);
+    if (app) return app.title;
   }
 
   return decodeURIComponent(segment)
