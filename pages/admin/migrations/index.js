@@ -16,18 +16,6 @@ import {
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
-function formatTimestamp(timestamp) {
-  if (!timestamp) return "—";
-
-  const date = new Date(Number(timestamp));
-  if (Number.isNaN(date.getTime())) return "—";
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "medium",
-  }).format(date);
-}
-
 function AdminMigrationsPage() {
   const router = useRouter();
   const { user, error, isLoading } = useUser();
@@ -274,9 +262,9 @@ function AdminMigrationsPage() {
             <div className={styles.environment}>
               <span className={styles.environmentDot} aria-hidden="true"></span>
               <span>
-                Ambiente: <strong>{process.env.NODE_ENV === "production" ? "Produção" : "Desenvolvimento"}</strong>
+                Ambiente conectado: <strong>configuração do servidor</strong>
               </span>
-              <small>Conexão definida no servidor</small>
+              <small>A conexão com o banco não é escolhida pelo navegador</small>
             </div>
 
             <div className={styles.summary}>
@@ -347,7 +335,6 @@ function AdminMigrationsPage() {
                         <strong>{migration.name}</strong>
                         <code>{migration.path}</code>
                       </div>
-                      <time>{formatTimestamp(migration.timestamp)}</time>
                     </li>
                   ))}
                 </ol>
