@@ -63,11 +63,16 @@ describe("GET /api/v1/admin/users/[username]/timeout", () => {
     expect(await response.json()).toEqual({ allowed: true });
   });
 
-  test("impede abrir o modal para o único titular de permissões privilegiadas", async () => {
-    const { sessionObject } = await createStatusManagerSession();
+  test("impede abrir o modal para o último administrador com permissões protegidas", async () => {
+    const { statusManager, sessionObject } = await createStatusManagerSession();
     const protectedFeatures = (await feature.findAll())
       .filter((item) => item.is_protected)
       .map((item) => item.name);
+    expect(protectedFeatures.length).toBeGreaterThan(0);
+    const statusManagerData = await user.findOneById(statusManager.id);
+    expect(statusManagerData.features).not.toEqual(
+      expect.arrayContaining(protectedFeatures),
+    );
     const lastPrivilegedUser = await orchestrator.createUser();
     await orchestrator.addFeaturesToUser(
       lastPrivilegedUser,
@@ -201,10 +206,15 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
   });
 
   test("Impede suspender o último administrador com todas as permissões protegidas", async () => {
-    const { sessionObject } = await createStatusManagerSession();
+    const { statusManager, sessionObject } = await createStatusManagerSession();
     const protectedFeatures = (await feature.findAll())
       .filter((item) => item.is_protected)
       .map((item) => item.name);
+    expect(protectedFeatures.length).toBeGreaterThan(0);
+    const statusManagerData = await user.findOneById(statusManager.id);
+    expect(statusManagerData.features).not.toEqual(
+      expect.arrayContaining(protectedFeatures),
+    );
     const lastPrivilegedUser = await orchestrator.createUser();
     await orchestrator.addFeaturesToUser(
       lastPrivilegedUser,
