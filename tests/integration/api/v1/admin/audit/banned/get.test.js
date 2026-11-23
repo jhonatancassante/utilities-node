@@ -47,7 +47,9 @@ describe("GET /api/v1/admin/audit/banned", () => {
       });
 
       expect(response.status).toBe(401);
-      expect(response.headers.get("Set-Cookie")).toContain("session_id=invalid");
+      expect(response.headers.get("Set-Cookie")).toContain(
+        "session_id=invalid",
+      );
       expect(await response.json()).toMatchObject({
         name: "UnauthorizedError",
         message: "Usuário não possui sessão ativa.",
