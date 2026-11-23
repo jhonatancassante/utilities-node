@@ -15,7 +15,7 @@ export default controller.createController(
       unbanHandler,
     ],
   },
-  { middlewares: [controller.injectUserOrAnonymousOnInvalidSession] },
+  { middlewares: [controller.injectAnonymousOrUser] },
 );
 
 async function banHandler(request, response) {
