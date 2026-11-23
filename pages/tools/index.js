@@ -28,9 +28,7 @@ function Home() {
                   Encontre a ferramenta certa para sua tarefa
                 </h2>
               </div>
-              <span className={styles.count}>
-                {tools.length} ferramentas
-              </span>
+              <span className={styles.count}>{tools.length} ferramentas</span>
             </div>
 
             <ul className={styles.grid}>
