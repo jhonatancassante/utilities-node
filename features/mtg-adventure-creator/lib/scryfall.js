@@ -88,7 +88,7 @@ async function requestRandomCard(query) {
   const url = ScryfallApi + "/cards/random?q=" + encodeURIComponent(query);
   const response = await fetch(url, {
     headers: {
-      Accept: "application/json",
+      Accept: "application/json;q=0.9,*/*;q=0.8",
       "User-Agent": "Utilities-MTG-Adventure-Creator/1.0",
     },
     cache: "no-store",

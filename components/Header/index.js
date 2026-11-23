@@ -162,6 +162,7 @@ function Header() {
                   }
                   onClick={closeMenus}
                 >
+                  <i className="fas fa-briefcase" aria-hidden="true"></i>
                   Ferramentas
                 </Link>
                 <button
