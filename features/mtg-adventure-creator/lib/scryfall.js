@@ -68,11 +68,19 @@ export function normalizeScryfallCard(card, slot) {
     throw new Error("A Scryfall não retornou uma imagem para esta carta.");
   }
 
+  const flavorText = card.card_faces
+    ? card.card_faces
+        .map((face) => face.flavor_text)
+        .filter(Boolean)
+        .join("\n\n")
+    : card.flavor_text;
+
   return {
     id: card.id,
     oracleId: card.oracle_id,
     name: card.printed_name || card.name,
     typeLine: card.printed_type_line || card.type_line,
+    flavorText,
     image,
     scryfallUri: card.scryfall_uri,
     language: card.lang,
