@@ -467,47 +467,52 @@ async function setProfilePhoto(userId, profilePhoto) {
   return results.rows[0];
 }
 
-async function ensurePrivilegedFeaturesCoverage(client, targetUserId) {
-  const targetFeatures = await client.query({
+async function ensureProtectedAdminCoverage(client, targetUserId) {
+  const protectedFeaturesResult = await client.query({
     text: `
-      SELECT features.name
+      SELECT name
       FROM features
-      INNER JOIN users ON features.name = ANY(users.features)
-      WHERE users.id = $1
-        AND features.is_privileged = true
-        AND features.deleted_at IS NULL
-      ORDER BY features.name
+      WHERE is_protected = true
+        AND deleted_at IS NULL
+      ORDER BY name
     ;`,
-    values: [targetUserId],
   });
-  const privilegedFeatureNames = targetFeatures.rows.map((item) => item.name);
+  const protectedFeatureNames = protectedFeaturesResult.rows.map(
+    (item) => item.name,
+  );
 
-  if (privilegedFeatureNames.length === 0) return;
+  if (protectedFeatureNames.length === 0) return;
 
-  const missingFeatures = await client.query({
+  const targetAdmin = await client.query({
     text: `
-      SELECT features.name
-      FROM features
-      WHERE features.is_privileged = true
-        AND features.deleted_at IS NULL
-        AND features.name = ANY($1)
-        AND NOT EXISTS (
-          SELECT 1
-          FROM users
-          WHERE users.id <> $2
-            AND features.name = ANY(users.features)
-        )
-      ORDER BY features.name
+      SELECT id
+      FROM users
+      WHERE id = $1
+        AND features @> $2::varchar[]
+      LIMIT 1
     ;`,
-    values: [privilegedFeatureNames, targetUserId],
+    values: [targetUserId, protectedFeatureNames],
   });
 
-  if (missingFeatures.rowCount > 0) {
+  if (targetAdmin.rowCount === 0) return;
+
+  const otherAdmin = await client.query({
+    text: `
+      SELECT id
+      FROM users
+      WHERE id <> $1
+        AND features @> $2::varchar[]
+      LIMIT 1
+    ;`,
+    values: [targetUserId, protectedFeatureNames],
+  });
+
+  if (otherAdmin.rowCount === 0) {
     throw new ConflictError({
       message:
-        "Esta operação não pode ser realizada porque o usuário é o único que possui uma ou mais permissões privilegiadas.",
+        "Esta operação não pode ser realizada porque o usuário é o último administrador com todas as permissões protegidas.",
       action:
-        "Conceda essas permissões privilegiadas a outra conta antes de banir ou suspender este usuário.",
+        "Conceda todas as permissões protegidas a outra conta antes de banir ou suspender este usuário.",
     });
   }
 }
@@ -516,7 +521,7 @@ async function validateStatusChangeEligibility(username) {
   const targetUser = await findOneByUsername(username);
 
   await database.transaction(async (client) => {
-    await ensurePrivilegedFeaturesCoverage(client, targetUser.id);
+    await ensureProtectedAdminCoverage(client, targetUser.id);
   });
 }
 
@@ -563,7 +568,7 @@ async function setBanStatus(username, isBanned, actorUserId) {
     }
 
     if (isBanned) {
-      await ensurePrivilegedFeaturesCoverage(client, currentUser.id);
+      await ensureProtectedAdminCoverage(client, currentUser.id);
     }
 
     const results = await client.query({
@@ -686,7 +691,7 @@ async function setTimeoutStatus(username, timeoutUntil, actorUserId) {
     }
 
     if (normalizedTimeout) {
-      await ensurePrivilegedFeaturesCoverage(client, currentUser.id);
+      await ensureProtectedAdminCoverage(client, currentUser.id);
     }
 
     const result = await client.query({
