@@ -145,9 +145,9 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
     });
 
     expect(loginResponse.status).toBe(201);
-    expect((await user.findOneById(targetUser.id)).timeout_until).toBeInstanceOf(
-      Date,
-    );
+    expect(
+      Date.parse((await user.findOneById(targetUser.id)).timeout_until),
+    ).toBeLessThan(Date.now());
   });
 
   test("não permite suspender a própria conta administrativa", async () => {
