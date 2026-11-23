@@ -1,4 +1,4 @@
-import useSWR from "swr";
+import useSWRMutation from "swr/mutation";
 import Image from "next/image";
 import { ADVENTURE_SLOTS } from "@/features/mtg-adventure-creator/lib/scryfall.js";
 import styles from "./index.module.css";
@@ -19,9 +19,9 @@ function MtgAdventureCreator() {
   const {
     data,
     error,
-    isLoading,
-    mutate: generateAdventure,
-  } = useSWR("/api/v1/entertainment/mtg-adventure", fetcher);
+    isMutating,
+    trigger: generateAdventure,
+  } = useSWRMutation("/api/v1/entertainment/mtg-adventure", fetcher);
   const cards = data?.cards || [];
 
   return (
@@ -40,13 +40,17 @@ function MtgAdventureCreator() {
           type="button"
           className={styles.generateButton}
           onClick={() => generateAdventure()}
-          disabled={isLoading}
+          disabled={isMutating}
         >
           <i
-            className={`fas ${isLoading ? "fa-spinner fa-spin" : "fa-wand-magic-sparkles"}`}
+            className={`fas ${isMutating ? "fa-spinner fa-spin" : "fa-wand-magic-sparkles"}`}
             aria-hidden="true"
           ></i>
-          {isLoading ? "Consultando a biblioteca..." : "Gerar nova aventura"}
+          {isMutating
+            ? "Consultando a biblioteca..."
+            : cards.length > 0
+              ? "Gerar nova aventura"
+              : "Nova aventura"}
         </button>
       </section>
 
@@ -60,7 +64,7 @@ function MtgAdventureCreator() {
         </div>
       )}
 
-      {isLoading && cards.length === 0 && (
+      {isMutating && (
         <div className={styles.loading} role="status" aria-live="polite">
           <span className={styles.loader}></span>
           <p>Reunindo os elementos da sua próxima aventura...</p>
@@ -118,6 +122,10 @@ function MtgAdventureCreator() {
                       </span>
                     )}
                   </div>
+
+                  {card.oracleText && (
+                    <p className={styles.cardText}>{card.oracleText}</p>
+                  )}
 
                   <p className={styles.slotDescription}>{slot.description}</p>
                 </li>
