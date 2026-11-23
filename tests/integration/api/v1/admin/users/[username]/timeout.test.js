@@ -28,6 +28,17 @@ async function createStatusManagerSession() {
   return { statusManager, sessionObject };
 }
 
+async function createLegacyAdminSession() {
+  const legacyAdmin = await orchestrator.createUser();
+  await orchestrator.activateUser(legacyAdmin);
+  await orchestrator.addFeaturesToUser(legacyAdmin, [
+    "update:user:others",
+    "read:user:others",
+  ]);
+  const sessionObject = await orchestrator.createSession(legacyAdmin);
+  return { legacyAdmin, sessionObject };
+}
+
 describe("POST /api/v1/admin/users/[username]/timeout", () => {
   test("aplica timeout, encerra sessões existentes e bloqueia novo login", async () => {
     const { sessionObject } = await createStatusManagerSession();
@@ -78,6 +89,24 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
       name: "TimedOutUserError",
       status_code: 403,
     });
+  });
+
+  test("não permite timeout usando apenas update:user:others", async () => {
+    const { sessionObject } = await createLegacyAdminSession();
+    const targetUser = await orchestrator.createUser();
+    const response = await fetch(adminUserTimeoutUrl(targetUser.username), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: "session_id=" + sessionObject.token,
+      },
+      body: JSON.stringify({
+        timeout_until: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      }),
+    });
+
+    expect(response.status).toBe(403);
+    expect((await user.findOneById(targetUser.id)).timeout_until).toBeNull();
   });
 
   test("rejeita prazo inválido ou vencido", async () => {

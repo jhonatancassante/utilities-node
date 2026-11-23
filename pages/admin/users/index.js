@@ -556,6 +556,17 @@ function UserEditor({
     }
   }
 
+  function handleOpenTimeoutModal() {
+    const date = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    setTimeoutDate(
+      new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16),
+    );
+    setFeedback(null);
+    setIsTimeoutModalOpen(true);
+  }
+
   async function handleTimeoutSubmit(event) {
     event.preventDefault();
     if (
@@ -756,7 +767,7 @@ function UserEditor({
           <Button
             variant="outline"
             icon="fa-clock"
-            onClick={() => setIsTimeoutModalOpen(true)}
+            onClick={handleOpenTimeoutModal}
             disabled={
               isEditingSelf ||
               isSaving ||
