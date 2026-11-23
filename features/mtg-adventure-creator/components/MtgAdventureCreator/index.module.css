@@ -110,8 +110,20 @@
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 22px;
+}
+
+.slot {
+  grid-column: span 2;
+}
+
+.slot:nth-child(4) {
+  grid-column: 2 / span 2;
+}
+
+.slot:nth-child(5) {
+  grid-column: 4 / span 2;
 }
 
 .slot {
@@ -168,19 +180,29 @@
   font-size: 1.08rem;
 }
 
-.cardLink {
+.cardButton {
   width: min(100%, 245px);
+  padding: 0;
   display: block;
+  border: 0;
   border-radius: 12px;
+  background: transparent;
+  cursor: zoom-in;
   filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.2));
   transition:
     transform var(--transition-fast),
     filter var(--transition-fast);
 }
 
-.cardLink:hover {
+.cardButton:hover {
   transform: translateY(-4px) rotate(-0.5deg);
   filter: drop-shadow(0 17px 18px rgba(0, 0, 0, 0.25));
+}
+
+.cardButton:focus-visible,
+.imageModalClose:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
 }
 
 .cardImage {
@@ -219,20 +241,6 @@
   font-weight: 600;
 }
 
-.cardText {
-  width: 100%;
-  margin-top: 14px;
-  padding: 13px 14px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font-size: 0.84rem;
-  line-height: 1.65;
-  text-align: left;
-  white-space: pre-line;
-}
-
 .slotDescription {
   margin-top: 17px;
   padding-top: 15px;
@@ -265,6 +273,54 @@
   color: inherit;
   font-weight: 700;
   text-decoration: underline;
+  cursor: pointer;
+}
+
+.imageModal {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(5px);
+}
+
+.imageModalContent {
+  position: relative;
+  max-width: min(100%, 520px);
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imageModalImage {
+  width: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 48px);
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.5);
+}
+
+.imageModalClose {
+  position: absolute;
+  z-index: 1;
+  top: -13px;
+  right: -13px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 1rem;
   cursor: pointer;
 }
 
@@ -314,6 +370,12 @@
   .cardGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .slot,
+  .slot:nth-child(4),
+  .slot:nth-child(5) {
+    grid-column: auto;
+  }
 }
 
 @media (max-width: 600px) {
@@ -339,8 +401,21 @@
     padding: 20px;
   }
 
-  .cardLink {
+  .cardButton {
     width: min(100%, 265px);
+  }
+
+  .imageModal {
+    padding: 16px;
+  }
+
+  .imageModalImage {
+    max-height: calc(100vh - 32px);
+  }
+
+  .imageModalClose {
+    top: -12px;
+    right: -8px;
   }
 
   .error {
