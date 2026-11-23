@@ -55,7 +55,7 @@ Os erros seguem o formato:
 | `400`  | `ValidationError`       | Dados inválidos ou duplicados                             |
 | `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão inválida/expirada         |
 | `403`  | `ForbiddenError`        | Feature necessária não concedida                          |
-| `403`  | `TimedOutUserError`     | Conta suspensa temporariamente                             |
+| `403`  | `BannedUserError`       | Conta banida                                                |\n| `403`  | `TimedOutUserError`     | Conta suspensa temporariamente                             |
 | `409`  | `ConflictError`         | Operação incompatível em andamento                        |
 | `404`  | `NotFoundError`         | Usuário ou token não encontrado, expirado ou já utilizado |
 | `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`             |
@@ -155,11 +155,11 @@ Remove a foto de perfil do usuário. Exige simultaneamente `update:user:others` 
 
 `DELETE /api/v1/admin/users/{username}/ban` exige as mesmas features e remove o banimento, registrando o evento de desbanimento. Sessões expiradas pelo banimento não são reativadas; o usuário precisa entrar novamente. Ambos os endpoints retornam `200` com os dados administrativos atualizados, sem hash de senha.
 
-### Timeout (suspensão temporária)
+### Suspensão temporária
 
 `POST /api/v1/admin/users/{username}/timeout` exige `update:user:status` e `read:user:others`. Recebe `timeout_until` como data/hora ISO 8601 futura. A operação não permite suspender a própria conta nem uma conta já banida. O prazo é armazenado em `users.timeout_until`, as sessões existentes são encerradas e o sistema bloqueia novos logins, a renovação e o uso de sessões enquanto o prazo estiver ativo. Ao atingir a data, o acesso é liberado automaticamente; por segurança, o usuário precisa iniciar uma nova sessão.
 
-`DELETE /api/v1/admin/users/{username}/timeout` exige as mesmas features e remove a suspensão antes do prazo. Sessões encerradas não são reativadas. O timeout não altera `banned_at`; uma conta banida continua banida mesmo que seu timeout seja removido.
+`DELETE /api/v1/admin/users/{username}/timeout` exige as mesmas features e remove a suspensão antes do prazo. Sessões encerradas não são reativadas. A suspensão temporária não altera `banned_at`; uma conta banida continua banida mesmo que a suspensão seja removida.
 
 ### `GET /api/v1/admin/audit/banned`
 
