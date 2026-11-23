@@ -2,7 +2,7 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 101;
   width: 100%;
   height: clamp(64px, 9vw, 76px);
   padding: 0 clamp(16px, 2.5vw, 28px);
