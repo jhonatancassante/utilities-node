@@ -65,13 +65,13 @@ describe("GET /api/v1/admin/users/[username]/timeout", () => {
 
   test("impede abrir o modal para o único titular de permissões privilegiadas", async () => {
     const { sessionObject } = await createStatusManagerSession();
-    const privilegedFeatures = (await feature.findAll())
-      .filter((item) => item.is_privileged)
+    const protectedFeatures = (await feature.findAll())
+      .filter((item) => item.is_protected)
       .map((item) => item.name);
     const lastPrivilegedUser = await orchestrator.createUser();
     await orchestrator.addFeaturesToUser(
       lastPrivilegedUser,
-      privilegedFeatures,
+      protectedFeatures,
     );
 
     const response = await fetch(
@@ -200,15 +200,15 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
     expect(loginResponse.status).toBe(201);
   });
 
-  test("Impede suspender o único usuário que possui permissões privilegiadas", async () => {
+  test("Impede suspender o último administrador com todas as permissões protegidas", async () => {
     const { sessionObject } = await createStatusManagerSession();
-    const privilegedFeatures = (await feature.findAll())
-      .filter((item) => item.is_privileged)
+    const protectedFeatures = (await feature.findAll())
+      .filter((item) => item.is_protected)
       .map((item) => item.name);
     const lastPrivilegedUser = await orchestrator.createUser();
     await orchestrator.addFeaturesToUser(
       lastPrivilegedUser,
-      privilegedFeatures,
+      protectedFeatures,
     );
 
     const response = await fetch(
