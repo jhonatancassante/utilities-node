@@ -1101,6 +1101,149 @@ function UserEditor({
           </Button>
         </div>
       </form>
+
+      {isTimeoutModalOpen && (
+        <Modal
+          title="Gerenciar timeout"
+          onClose={() => {
+            if (!isUpdatingTimeout) setIsTimeoutModalOpen(false);
+          }}
+          closeOnBackdrop={!isUpdatingTimeout}
+          closeOnEscape={!isUpdatingTimeout}
+        >
+          {user.timeout_until && new Date(user.timeout_until) > new Date() && (
+            <div className={styles.timeoutCurrent}>
+              <strong>Timeout ativo</strong>
+              <span>
+                Acesso suspenso até{" "}
+                {new Date(user.timeout_until).toLocaleString("pt-BR")}
+              </span>
+            </div>
+          )}
+
+          <form className={styles.timeoutForm} onSubmit={handleTimeoutSubmit}>
+            <p>
+              O usuário ficará sem acesso até o prazo escolhido. As sessões
+              atuais serão encerradas e não serão reativadas automaticamente.
+            </p>
+
+            <div className={styles.timeoutMode}>
+              <label>
+                <input
+                  type="radio"
+                  name="timeout-mode"
+                  value="duration"
+                  checked={timeoutMode === "duration"}
+                  onChange={() => setTimeoutMode("duration")}
+                  disabled={isUpdatingTimeout}
+                />
+                Por duração
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="timeout-mode"
+                  value="date"
+                  checked={timeoutMode === "date"}
+                  onChange={() => setTimeoutMode("date")}
+                  disabled={isUpdatingTimeout}
+                />
+                Até uma data
+              </label>
+            </div>
+
+            {timeoutMode === "duration" ? (
+              <div className={styles.timeoutDuration}>
+                <div className={styles.field}>
+                  <label className={shared.label} htmlFor="timeout-amount">
+                    Quantidade
+                  </label>
+                  <input
+                    className={shared.input}
+                    id="timeout-amount"
+                    type="number"
+                    min="1"
+                    max="10000"
+                    step="1"
+                    value={timeoutAmount}
+                    onChange={(event) => setTimeoutAmount(event.target.value)}
+                    disabled={isUpdatingTimeout}
+                    required
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={shared.label} htmlFor="timeout-unit">
+                    Unidade
+                  </label>
+                  <select
+                    className={shared.input}
+                    id="timeout-unit"
+                    value={timeoutUnit}
+                    onChange={(event) => setTimeoutUnit(event.target.value)}
+                    disabled={isUpdatingTimeout}
+                  >
+                    <option value="hours">Horas</option>
+                    <option value="days">Dias</option>
+                    <option value="months">Meses</option>
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.field}>
+                <label className={shared.label} htmlFor="timeout-date">
+                  Data e hora para liberar o acesso
+                </label>
+                <input
+                  className={shared.input}
+                  id="timeout-date"
+                  type="datetime-local"
+                  value={timeoutDate}
+                  onChange={(event) => setTimeoutDate(event.target.value)}
+                  disabled={isUpdatingTimeout}
+                  required
+                />
+              </div>
+            )}
+
+            {feedback?.type === "error" && (
+              <div className={styles.timeoutFeedback}>
+                <StatusMessage
+                  type="inline-error"
+                  name={feedback.name}
+                  action={feedback.action}
+                >
+                  {feedback.message}
+                </StatusMessage>
+              </div>
+            )}
+
+            <div className={styles.timeoutActions}>
+              <Button type="submit" icon="fa-clock" disabled={isUpdatingTimeout}>
+                {isUpdatingTimeout ? "Aplicando..." : "Aplicar timeout"}
+              </Button>
+              {user.timeout_until && new Date(user.timeout_until) > new Date() && (
+                <Button
+                  type="button"
+                  variant="danger"
+                  icon="fa-unlock"
+                  onClick={handleRemoveTimeout}
+                  disabled={isUpdatingTimeout}
+                >
+                  Remover timeout
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setIsTimeoutModalOpen(false)}
+                disabled={isUpdatingTimeout}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </section>
   );
 }

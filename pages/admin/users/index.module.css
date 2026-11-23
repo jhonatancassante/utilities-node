@@ -190,6 +190,11 @@
   color: #198754;
 }
 
+.userStatusTimeout {
+  background: rgba(255, 193, 7, 0.16);
+  color: #a87900;
+}
+
 .banActions {
   display: flex;
   align-items: center;
@@ -201,6 +206,62 @@
 .banActions small {
   color: var(--text-faint);
   font-size: 12px;
+}
+
+.timeoutCurrent {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.timeoutCurrent strong {
+  color: var(--text-primary);
+}
+
+.timeoutForm > p {
+  margin: 0 0 18px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.timeoutMode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.timeoutMode label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.timeoutDuration {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.timeoutActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.timeoutFeedback {
+  margin-top: 14px;
 }
 
 .editor {
@@ -450,6 +511,19 @@
 }
 
 @media (max-width: 700px) {
+  .timeoutDuration {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .timeoutActions {
+    flex-direction: column;
+  }
+
+  .timeoutActions button {
+    width: 100%;
+  }
+
   .card {
     padding: 38px 22px;
   }
