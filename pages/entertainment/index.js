@@ -16,10 +16,6 @@ function EntertainmentPage() {
       <Layout>
         <main className={styles.main}>
           <section className={styles.hero}>
-            <span className={styles.eyebrow}>
-              <i className="fas fa-dice-d20" aria-hidden="true"></i>
-              Um intervalo na rotina
-            </span>
             <h1>Entretenimento</h1>
             <p>
               Nem toda ferramenta precisa resolver um problema do trabalho.
@@ -43,18 +39,11 @@ function EntertainmentPage() {
               {entertainmentApps.map((app) => (
                 <li key={app.slug}>
                   <Link href={app.href} className={styles.card}>
-                    <span className={styles.cardIcon} aria-hidden="true">
+                    <span className={styles.icon} aria-hidden="true">
                       <i className={`fas ${app.icon}`}></i>
-                    </span>
-                    <span className={styles.cardEyebrow}>
-                      Magic: The Gathering
                     </span>
                     <h3>{app.title}</h3>
                     <p>{app.description}</p>
-                    <span className={styles.cardAction}>
-                      Explorar aplicação
-                      <i className="fas fa-arrow-right" aria-hidden="true"></i>
-                    </span>
                   </Link>
                 </li>
               ))}
