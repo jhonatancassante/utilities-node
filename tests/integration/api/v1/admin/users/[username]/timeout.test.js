@@ -1,5 +1,6 @@
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
+import database from "@/infra/database.js";
 import session from "@/models/session.js";
 
 beforeAll(async () => {
@@ -122,6 +123,31 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
     });
 
     expect(response.status).toBe(400);
+  });
+
+  test("libera novo login automaticamente quando o prazo já terminou", async () => {
+    const targetUser = await orchestrator.createUser({
+      password: "Senha_Padrao_V@l1d@_1234",
+    });
+    await orchestrator.activateUser(targetUser);
+    await database.query({
+      text: "UPDATE users SET timeout_until = NOW() - interval '1 second' WHERE id = $1;",
+      values: [targetUser.id],
+    });
+
+    const loginResponse = await fetch(orchestrator.API_URL + "/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: targetUser.email,
+        password: "Senha_Padrao_V@l1d@_1234",
+      }),
+    });
+
+    expect(loginResponse.status).toBe(201);
+    expect((await user.findOneById(targetUser.id)).timeout_until).toBeInstanceOf(
+      Date,
+    );
   });
 
   test("não permite suspender a própria conta administrativa", async () => {
