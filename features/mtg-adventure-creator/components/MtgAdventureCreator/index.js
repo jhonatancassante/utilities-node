@@ -135,6 +135,12 @@ function MtgAdventureCreator() {
                     )}
                   </div>
 
+                  {card.flavorText && (
+                    <blockquote className={styles.flavorText}>
+                      {card.flavorText}
+                    </blockquote>
+                  )}
+
                   <p className={styles.slotDescription}>{slot.description}</p>
                 </li>
               );
