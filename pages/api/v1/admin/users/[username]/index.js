@@ -5,7 +5,7 @@ import {
   uploadProfilePhoto,
   deleteProfilePhoto,
 } from "@/lib/server/cloudinary.js";
-import { ValidationError } from "@/infra/errors.js";
+import { ForbiddenError, ValidationError } from "@/infra/errors.js";
 
 export const config = {
   api: { bodyParser: { sizeLimit: "3mb" } },
@@ -15,8 +15,8 @@ export default controller.createController(
   {
     GET: [controller.canRequest("read:user:others"), getHandler],
     PATCH: [
-      controller.canRequest("update:user:others"),
       controller.canRequest("read:user:others"),
+      authorizePatch,
       patchHandler,
     ],
   },
@@ -34,6 +34,28 @@ async function getHandler(request, response) {
   );
 
   return response.status(200).json(secureOutputValues);
+}
+
+function authorizePatch(request, response, next) {
+  const body = request.body ?? {};
+  const hasFeatures = Object.hasOwn(body, "features");
+  const hasOtherFields = Object.keys(body).some((field) => field !== "features");
+  const requiredFeatures = [];
+
+  if (hasFeatures) requiredFeatures.push("update:user:features");
+  if (!hasFeatures || hasOtherFields)
+    requiredFeatures.push("update:user:others");
+
+  for (const requiredFeature of requiredFeatures) {
+    if (!authorization.can(request.context.user, requiredFeature)) {
+      throw new ForbiddenError({
+        message: "Você não possui permissão para executar esta ação.",
+        action: `Verifique se o seu usuário possui a feature "${requiredFeature}".`,
+      });
+    }
+  }
+
+  return next();
 }
 
 async function patchHandler(request, response) {
