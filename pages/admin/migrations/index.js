@@ -39,11 +39,7 @@ function AdminMigrationsPage() {
       router.replace("/login");
     }
 
-    if (
-      !isLoading &&
-      user &&
-      !hasAdminSectionAccess(user, "migrations")
-    ) {
+    if (!isLoading && user && !hasAdminSectionAccess(user, "migrations")) {
       router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
     }
   }, [error, isLoading, router, user]);
@@ -265,8 +261,8 @@ function AdminMigrationsPage() {
               <span className={shared.badge}>ADMINISTRAÇÃO</span>
               <h1>Gerenciar migrations</h1>
               <p>
-                Consulte as alterações de banco de dados disponíveis no código
-                e aplique as migrations pendentes no ambiente atual.
+                Consulte as alterações de banco de dados disponíveis no código e
+                aplique as migrations pendentes no ambiente atual.
               </p>
             </header>
 
@@ -283,19 +279,32 @@ function AdminMigrationsPage() {
                 </strong>
               </span>
               <small>
-                O ambiente é definido pela configuração de execução da
-                aplicação e não identifica diretamente o banco de dados
-                utilizado.
+                O ambiente é definido pela configuração de execução da aplicação
+                e não identifica diretamente o banco de dados utilizado.
               </small>
             </div>
 
             <div className={styles.summary}>
               <div>
-                <strong>{isLoadingMigrations ? "..." : hasLoadError ? "—" : pendingMigrations.length}</strong>
+                <strong>
+                  {isLoadingMigrations
+                    ? "..."
+                    : hasLoadError
+                      ? "—"
+                      : pendingMigrations.length}
+                </strong>
                 <span>Migrations pendentes</span>
               </div>
               <div>
-                <strong>{isLoadingMigrations ? "..." : hasLoadError ? "Indisponível" : pendingMigrations.length === 0 ? "Em dia" : "Ação necessária"}</strong>
+                <strong>
+                  {isLoadingMigrations
+                    ? "..."
+                    : hasLoadError
+                      ? "Indisponível"
+                      : pendingMigrations.length === 0
+                        ? "Em dia"
+                        : "Ação necessária"}
+                </strong>
                 <span>Estado da base de dados</span>
               </div>
             </div>
@@ -319,7 +328,9 @@ function AdminMigrationsPage() {
                 onClick={handleRefresh}
                 disabled={isLoadingMigrations || isExecuting}
               >
-                {isLoadingMigrations ? "Verificando..." : "Verificar pendências"}
+                {isLoadingMigrations
+                  ? "Verificando..."
+                  : "Verificar pendências"}
               </Button>
               {canExecute && (
                 <Button
@@ -341,7 +352,11 @@ function AdminMigrationsPage() {
             <section className={styles.migrations}>
               <div className={styles.sectionHeading}>
                 <h2>Migrations pendentes</h2>
-                <span>{hasLoadError ? "Estado indisponível" : `${pendingMigrations.length} item(ns)`}</span>
+                <span>
+                  {hasLoadError
+                    ? "Estado indisponível"
+                    : `${pendingMigrations.length} item(ns)`}
+                </span>
               </div>
 
               {isLoadingMigrations ? (

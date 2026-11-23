@@ -46,7 +46,8 @@ async function runPendingMigrations() {
     if (!lockAcquired) {
       throw new ConflictError({
         message: "Já existe uma execução de migrations em andamento.",
-        action: "Aguarde a conclusão da execução atual e atualize a verificação.",
+        action:
+          "Aguarde a conclusão da execução atual e atualize a verificação.",
       });
     }
 
@@ -63,7 +64,10 @@ async function runPendingMigrations() {
           values: [MIGRATION_LOCK_KEY],
         })
         .catch((error) => {
-          console.error("Não foi possível liberar o bloqueio de migrations.", error);
+          console.error(
+            "Não foi possível liberar o bloqueio de migrations.",
+            error,
+          );
         });
     }
 
