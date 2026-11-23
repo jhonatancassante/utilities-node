@@ -5,6 +5,7 @@ import Image from "next/image";
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
+import Modal from "@/components/Modal";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
@@ -155,20 +156,26 @@ function AdminUsersPage() {
     };
   }, [router.isReady, router.query.username, user]);
 
-  async function handleBanStatusChanged(updatedUser) {
+  async function handleBanStatusChanged(updatedUser, successMessage) {
     setSelectedUser(updatedUser);
     setResults((currentResults) =>
       currentResults.map((result) =>
         result.id === updatedUser.id
-          ? { ...result, banned_at: updatedUser.banned_at }
+          ? {
+              ...result,
+              banned_at: updatedUser.banned_at,
+              timeout_until: updatedUser.timeout_until,
+            }
           : result,
       ),
     );
     setFeedback({
       type: "success",
-      message: updatedUser.banned_at
-        ? "Usuário banido com sucesso."
-        : "Usuário desbanido com sucesso.",
+      message:
+        successMessage ||
+        (updatedUser.banned_at
+          ? "Usuário banido com sucesso."
+          : "Usuário desbanido com sucesso."),
     });
   }
 
@@ -354,10 +361,18 @@ function AdminUsersPage() {
                               className={`${styles.userStatusBadge} ${
                                 result.banned_at
                                   ? styles.userStatusBanned
-                                  : styles.userStatusActive
+                                  : result.timeout_until &&
+                                      new Date(result.timeout_until) > new Date()
+                                    ? styles.userStatusTimeout
+                                    : styles.userStatusActive
                               }`}
                             >
-                              {result.banned_at ? "Banido" : "Ativo"}
+                              {result.banned_at
+                                ? "Banido"
+                                : result.timeout_until &&
+                                    new Date(result.timeout_until) > new Date()
+                                  ? "Em timeout"
+                                  : "Ativo"}
                             </span>
                           </span>
                           <small>{result.email}</small>
@@ -414,6 +429,17 @@ function UserEditor({
   const [protectedOnly, setProtectedOnly] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUpdatingBan, setIsUpdatingBan] = useState(false);
+  const [isUpdatingTimeout, setIsUpdatingTimeout] = useState(false);
+  const [isTimeoutModalOpen, setIsTimeoutModalOpen] = useState(false);
+  const [timeoutMode, setTimeoutMode] = useState("duration");
+  const [timeoutAmount, setTimeoutAmount] = useState("1");
+  const [timeoutUnit, setTimeoutUnit] = useState("hours");
+  const [timeoutDate, setTimeoutDate] = useState(() => {
+    const date = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  });
   const [feedback, setFeedback] = useState(null);
   const [features, setFeatures] = useState([]);
   const [isLoadingFeatures, setIsLoadingFeatures] = useState(
@@ -530,6 +556,103 @@ function UserEditor({
     }
   }
 
+  async function handleTimeoutSubmit(event) {
+    event.preventDefault();
+    if (!canManageUserStatus || isEditingSelf || isUpdatingTimeout) return;
+
+    let expiresAt;
+    if (timeoutMode === "date") {
+      expiresAt = new Date(timeoutDate);
+    } else {
+      const amount = Number(timeoutAmount);
+      if (!Number.isInteger(amount) || amount < 1 || amount > 10000) {
+        setFeedback({
+          type: "error",
+          message: "Informe uma quantidade inteira entre 1 e 10.000.",
+        });
+        return;
+      }
+
+      expiresAt = new Date();
+      if (timeoutUnit === "hours") {
+        expiresAt.setHours(expiresAt.getHours() + amount);
+      } else if (timeoutUnit === "days") {
+        expiresAt.setDate(expiresAt.getDate() + amount);
+      } else {
+        const day = expiresAt.getDate();
+        expiresAt.setDate(1);
+        expiresAt.setMonth(expiresAt.getMonth() + amount);
+        const lastDay = new Date(
+          expiresAt.getFullYear(),
+          expiresAt.getMonth() + 1,
+          0,
+        ).getDate();
+        expiresAt.setDate(Math.min(day, lastDay));
+      }
+    }
+
+    if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
+      setFeedback({
+        type: "error",
+        message: "Informe uma data e hora futuras para o timeout.",
+      });
+      return;
+    }
+
+    setIsUpdatingTimeout(true);
+    setFeedback(null);
+    try {
+      const updatedUser = await requestAPI(
+        "/api/v1/admin/users/" + encodeURIComponent(user.username) + "/timeout",
+        {
+          method: "POST",
+          body: JSON.stringify({ timeout_until: expiresAt.toISOString() }),
+        },
+      );
+      setIsTimeoutModalOpen(false);
+      await onBanStatusChanged(
+        updatedUser,
+        "Timeout aplicado com sucesso. As sessões anteriores foram encerradas.",
+      );
+    } catch (requestError) {
+      setFeedback({
+        type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
+        message: requestError.message,
+        action: requestError.action,
+      });
+    } finally {
+      setIsUpdatingTimeout(false);
+    }
+  }
+
+  async function handleRemoveTimeout() {
+    if (!canManageUserStatus || isEditingSelf || isUpdatingTimeout) return;
+
+    setIsUpdatingTimeout(true);
+    setFeedback(null);
+    try {
+      const updatedUser = await requestAPI(
+        "/api/v1/admin/users/" + encodeURIComponent(user.username) + "/timeout",
+        { method: "DELETE" },
+      );
+      setIsTimeoutModalOpen(false);
+      await onBanStatusChanged(
+        updatedUser,
+        "Timeout removido. O usuário poderá entrar novamente, mas precisará fazer login.",
+      );
+    } catch (requestError) {
+      setFeedback({
+        type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
+        message: requestError.message,
+        action: requestError.action,
+      });
+    } finally {
+      setIsUpdatingTimeout(false);
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -613,7 +736,9 @@ function UserEditor({
             variant={user.banned_at ? "success" : "danger"}
             icon={user.banned_at ? "fa-unlock" : "fa-ban"}
             onClick={handleToggleBan}
-            disabled={isEditingSelf || isSaving || isUpdatingBan}
+            disabled={
+              isEditingSelf || isSaving || isUpdatingBan || isUpdatingTimeout
+            }
           >
             {isUpdatingBan
               ? user.banned_at
@@ -623,8 +748,26 @@ function UserEditor({
                 ? "Desbanir usuário"
                 : "Banir usuário"}
           </Button>
+          <Button
+            variant="secondary"
+            icon="fa-clock"
+            onClick={() => setIsTimeoutModalOpen(true)}
+            disabled={
+              isEditingSelf ||
+              isSaving ||
+              isUpdatingBan ||
+              isUpdatingTimeout ||
+              Boolean(user.banned_at)
+            }
+          >
+            {user.timeout_until && new Date(user.timeout_until) > new Date()
+              ? "Alterar timeout"
+              : "Aplicar timeout"}
+          </Button>
           {isEditingSelf && (
-            <small>Não é permitido banir a própria conta administrativa.</small>
+            <small>
+              Não é permitido banir ou aplicar timeout à própria conta administrativa.
+            </small>
           )}
         </div>
       )}
