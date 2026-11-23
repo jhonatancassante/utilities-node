@@ -141,7 +141,10 @@ export default function AdminMigrationAuditPage() {
               </p>
             </header>
 
-            <section className={styles.summary} aria-label="Resumo do histórico">
+            <section
+              className={styles.summary}
+              aria-label="Resumo do histórico"
+            >
               <div>
                 <strong>
                   {isLoadingMigrations ? "..." : migrations.length}
