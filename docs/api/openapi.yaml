@@ -263,10 +263,10 @@ paths:
       operationId: searchAdminUsers
       summary: Pesquisa usuários para administração
       description: |
-        Exige sessão válida e a feature update:user:others.
+        Exige sessão válida e a feature read:user:others.
         Pesquisa por trecho de username ou e-mail, sem diferenciar maiúsculas
         de minúsculas. Retorna até dez resultados, pode incluir a própria conta do administrador e nunca inclui hash de senha.
-      x-required-feature: update:user:others
+      x-required-feature: read:user:others
       security:
         - SessionCookie: []
       parameters:

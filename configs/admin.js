@@ -5,7 +5,7 @@ export const adminSections = [
     description: "Pesquise contas e altere dados, senhas e permissões.",
     href: "/admin/users",
     icon: "fa-users-cog",
-    requiredFeature: "update:user:others",
+    requiredFeature: "read:user:others",
   },
   {
     id: "features",

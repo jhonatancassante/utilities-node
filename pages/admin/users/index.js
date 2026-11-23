@@ -396,6 +396,7 @@ function AdminUsersPage() {
                 onUpdated={handleUserUpdated}
                 onBanStatusChanged={handleBanStatusChanged}
                 canManageUserStatus={user.features.includes("update:user:status")}
+                canManageUserData={user.features.includes("update:user:others")}
                 canManageUserFeatures={user.features.includes("update:user:features")}
                 onCancel={() => setSelectedUser(null)}
               />
@@ -413,6 +414,7 @@ function UserEditor({
   onUpdated,
   onBanStatusChanged,
   canManageUserStatus,
+  canManageUserData,
   canManageUserFeatures,
   onCancel,
 }) {
@@ -802,10 +804,11 @@ function UserEditor({
             <div>
               <strong>Foto de perfil</strong>
               <small>A imagem atual desta conta.</small>
-              <Button
-                type="button"
-                variant="danger"
-                icon="fa-trash"
+              {canManageUserData && (
+                <Button
+                  type="button"
+                  variant="danger"
+                  icon="fa-trash"
                 disabled={isSaving}
                 onClick={async () => {
                   setIsSaving(true);
@@ -830,14 +833,16 @@ function UserEditor({
                   }
                 }}
               >
-                Remover foto de perfil
-              </Button>
+                  Remover foto de perfil
+                </Button>
+              )}
             </div>
           </div>
         )}
-        <div className={styles.formGrid}>
-          <div className={styles.field}>
-            <label className={shared.label} htmlFor="edit-username">
+        {canManageUserData && (
+          <div className={styles.formGrid}>
+            <div className={styles.field}>
+              <label className={shared.label} htmlFor="edit-username">
               Nome de usuário
             </label>
             <input
@@ -860,10 +865,12 @@ function UserEditor({
               onChange={(event) => updateField("email", event.target.value)}
               disabled={isSaving}
             />
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.passwordSection}>
+        {canManageUserData && (
+          <div className={styles.passwordSection}>
           <h3>Alterar senha</h3>
           <p>Deixe os campos em branco para manter a senha atual.</p>
           <div className={styles.formGrid}>
@@ -903,10 +910,12 @@ function UserEditor({
               />
             </div>
           </div>
-        </div>
+          </div>
+        )}
 
-        <div className={styles.formActions}>
-          <Button type="submit" icon="fa-save" disabled={isSaving}>
+        {canManageUserData && (
+          <div className={styles.formActions}>
+            <Button type="submit" icon="fa-save" disabled={isSaving}>
             {isSaving ? "Salvando..." : "Salvar alterações"}
           </Button>
           <Button
@@ -917,8 +926,9 @@ function UserEditor({
             disabled={isSaving}
           >
             Cancelar
-          </Button>
-        </div>
+            </Button>
+          </div>
+        )}
 
         {canManageUserFeatures && (
           <div className={styles.featureSection}>
@@ -1143,7 +1153,7 @@ function UserEditor({
               O usuário ficará sem acesso até o prazo escolhido. As sessões
               atuais serão encerradas e não serão reativadas automaticamente.
               {user.banned_at &&
-                " A conta também está banida; o suspensão poderá ser removida, mas o banimento continuará ativo."}
+                " A conta também está banida; a suspensão poderá ser removida, mas o banimento continuará ativo."}
             </p>
 
             <div className={styles.timeoutMode}>
@@ -1242,7 +1252,7 @@ function UserEditor({
                 icon="fa-clock"
                 disabled={isUpdatingTimeout || Boolean(user.banned_at)}
               >
-                {isUpdatingTimeout ? "Aplicando..." : "Aplicar timeout"}
+                {isUpdatingTimeout ? "Aplicando..." : "Suspender temporariamente"}
               </Button>
               {user.timeout_until && new Date(user.timeout_until) > new Date() && (
                 <Button

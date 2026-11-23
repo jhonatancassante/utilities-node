@@ -6,6 +6,7 @@ import user from "@/models/user.js";
 import authorization from "@/models/authorization.js";
 import {
   BannedUserError,
+  TimedOutUserError,
   ConfigurationError,
   ConflictError,
   ForbiddenError,
@@ -64,6 +65,7 @@ function onErrorHandler(error, request, response) {
 
   if (
     error instanceof BannedUserError ||
+    error instanceof TimedOutUserError ||
     error instanceof ConflictError ||
     error instanceof ForbiddenError ||
     error instanceof NotFoundError ||

@@ -21,7 +21,7 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 | `POST`   | `/api/v1/migrations`                 | Feature `create:migration`                                     |
 | `POST`   | `/api/v1/users`                      | Feature `create:user` (visitante padrão)                       |
 | `GET`    | `/api/v1/users/{username}`           | Público; saída filtrada                                        |
-| `GET`    | `/api/v1/admin/users?search=...`     | Feature `update:user:others`                                   |
+| `GET`    | `/api/v1/admin/users?search=...`     | Feature `read:user:others`                                     |
 | `GET`    | `/api/v1/admin/users/{username}`     | Feature `update:user:others`                                   |
 | `PATCH`  | `/api/v1/admin/users/{username}`     | `update:user:others`; features exigem também `update:user:features` |
 | `POST`   | `/api/v1/admin/users/{username}/ban` | Features `update:user:status` e `read:user:others`; bane a conta |
@@ -55,7 +55,8 @@ Os erros seguem o formato:
 | `400`  | `ValidationError`       | Dados inválidos ou duplicados                             |
 | `401`  | `UnauthorizedError`     | Credenciais inválidas ou sessão inválida/expirada         |
 | `403`  | `ForbiddenError`        | Feature necessária não concedida                          |
-| `403`  | `BannedUserError`       | Conta banida                                                |\n| `403`  | `TimedOutUserError`     | Conta suspensa temporariamente                             |
+| `403`  | `BannedUserError`       | Conta banida                                                |
+| `403`  | `TimedOutUserError`     | Conta suspensa temporariamente                             |
 | `409`  | `ConflictError`         | Operação incompatível em andamento                        |
 | `404`  | `NotFoundError`         | Usuário ou token não encontrado, expirado ou já utilizado |
 | `405`  | `MethodNotAllowedError` | Método não aceito; a resposta informa `Allow`             |
@@ -129,7 +130,7 @@ Respostas relevantes: `201` criado; `400` dados obrigatórios ausentes, username
 
 ## Administração de usuários
 
-Os endpoints administrativos de consulta e edição de dados gerais exigem uma sessão válida e a feature `update:user:others`. A alteração do campo `features` exige `update:user:features` e `read:user:others`; quando a mesma requisição altera dados gerais e features, exige também `update:user:others`. O banimento, o desbanimento e o gerenciamento de timeout são operações separadas: exigem `update:user:status` e `read:user:others`. A autorização é sempre verificada no servidor; ocultar controles na interface não substitui essa validação.
+Os endpoints administrativos de consulta exigem uma sessão válida e a feature `read:user:others`. A edição de dados gerais exige `update:user:others`. A alteração do campo `features` exige `update:user:features` e `read:user:others`; quando a mesma requisição altera dados gerais e features, exige também `update:user:others`. O banimento, o desbanimento e o gerenciamento de timeout são operações separadas: exigem `update:user:status` e `read:user:others`. A autorização é sempre verificada no servidor; ocultar controles na interface não substitui essa validação.
 
 ### `GET /api/v1/admin/users?search=...`
 
