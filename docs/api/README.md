@@ -24,8 +24,8 @@ Guia dos endpoints implementados. O contrato formal está em [openapi.yaml](open
 | `GET`    | `/api/v1/admin/users?search=...`     | Feature `update:user:others`                                   |
 | `GET`    | `/api/v1/admin/users/{username}`     | Feature `update:user:others`                                   |
 | `PATCH`  | `/api/v1/admin/users/{username}`     | Feature `update:user:others`; inclui alteração de features     |
-| `POST`   | `/api/v1/admin/users/{username}/ban` | Feature `update:user:others`; bane a conta                     |
-| `DELETE` | `/api/v1/admin/users/{username}/ban` | Feature `update:user:others`; desbane a conta                  |
+| `POST`   | `/api/v1/admin/users/{username}/ban` | Features `update:user:status` e `read:user:others`; bane a conta |
+| `DELETE` | `/api/v1/admin/users/{username}/ban` | Features `update:user:status` e `read:user:others`; desbane a conta |
 | `GET`    | `/api/v1/admin/audit/banned`         | Feature `read:audit`; consulta a trilha de auditoria           |
 | `GET`    | `/api/v1/admin/audit/migrations`     | Feature `read:audit`; consulta migrations aplicadas            |
 | `PATCH`  | `/api/v1/users/{username}`           | Feature `update:user`; próprio usuário ou `update:user:others` |
@@ -126,7 +126,7 @@ Respostas relevantes: `201` criado; `400` dados obrigatórios ausentes, username
 
 ## Administração de usuários
 
-Os endpoints administrativos exigem uma sessão válida e a feature `update:user:others`. A autorização é verificada no servidor; ocultar o acesso na interface não substitui essa validação.
+Os endpoints administrativos de consulta e edição de usuários exigem uma sessão válida e a feature `update:user:others`. O banimento e o desbanimento são operações separadas: exigem `update:user:status` e `read:user:others`. A autorização é sempre verificada no servidor; ocultar controles na interface não substitui essa validação.
 
 ### `GET /api/v1/admin/users?search=...`
 
@@ -140,7 +140,7 @@ Consulta os dados administrativos de uma conta, incluindo e-mail e features, mas
 
 Permite alterar `username`, `email`, `password` e `features` de qualquer conta, inclusive a própria conta do administrador. Também aceita `profile_photo` com uma imagem em Data URL nos formatos JPEG, PNG ou WebP, estática, com até 2 MB e dimensões entre 128 e 2048 pixels por lado. A imagem é enviada ao Cloudinary com o identificador estável `profile-photos/{user_id}` e `overwrite: true`, substituindo a foto anterior e invalidando o cache. Quando a conta ainda possui uma foto legada com identificador aleatório, ela é excluída após a persistência da nova referência. A senha segue as mesmas regras de validação e hash do fluxo de edição do perfil. A lista de features é validada contra o catálogo central em `configs/features.js`; valores desconhecidos são rejeitados com `400 ValidationError`. A lista enviada substitui integralmente as permissões atuais, inclusive quando vazia. Campos omitidos permanecem inalterados.
 
-Os endpoints administrativos retornam `403` quando a sessão não possui `update:user:others`, `404` quando o usuário alvo não existe e `400` quando a pesquisa ou os dados enviados são inválidos.
+Os endpoints de consulta e edição retornam `403` quando a sessão não possui `update:user:others`; os endpoints de banimento e desbanimento retornam `403` quando falta `update:user:status` ou `read:user:others`. As operações retornam `404` quando o usuário alvo não existe e `400` quando a pesquisa ou os dados enviados são inválidos.
 
 ### `DELETE /api/v1/admin/users/{username}/photo`
 
@@ -148,9 +148,9 @@ Remove a foto de perfil do usuário. Exige simultaneamente `update:user:others` 
 
 ### Banimento e desbanimento
 
-`POST /api/v1/admin/users/{username}/ban` exige `update:user:others` e bane a conta indicada. O próprio administrador não pode banir a própria conta. A operação atualiza `users.banned_at`, expira todas as sessões existentes e registra o evento na mesma transação. Operações repetidas que não alteram o estado não criam eventos duplicados.
+`POST /api/v1/admin/users/{username}/ban` exige `update:user:status` e `read:user:others` e bane a conta indicada. O próprio administrador não pode banir a própria conta. A operação atualiza `users.banned_at`, expira todas as sessões existentes e registra o evento na mesma transação. Operações repetidas que não alteram o estado não criam eventos duplicados.
 
-`DELETE /api/v1/admin/users/{username}/ban` remove o banimento e registra o evento de desbanimento. Sessões expiradas pelo banimento não são reativadas; o usuário precisa entrar novamente. Ambos os endpoints retornam `200` com os dados administrativos atualizados, sem hash de senha.
+`DELETE /api/v1/admin/users/{username}/ban` exige as mesmas features e remove o banimento, registrando o evento de desbanimento. Sessões expiradas pelo banimento não são reativadas; o usuário precisa entrar novamente. Ambos os endpoints retornam `200` com os dados administrativos atualizados, sem hash de senha.
 
 ### `GET /api/v1/admin/audit/banned`
 
