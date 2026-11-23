@@ -467,6 +467,53 @@ async function setProfilePhoto(userId, profilePhoto) {
   return results.rows[0];
 }
 
+async function ensurePrivilegedFeaturesCoverage(client, targetUserId) {
+  const targetFeatures = await client.query({
+    text: `
+      SELECT features.name
+      FROM features
+      INNER JOIN users ON features.name = ANY(users.features)
+      WHERE users.id = $1
+        AND features.is_privileged = true
+        AND features.deleted_at IS NULL
+      ORDER BY features.name
+    ;`,
+    values: [targetUserId],
+  });
+  const privilegedFeatureNames = targetFeatures.rows.map(
+    (item) => item.name,
+  );
+
+  if (privilegedFeatureNames.length === 0) return;
+
+  const missingFeatures = await client.query({
+    text: `
+      SELECT features.name
+      FROM features
+      WHERE features.is_privileged = true
+        AND features.deleted_at IS NULL
+        AND features.name = ANY($1)
+        AND NOT EXISTS (
+          SELECT 1
+          FROM users
+          WHERE users.id <> $2
+            AND features.name = ANY(users.features)
+        )
+      ORDER BY features.name
+    ;`,
+    values: [privilegedFeatureNames, targetUserId],
+  });
+
+  if (missingFeatures.rowCount > 0) {
+    throw new ConflictError({
+      message:
+        "Esta operação não pode ser realizada porque o usuário é o único que possui uma ou mais permissões privilegiadas.",
+      action:
+        "Conceda essas permissões privilegiadas a outra conta antes de banir ou suspender este usuário.",
+    });
+  }
+}
+
 async function setBanStatus(username, isBanned, actorUserId) {
   if (typeof isBanned !== "boolean") {
     throw new ValidationError({
@@ -485,6 +532,13 @@ async function setBanStatus(username, isBanned, actorUserId) {
   }
 
   return database.transaction(async (client) => {
+    if (isBanned) {
+      await client.query({
+        text: "SELECT pg_advisory_xact_lock(hashtext($1));",
+        values: ["protected-features-coverage"],
+      });
+    }
+
     const lockedUser = await client.query({
       text: "SELECT * FROM users WHERE id = $1 FOR UPDATE;",
       values: [currentUser.id],
@@ -500,6 +554,10 @@ async function setBanStatus(username, isBanned, actorUserId) {
     const lockedUserData = lockedUser.rows[0];
     if (Boolean(lockedUserData.banned_at) === isBanned) {
       return lockedUserData;
+    }
+
+    if (isBanned) {
+      await ensurePrivilegedFeaturesCoverage(client, currentUser.id);
     }
 
     const results = await client.query({
@@ -594,6 +652,13 @@ async function setTimeoutStatus(username, timeoutUntil, actorUserId) {
   }
 
   return database.transaction(async (client) => {
+    if (normalizedTimeout) {
+      await client.query({
+        text: "SELECT pg_advisory_xact_lock(hashtext($1));",
+        values: ["protected-features-coverage"],
+      });
+    }
+
     const lockedUser = await client.query({
       text: "SELECT id, banned_at FROM users WHERE id = $1 FOR UPDATE;",
       values: [currentUser.id],
@@ -612,6 +677,10 @@ async function setTimeoutStatus(username, timeoutUntil, actorUserId) {
           "Não é possível aplicar timeout a uma conta que já está banida.",
         action: "Remova o banimento antes de aplicar uma suspensão temporária.",
       });
+    }
+
+    if (normalizedTimeout) {
+      await ensurePrivilegedFeaturesCoverage(client, currentUser.id);
     }
 
     const result = await client.query({
