@@ -179,7 +179,7 @@ function MtgAdventureCreator() {
                   </span>
                   <h3>{slot.title}</h3>
                 </div>
-                <div className={styles.cardImagePlaceholder}>
+                <div className={styles.cardLoadingPlaceholder}>
                   <span className={styles.cardImageLoader}></span>
                   <span>Buscando carta...</span>
                 </div>
