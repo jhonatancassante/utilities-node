@@ -97,7 +97,7 @@ describe("features/mtg-adventure-creator/lib/scryfall.js", () => {
       };
 
       expect(normalizeScryfallCard(card, ADVENTURE_SLOTS[0]).flavorText).toBe(
-        "Flavor text from the front.\\n\\nFlavor text from the back.",
+        "Flavor text from the front.\n\nFlavor text from the back.",
       );
     });
 
