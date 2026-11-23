@@ -803,9 +803,11 @@ function UserEditor({
                 ))
             }
           >
-            {user.timeout_until && new Date(user.timeout_until) > new Date()
-              ? "Gerenciar suspensão"
-              : "Suspender"}
+            {isUpdatingTimeout
+              ? "Verificando..."
+              : user.timeout_until && new Date(user.timeout_until) > new Date()
+                ? "Gerenciar suspensão"
+                : "Suspender"}
           </Button>
           {isEditingSelf && (
             <small>
@@ -1281,9 +1283,7 @@ function UserEditor({
                 icon="fa-clock"
                 disabled={isUpdatingTimeout || Boolean(user.banned_at)}
               >
-                {isUpdatingTimeout
-                  ? "Verificando..."
-                  : "Suspender"}
+                {isUpdatingTimeout ? "Aplicando..." : "Suspender"}
               </Button>
               {user.timeout_until &&
                 new Date(user.timeout_until) > new Date() && (
