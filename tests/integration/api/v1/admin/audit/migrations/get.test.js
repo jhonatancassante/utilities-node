@@ -60,7 +60,7 @@ describe("GET /api/v1/admin/audit/migrations", () => {
     test("Consulta o histórico registrado em pgmigrations", async () => {
       const sessionObject = await createAuditorSession();
       const expectedMigrations = await database.query({
-        text: "SELECT id, name, run_on FROM pgmigrations ORDER BY run_on DESC, id DESC;",
+        text: "SELECT id, name, run_on AT TIME ZONE 'UTC' AS run_on FROM pgmigrations ORDER BY run_on DESC, id DESC;",
       });
 
       const response = await fetch(auditUrl(), {
