@@ -11,7 +11,7 @@ export default controller.createController(
       postHandler,
     ],
   },
-  { middlewares: [controller.injectUserOrAnonymousOnInvalidSession] },
+  { middlewares: [controller.injectAnonymousOrUser] },
 );
 
 async function getHandler(request, response) {
