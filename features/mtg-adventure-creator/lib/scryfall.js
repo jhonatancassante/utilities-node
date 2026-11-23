@@ -72,7 +72,7 @@ export function normalizeScryfallCard(card, slot) {
     ? card.card_faces
         .map((face) => face.printed_text || face.oracle_text)
         .filter(Boolean)
-        .join("\\n\\n")
+        .join("\n\n")
     : card.printed_text || card.oracle_text;
 
   return {
