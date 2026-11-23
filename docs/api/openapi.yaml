@@ -263,10 +263,10 @@ paths:
       operationId: searchAdminUsers
       summary: Pesquisa usuários para administração
       description: |
-        Exige sessão válida e a feature update:user:others.
+        Exige sessão válida e a feature read:user:others.
         Pesquisa por trecho de username ou e-mail, sem diferenciar maiúsculas
         de minúsculas. Retorna até dez resultados, pode incluir a própria conta do administrador e nunca inclui hash de senha.
-      x-required-feature: update:user:others
+      x-required-feature: read:user:others
       security:
         - SessionCookie: []
       parameters:
@@ -305,8 +305,8 @@ paths:
       tags: [Admin]
       operationId: getAdminUser
       summary: Consulta os dados administrativos de um usuário
-      description: Exige sessão válida e update:user:others. Inclui e-mail e features, mas nunca o hash da senha.
-      x-required-feature: update:user:others
+      description: Exige sessão válida e read:user:others. Inclui e-mail e features, mas nunca o hash da senha.
+      x-required-feature: read:user:others
       security:
         - SessionCookie: []
       responses:
@@ -330,8 +330,8 @@ paths:
       tags: [Admin]
       operationId: updateAdminUser
       summary: Atualiza dados e permissões de um usuário
-      description: Exige update:user:others e permite alterar qualquer conta, inclusive a própria conta do administrador. Aceita também profile_photo como Data URL de imagem JPEG, PNG ou WebP estática, até 2 MB e dimensões entre 128 e 2048 pixels. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
-      x-required-feature: update:user:others
+      description: Exige read:user:others. Alterações de username, email, password e profile_photo exigem update:user:others; alterações de features exigem update:user:features. Requisições que alteram ambos os grupos exigem as duas features. Permite alterar qualquer conta, inclusive a própria conta do administrador. A lista de features enviada substitui as permissões atuais e só aceita valores do catálogo da aplicação.
+      x-required-feature: update:user:others (general fields) / update:user:features (features)
       security:
         - SessionCookie: []
       requestBody:
@@ -367,8 +367,8 @@ paths:
       tags: [Admin]
       operationId: banAdminUser
       summary: Bane uma conta
-      description: Exige sessão válida e update:user:others. Não permite auto banimento. Expira sessões e registra o evento na mesma transação.
-      x-required-feature: update:user:others
+      description: Exige sessão válida, update:user:status e read:user:others. Não permite auto banimento. Expira sessões e registra o evento na mesma transação.
+      x-required-feature: update:user:status
       security:
         - SessionCookie: []
       responses:
@@ -392,13 +392,81 @@ paths:
       tags: [Admin]
       operationId: unbanAdminUser
       summary: Remove o banimento de uma conta
-      description: Exige sessão válida e update:user:others. Não reativa sessões antigas.
-      x-required-feature: update:user:others
+      description: Exige sessão válida, update:user:status e read:user:others. Não reativa sessões antigas.
+      x-required-feature: update:user:status
       security:
         - SessionCookie: []
       responses:
         "200":
           description: Conta desbanida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/admin/users/{username}/timeout:
+    parameters:
+      - $ref: "#/components/parameters/Username"
+    post:
+      tags: [Admin]
+      operationId: applyAdminUserTimeout
+      summary: Aplica suspensão temporária a uma conta
+      description: Exige sessão válida, update:user:status e read:user:others. Recebe timeout_until como data/hora ISO 8601 futura. Não permite suspender a própria conta nem uma conta banida. Encerra as sessões existentes e bloqueia login, renovação e uso de sessões até o prazo. A liberação é automática, mas exige novo login.
+      x-required-feature: update:user:status
+      security:
+        - SessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [timeout_until]
+              properties:
+                timeout_until:
+                  type: string
+                  format: date-time
+      responses:
+        "200":
+          description: Suspensão temporária aplicada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "400":
+          $ref: "#/components/responses/Validation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/UserNotFound"
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      tags: [Admin]
+      operationId: removeAdminUserTimeout
+      summary: Remove suspensão temporária de uma conta
+      description: Exige sessão válida, update:user:status e read:user:others. Não reativa sessões expiradas anteriormente.
+      x-required-feature: update:user:status
+      security:
+        - SessionCookie: []
+      responses:
+        "200":
+          description: Suspensão temporária removida.
           content:
             application/json:
               schema:
@@ -590,6 +658,7 @@ paths:
         retorna ValidationError (400). Espaços no início e no fim do e-mail
         são removidos antes da consulta. Credenciais incorretas retornam uma
         mensagem genérica, sem distinguir e-mail inexistente de senha errada.
+        Contas banidas ou com timeout ativo recebem 403 e não iniciam sessão.
       x-required-feature: create:session
       requestBody:
         required: true
@@ -869,6 +938,10 @@ components:
             banned_at:
               type: [string, "null"]
               format: date-time
+            timeout_until:
+              type: [string, "null"]
+              format: date-time
+              description: Data e hora até quando a conta permanece suspensa temporariamente.
     SessionCreate:
       type: object
       required: [email, password]
@@ -959,6 +1032,24 @@ components:
               const: ForbiddenError
             status_code:
               const: 403
+    TimedOutUserError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: TimedOutUserError
+            status_code:
+              const: 403
+    BannedUserError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          properties:
+            name:
+              const: BannedUserError
+            status_code:
+              const: 403
     NotFoundError:
       allOf:
         - $ref: "#/components/schemas/Error"
@@ -1000,11 +1091,14 @@ components:
           schema:
             $ref: "#/components/schemas/UnauthorizedError"
     Forbidden:
-      description: Usuário não possui a feature necessária.
+      description: Feature necessária ausente ou conta banida/suspensa temporariamente.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/ForbiddenError"
+            oneOf:
+              - $ref: "#/components/schemas/ForbiddenError"
+              - $ref: "#/components/schemas/BannedUserError"
+              - $ref: "#/components/schemas/TimedOutUserError"
     UserNotFound:
       description: Usuário não encontrado.
       content:

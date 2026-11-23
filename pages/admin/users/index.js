@@ -5,6 +5,7 @@ import Image from "next/image";
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
+import Modal from "@/components/Modal";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
@@ -155,20 +156,26 @@ function AdminUsersPage() {
     };
   }, [router.isReady, router.query.username, user]);
 
-  async function handleBanStatusChanged(updatedUser) {
+  async function handleBanStatusChanged(updatedUser, successMessage) {
     setSelectedUser(updatedUser);
     setResults((currentResults) =>
       currentResults.map((result) =>
         result.id === updatedUser.id
-          ? { ...result, banned_at: updatedUser.banned_at }
+          ? {
+              ...result,
+              banned_at: updatedUser.banned_at,
+              timeout_until: updatedUser.timeout_until,
+            }
           : result,
       ),
     );
     setFeedback({
       type: "success",
-      message: updatedUser.banned_at
-        ? "Usuário banido com sucesso."
-        : "Usuário desbanido com sucesso.",
+      message:
+        successMessage ||
+        (updatedUser.banned_at
+          ? "Usuário banido com sucesso."
+          : "Usuário desbanido com sucesso."),
     });
   }
 
@@ -354,10 +361,19 @@ function AdminUsersPage() {
                               className={`${styles.userStatusBadge} ${
                                 result.banned_at
                                   ? styles.userStatusBanned
-                                  : styles.userStatusActive
+                                  : result.timeout_until &&
+                                      new Date(result.timeout_until) >
+                                        new Date()
+                                    ? styles.userStatusTimeout
+                                    : styles.userStatusActive
                               }`}
                             >
-                              {result.banned_at ? "Banido" : "Ativo"}
+                              {result.banned_at
+                                ? "Banido"
+                                : result.timeout_until &&
+                                    new Date(result.timeout_until) > new Date()
+                                  ? "Suspenso"
+                                  : "Ativo"}
                             </span>
                           </span>
                           <small>{result.email}</small>
@@ -380,6 +396,13 @@ function AdminUsersPage() {
                 currentUserId={user.id}
                 onUpdated={handleUserUpdated}
                 onBanStatusChanged={handleBanStatusChanged}
+                canManageUserStatus={user.features.includes(
+                  "update:user:status",
+                )}
+                canManageUserData={user.features.includes("update:user:others")}
+                canManageUserFeatures={user.features.includes(
+                  "update:user:features",
+                )}
                 onCancel={() => setSelectedUser(null)}
               />
             )}
@@ -395,6 +418,9 @@ function UserEditor({
   currentUserId,
   onUpdated,
   onBanStatusChanged,
+  canManageUserStatus,
+  canManageUserData,
+  canManageUserFeatures,
   onCancel,
 }) {
   const isEditingSelf = user.id === currentUserId;
@@ -410,11 +436,26 @@ function UserEditor({
   const [protectedOnly, setProtectedOnly] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUpdatingBan, setIsUpdatingBan] = useState(false);
+  const [isUpdatingTimeout, setIsUpdatingTimeout] = useState(false);
+  const [isTimeoutModalOpen, setIsTimeoutModalOpen] = useState(false);
+  const [timeoutMode, setTimeoutMode] = useState("duration");
+  const [timeoutAmount, setTimeoutAmount] = useState("1");
+  const [timeoutUnit, setTimeoutUnit] = useState("hours");
+  const [timeoutDate, setTimeoutDate] = useState(() => {
+    const date = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  });
   const [feedback, setFeedback] = useState(null);
   const [features, setFeatures] = useState([]);
-  const [isLoadingFeatures, setIsLoadingFeatures] = useState(true);
+  const [isLoadingFeatures, setIsLoadingFeatures] = useState(
+    canManageUserFeatures,
+  );
 
   useEffect(() => {
+    if (!canManageUserFeatures) return undefined;
+
     let isMounted = true;
 
     requestAPI("/api/v1/admin/users/features")
@@ -437,7 +478,7 @@ function UserEditor({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [canManageUserFeatures]);
 
   const featureGroups = useMemo(
     () =>
@@ -491,7 +532,8 @@ function UserEditor({
   }
 
   async function handleToggleBan() {
-    if (isEditingSelf || isUpdatingBan || isSaving) return;
+    if (!canManageUserStatus || isEditingSelf || isUpdatingBan || isSaving)
+      return;
 
     const isBanned = Boolean(user.banned_at);
     setIsUpdatingBan(true);
@@ -513,6 +555,140 @@ function UserEditor({
       }));
     } finally {
       setIsUpdatingBan(false);
+    }
+  }
+
+  async function handleOpenTimeoutModal() {
+    if (!canManageUserStatus || isEditingSelf || isUpdatingTimeout) return;
+
+    setIsUpdatingTimeout(true);
+    setFeedback(null);
+
+    try {
+      await requestAPI(
+        `/api/v1/admin/users/${encodeURIComponent(user.username)}/timeout`,
+      );
+
+      const date = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      setTimeoutDate(
+        new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 16),
+      );
+      setIsTimeoutModalOpen(true);
+    } catch (requestError) {
+      setFeedback((currentFeedback) => ({
+        id: (currentFeedback?.id ?? 0) + 1,
+        type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
+        message: requestError.message,
+        action: requestError.action,
+      }));
+    } finally {
+      setIsUpdatingTimeout(false);
+    }
+  }
+
+  async function handleTimeoutSubmit(event) {
+    event.preventDefault();
+    if (
+      !canManageUserStatus ||
+      isEditingSelf ||
+      isUpdatingTimeout ||
+      user.banned_at
+    )
+      return;
+
+    let expiresAt;
+    if (timeoutMode === "date") {
+      expiresAt = new Date(timeoutDate);
+    } else {
+      const amount = Number(timeoutAmount);
+      if (!Number.isInteger(amount) || amount < 1 || amount > 10000) {
+        setFeedback({
+          type: "error",
+          message: "Informe uma quantidade inteira entre 1 e 10.000.",
+        });
+        return;
+      }
+
+      expiresAt = new Date();
+      if (timeoutUnit === "hours") {
+        expiresAt.setHours(expiresAt.getHours() + amount);
+      } else if (timeoutUnit === "days") {
+        expiresAt.setDate(expiresAt.getDate() + amount);
+      } else {
+        const day = expiresAt.getDate();
+        expiresAt.setDate(1);
+        expiresAt.setMonth(expiresAt.getMonth() + amount);
+        const lastDay = new Date(
+          expiresAt.getFullYear(),
+          expiresAt.getMonth() + 1,
+          0,
+        ).getDate();
+        expiresAt.setDate(Math.min(day, lastDay));
+      }
+    }
+
+    if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
+      setFeedback({
+        type: "error",
+        message: "Informe uma data e hora futuras para o timeout.",
+      });
+      return;
+    }
+
+    setIsUpdatingTimeout(true);
+    setFeedback(null);
+    try {
+      const updatedUser = await requestAPI(
+        "/api/v1/admin/users/" + encodeURIComponent(user.username) + "/timeout",
+        {
+          method: "POST",
+          body: JSON.stringify({ timeout_until: expiresAt.toISOString() }),
+        },
+      );
+      setIsTimeoutModalOpen(false);
+      await onBanStatusChanged(
+        updatedUser,
+        "Suspensão aplicada com sucesso. As sessões anteriores foram encerradas.",
+      );
+    } catch (requestError) {
+      setFeedback({
+        type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
+        message: requestError.message,
+        action: requestError.action,
+      });
+    } finally {
+      setIsUpdatingTimeout(false);
+    }
+  }
+
+  async function handleRemoveTimeout() {
+    if (!canManageUserStatus || isEditingSelf || isUpdatingTimeout) return;
+
+    setIsUpdatingTimeout(true);
+    setFeedback(null);
+    try {
+      const updatedUser = await requestAPI(
+        "/api/v1/admin/users/" + encodeURIComponent(user.username) + "/timeout",
+        { method: "DELETE" },
+      );
+      setIsTimeoutModalOpen(false);
+      await onBanStatusChanged(
+        updatedUser,
+        "Suspensão removida. O usuário poderá entrar novamente, mas precisará fazer login.",
+      );
+    } catch (requestError) {
+      setFeedback({
+        type: "error",
+        name: requestError.statusCode ? requestError.name : undefined,
+        message: requestError.message,
+        action: requestError.action,
+      });
+    } finally {
+      setIsUpdatingTimeout(false);
     }
   }
 
@@ -545,10 +721,12 @@ function UserEditor({
     }
     if (form.password) payload.password = form.password;
 
-    const currentFeatures = [...user.features].sort();
-    const nextFeatures = [...new Set(form.features)].sort();
-    if (JSON.stringify(currentFeatures) !== JSON.stringify(nextFeatures)) {
-      payload.features = nextFeatures;
+    if (canManageUserFeatures) {
+      const currentFeatures = [...user.features].sort();
+      const nextFeatures = [...new Set(form.features)].sort();
+      if (JSON.stringify(currentFeatures) !== JSON.stringify(nextFeatures)) {
+        payload.features = nextFeatures;
+      }
     }
 
     if (Object.keys(payload).length === 0) {
@@ -591,25 +769,53 @@ function UserEditor({
         <span className={styles.userId}>ID: {user.id}</span>
       </div>
 
-      <div className={styles.banActions}>
-        <Button
-          variant={user.banned_at ? "success" : "danger"}
-          icon={user.banned_at ? "fa-unlock" : "fa-ban"}
-          onClick={handleToggleBan}
-          disabled={isEditingSelf || isSaving || isUpdatingBan}
-        >
-          {isUpdatingBan
-            ? user.banned_at
-              ? "Desbanindo..."
-              : "Banindo..."
-            : user.banned_at
-              ? "Desbanir usuário"
-              : "Banir usuário"}
-        </Button>
-        {isEditingSelf && (
-          <small>Não é permitido banir a própria conta administrativa.</small>
-        )}
-      </div>
+      {canManageUserStatus && (
+        <div className={styles.banActions}>
+          <Button
+            variant={user.banned_at ? "success" : "danger"}
+            icon={user.banned_at ? "fa-unlock" : "fa-ban"}
+            onClick={handleToggleBan}
+            disabled={
+              isEditingSelf || isSaving || isUpdatingBan || isUpdatingTimeout
+            }
+          >
+            {isUpdatingBan
+              ? user.banned_at
+                ? "Desbanindo..."
+                : "Banindo..."
+              : user.banned_at
+                ? "Desbanir usuário"
+                : "Banir usuário"}
+          </Button>
+          <Button
+            variant="outline"
+            icon="fa-clock"
+            onClick={handleOpenTimeoutModal}
+            disabled={
+              isEditingSelf ||
+              isSaving ||
+              isUpdatingBan ||
+              isUpdatingTimeout ||
+              (Boolean(user.banned_at) &&
+                !(
+                  user.timeout_until &&
+                  new Date(user.timeout_until) > new Date()
+                ))
+            }
+          >
+            {isUpdatingTimeout
+              ? "Verificando..."
+              : user.timeout_until && new Date(user.timeout_until) > new Date()
+                ? "Gerenciar suspensão"
+                : "Suspender"}
+          </Button>
+          {isEditingSelf && (
+            <small>
+              Não é permitido banir ou suspender a própria conta administrativa.
+            </small>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} noValidate>
         {user.profile_photo_url && (
@@ -624,283 +830,295 @@ function UserEditor({
             <div>
               <strong>Foto de perfil</strong>
               <small>A imagem atual desta conta.</small>
-              <Button
-                type="button"
-                variant="danger"
-                icon="fa-trash"
-                disabled={isSaving}
-                onClick={async () => {
-                  setIsSaving(true);
-                  setFeedback(null);
-                  try {
-                    const updatedUser = await requestAPI(
-                      `/api/v1/admin/users/${encodeURIComponent(user.username)}/photo`,
-                      { method: "DELETE" },
-                    );
-                    await onUpdated(updatedUser);
-                  } catch (requestError) {
-                    setFeedback({
-                      type: "error",
-                      name: requestError.statusCode
-                        ? requestError.name
-                        : undefined,
-                      message: requestError.message,
-                      action: requestError.action,
-                    });
-                  } finally {
-                    setIsSaving(false);
-                  }
-                }}
-              >
-                Remover foto de perfil
-              </Button>
+              {canManageUserData && (
+                <Button
+                  type="button"
+                  variant="danger"
+                  icon="fa-trash"
+                  disabled={isSaving}
+                  onClick={async () => {
+                    setIsSaving(true);
+                    setFeedback(null);
+                    try {
+                      const updatedUser = await requestAPI(
+                        `/api/v1/admin/users/${encodeURIComponent(user.username)}/photo`,
+                        { method: "DELETE" },
+                      );
+                      await onUpdated(updatedUser);
+                    } catch (requestError) {
+                      setFeedback({
+                        type: "error",
+                        name: requestError.statusCode
+                          ? requestError.name
+                          : undefined,
+                        message: requestError.message,
+                        action: requestError.action,
+                      });
+                    } finally {
+                      setIsSaving(false);
+                    }
+                  }}
+                >
+                  Remover foto de perfil
+                </Button>
+              )}
             </div>
           </div>
         )}
-        <div className={styles.formGrid}>
-          <div className={styles.field}>
-            <label className={shared.label} htmlFor="edit-username">
-              Nome de usuário
-            </label>
-            <input
-              className={shared.input}
-              id="edit-username"
-              value={form.username}
-              onChange={(event) => updateField("username", event.target.value)}
-              disabled={isSaving}
-            />
-          </div>
-          <div className={styles.field}>
-            <label className={shared.label} htmlFor="edit-email">
-              E-mail
-            </label>
-            <input
-              className={shared.input}
-              id="edit-email"
-              type="email"
-              value={form.email}
-              onChange={(event) => updateField("email", event.target.value)}
-              disabled={isSaving}
-            />
-          </div>
-        </div>
-
-        <div className={styles.passwordSection}>
-          <h3>Alterar senha</h3>
-          <p>Deixe os campos em branco para manter a senha atual.</p>
+        {canManageUserData && (
           <div className={styles.formGrid}>
             <div className={styles.field}>
-              <label className={shared.label} htmlFor="edit-password">
-                Nova senha
+              <label className={shared.label} htmlFor="edit-username">
+                Nome de usuário
               </label>
               <input
                 className={shared.input}
-                id="edit-password"
-                type="password"
-                autoComplete="new-password"
-                value={form.password}
+                id="edit-username"
+                value={form.username}
                 onChange={(event) =>
-                  updateField("password", event.target.value)
+                  updateField("username", event.target.value)
                 }
                 disabled={isSaving}
               />
             </div>
             <div className={styles.field}>
-              <label
-                className={shared.label}
-                htmlFor="edit-password-confirmation"
-              >
-                Confirmar nova senha
+              <label className={shared.label} htmlFor="edit-email">
+                E-mail
               </label>
               <input
                 className={shared.input}
-                id="edit-password-confirmation"
-                type="password"
-                autoComplete="new-password"
-                value={form.passwordConfirmation}
-                onChange={(event) =>
-                  updateField("passwordConfirmation", event.target.value)
-                }
+                id="edit-email"
+                type="email"
+                value={form.email}
+                onChange={(event) => updateField("email", event.target.value)}
                 disabled={isSaving}
               />
             </div>
           </div>
-        </div>
+        )}
 
-        <div className={styles.formActions}>
-          <Button type="submit" icon="fa-save" disabled={isSaving}>
-            {isSaving ? "Salvando..." : "Salvar alterações"}
-          </Button>
-          <Button
-            type="button"
-            variant="danger"
-            icon="fa-times"
-            onClick={handleCancel}
-            disabled={isSaving}
-          >
-            Cancelar
-          </Button>
-        </div>
+        {canManageUserData && (
+          <div className={styles.passwordSection}>
+            <h3>Alterar senha</h3>
+            <p>Deixe os campos em branco para manter a senha atual.</p>
+            <div className={styles.formGrid}>
+              <div className={styles.field}>
+                <label className={shared.label} htmlFor="edit-password">
+                  Nova senha
+                </label>
+                <input
+                  className={shared.input}
+                  id="edit-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={form.password}
+                  onChange={(event) =>
+                    updateField("password", event.target.value)
+                  }
+                  disabled={isSaving}
+                />
+              </div>
+              <div className={styles.field}>
+                <label
+                  className={shared.label}
+                  htmlFor="edit-password-confirmation"
+                >
+                  Confirmar nova senha
+                </label>
+                <input
+                  className={shared.input}
+                  id="edit-password-confirmation"
+                  type="password"
+                  autoComplete="new-password"
+                  value={form.passwordConfirmation}
+                  onChange={(event) =>
+                    updateField("passwordConfirmation", event.target.value)
+                  }
+                  disabled={isSaving}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
-        <div className={styles.featureSection}>
-          <div className={styles.sectionHeading}>
-            <div>
-              <h3>Permissões e features</h3>
-              <span>
-                Selecione as permissões que esta conta poderá utilizar.
+        {canManageUserData && (
+          <div className={styles.formActions}>
+            <Button type="submit" icon="fa-save" disabled={isSaving}>
+              {isSaving ? "Salvando..." : "Salvar alterações"}
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              icon="fa-times"
+              onClick={handleCancel}
+              disabled={isSaving}
+            >
+              Cancelar
+            </Button>
+          </div>
+        )}
+
+        {canManageUserFeatures && (
+          <div className={styles.featureSection}>
+            <div className={styles.sectionHeading}>
+              <div>
+                <h3>Permissões e features</h3>
+                <span>
+                  Selecione as permissões que esta conta poderá utilizar.
+                </span>
+              </div>
+              <span className={styles.featureCount}>
+                {form.features.length} selecionada(s)
               </span>
             </div>
-            <span className={styles.featureCount}>
-              {form.features.length} selecionada(s)
-            </span>
-          </div>
 
-          {isLoadingFeatures && <p>Carregando permissões disponíveis...</p>}
+            {isLoadingFeatures && <p>Carregando permissões disponíveis...</p>}
 
-          <input
-            className={shared.input}
-            type="search"
-            aria-label="Pesquisar features"
-            placeholder="Pesquisar por nome ou descrição da feature"
-            value={featureSearch}
-            onChange={(event) => setFeatureSearch(event.target.value)}
-            disabled={isSaving}
-          />
+            <input
+              className={shared.input}
+              type="search"
+              aria-label="Pesquisar features"
+              placeholder="Pesquisar por nome ou descrição da feature"
+              value={featureSearch}
+              onChange={(event) => setFeatureSearch(event.target.value)}
+              disabled={isSaving}
+            />
 
-          <div className={styles.searchFilters}>
-            <label className={styles.filterSwitch}>
-              <input
-                type="checkbox"
-                checked={privilegedOnly}
-                onChange={(event) => setPrivilegedOnly(event.target.checked)}
-                disabled={isSaving}
-              />
-              <span className={styles.switch} aria-hidden="true"></span>
-              <span>Privilegiadas</span>
-            </label>
-            <label className={styles.filterSwitch}>
-              <input
-                type="checkbox"
-                checked={protectedOnly}
-                onChange={(event) => setProtectedOnly(event.target.checked)}
-                disabled={isSaving}
-              />
-              <span className={styles.switch} aria-hidden="true"></span>
-              <span>Protegidas</span>
-            </label>
-          </div>
+            <div className={styles.searchFilters}>
+              <label className={styles.filterSwitch}>
+                <input
+                  type="checkbox"
+                  checked={privilegedOnly}
+                  onChange={(event) => setPrivilegedOnly(event.target.checked)}
+                  disabled={isSaving}
+                />
+                <span className={styles.switch} aria-hidden="true"></span>
+                <span>Privilegiadas</span>
+              </label>
+              <label className={styles.filterSwitch}>
+                <input
+                  type="checkbox"
+                  checked={protectedOnly}
+                  onChange={(event) => setProtectedOnly(event.target.checked)}
+                  disabled={isSaving}
+                />
+                <span className={styles.switch} aria-hidden="true"></span>
+                <span>Protegidas</span>
+              </label>
+            </div>
 
-          <div className={styles.featureGroups}>
-            {featureGroups.map((group) => {
-              const groupFeatures = filteredFeatures.filter(
-                (feature) => feature.group_name === group,
-              );
-              if (groupFeatures.length === 0) return null;
+            <div className={styles.featureGroups}>
+              {featureGroups.map((group) => {
+                const groupFeatures = filteredFeatures.filter(
+                  (feature) => feature.group_name === group,
+                );
+                if (groupFeatures.length === 0) return null;
 
-              return (
-                <div className={styles.featureGroup} key={group}>
-                  <h4>{group}</h4>
-                  <div className={styles.featureList}>
-                    {groupFeatures.map((feature) => {
-                      const isLockedForSelf =
-                        isEditingSelf && feature.is_self_removable === false;
+                return (
+                  <div className={styles.featureGroup} key={group}>
+                    <h4>{group}</h4>
+                    <div className={styles.featureList}>
+                      {groupFeatures.map((feature) => {
+                        const isLockedForSelf =
+                          isEditingSelf && feature.is_self_removable === false;
 
-                      return (
-                        <label
-                          className={`${styles.featureOption} ${
-                            isLockedForSelf ? styles.featureOptionLocked : ""
-                          } ${
-                            feature.is_privileged ||
-                            feature.is_protected ||
-                            feature.is_self_removable === false
-                              ? styles.featureOptionBadged
-                              : ""
-                          }`}
-                          key={feature.name}
-                          title={
-                            isLockedForSelf &&
-                            form.features.includes(feature.name)
-                              ? "Esta feature não pode ser removida pelo próprio usuário"
-                              : undefined
-                          }
-                        >
-                          <span className={styles.featureBadges}>
-                            {feature.is_privileged && (
-                              <span
-                                className={`${styles.featureBadge} ${styles.privilegedBadge}`}
-                                title="Permissão privilegiada"
-                                role="img"
-                                aria-label="Permissão privilegiada"
-                              >
-                                <i
-                                  className="fas fa-crown"
-                                  aria-hidden="true"
-                                ></i>
-                              </span>
-                            )}
-                            {feature.is_protected && (
-                              <span
-                                className={`${styles.featureBadge} ${styles.protectedFeatureBadge}`}
-                                title="Feature protegida: não pode ser alterada ou excluída"
-                                role="img"
-                                aria-label="Feature protegida"
-                              >
-                                <i
-                                  className="fas fa-shield-alt"
-                                  aria-hidden="true"
-                                ></i>
-                              </span>
-                            )}
-                            {feature.is_self_removable === false && (
-                              <span
-                                className={`${styles.featureBadge} ${styles.protectedBadge}`}
-                                title="Não pode ser removida pelo próprio usuário"
-                                role="img"
-                                aria-label="Não pode ser removida pelo próprio usuário"
-                              >
-                                <i
-                                  className="fas fa-ban"
-                                  aria-hidden="true"
-                                ></i>
-                              </span>
-                            )}
-                          </span>
-                          <input
-                            type="checkbox"
-                            checked={form.features.includes(feature.name)}
-                            onChange={() => toggleFeature(feature.name)}
-                            disabled={
-                              isSaving ||
-                              (isLockedForSelf &&
-                                form.features.includes(feature.name))
-                            }
-                          />
-                          <span
-                            className={`${styles.switch} ${
-                              isLockedForSelf ? styles.switchLocked : ""
+                        return (
+                          <label
+                            className={`${styles.featureOption} ${
+                              isLockedForSelf ? styles.featureOptionLocked : ""
+                            } ${
+                              feature.is_privileged ||
+                              feature.is_protected ||
+                              feature.is_self_removable === false
+                                ? styles.featureOptionBadged
+                                : ""
                             }`}
-                            aria-hidden="true"
-                          ></span>
-                          <span className={styles.featureText}>
-                            <strong>{feature.label}</strong>
-                            <small>{feature.description}</small>
-                            <code>{feature.name}</code>
-                          </span>
-                        </label>
-                      );
-                    })}
+                            key={feature.name}
+                            title={
+                              isLockedForSelf &&
+                              form.features.includes(feature.name)
+                                ? "Esta feature não pode ser removida pelo próprio usuário"
+                                : undefined
+                            }
+                          >
+                            <span className={styles.featureBadges}>
+                              {feature.is_privileged && (
+                                <span
+                                  className={`${styles.featureBadge} ${styles.privilegedBadge}`}
+                                  title="Permissão privilegiada"
+                                  role="img"
+                                  aria-label="Permissão privilegiada"
+                                >
+                                  <i
+                                    className="fas fa-crown"
+                                    aria-hidden="true"
+                                  ></i>
+                                </span>
+                              )}
+                              {feature.is_protected && (
+                                <span
+                                  className={`${styles.featureBadge} ${styles.protectedFeatureBadge}`}
+                                  title="Feature protegida: não pode ser alterada ou excluída"
+                                  role="img"
+                                  aria-label="Feature protegida"
+                                >
+                                  <i
+                                    className="fas fa-shield-alt"
+                                    aria-hidden="true"
+                                  ></i>
+                                </span>
+                              )}
+                              {feature.is_self_removable === false && (
+                                <span
+                                  className={`${styles.featureBadge} ${styles.protectedBadge}`}
+                                  title="Não pode ser removida pelo próprio usuário"
+                                  role="img"
+                                  aria-label="Não pode ser removida pelo próprio usuário"
+                                >
+                                  <i
+                                    className="fas fa-ban"
+                                    aria-hidden="true"
+                                  ></i>
+                                </span>
+                              )}
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={form.features.includes(feature.name)}
+                              onChange={() => toggleFeature(feature.name)}
+                              disabled={
+                                isSaving ||
+                                (isLockedForSelf &&
+                                  form.features.includes(feature.name))
+                              }
+                            />
+                            <span
+                              className={`${styles.switch} ${
+                                isLockedForSelf ? styles.switchLocked : ""
+                              }`}
+                              aria-hidden="true"
+                            ></span>
+                            <span className={styles.featureText}>
+                              <strong>{feature.label}</strong>
+                              <small>{feature.description}</small>
+                              <code>{feature.name}</code>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          {filteredFeatures.length === 0 && (
-            <p className={styles.emptyFeatures}>
-              Nenhuma feature corresponde à pesquisa ou aos filtros.
-            </p>
-          )}
-        </div>
+            {filteredFeatures.length === 0 && (
+              <p className={styles.emptyFeatures}>
+                Nenhuma feature corresponde à pesquisa ou aos filtros.
+              </p>
+            )}
+          </div>
+        )}
 
         {feedback &&
           (feedback.type === "critical" ? (
@@ -923,21 +1141,173 @@ function UserEditor({
             </div>
           ))}
 
-        <div className={styles.formActions}>
-          <Button type="submit" icon="fa-save" disabled={isSaving}>
-            {isSaving ? "Salvando..." : "Salvar alterações"}
-          </Button>
-          <Button
-            type="button"
-            variant="danger"
-            icon="fa-times"
-            onClick={handleCancel}
-            disabled={isSaving}
-          >
-            Cancelar
-          </Button>
-        </div>
+        {canManageUserFeatures && (
+          <div className={styles.formActions}>
+            <Button type="submit" icon="fa-save" disabled={isSaving}>
+              {isSaving ? "Salvando..." : "Salvar alterações"}
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              icon="fa-times"
+              onClick={handleCancel}
+              disabled={isSaving}
+            >
+              Cancelar
+            </Button>
+          </div>
+        )}
       </form>
+
+      {isTimeoutModalOpen && (
+        <Modal
+          title="Gerenciar suspensão"
+          onClose={() => {
+            if (!isUpdatingTimeout) setIsTimeoutModalOpen(false);
+          }}
+          closeOnBackdrop={!isUpdatingTimeout}
+          closeOnEscape={!isUpdatingTimeout}
+        >
+          {user.timeout_until && new Date(user.timeout_until) > new Date() && (
+            <div className={styles.timeoutCurrent}>
+              <strong>Suspensão ativa</strong>
+              <span>
+                Acesso suspenso até{" "}
+                {new Date(user.timeout_until).toLocaleString("pt-BR")}
+              </span>
+            </div>
+          )}
+
+          <form className={styles.timeoutForm} onSubmit={handleTimeoutSubmit}>
+            <p>
+              O usuário ficará sem acesso até o prazo escolhido. As sessões
+              atuais serão encerradas e não serão reativadas automaticamente.
+              {user.banned_at &&
+                " A conta também está banida; a suspensão poderá ser removida, mas o banimento continuará ativo."}
+            </p>
+
+            <div className={styles.timeoutMode}>
+              <label>
+                <input
+                  type="radio"
+                  name="timeout-mode"
+                  value="duration"
+                  checked={timeoutMode === "duration"}
+                  onChange={() => setTimeoutMode("duration")}
+                  disabled={isUpdatingTimeout}
+                />
+                Por duração
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="timeout-mode"
+                  value="date"
+                  checked={timeoutMode === "date"}
+                  onChange={() => setTimeoutMode("date")}
+                  disabled={isUpdatingTimeout}
+                />
+                Até uma data
+              </label>
+            </div>
+
+            {timeoutMode === "duration" ? (
+              <div className={styles.timeoutDuration}>
+                <div className={styles.field}>
+                  <label className={shared.label} htmlFor="timeout-amount">
+                    Quantidade
+                  </label>
+                  <input
+                    className={shared.input}
+                    id="timeout-amount"
+                    type="number"
+                    min="1"
+                    max="10000"
+                    step="1"
+                    value={timeoutAmount}
+                    onChange={(event) => setTimeoutAmount(event.target.value)}
+                    disabled={isUpdatingTimeout}
+                    required
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={shared.label} htmlFor="timeout-unit">
+                    Unidade
+                  </label>
+                  <select
+                    className={shared.input}
+                    id="timeout-unit"
+                    value={timeoutUnit}
+                    onChange={(event) => setTimeoutUnit(event.target.value)}
+                    disabled={isUpdatingTimeout}
+                  >
+                    <option value="hours">Horas</option>
+                    <option value="days">Dias</option>
+                    <option value="months">Meses</option>
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.field}>
+                <label className={shared.label} htmlFor="timeout-date">
+                  Data e hora para liberar o acesso
+                </label>
+                <input
+                  className={shared.input}
+                  id="timeout-date"
+                  type="datetime-local"
+                  value={timeoutDate}
+                  onChange={(event) => setTimeoutDate(event.target.value)}
+                  disabled={isUpdatingTimeout}
+                  required
+                />
+              </div>
+            )}
+
+            {feedback?.type === "error" && (
+              <div className={styles.timeoutFeedback}>
+                <StatusMessage
+                  type="inline-error"
+                  name={feedback.name}
+                  action={feedback.action}
+                >
+                  {feedback.message}
+                </StatusMessage>
+              </div>
+            )}
+
+            <div className={styles.timeoutActions}>
+              <Button
+                type="submit"
+                icon="fa-clock"
+                disabled={isUpdatingTimeout || Boolean(user.banned_at)}
+              >
+                {isUpdatingTimeout ? "Aplicando..." : "Suspender"}
+              </Button>
+              {user.timeout_until &&
+                new Date(user.timeout_until) > new Date() && (
+                  <Button
+                    type="button"
+                    variant="danger"
+                    icon="fa-unlock"
+                    onClick={handleRemoveTimeout}
+                    disabled={isUpdatingTimeout}
+                  >
+                    Remover suspensão
+                  </Button>
+                )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsTimeoutModalOpen(false)}
+                disabled={isUpdatingTimeout}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </section>
   );
 }

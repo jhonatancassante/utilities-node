@@ -188,6 +188,7 @@ async function search(searchTerm) {
         email,
         features,
         banned_at,
+        timeout_until,
         profile_photo_url,
         created_at,
         updated_at
@@ -466,6 +467,64 @@ async function setProfilePhoto(userId, profilePhoto) {
   return results.rows[0];
 }
 
+async function ensureProtectedAdminCoverage(client, targetUserId) {
+  const protectedFeaturesResult = await client.query({
+    text: `
+      SELECT name
+      FROM features
+      WHERE is_protected = true
+        AND deleted_at IS NULL
+      ORDER BY name
+    ;`,
+  });
+  const protectedFeatureNames = protectedFeaturesResult.rows.map(
+    (item) => item.name,
+  );
+
+  if (protectedFeatureNames.length === 0) return;
+
+  const targetAdmin = await client.query({
+    text: `
+      SELECT id
+      FROM users
+      WHERE id = $1
+        AND features @> $2::varchar[]
+      LIMIT 1
+    ;`,
+    values: [targetUserId, protectedFeatureNames],
+  });
+
+  if (targetAdmin.rowCount === 0) return;
+
+  const otherAdmin = await client.query({
+    text: `
+      SELECT id
+      FROM users
+      WHERE id <> $1
+        AND features @> $2::varchar[]
+      LIMIT 1
+    ;`,
+    values: [targetUserId, protectedFeatureNames],
+  });
+
+  if (otherAdmin.rowCount === 0) {
+    throw new ConflictError({
+      message:
+        "Esta operação não pode ser realizada porque o usuário é o último administrador com todas as permissões protegidas.",
+      action:
+        "Conceda todas as permissões protegidas a outra conta antes de banir ou suspender este usuário.",
+    });
+  }
+}
+
+async function validateStatusChangeEligibility(username) {
+  const targetUser = await findOneByUsername(username);
+
+  await database.transaction(async (client) => {
+    await ensureProtectedAdminCoverage(client, targetUser.id);
+  });
+}
+
 async function setBanStatus(username, isBanned, actorUserId) {
   if (typeof isBanned !== "boolean") {
     throw new ValidationError({
@@ -484,6 +543,13 @@ async function setBanStatus(username, isBanned, actorUserId) {
   }
 
   return database.transaction(async (client) => {
+    if (isBanned) {
+      await client.query({
+        text: "SELECT pg_advisory_xact_lock(hashtext($1));",
+        values: ["protected-features-coverage"],
+      });
+    }
+
     const lockedUser = await client.query({
       text: "SELECT * FROM users WHERE id = $1 FOR UPDATE;",
       values: [currentUser.id],
@@ -499,6 +565,10 @@ async function setBanStatus(username, isBanned, actorUserId) {
     const lockedUserData = lockedUser.rows[0];
     if (Boolean(lockedUserData.banned_at) === isBanned) {
       return lockedUserData;
+    }
+
+    if (isBanned) {
+      await ensureProtectedAdminCoverage(client, currentUser.id);
     }
 
     const results = await client.query({
@@ -557,6 +627,90 @@ async function setBanStatus(username, isBanned, actorUserId) {
     }
 
     return results.rows[0];
+  });
+}
+
+async function setTimeoutStatus(username, timeoutUntil, actorUserId) {
+  const currentUser = await findOneByUsername(username);
+
+  if (currentUser.id === actorUserId) {
+    throw new ForbiddenError({
+      message:
+        "Não é permitido aplicar ou remover timeout da própria conta administrativa.",
+      action: "Selecione outro usuário para realizar esta operação.",
+    });
+  }
+
+  let normalizedTimeout = null;
+  if (timeoutUntil !== null) {
+    if (typeof timeoutUntil !== "string") {
+      throw new ValidationError({
+        message: "A data e hora do timeout devem ser informadas como texto.",
+        action: "Envie uma data e hora ISO 8601 futura.",
+      });
+    }
+
+    normalizedTimeout = new Date(timeoutUntil);
+    if (
+      Number.isNaN(normalizedTimeout.getTime()) ||
+      normalizedTimeout <= new Date()
+    ) {
+      throw new ValidationError({
+        message: "A data e hora do timeout devem ser válidas e futuras.",
+        action: "Informe uma data e hora posteriores ao momento atual.",
+      });
+    }
+  }
+
+  return database.transaction(async (client) => {
+    if (normalizedTimeout) {
+      await client.query({
+        text: "SELECT pg_advisory_xact_lock(hashtext($1));",
+        values: ["protected-features-coverage"],
+      });
+    }
+
+    const lockedUser = await client.query({
+      text: "SELECT id, banned_at FROM users WHERE id = $1 FOR UPDATE;",
+      values: [currentUser.id],
+    });
+
+    if (lockedUser.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O usuário não foi encontrado.",
+        action: "Atualize a lista e tente novamente.",
+      });
+    }
+
+    if (normalizedTimeout && lockedUser.rows[0].banned_at) {
+      throw new ForbiddenError({
+        message:
+          "Não é possível aplicar timeout a uma conta que já está banida.",
+        action: "Remova o banimento antes de aplicar uma suspensão temporária.",
+      });
+    }
+
+    if (normalizedTimeout) {
+      await ensureProtectedAdminCoverage(client, currentUser.id);
+    }
+
+    const result = await client.query({
+      text: `
+        UPDATE users
+        SET
+          timeout_until = $2,
+          updated_at = timezone('utc', now())
+        WHERE id = $1
+        RETURNING *
+      ;`,
+      values: [currentUser.id, normalizedTimeout],
+    });
+
+    if (normalizedTimeout) {
+      await session.expireAllByUserId(currentUser.id, client);
+    }
+
+    return result.rows[0];
   });
 }
 
@@ -680,6 +834,8 @@ const user = {
   findOneByEmail,
   update,
   setBanStatus,
+  validateStatusChangeEligibility,
+  setTimeoutStatus,
   setProfilePhoto,
   setFeatures,
   addFeatures,

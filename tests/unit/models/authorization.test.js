@@ -456,10 +456,19 @@ describe("models/authorization.js", () => {
     test("Usuário com a feature exigida para a seção", () => {
       expect(
         authorization.hasAdminSectionAccess(
-          { features: ["update:user:others"] },
+          { features: ["read:user:others"] },
           "users",
         ),
       ).toBe(true);
+    });
+
+    test("update:user:others não libera a seção sem read:user:others", () => {
+      expect(
+        authorization.hasAdminSectionAccess(
+          { features: ["update:user:others"] },
+          "users",
+        ),
+      ).toBe(false);
     });
 
     test("Usuário com a feature de auditoria acessa a seção", () => {
@@ -491,9 +500,15 @@ describe("models/authorization.js", () => {
     test("Disponibiliza somente as seções autorizadas", () => {
       expect(
         authorization
-          .getAvailableAdminSections({ features: ["update:user:others"] })
+          .getAvailableAdminSections({ features: ["read:user:others"] })
           .map((section) => section.id),
       ).toEqual(["users"]);
+
+      expect(
+        authorization
+          .getAvailableAdminSections({ features: ["update:user:others"] })
+          .map((section) => section.id),
+      ).toEqual([]);
 
       expect(
         authorization
@@ -506,7 +521,11 @@ describe("models/authorization.js", () => {
       expect(
         authorization
           .getAvailableAdminSections({
-            features: ["update:user:others", "read:status:all"],
+            features: [
+              "read:user:others",
+              "update:user:others",
+              "read:status:all",
+            ],
           })
           .map((section) => section.id),
       ).toEqual(["users", "status"]);

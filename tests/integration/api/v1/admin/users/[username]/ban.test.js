@@ -29,9 +29,32 @@ async function createPrivilegedSession() {
     "create:user",
     "read:session",
     "read:audit",
+    "update:user:status",
   ]);
   const sessionObject = await orchestrator.createSession(privilegedUser);
   return { privilegedUser, sessionObject };
+}
+
+async function createStatusManagerSession() {
+  const statusManager = await orchestrator.createUser();
+  await orchestrator.activateUser(statusManager);
+  await orchestrator.addFeaturesToUser(statusManager, [
+    "update:user:status",
+    "read:user:others",
+  ]);
+  const sessionObject = await orchestrator.createSession(statusManager);
+  return { statusManager, sessionObject };
+}
+
+async function createLegacyAdminSession() {
+  const legacyAdmin = await orchestrator.createUser();
+  await orchestrator.activateUser(legacyAdmin);
+  await orchestrator.addFeaturesToUser(legacyAdmin, [
+    "update:user:others",
+    "read:user:others",
+  ]);
+  const sessionObject = await orchestrator.createSession(legacyAdmin);
+  return { legacyAdmin, sessionObject };
 }
 
 async function createStandardSession() {
@@ -65,6 +88,75 @@ describe("POST /api/v1/admin/users/[username]/ban", () => {
       });
 
       expect(response.status).toBe(403);
+    });
+  });
+
+  describe("Permissão específica de status", () => {
+    test("Não permite banir usando apenas update:user:others", async () => {
+      const { sessionObject } = await createLegacyAdminSession();
+      const targetUser = await orchestrator.createUser();
+
+      const response = await fetch(adminUserBanUrl(targetUser.username), {
+        method: "POST",
+        headers: { Cookie: "session_id=" + sessionObject.token },
+      });
+
+      expect(response.status).toBe(403);
+      expect((await user.findOneById(targetUser.id)).banned_at).toBeNull();
+    });
+
+    test("Permite banir sem update:user:others quando possui update:user:status", async () => {
+      const { statusManager, sessionObject } =
+        await createStatusManagerSession();
+      const targetUser = await orchestrator.createUser();
+      const headers = { Cookie: "session_id=" + sessionObject.token };
+
+      const persistedStatusManager = await user.findOneById(statusManager.id);
+      expect(persistedStatusManager.features).toContain("update:user:status");
+      expect(persistedStatusManager.features).not.toContain(
+        "update:user:others",
+      );
+
+      const banResponse = await fetch(adminUserBanUrl(targetUser.username), {
+        method: "POST",
+        headers,
+      });
+      expect(banResponse.status).toBe(200);
+      expect(Date.parse((await banResponse.json()).banned_at)).not.toBeNaN();
+
+      const unbanResponse = await fetch(adminUserBanUrl(targetUser.username), {
+        method: "DELETE",
+        headers,
+      });
+      expect(unbanResponse.status).toBe(200);
+      expect((await unbanResponse.json()).banned_at).toBeNull();
+    });
+  });
+
+  describe("Proteção das permissões privilegiadas", () => {
+    test("Impede banir o único usuário que possui permissões privilegiadas", async () => {
+      const { sessionObject } = await createStatusManagerSession();
+      const privilegedFeatures = (await feature.findAll())
+        .filter((item) => item.is_privileged)
+        .map((item) => item.name);
+      const lastPrivilegedUser = await orchestrator.createUser();
+      await orchestrator.addFeaturesToUser(
+        lastPrivilegedUser,
+        privilegedFeatures,
+      );
+
+      const response = await fetch(
+        adminUserBanUrl(lastPrivilegedUser.username),
+        {
+          method: "POST",
+          headers: { Cookie: "session_id=" + sessionObject.token },
+        },
+      );
+
+      expect(response.status).toBe(409);
+      expect(
+        (await user.findOneById(lastPrivilegedUser.id)).banned_at,
+      ).toBeNull();
     });
   });
 
@@ -256,6 +348,24 @@ describe("DELETE /api/v1/admin/users/[username]/ban", () => {
       });
 
       expect(response.status).toBe(403);
+    });
+  });
+
+  describe("Permissão específica de status", () => {
+    test("Não permite desbanir usando apenas update:user:others", async () => {
+      const { sessionObject } = await createLegacyAdminSession();
+      const targetUser = await orchestrator.createUser();
+      await user.setBanStatus(targetUser.username, true);
+
+      const response = await fetch(adminUserBanUrl(targetUser.username), {
+        method: "DELETE",
+        headers: { Cookie: "session_id=" + sessionObject.token },
+      });
+
+      expect(response.status).toBe(403);
+      expect(
+        Date.parse((await user.findOneById(targetUser.id)).banned_at),
+      ).not.toBeNaN();
     });
   });
 

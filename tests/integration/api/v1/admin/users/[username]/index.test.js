@@ -12,6 +12,28 @@ function adminUserUrl(username) {
   return `${orchestrator.API_URL}/admin/users/${username}`;
 }
 
+async function createGeneralEditorSession() {
+  const generalEditor = await orchestrator.createUser();
+  await orchestrator.activateUser(generalEditor);
+  await orchestrator.addFeaturesToUser(generalEditor, [
+    "update:user:others",
+    "read:user:others",
+  ]);
+  const sessionObject = await orchestrator.createSession(generalEditor);
+  return { generalEditor, sessionObject };
+}
+
+async function createFeatureManagerSession() {
+  const featureManager = await orchestrator.createUser();
+  await orchestrator.activateUser(featureManager);
+  await orchestrator.addFeaturesToUser(featureManager, [
+    "update:user:features",
+    "read:user:others",
+  ]);
+  const sessionObject = await orchestrator.createSession(featureManager);
+  return { featureManager, sessionObject };
+}
+
 async function createPrivilegedSession() {
   const protectedFeatures = (await feature.findAll())
     .filter((item) => item.is_protected)
@@ -21,6 +43,7 @@ async function createPrivilegedSession() {
   await orchestrator.addFeaturesToUser(privilegedUser, [
     ...protectedFeatures,
     "read:session",
+    "update:user:features",
   ]);
   const sessionObject = await orchestrator.createSession(privilegedUser);
   return { privilegedUser, sessionObject, protectedFeatures };
@@ -100,6 +123,84 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
         body: JSON.stringify({ features: ["update:user:others"] }),
       });
       expect(response.status).toBe(403);
+    });
+  });
+
+  describe("Permissões específicas", () => {
+    test("update:user:others permite alterar dados gerais, mas não features", async () => {
+      const { sessionObject } = await createGeneralEditorSession();
+      const targetUser = await orchestrator.createUser();
+      const headers = {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      };
+
+      const dataResponse = await fetch(adminUserUrl(targetUser.username), {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ username: "generalEditorUpdated" }),
+      });
+      expect(dataResponse.status).toBe(200);
+
+      const featuresResponse = await fetch(
+        adminUserUrl("generalEditorUpdated"),
+        {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({ features: ["read:activation_token"] }),
+        },
+      );
+      expect(featuresResponse.status).toBe(403);
+      expect((await user.findOneById(targetUser.id)).features).toEqual(
+        targetUser.features,
+      );
+    });
+
+    test("update:user:features permite alterar features sem update:user:others", async () => {
+      const { sessionObject } = await createFeatureManagerSession();
+      const targetUser = await orchestrator.createUser();
+
+      const response = await fetch(adminUserUrl(targetUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({ features: ["read:activation_token"] }),
+      });
+
+      expect(response.status).toBe(200);
+      expect((await response.json()).features).toEqual([
+        "read:activation_token",
+      ]);
+      expect((await user.findOneById(targetUser.id)).features).toEqual([
+        "read:activation_token",
+      ]);
+    });
+
+    test("Exige as duas features quando altera dados gerais e features juntos", async () => {
+      const { sessionObject } = await createFeatureManagerSession();
+      const targetUser = await orchestrator.createUser();
+
+      const response = await fetch(adminUserUrl(targetUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({
+          username: "featureManagerMustNotRename",
+          features: ["read:activation_token"],
+        }),
+      });
+
+      expect(response.status).toBe(403);
+      expect((await user.findOneById(targetUser.id)).username).toBe(
+        targetUser.username,
+      );
+      expect((await user.findOneById(targetUser.id)).features).toEqual(
+        targetUser.features,
+      );
     });
   });
 

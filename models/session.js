@@ -1,6 +1,10 @@
 import crypto from "node:crypto";
 import database from "@/infra/database.js";
-import { BannedUserError, UnauthorizedError } from "@/infra/errors.js";
+import {
+  BannedUserError,
+  TimedOutUserError,
+  UnauthorizedError,
+} from "@/infra/errors.js";
 
 const EXPIRATION_IN_MILLISECONDS = 30 * 24 * 60 * 60 * 1000; // 30 DIAS
 
@@ -10,7 +14,7 @@ async function create(userId) {
 
   return database.transaction(async (client) => {
     const userResults = await client.query({
-      text: "SELECT banned_at FROM users WHERE id = $1 FOR UPDATE;",
+      text: "SELECT banned_at, timeout_until > NOW() AS timeout_active FROM users WHERE id = $1 FOR UPDATE;",
       values: [userId],
     });
 
@@ -24,6 +28,10 @@ async function create(userId) {
 
     if (userResults.rows[0].banned_at) {
       throw new BannedUserError({});
+    }
+
+    if (userResults.rows[0].timeout_active) {
+      throw new TimedOutUserError({});
     }
 
     const results = await client.query({
@@ -61,6 +69,7 @@ async function findOneValidByToken(sessionToken) {
           sessions.token = $1
           AND sessions.expires_at > NOW()
           AND users.banned_at IS NULL
+          AND (users.timeout_until IS NULL OR users.timeout_until <= NOW())
         LIMIT 1
       ;`,
       values: [sessionToken],
@@ -84,7 +93,8 @@ async function renew(sessionId) {
     const userResults = await client.query({
       text: `
         SELECT
-          users.banned_at
+          users.banned_at,
+          users.timeout_until > NOW() AS timeout_active
         FROM
           sessions
         INNER JOIN
@@ -97,7 +107,11 @@ async function renew(sessionId) {
       values: [sessionId],
     });
 
-    if (userResults.rowCount === 0 || userResults.rows[0].banned_at) {
+    if (
+      userResults.rowCount === 0 ||
+      userResults.rows[0].banned_at ||
+      userResults.rows[0].timeout_active
+    ) {
       throw new UnauthorizedError({
         message: "Usuário não possui sessão ativa.",
         action: "Verifique se este usuário está logado e tente novamente.",

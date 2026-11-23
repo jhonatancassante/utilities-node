@@ -20,6 +20,30 @@ export class BannedUserError extends Error {
   }
 }
 
+export class TimedOutUserError extends Error {
+  constructor({ cause, message, action } = {}) {
+    super(
+      message ||
+        "Esta conta está suspensa temporariamente e não pode acessar o sistema.",
+      { cause },
+    );
+    this.name = "TimedOutUserError";
+    this.action =
+      action ||
+      "Aguarde o término do prazo de suspensão ou entre em contato com a administração.";
+    this.statusCode = 403;
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    };
+  }
+}
+
 export class ConflictError extends Error {
   constructor({ cause, message, action }) {
     super(
