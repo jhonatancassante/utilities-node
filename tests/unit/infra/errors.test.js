@@ -9,6 +9,7 @@ const defaultStatusCodes = {
   MethodNotAllowedError: 405,
   NotFoundError: 404,
   ServiceError: 503,
+  TimedOutUserError: 403,
   UnauthorizedError: 401,
   ValidationError: 400,
 };

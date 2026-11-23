@@ -56,9 +56,27 @@ function getCallsContaining(querySpy, pattern) {
 
 afterEach(() => {
   jest.restoreAllMocks();
+  jest.useRealTimers();
 });
 
 describe("models/user.js", () => {
+  describe(".setTimeoutStatus()", () => {
+    test("Rejeita um prazo vencido usando o relógio controlado", async () => {
+      jest.useFakeTimers({ now: new Date("2026-01-01T12:00:00.000Z") });
+      mockQueries([
+        ["LOWER(users.username) = LOWER($1)", [existingUser]],
+      ]);
+
+      await expect(
+        user.setTimeoutStatus(
+          "UsuarioAtual",
+          "2026-01-01T11:59:59.999Z",
+          "admin-1",
+        ),
+      ).rejects.toBeInstanceOf(ValidationError);
+    });
+  });
+
   describe(".update()", () => {
     test("Usa o id do usuário encontrado no WHERE", async () => {
       const querySpy = mockQueries([

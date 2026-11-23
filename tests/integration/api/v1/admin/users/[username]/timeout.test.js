@@ -1,3 +1,5 @@
+import { jest } from "@jest/globals";
+
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
 import database from "@/infra/database.js";
@@ -8,6 +10,13 @@ beforeAll(async () => {
   await orchestrator.clearDatabase();
   await orchestrator.runPendingMigrations();
 });
+
+function getFutureTimeout() {
+  jest.useFakeTimers({ now: new Date("2099-01-01T00:00:00.908Z") });
+  const timeoutUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  jest.useRealTimers();
+  return timeoutUntil;
+}
 
 function adminUserTimeoutUrl(username) {
   return (
@@ -48,7 +57,7 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
     });
     await orchestrator.activateUser(targetUser);
     const targetSession = await orchestrator.createSession(targetUser);
-    const timeoutUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const timeoutUntil = getFutureTimeout();
 
     const response = await fetch(adminUserTimeoutUrl(targetUser.username), {
       method: "POST",
@@ -64,8 +73,13 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
     expect(timedOutUser.id).toBe(targetUser.id);
     expect(Date.parse(timedOutUser.timeout_until)).toBe(Date.parse(timeoutUntil));
 
-    const persistedUser = await user.findOneById(targetUser.id);
-    expect(Date.parse(persistedUser.timeout_until)).toBe(Date.parse(timeoutUntil));
+    const persistedTimeout = await database.query({
+      text: "SELECT EXTRACT(EPOCH FROM timeout_until) * 1000 AS timeout_until_ms FROM users WHERE id = $1;",
+      values: [targetUser.id],
+    });
+    expect(Number(persistedTimeout.rows[0].timeout_until_ms)).toBe(
+      Date.parse(timeoutUntil),
+    );
 
     await expect(
       session.findOneValidByToken(targetSession.token),
@@ -102,7 +116,7 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
         Cookie: "session_id=" + sessionObject.token,
       },
       body: JSON.stringify({
-        timeout_until: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        timeout_until: getFutureTimeout(),
       }),
     });
 
@@ -131,7 +145,7 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
     });
     await orchestrator.activateUser(targetUser);
     await database.query({
-      text: "UPDATE users SET timeout_until = NOW() - interval '1 second' WHERE id = $1;",
+      text: "UPDATE users SET timeout_until = '2020-01-01T00:00:00.000Z' WHERE id = $1;",
       values: [targetUser.id],
     });
 
@@ -145,9 +159,6 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
     });
 
     expect(loginResponse.status).toBe(201);
-    expect(
-      Date.parse((await user.findOneById(targetUser.id)).timeout_until),
-    ).toBeLessThan(Date.now());
   });
 
   test("não permite suspender a própria conta administrativa", async () => {
@@ -162,7 +173,7 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
           Cookie: "session_id=" + sessionObject.token,
         },
         body: JSON.stringify({
-          timeout_until: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          timeout_until: getFutureTimeout(),
         }),
       },
     );
@@ -186,7 +197,7 @@ describe("POST /api/v1/admin/users/[username]/timeout", () => {
         Cookie: "session_id=" + sessionObject.token,
       },
       body: JSON.stringify({
-        timeout_until: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        timeout_until: getFutureTimeout(),
       }),
     });
 
@@ -213,7 +224,7 @@ describe("DELETE /api/v1/admin/users/[username]/timeout", () => {
           Cookie: "session_id=" + sessionObject.token,
         },
         body: JSON.stringify({
-          timeout_until: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          timeout_until: getFutureTimeout(),
         }),
       },
     );
