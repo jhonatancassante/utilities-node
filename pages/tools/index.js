@@ -20,24 +20,36 @@ function Home() {
             </p>
           </section>
 
-          <ul className={styles.grid}>
-            {tools.map((tool) => (
-              <li key={tool.slug}>
-                {tool.isAvailable ? (
-                  <Link href={tool.href} className={styles.card}>
-                    <ToolCardContent tool={tool} />
-                  </Link>
-                ) : (
-                  <div
-                    className={`${styles.card} ${styles.cardSoon}`}
-                    aria-disabled="true"
-                  >
-                    <ToolCardContent tool={tool} />
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
+          <section className={styles.section} aria-labelledby="tools-title">
+            <div className={styles.sectionHeading}>
+              <div>
+                <span className={styles.sectionEyebrow}>Utilitários</span>
+                <h2 id="tools-title">
+                  Encontre a ferramenta certa para sua tarefa
+                </h2>
+              </div>
+              <span className={styles.count}>{tools.length} ferramentas</span>
+            </div>
+
+            <ul className={styles.grid}>
+              {tools.map((tool) => (
+                <li key={tool.slug}>
+                  {tool.isAvailable ? (
+                    <Link href={tool.href} className={styles.card}>
+                      <ToolCardContent tool={tool} />
+                    </Link>
+                  ) : (
+                    <div
+                      className={`${styles.card} ${styles.cardSoon}`}
+                      aria-disabled="true"
+                    >
+                      <ToolCardContent tool={tool} />
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
         </main>
       </Layout>
     </>
