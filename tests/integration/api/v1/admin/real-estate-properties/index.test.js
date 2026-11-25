@@ -190,6 +190,150 @@ describe("GET, PATCH e DELETE /api/v1/admin/real-estate-properties/[id]", () => 
   });
 });
 
+
+describe("Regras de cadastro atualizado e anual", () => {
+  test("Atualizando o cadastro annual=false pelo código físico", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "create:real_estate_properties",
+      "read:real_estate_properties",
+    ]);
+    const first = await realEstateProperty.create(
+      createPropertyInput({ physical_property_id: 41001, annual: false }),
+    );
+    const response = await fetch(collectionEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      },
+      body: JSON.stringify(
+        createPropertyInput({
+          physical_property_id: 41001,
+          year: 2027,
+          owner_name: "Proprietário atualizado",
+          annual: false,
+        }),
+      ),
+    });
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.id).toBe(first.id);
+    expect(body.year).toBe(2027);
+    expect(body.owner_name).toBe("Proprietário atualizado");
+  });
+
+  test("Rejeitando cadastro annual=true quando o código físico já existe", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "create:real_estate_properties",
+      "read:real_estate_properties",
+    ]);
+    await realEstateProperty.create(
+      createPropertyInput({ physical_property_id: 41002, annual: true }),
+    );
+    const response = await fetch(collectionEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      },
+      body: JSON.stringify(
+        createPropertyInput({
+          physical_property_id: 41002,
+          year: 2027,
+          annual: true,
+        }),
+      ),
+    });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      name: "ConflictError",
+    });
+  });
+
+  test("Excluindo fisicamente todos os annual=false antes da importação em lote", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "create:real_estate_properties",
+      "read:real_estate_properties",
+    ]);
+    const previousCurrent = await realEstateProperty.create(
+      createPropertyInput({ physical_property_id: 41003, annual: false }),
+    );
+    const annualRecord = await realEstateProperty.create(
+      createPropertyInput({ physical_property_id: 41004, annual: true }),
+    );
+    const response = await fetch(bulkEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      },
+      body: JSON.stringify({
+        records: [
+          createPropertyInput({
+            physical_property_id: 41005,
+            annual: false,
+          }),
+        ],
+      }),
+    });
+    expect(response.status).toBe(201);
+    const deleted = await database.query({
+      text: "SELECT id FROM real_estate_properties WHERE id = $1;",
+      values: [previousCurrent.id],
+    });
+    expect(deleted.rowCount).toBe(0);
+    await expect(realEstateProperty.findOneById(annualRecord.id)).resolves.toBeDefined();
+  });
+
+  test("Solicitando confirmação e atualizando annual=true em lote", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "create:real_estate_properties",
+      "read:real_estate_properties",
+    ]);
+    const existing = await realEstateProperty.create(
+      createPropertyInput({
+        physical_property_id: 41006,
+        annual: true,
+      }),
+    );
+    const records = [
+      createPropertyInput({
+        physical_property_id: 41006,
+        owner_name: "Proprietário substituído",
+        annual: true,
+      }),
+      createPropertyInput({
+        physical_property_id: 41007,
+        annual: true,
+      }),
+    ];
+    const headers = {
+      "Content-Type": "application/json",
+      Cookie: `session_id=${sessionObject.token}`,
+    };
+    const firstResponse = await fetch(bulkEndpoint(), {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ records }),
+    });
+    expect(firstResponse.status).toBe(409);
+    const confirmedResponse = await fetch(bulkEndpoint(), {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ records, overwriteExisting: true }),
+    });
+    expect(confirmedResponse.status).toBe(201);
+    const body = await confirmedResponse.json();
+    expect(body).toHaveLength(2);
+    expect(body[0].id).toBe(existing.id);
+    expect(body[0].owner_name).toBe("Proprietário substituído");
+    expect(body.map((record) => record.physical_property_id)).toEqual([
+      41006,
+      41007,
+    ]);
+  });
+});
+
 describe("POST e DELETE /api/v1/admin/real-estate-properties/bulk", () => {
   test("Cadastrando imóveis em lote", async () => {
     const sessionObject = await createSessionWithFeatures([

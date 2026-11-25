@@ -223,10 +223,10 @@ function RealEstatePropertyEditor({ recordId }) {
                 ))}
                 <div className={styles.options}>
                   <label className={styles.switchField}>
-                    <span><strong>Lançamento anual</strong><small>Indica se o cadastro corresponde ao lançamento anual.</small></span>
+                    <span><strong>Atualizado</strong><small>Indica que este cadastro representa a situação atual do imóvel.</small></span>
                     <span className={styles.switchControl}>
-                      <input type="checkbox" role="switch" checked={form.annual}
-                        onChange={(event) => setForm((current) => ({ ...current, annual: event.target.checked }))}
+                      <input type="checkbox" role="switch" checked={!form.annual}
+                        onChange={(event) => setForm((current) => ({ ...current, annual: !event.target.checked }))}
                         disabled={isSaving || isReadOnly} />
                       <span aria-hidden="true"></span>
                     </span>

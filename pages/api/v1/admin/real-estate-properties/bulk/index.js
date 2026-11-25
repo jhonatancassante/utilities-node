@@ -20,7 +20,9 @@ export default controller.createController(
 
 async function postHandler(request, response) {
   const currentUser = request.context.user;
-  const records = await realEstateProperty.createMany(request.body?.records);
+  const records = await realEstateProperty.createMany(request.body?.records, {
+    overwriteExisting: request.body?.overwriteExisting === true,
+  });
   const output = authorization.filterOutput(
     currentUser,
     "read:real_estate_properties",

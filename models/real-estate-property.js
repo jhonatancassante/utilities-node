@@ -1,5 +1,5 @@
 import database from "@/infra/database.js";
-import { NotFoundError, ValidationError } from "@/infra/errors.js";
+import { ConflictError, NotFoundError, ValidationError } from "@/infra/errors.js";
 
 const FIELD_RULES = {
   year: { type: "integer", min: 1, max: 9999 },
@@ -127,16 +127,11 @@ function getColumns(property) {
   return WRITABLE_FIELDS.filter((field) => Object.hasOwn(property, field));
 }
 
-async function create(inputValues) {
-  const property = validateInput(inputValues, {
-    requiredFields: Object.entries(FIELD_RULES)
-      .filter(([, rule]) => rule.required)
-      .map(([field]) => field),
-  });
+async function insertRecord(client, property) {
   const columns = getColumns(property);
   const values = columns.map((field) => property[field]);
   const placeholders = columns.map((field, index) => `$${index + 1}`);
-  const results = await database.query({
+  const results = await client.query({
     text: `
       INSERT INTO real_estate_properties (${columns.join(", ")})
       VALUES (${placeholders.join(", ")})
@@ -145,6 +140,65 @@ async function create(inputValues) {
     values,
   });
   return results.rows[0];
+}
+
+async function create(inputValues) {
+  const property = validateInput(inputValues, {
+    requiredFields: Object.entries(FIELD_RULES)
+      .filter(([, rule]) => rule.required)
+      .map(([field]) => field),
+  });
+  if (!Object.hasOwn(property, "annual")) property.annual = false;
+
+  return database.transaction(async (client) => {
+    await client.query(
+      "LOCK TABLE real_estate_properties IN SHARE ROW EXCLUSIVE MODE;",
+    );
+
+    if (property.annual) {
+      const existing = await client.query({
+        text: `
+          SELECT id
+          FROM real_estate_properties
+          WHERE physical_property_id = $1 AND deleted_at IS NULL
+          LIMIT 1
+        ;`,
+        values: [property.physical_property_id],
+      });
+      if (existing.rowCount) {
+        throw new ConflictError({
+          message:
+            "Já existe um cadastro para este código de imóvel. Para alterá-lo, pesquise o registro e utilize a opção Alterar.",
+          action:
+            "Cancele o cadastro e localize o imóvel existente na listagem.",
+        });
+      }
+      return insertRecord(client, property);
+    }
+
+    const columns = getColumns(property);
+    const values = columns.map((field) => property[field]);
+    const placeholders = columns.map((field, index) => `$${index + 1}`);
+    const updateFields = columns.filter(
+      (field) => field !== "physical_property_id",
+    );
+    const updates = updateFields.map(
+      (field) => `${field} = EXCLUDED.${field}`,
+    );
+    updates.push("updated_at = timezone('utc', now())");
+    const results = await client.query({
+      text: `
+        INSERT INTO real_estate_properties (${columns.join(", ")})
+        VALUES (${placeholders.join(", ")})
+        ON CONFLICT (physical_property_id)
+          WHERE annual = false AND deleted_at IS NULL
+        DO UPDATE SET ${updates.join(", ")}
+        RETURNING *
+      ;`,
+      values,
+    });
+    return results.rows[0];
+  });
 }
 
 async function findAll() {
@@ -263,7 +317,7 @@ async function deleteMany(ids) {
   });
 }
 
-async function createMany(inputValues) {
+async function createMany(inputValues, { overwriteExisting = false } = {}) {
   if (
     !Array.isArray(inputValues) ||
     inputValues.length === 0 ||
@@ -275,33 +329,106 @@ async function createMany(inputValues) {
     });
   }
 
-  const properties = inputValues.map((input) =>
-    validateInput(input, {
+  const properties = inputValues.map((input) => {
+    const property = validateInput(input, {
       requiredFields: [
         "year",
         ...Object.entries(FIELD_RULES)
           .filter(([, rule]) => rule.required)
           .map(([field]) => field),
       ],
-    }),
+    });
+    if (!Object.hasOwn(property, "annual")) property.annual = false;
+    return property;
+  });
+  const annual = properties[0].annual;
+  if (properties.some((property) => property.annual !== annual)) {
+    throw new ValidationError({
+      message: "Todos os imóveis da importação devem ter a mesma situação de atualização.",
+      action: "Confira o campo Atualizado e gere novamente a prévia do arquivo.",
+    });
+  }
+
+  const identifiers = properties.map((property) =>
+    annual
+      ? property.year + ":" + property.physical_property_id
+      : String(property.physical_property_id),
   );
-  const columns = WRITABLE_FIELDS;
-  const queryText = `
-    INSERT INTO real_estate_properties (${columns.join(", ")})
-    VALUES (${columns.map((field, index) => `$${index + 1}`).join(", ")})
-    RETURNING *
-  `;
+  if (new Set(identifiers).size !== identifiers.length) {
+    throw new ValidationError({
+      message: annual
+        ? "O arquivo contém códigos de imóvel repetidos para o mesmo ano."
+        : "O arquivo contém códigos de imóvel repetidos.",
+      action: "Corrija os registros duplicados no arquivo e tente novamente.",
+    });
+  }
 
   return database.transaction(async (client) => {
+    await client.query(
+      "LOCK TABLE real_estate_properties IN SHARE ROW EXCLUSIVE MODE;",
+    );
+
+    if (!annual) {
+      await client.query(
+        "DELETE FROM real_estate_properties WHERE annual = false;",
+      );
+      const records = [];
+      for (const property of properties) {
+        records.push(await insertRecord(client, property));
+      }
+      return records;
+    }
+
+    const existing = await client.query({
+      text: `
+        SELECT year, physical_property_id
+        FROM real_estate_properties
+        WHERE annual = true
+          AND deleted_at IS NULL
+          AND (year, physical_property_id) IN (
+            SELECT * FROM unnest($1::integer[], $2::integer[])
+          )
+        ORDER BY year, physical_property_id
+      ;`,
+      values: [
+        properties.map((property) => property.year),
+        properties.map((property) => property.physical_property_id),
+      ],
+    });
+
+    if (existing.rowCount && !overwriteExisting) {
+      throw new ConflictError({
+        message:
+          "Foram encontrados " +
+          existing.rowCount +
+          " imóvel(is) já cadastrado(s) para o mesmo ano e código físico. Se continuar, os registros existentes serão atualizados e os novos serão inseridos.",
+        action: "Escolha Continuar para atualizar os existentes ou Cancelar para interromper a importação.",
+      });
+    }
+
     const records = [];
     for (const property of properties) {
-      const values = columns.map((field) => {
-        if (Object.hasOwn(property, field)) return property[field];
-        if (field === "built_area") return 0;
-        if (field === "annual") return false;
-        return null;
+      const columns = getColumns(property);
+      const values = columns.map((field) => property[field]);
+      const placeholders = columns.map((field, index) => `$${index + 1}`);
+      const updateFields = columns.filter(
+        (field) => !["year", "physical_property_id"].includes(field),
+      );
+      const updates = updateFields.map(
+        (field) => `${field} = EXCLUDED.${field}`,
+      );
+      updates.push("updated_at = timezone('utc', now())");
+      const result = await client.query({
+        text: `
+          INSERT INTO real_estate_properties (${columns.join(", ")})
+          VALUES (${placeholders.join(", ")})
+          ON CONFLICT (year, physical_property_id)
+            WHERE annual = true AND deleted_at IS NULL
+          DO UPDATE SET ${updates.join(", ")}
+          RETURNING *
+        ;`,
+        values,
       });
-      const result = await client.query({ text: queryText, values });
       records.push(result.rows[0]);
     }
     return records;

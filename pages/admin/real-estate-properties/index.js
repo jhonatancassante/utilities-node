@@ -164,10 +164,28 @@ function RealEstatePropertiesPage() {
     setIsSaving(true);
     setFeedback(null);
     try {
-      await requestAPI("/api/v1/admin/real-estate-properties/bulk", {
-        method: "POST",
-        body: JSON.stringify({ records }),
-      });
+      const request = (overwriteExisting = false) =>
+        requestAPI("/api/v1/admin/real-estate-properties/bulk", {
+          method: "POST",
+          body: JSON.stringify({ records, overwriteExisting }),
+        });
+
+      try {
+        await request();
+      } catch (requestError) {
+        if (
+          requestError.statusCode !== 409 ||
+          !records.every((record) => record.annual === true)
+        ) {
+          throw requestError;
+        }
+        const shouldContinue = window.confirm(
+          requestError.message + "\n\nDeseja continuar com a atualização dos registros existentes?",
+        );
+        if (!shouldContinue) return false;
+        await request(true);
+      }
+
       await loadRecords();
       setFeedback({
         type: "success",
@@ -186,7 +204,6 @@ function RealEstatePropertiesPage() {
       setIsSaving(false);
     }
   }
-
   async function handleDelete(ids) {
     if (
       !ids.length ||
