@@ -12,7 +12,7 @@
 .sectionTitle h2, .resultsHeading h2 { margin: 0 0 5px; color: var(--text-primary); font-size: 18px; }
 .sectionTitle p { margin: 0; color: var(--text-secondary); font-size: 12px; }
 .sectionTitle > i { color: var(--accent); font-size: 28px; }
-.importControls { display: grid; grid-template-columns: minmax(220px, 2fr) repeat(2, minmax(150px, 1fr)); gap: 14px; margin-top: 18px; }
+.importControls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
 .importControls label { min-width: 0; }
 .fileField { min-width: 0; grid-column: 1 / -1; }
 .selectedFile { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
