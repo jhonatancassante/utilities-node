@@ -45,7 +45,6 @@ function RealEstatePropertiesPage() {
   const [pageSize, setPageSize] = useState(10);
   const [modalRecord, setModalRecord] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const canCreate = user?.features?.includes("create:real_estate_properties");
   const canUpdate = user?.features?.includes("update:real_estate_properties");
@@ -185,12 +184,12 @@ function RealEstatePropertiesPage() {
         method: "POST",
         body: JSON.stringify({ records }),
       });
-      setIsBulkModalOpen(false);
       await loadRecords();
       setFeedback({
         type: "success",
         message: records.length + " imóvel(is) importado(s) com sucesso.",
       });
+      return true;
     } catch (requestError) {
       setFeedback({
         type: "error",
@@ -198,6 +197,7 @@ function RealEstatePropertiesPage() {
         message: requestError.message,
         action: requestError.action,
       });
+      return false;
     } finally {
       setIsSaving(false);
     }
@@ -317,77 +317,41 @@ function RealEstatePropertiesPage() {
                 </StatusMessage>
               </div>
             )}
+            {canCreate && (
+              <RealEstatePropertyBulkModal
+                isSaving={isSaving}
+                onSubmit={handleBulkImport}
+              />
+            )}
             <div className={styles.toolbar}>
               <label className={styles.searchField}>
-                <span className={shared.label}>
-                  Pesquisar por ID ou cadastro
-                </span>
-                <input
-                  className={shared.input}
-                  type="search"
-                  value={search}
-                  onChange={(event) => {
-                    setSearch(event.target.value);
-                    setPage(1);
-                  }}
-                  placeholder="ID, inscrição física ou CTM..."
-                />
+                <span className={shared.label}>Pesquisar por ID ou cadastro</span>
+                <input className={shared.input} type="search" value={search}
+                  onChange={(event) => { setSearch(event.target.value); setPage(1); }}
+                  placeholder="ID, inscrição física ou CTM..." />
               </label>
               <label className={styles.filterField}>
                 <span className={shared.label}>Ano</span>
-                <select
-                  className={shared.input}
-                  value={yearFilter}
-                  onChange={(event) => {
-                    setYearFilter(event.target.value);
-                    setPage(1);
-                  }}
-                >
-                  {!availableYears.includes(Number(yearFilter)) && (
-                    <option value={yearFilter}>{yearFilter}</option>
-                  )}
-                  {availableYears.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
+                <select className={shared.input} value={yearFilter}
+                  onChange={(event) => { setYearFilter(event.target.value); setPage(1); }}>
+                  {!availableYears.includes(Number(yearFilter)) && <option value={yearFilter}>{yearFilter}</option>}
+                  {availableYears.map((year) => <option key={year} value={year}>{year}</option>)}
                 </select>
               </label>
               <label className={styles.switchField}>
                 <span className={shared.label}>Atualizado</span>
                 <span className={styles.switchControl}>
-                  <input
-                    type="checkbox"
-                    role="switch"
-                    checked={updatedFilter}
-                    onChange={(event) => {
-                      setUpdatedFilter(event.target.checked);
-                      setPage(1);
-                    }}
-                  />
+                  <input type="checkbox" role="switch" checked={updatedFilter}
+                    onChange={(event) => { setUpdatedFilter(event.target.checked); setPage(1); }} />
                   <span aria-hidden="true"></span>
                 </span>
               </label>
               {canCreate && (
                 <div className={styles.toolbarActions}>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    icon="fa-file-csv"
-                    onClick={() => setIsBulkModalOpen(true)}
-                  >
-                    Importar CSV
-                  </Button>
-                  <Button
-                    type="button"
-                    icon="fa-plus"
-                    onClick={() => {
-                      setModalRecord(null);
-                      setIsModalOpen(true);
-                    }}
-                  >
-                    Novo imóvel
-                  </Button>
+                  <Button type="button" icon="fa-plus" onClick={() => {
+                    setModalRecord(null);
+                    setIsModalOpen(true);
+                  }}>Novo imóvel</Button>
                 </div>
               )}
             </div>
@@ -564,15 +528,6 @@ function RealEstatePropertiesPage() {
           </section>
         </main>
       </Layout>
-      {isBulkModalOpen && (
-        <RealEstatePropertyBulkModal
-          isSaving={isSaving}
-          onClose={() => {
-            if (!isSaving) setIsBulkModalOpen(false);
-          }}
-          onSubmit={handleBulkImport}
-        />
-      )}
       {isModalOpen && (
         <RealEstatePropertyModal
           key={modalRecord?.id || "new"}

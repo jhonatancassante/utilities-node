@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Button from "@/components/Button";
-import Modal from "@/components/Modal";
+import FileDropzone from "@/components/FileDropzone";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -126,7 +126,7 @@ function parseValue(field, raw, rowNumber) {
   return value;
 }
 
-function RealEstatePropertyBulkModal({ onClose, onSubmit, isSaving }) {
+function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
   const [file, setFile] = useState(null);
   const [year, setYear] = useState(String(new Date().getFullYear()));
   const [isUpdated, setIsUpdated] = useState(false);
@@ -213,107 +213,61 @@ function RealEstatePropertyBulkModal({ onClose, onSubmit, isSaving }) {
   }
 
   return (
-    <Modal title="Importar imóveis em lote" onClose={onClose} wide>
-      <div className={styles.content}>
-        <p>
-          Informe o exercício e a situação de atualização. O CSV deve conter os
-          19 cabeçalhos do cadastro e pode importar até 500 imóveis por
-          operação.
-        </p>
-        <div className={styles.importSettings}>
-          <label>
-            <span className={shared.label}>Ano *</span>
-            <input
-              className={shared.input}
-              type="number"
-              min="1"
-              max="9999"
-              step="1"
-              value={year}
-              onChange={(event) => {
-                setYear(event.target.value);
-                setRecords(null);
-                setError("");
-              }}
-              required
-            />
-          </label>
-          <label className={styles.switchField}>
-            <span className={shared.label}>Atualizado</span>
-            <span className={styles.switchControl}>
-              <input
-                type="checkbox"
-                role="switch"
-                checked={isUpdated}
-                onChange={(event) => {
-                  setIsUpdated(event.target.checked);
-                  setRecords(null);
-                  setError("");
-                }}
-              />
-              <span aria-hidden="true"></span>
-            </span>
-          </label>
+    <section className={styles.importSection}>
+      <div className={styles.sectionTitle}>
+        <div>
+          <h2>Importar imóveis por arquivo CSV</h2>
+          <p>Informe o exercício e a situação de atualização. O arquivo deve conter os 19 campos do cadastro e pode importar até 500 imóveis.</p>
         </div>
-        <label className={styles.fileField}>
-          <span className={shared.label}>Arquivo CSV *</span>
-          <input
-            className={shared.input}
-            type="file"
-            accept=".csv,text/csv"
-            onChange={(event) => {
-              setFile(event.target.files?.[0] || null);
-              setRecords(null);
-              setError("");
-            }}
-          />
-        </label>
-        <div className={styles.actions}>
-          <Button
-            type="button"
-            variant="outline"
-            icon="fa-eye"
-            onClick={handleReadFile}
-            disabled={!file || isSaving || !year.trim()}
-          >
-            Ler e validar
-          </Button>
-        </div>
-        {error && (
-          <p className={styles.error} role="alert">
-            {error}
-          </p>
-        )}
-        {records && (
-          <div className={styles.preview}>
-            <strong>{records.length} imóvel(is) validados.</strong>
-            <p>
-              Ano: {year} · Atualizado: {isUpdated ? "Sim" : "Não"}. Os valores
-              foram aplicados a todos os registros.
-            </p>
-            <div className={styles.actions}>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={isSaving}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="button"
-                icon="fa-file-import"
-                onClick={() => onSubmit(records)}
-                disabled={isSaving}
-              >
-                {isSaving ? "Importando..." : "Importar imóveis"}
-              </Button>
-            </div>
-          </div>
-        )}
+        <i className="fas fa-file-csv" aria-hidden="true"></i>
       </div>
-    </Modal>
+      <div className={styles.importSettings}>
+        <label>
+          <span className={shared.label}>Ano *</span>
+          <input className={shared.input} type="number" min="1" max="9999" step="1" value={year}
+            onChange={(event) => { setYear(event.target.value); setRecords(null); setError(""); }} required />
+        </label>
+        <label className={styles.switchField}>
+          <span className={shared.label}>Atualizado</span>
+          <span className={styles.switchControl}>
+            <input type="checkbox" role="switch" checked={isUpdated}
+              onChange={(event) => { setIsUpdated(event.target.checked); setRecords(null); setError(""); }} />
+            <span aria-hidden="true"></span>
+          </span>
+        </label>
+      </div>
+      <div className={styles.fileField}>
+        <span className={shared.label}>Arquivo CSV *</span>
+        <FileDropzone label="Arraste um arquivo CSV ou clique para selecionar" accept=".csv,text/csv"
+          onFiles={(files) => {
+            const selectedFile = files[0];
+            if (!selectedFile) return;
+            if (!selectedFile.name.toLowerCase().endsWith(".csv")) {
+              setFile(null); setRecords(null); setError("Selecione um arquivo com extensão .csv."); return;
+            }
+            setFile(selectedFile); setRecords(null); setError("");
+          }} />
+        {file && <div className={styles.selectedFile}>
+          <span>{file.name}</span>
+          <Button type="button" variant="outline" onClick={() => { setFile(null); setRecords(null); setError(""); }} disabled={isSaving}>Limpar arquivo</Button>
+        </div>}
+      </div>
+      <div className={styles.importActions}>
+        <Button type="button" variant="outline" icon="fa-eye" onClick={handleReadFile} disabled={!file || isSaving || !year.trim()}>Ler e validar CSV</Button>
+        {records && <Button type="button" icon="fa-file-import" onClick={async () => {
+          const succeeded = await onSubmit(records);
+          if (succeeded) { setFile(null); setRecords(null); setError(""); }
+        }} disabled={isSaving}>{isSaving ? "Importando..." : "Importar " + records.length + " imóvel(is)"}</Button>}
+      </div>
+      {error && <p className={styles.error} role="alert">{error}</p>}
+      {records && <div className={styles.preview}>
+        <div className={styles.previewHeading}>
+          <strong>{records.length} imóvel(is) validados.</strong>
+          <span>Ano: {year} · Atualizado: {isUpdated ? "Sim" : "Não"}</span>
+        </div>
+        <p>Todos os registros foram validados. Confira a quantidade antes de concluir a importação.</p>
+      </div>}
+    </section>
   );
-}
 
 export default RealEstatePropertyBulkModal;
