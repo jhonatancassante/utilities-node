@@ -107,6 +107,33 @@ describe("POST /api/v1/admin/real-estate-properties", () => {
     expect(body).not.toHaveProperty("deleted_at");
   });
 
+
+  test("Preenchendo a fração ideal com a área do terreno quando não informada", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "create:real_estate_properties",
+      "read:real_estate_properties",
+    ]);
+    const response = await fetch(collectionEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      },
+      body: JSON.stringify(
+        createPropertyInput({
+          physical_property_id: 12347,
+          ideal_fraction: null,
+          land_area: 375.25,
+        }),
+      ),
+    });
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({
+      land_area: "375.25",
+      ideal_fraction: "375.25",
+    });
+  });
+
   test("Rejeitando cadastro sem campo obrigatório", async () => {
     const sessionObject = await createSessionWithFeatures([
       "create:real_estate_properties",
@@ -367,6 +394,36 @@ describe("POST e DELETE /api/v1/admin/real-estate-properties/bulk", () => {
       20001, 20002,
     ]);
     expect(body.every((item) => !("deleted_at" in item))).toBe(true);
+  });
+
+
+  test("Preenchendo a fração ideal com a área do terreno na importação em lote", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "create:real_estate_properties",
+      "read:real_estate_properties",
+    ]);
+    const response = await fetch(bulkEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      },
+      body: JSON.stringify({
+        records: [
+          createPropertyInput({
+            physical_property_id: 20003,
+            physical_registration: "002.003",
+            ctm: "02.003",
+            land_area: 420,
+            ideal_fraction: null,
+          }),
+        ],
+      }),
+    });
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject([
+      { land_area: "420.00", ideal_fraction: "420.00" },
+    ]);
   });
 
   test("Excluindo vários imóveis em uma única operação", async () => {
