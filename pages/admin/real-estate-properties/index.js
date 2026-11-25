@@ -211,11 +211,11 @@ function RealEstatePropertiesPage() {
                         onChange={() => setSelectedIds((current) => current.includes(record.id) ? current.filter((id) => id !== record.id) : [...current, record.id])} /></td>}
                       {TABLE_FIELDS.map(([field]) => <td key={field}>{record[field] ?? "—"}</td>)}
                       <td className={styles.actions}>
-                        <Button type="button" size="small" variant="outline" icon={canUpdate ? "fa-edit" : "fa-eye"}
+                        <Button type="button" variant="outline" icon={canUpdate ? "fa-edit" : "fa-eye"}
                           onClick={() => { setModalRecord(record); setIsModalOpen(true); }}>
                           {canUpdate ? "Editar" : "Visualizar"}
                         </Button>
-                        {canDelete && <Button type="button" size="small" variant="danger" icon="fa-trash"
+                        {canDelete && <Button type="button" variant="danger" icon="fa-trash"
                           onClick={() => handleDelete([record.id])} disabled={isDeleting}>Excluir</Button>}
                       </td>
                     </tr>)}
@@ -227,10 +227,10 @@ function RealEstatePropertiesPage() {
                     </select></label>
                     <div><span>Página {currentPage} de {pageCount}</span>
                       <div className={styles.pageButtons}>
-                        <Button type="button" size="small" variant="outline" onClick={() => setPage(1)} disabled={currentPage === 1}>«</Button>
-                        <Button type="button" size="small" variant="outline" onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1}>‹</Button>
-                        <Button type="button" size="small" variant="outline" onClick={() => setPage(currentPage + 1)} disabled={currentPage === pageCount}>›</Button>
-                        <Button type="button" size="small" variant="outline" onClick={() => setPage(pageCount)} disabled={currentPage === pageCount}>»</Button>
+                        <Button type="button" variant="outline" onClick={() => setPage(1)} disabled={currentPage === 1}>«</Button>
+                        <Button type="button" variant="outline" onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1}>‹</Button>
+                        <Button type="button" variant="outline" onClick={() => setPage(currentPage + 1)} disabled={currentPage === pageCount}>›</Button>
+                        <Button type="button" variant="outline" onClick={() => setPage(pageCount)} disabled={currentPage === pageCount}>»</Button>
                       </div>
                     </div>
                   </div>

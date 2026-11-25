@@ -1,0 +1,8 @@
+.content { display: grid; gap: 16px; }
+.content > p { color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+.fileField { display: grid; gap: 7px; }
+.actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
+.error { color: var(--danger-fg); font-size: 13px; }
+.preview { padding-top: 14px; border-top: 1px solid var(--border-color); }
+.preview strong { color: var(--text-primary); }
+.preview p { margin: 6px 0 14px; color: var(--text-secondary); font-size: 13px; }
