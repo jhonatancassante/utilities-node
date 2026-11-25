@@ -1,34 +1,183 @@
+.importSection {
+  padding: 20px;
+  margin-bottom: 28px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+}
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sectionTitle h2 {
+  margin: 0 0 5px;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+.sectionTitle p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.sectionTitle > i {
+  color: var(--accent);
+  font-size: 28px;
+}
+.importSettings,
+.formatSettings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+.importSettings {
+  align-items: end;
+}
+.formatSettings {
+  margin-top: 14px;
+}
+.formatSettings label {
+  min-width: 0;
+}
+.fileField {
+  min-width: 0;
+  grid-column: 1 / -1;
+}
+.importSettings > label:first-child {
+  display: grid;
+  gap: 7px;
+}
+.fileField {
+  display: grid;
+  gap: 7px;
+}
+.selectedFile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+.selectedFile span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.importActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 9px;
+  margin-top: 16px;
+}
+.error {
+  margin-top: 12px;
+  color: var(--danger-fg);
+  font-size: 13px;
+}
+.preview {
+  padding-top: 18px;
+  margin-top: 18px;
+  border-top: 1px solid var(--border-color);
+}
+.previewHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.previewHeading strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+.previewHeading span,
+.preview p {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.preview p {
+  margin: 8px 0 0;
+  line-height: 1.6;
+}
+.switchField {
+  display: grid;
+  gap: 7px;
+  min-width: 105px;
+}
+.switchControl {
+  position: relative;
+  display: inline-flex;
+  width: 46px;
+  height: 26px;
+  align-items: center;
+}
+.switchControl input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.switchControl > span {
+  width: 46px;
+  height: 26px;
+  border-radius: 20px;
+  background: var(--border-color);
+  transition: background-color var(--transition-fast);
+}
+.switchControl > span::after {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: 3px;
+  border-radius: 50%;
+  background: white;
+  transition: transform var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.switchControl input:checked + span {
+  background: var(--accent);
+}
+.switchControl input:checked + span::after {
+  transform: translateX(20px);
+}
+.switchControl input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  .importSettings,
+  .formatSettings {
+    grid-template-columns: 1fr;
+  }
+  .sectionTitle {
+    align-items: flex-start;
+  }
+}
 
-.importSection { padding:20px; margin-bottom:28px; border:1px solid var(--border-color); border-radius:var(--radius-md); background:var(--bg-elevated); }
-.sectionTitle { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.sectionTitle h2 { margin:0 0 5px; color:var(--text-primary); font-size:18px; }
-.sectionTitle p { margin:0; color:var(--text-secondary); font-size:12px; line-height:1.6; }
-.sectionTitle > i { color:var(--accent); font-size:28px; }
-.importSettings, .formatSettings { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:18px; }
-.importSettings { align-items:end; }
-.formatSettings { margin-top:14px; }
-.formatSettings label { min-width:0; }
-.fileField { min-width:0; grid-column:1 / -1; }
-.importSettings > label:first-child { display:grid; gap:7px; }
-.fileField { display:grid; gap:7px; }
-.selectedFile { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:10px; }
-.selectedFile span { min-width:0; overflow-wrap:anywhere; color:var(--text-secondary); font-size:12px; }
-.importActions { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:9px; margin-top:16px; }
-.error { margin-top:12px; color:var(--danger-fg); font-size:13px; }
-.preview { padding-top:18px; margin-top:18px; border-top:1px solid var(--border-color); }
-.previewHeading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
-.previewHeading strong { color:var(--text-primary); font-size:14px; }
-.previewHeading span,.preview p { color:var(--text-secondary); font-size:12px; }
-.preview p { margin:8px 0 0; line-height:1.6; }
-.switchField { display:grid; gap:7px; min-width:105px; }
-.switchControl { position:relative; display:inline-flex; width:46px; height:26px; align-items:center; }
-.switchControl input { position:absolute; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; }
-.switchControl > span { width:46px; height:26px; border-radius:20px; background:var(--border-color); transition:background-color var(--transition-fast); }
-.switchControl > span::after { content:""; display:block; width:20px; height:20px; margin:3px; border-radius:50%; background:white; transition:transform var(--transition-fast); box-shadow:0 1px 3px rgba(0,0,0,.2); }
-.switchControl input:checked + span { background:var(--accent); }
-.switchControl input:checked + span::after { transform:translateX(20px); }
-.switchControl input:focus-visible + span { outline:2px solid var(--accent); outline-offset:2px; }
-@media (max-width:760px) { .importSettings, .formatSettings { grid-template-columns:1fr; } .sectionTitle { align-items:flex-start; } }
-
-.importProgress { display:flex; align-items:center; gap:10px; padding:12px 14px; margin-top:14px; border:1px solid var(--border-color); border-radius:var(--radius-md); background:var(--bg-elevated); color:var(--text-secondary); font-size:13px; line-height:1.5; }
-.importProgress i { flex-shrink:0; color:var(--accent); font-size:16px; }
+.importProgress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-top: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.importProgress i {
+  flex-shrink: 0;
+  color: var(--accent);
+  font-size: 16px;
+}

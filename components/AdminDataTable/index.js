@@ -13,7 +13,10 @@ function AdminDataTable({
   maxHeight = "min(940px, 70vh)",
 }) {
   return (
-    <div className={styles.tableWrapper} style={{ maxHeight, overflowY: "auto" }}>
+    <div
+      className={styles.tableWrapper}
+      style={{ maxHeight, overflowY: "auto" }}
+    >
       <table>
         <thead>
           <tr>
@@ -48,7 +51,9 @@ function AdminDataTable({
               )}
               {columns.map((column) => (
                 <td key={column.key}>
-                  {column.render ? column.render(record) : record[column.key] ?? "—"}
+                  {column.render
+                    ? column.render(record)
+                    : (record[column.key] ?? "—")}
                 </td>
               ))}
               <td className={styles.actionCell}>

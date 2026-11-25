@@ -137,7 +137,9 @@ function StatusMessage({
             <i
               className={
                 "fas " +
-                (isWarning ? "fa-exclamation-triangle" : "fa-exclamation-circle")
+                (isWarning
+                  ? "fa-exclamation-triangle"
+                  : "fa-exclamation-circle")
               }
               aria-hidden="true"
             ></i>

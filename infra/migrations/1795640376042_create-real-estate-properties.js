@@ -52,11 +52,11 @@ export const up = (pgm) => {
       notNull: true,
     },
     owner_name: {
-      type: "varchar(100)",
+      type: "varchar(150)",
       notNull: true,
     },
     promissory_buyer: {
-      type: "varchar(100)",
+      type: "varchar(150)",
       notNull: false,
     },
     land_sector: {
@@ -64,7 +64,7 @@ export const up = (pgm) => {
       notNull: true,
     },
     property_street: {
-      type: "varchar(100)",
+      type: "varchar(150)",
       notNull: true,
     },
     property_number: {
@@ -72,7 +72,7 @@ export const up = (pgm) => {
       notNull: false,
     },
     property_complement: {
-      type: "varchar(100)",
+      type: "varchar(150)",
       notNull: false,
     },
     construction_type: {

@@ -426,7 +426,9 @@ function RealEstatePropertiesPage() {
                   <button
                     type="button"
                     className={styles.linkButton}
-                    onClick={() => router.push("/admin/real-estate-properties/new")}
+                    onClick={() =>
+                      router.push("/admin/real-estate-properties/new")
+                    }
                   >
                     <i className="fas fa-plus" aria-hidden="true"></i> Novo
                     imóvel
@@ -462,7 +464,10 @@ function RealEstatePropertiesPage() {
                 <>
                   <AdminDataTable
                     records={visibleRecords}
-                    columns={TABLE_FIELDS.map(([key, label]) => ({ key, label }))}
+                    columns={TABLE_FIELDS.map(([key, label]) => ({
+                      key,
+                      label,
+                    }))}
                     selectable={canDelete}
                     selectedIds={selectedIds}
                     allVisibleSelected={allVisibleSelected}
@@ -483,7 +488,9 @@ function RealEstatePropertiesPage() {
                         }
                       >
                         <i
-                          className={"fas " + (canUpdate ? "fa-edit" : "fa-eye")}
+                          className={
+                            "fas " + (canUpdate ? "fa-edit" : "fa-eye")
+                          }
                           aria-hidden="true"
                         ></i>{" "}
                         {canUpdate ? "Editar" : "Visualizar"}

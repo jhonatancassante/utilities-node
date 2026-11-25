@@ -237,46 +237,97 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
       <div className={styles.sectionTitle}>
         <div>
           <h2>Importar imóveis por arquivo CSV</h2>
-          <p>Informe o exercício e a situação de atualização. O arquivo deve conter os 19 campos do cadastro e pode importar até 100.000 imóveis.</p>
+          <p>
+            Informe o exercício e a situação de atualização. O arquivo deve
+            conter os 19 campos do cadastro e pode importar até 100.000 imóveis.
+          </p>
         </div>
         <i className="fas fa-file-csv" aria-hidden="true"></i>
       </div>
       <div className={styles.importSettings}>
         <label>
           <span className={shared.label}>Ano *</span>
-          <input className={shared.input} type="number" min="1" max="9999" step="1" value={year}
-            onChange={(event) => { setYear(event.target.value); setRecords(null); setError(""); }} required />
+          <input
+            className={shared.input}
+            type="number"
+            min="1"
+            max="9999"
+            step="1"
+            value={year}
+            onChange={(event) => {
+              setYear(event.target.value);
+              setRecords(null);
+              setError("");
+            }}
+            required
+          />
         </label>
         <label className={styles.switchField}>
           <span className={shared.label}>Atualizado</span>
           <span className={styles.switchControl}>
-            <input type="checkbox" role="switch" checked={isUpdated}
-              onChange={(event) => { setIsUpdated(event.target.checked); setRecords(null); setError(""); }} />
+            <input
+              type="checkbox"
+              role="switch"
+              checked={isUpdated}
+              onChange={(event) => {
+                setIsUpdated(event.target.checked);
+                setRecords(null);
+                setError("");
+              }}
+            />
             <span aria-hidden="true"></span>
           </span>
         </label>
       </div>
       <div className={styles.fileField}>
         <span className={shared.label}>Arquivo CSV *</span>
-        <FileDropzone label="Arraste um arquivo CSV ou clique para selecionar" accept=".csv,text/csv"
+        <FileDropzone
+          label="Arraste um arquivo CSV ou clique para selecionar"
+          accept=".csv,text/csv"
           onFiles={(files) => {
             const selectedFile = files[0];
             if (!selectedFile) return;
             if (!selectedFile.name.toLowerCase().endsWith(".csv")) {
-              setFile(null); setRecords(null); setError("Selecione um arquivo com extensão .csv."); return;
+              setFile(null);
+              setRecords(null);
+              setError("Selecione um arquivo com extensão .csv.");
+              return;
             }
-            setFile(selectedFile); setRecords(null); setError("");
-          }} />
-        {file && <div className={styles.selectedFile}>
-          <span>{file.name}</span>
-          <Button type="button" variant="outline" onClick={() => { setFile(null); setRecords(null); setError(""); }} disabled={isSaving}>Limpar arquivo</Button>
-        </div>}
+            setFile(selectedFile);
+            setRecords(null);
+            setError("");
+          }}
+        />
+        {file && (
+          <div className={styles.selectedFile}>
+            <span>{file.name}</span>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setFile(null);
+                setRecords(null);
+                setError("");
+              }}
+              disabled={isSaving}
+            >
+              Limpar arquivo
+            </Button>
+          </div>
+        )}
       </div>
       <div className={styles.formatSettings}>
         <label>
           <span className={shared.label}>Codificação *</span>
-          <select className={shared.input} value={encoding}
-            onChange={(event) => { setEncoding(event.target.value); setRecords(null); setError(""); }}>
+          <select
+            className={shared.input}
+            value={encoding}
+            onChange={(event) => {
+              setEncoding(event.target.value);
+              setRecords(null);
+              setError("");
+            }}
+          >
             <option value="UTF-8">UTF-8</option>
             <option value="windows-1252">Windows-1252 (ANSI)</option>
             <option value="ISO-8859-1">ISO-8859-1</option>
@@ -284,8 +335,15 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
         </label>
         <label>
           <span className={shared.label}>Delimitador *</span>
-          <select className={shared.input} value={delimiter}
-            onChange={(event) => { setDelimiter(event.target.value); setRecords(null); setError(""); }}>
+          <select
+            className={shared.input}
+            value={delimiter}
+            onChange={(event) => {
+              setDelimiter(event.target.value);
+              setRecords(null);
+              setError("");
+            }}
+          >
             <option value=";">Ponto e vírgula (;)</option>
             <option value=",">Vírgula (,)</option>
             <option value="tab">Tabulação</option>
@@ -293,11 +351,34 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
         </label>
       </div>
       <div className={styles.importActions}>
-        <Button type="button" variant="outline" icon="fa-eye" onClick={handleReadFile} disabled={!file || isSaving || !year.trim()}>Ler e validar CSV</Button>
-        {records && <Button type="button" icon="fa-file-import" onClick={async () => {
-          const succeeded = await onSubmit(records);
-          if (succeeded) { setFile(null); setRecords(null); setError(""); }
-        }} disabled={isSaving}>{isSaving ? "Importando..." : "Importar " + records.length + " imóvel(is)"}</Button>}
+        <Button
+          type="button"
+          variant="outline"
+          icon="fa-eye"
+          onClick={handleReadFile}
+          disabled={!file || isSaving || !year.trim()}
+        >
+          Ler e validar CSV
+        </Button>
+        {records && (
+          <Button
+            type="button"
+            icon="fa-file-import"
+            onClick={async () => {
+              const succeeded = await onSubmit(records);
+              if (succeeded) {
+                setFile(null);
+                setRecords(null);
+                setError("");
+              }
+            }}
+            disabled={isSaving}
+          >
+            {isSaving
+              ? "Importando..."
+              : "Importar " + records.length + " imóvel(is)"}
+          </Button>
+        )}
       </div>
       {isSaving && (
         <div className={styles.importProgress} role="status" aria-live="polite">
@@ -308,14 +389,25 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
           </span>
         </div>
       )}
-      {error && <p className={styles.error} role="alert">{error}</p>}
-      {records && <div className={styles.preview}>
-        <div className={styles.previewHeading}>
-          <strong>{records.length} imóvel(is) validados.</strong>
-          <span>Ano: {year} · Atualizado: {isUpdated ? "Sim" : "Não"}</span>
+      {error && (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
+      {records && (
+        <div className={styles.preview}>
+          <div className={styles.previewHeading}>
+            <strong>{records.length} imóvel(is) validados.</strong>
+            <span>
+              Ano: {year} · Atualizado: {isUpdated ? "Sim" : "Não"}
+            </span>
+          </div>
+          <p>
+            Todos os registros foram validados. Confira a quantidade antes de
+            concluir a importação.
+          </p>
         </div>
-        <p>Todos os registros foram validados. Confira a quantidade antes de concluir a importação.</p>
-      </div>}
+      )}
     </section>
   );
 }

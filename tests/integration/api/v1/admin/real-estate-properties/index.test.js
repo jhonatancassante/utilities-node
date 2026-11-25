@@ -107,7 +107,6 @@ describe("POST /api/v1/admin/real-estate-properties", () => {
     expect(body).not.toHaveProperty("deleted_at");
   });
 
-
   test("Preenchendo a fração ideal com a área do terreno quando não informada", async () => {
     const sessionObject = await createSessionWithFeatures([
       "create:real_estate_properties",
@@ -217,7 +216,6 @@ describe("GET, PATCH e DELETE /api/v1/admin/real-estate-properties/[id]", () => 
   });
 });
 
-
 describe("Regras de cadastro atualizado e anual", () => {
   test("Atualizando o cadastro annual=false pelo código físico", async () => {
     const sessionObject = await createSessionWithFeatures([
@@ -309,7 +307,9 @@ describe("Regras de cadastro atualizado e anual", () => {
       values: [previousCurrent.id],
     });
     expect(deleted.rowCount).toBe(0);
-    await expect(realEstateProperty.findOneById(annualRecord.id)).resolves.toBeDefined();
+    await expect(
+      realEstateProperty.findOneById(annualRecord.id),
+    ).resolves.toBeDefined();
   });
 
   test("Solicitando confirmação e atualizando annual=true em lote", async () => {
@@ -355,8 +355,7 @@ describe("Regras de cadastro atualizado e anual", () => {
     expect(body[0].id).toBe(existing.id);
     expect(body[0].owner_name).toBe("Proprietário substituído");
     expect(body.map((record) => record.physical_property_id)).toEqual([
-      41006,
-      41007,
+      41006, 41007,
     ]);
   });
 });
@@ -395,7 +394,6 @@ describe("POST e DELETE /api/v1/admin/real-estate-properties/bulk", () => {
     ]);
     expect(body.every((item) => !("deleted_at" in item))).toBe(true);
   });
-
 
   test("Preenchendo a fração ideal com a área do terreno na importação em lote", async () => {
     const sessionObject = await createSessionWithFeatures([

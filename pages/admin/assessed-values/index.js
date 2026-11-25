@@ -743,14 +743,18 @@ function AssessedValuesPage() {
                     allVisibleSelected={allVisibleSelected}
                     onToggleRecord={toggleSelection}
                     onTogglePage={togglePageSelection}
-                    getSelectionLabel={(record) => "Selecionar ano " + record.year}
+                    getSelectionLabel={(record) =>
+                      "Selecionar ano " + record.year
+                    }
                     renderActions={(record, actionClassName) => (
                       <Link
                         className={actionClassName}
                         href={"/admin/assessed-values/" + record.id}
                       >
                         <i
-                          className={"fas " + (canUpdate ? "fa-edit" : "fa-eye")}
+                          className={
+                            "fas " + (canUpdate ? "fa-edit" : "fa-eye")
+                          }
                           aria-hidden="true"
                         ></i>{" "}
                         {canUpdate ? "Editar" : "Visualizar"}

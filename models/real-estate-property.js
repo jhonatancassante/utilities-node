@@ -1,5 +1,9 @@
 import database from "@/infra/database.js";
-import { ConflictError, NotFoundError, ValidationError } from "@/infra/errors.js";
+import {
+  ConflictError,
+  NotFoundError,
+  ValidationError,
+} from "@/infra/errors.js";
 
 const FIELD_RULES = {
   year: { type: "integer", min: 1, max: 9999 },
@@ -151,7 +155,6 @@ async function insertRecord(client, property) {
   return results.rows[0];
 }
 
-
 async function insertManyRecords(client, properties, { annual }) {
   const records = new Array(properties.length);
   let start = 0;
@@ -174,8 +177,7 @@ async function insertManyRecords(client, properties, { annual }) {
     );
     const valueGroups = batch.map((_, rowIndex) => {
       const placeholders = columns.map(
-        (_, columnIndex) =>
-          `${rowIndex * columns.length + columnIndex + 1}`,
+        (_, columnIndex) => `${rowIndex * columns.length + columnIndex + 1}`,
       );
       return `(${placeholders.join(", ")})`;
     });
@@ -184,9 +186,7 @@ async function insertManyRecords(client, properties, { annual }) {
         ? !["year", "physical_property_id"].includes(field)
         : field !== "physical_property_id",
     );
-    const updates = updateFields.map(
-      (field) => `${field} = EXCLUDED.${field}`,
-    );
+    const updates = updateFields.map((field) => `${field} = EXCLUDED.${field}`);
     updates.push("updated_at = timezone('utc', now())");
     const conflictTarget = annual
       ? "(year, physical_property_id) WHERE annual = true AND deleted_at IS NULL"
@@ -212,11 +212,13 @@ async function insertManyRecords(client, properties, { annual }) {
 }
 
 async function create(inputValues) {
-  const property = applyIdealFractionDefault(validateInput(inputValues, {
-    requiredFields: Object.entries(FIELD_RULES)
-      .filter(([, rule]) => rule.required)
-      .map(([field]) => field),
-  }));
+  const property = applyIdealFractionDefault(
+    validateInput(inputValues, {
+      requiredFields: Object.entries(FIELD_RULES)
+        .filter(([, rule]) => rule.required)
+        .map(([field]) => field),
+    }),
+  );
   if (!Object.hasOwn(property, "annual")) property.annual = false;
 
   return database.transaction(async (client) => {
@@ -251,9 +253,7 @@ async function create(inputValues) {
     const updateFields = columns.filter(
       (field) => field !== "physical_property_id",
     );
-    const updates = updateFields.map(
-      (field) => `${field} = EXCLUDED.${field}`,
-    );
+    const updates = updateFields.map((field) => `${field} = EXCLUDED.${field}`);
     updates.push("updated_at = timezone('utc', now())");
     const results = await client.query({
       text: `
@@ -303,7 +303,10 @@ async function findOneById(id) {
 
 async function update(id, inputValues) {
   const property = validateInput(inputValues);
-  if (property.ideal_fraction === null && !Object.hasOwn(property, "land_area")) {
+  if (
+    property.ideal_fraction === null &&
+    !Object.hasOwn(property, "land_area")
+  ) {
     property.ideal_fraction = undefined;
   } else {
     applyIdealFractionDefault(property);
@@ -317,7 +320,8 @@ async function update(id, inputValues) {
   }
   const values = columns
     .filter(
-      (field) => field !== "ideal_fraction" || property.ideal_fraction !== undefined,
+      (field) =>
+        field !== "ideal_fraction" || property.ideal_fraction !== undefined,
     )
     .map((field) => property[field]);
   let parameterIndex = 2;
@@ -414,22 +418,26 @@ async function createMany(inputValues, { overwriteExisting = false } = {}) {
   }
 
   const properties = inputValues.map((input) => {
-    const property = applyIdealFractionDefault(validateInput(input, {
-      requiredFields: [
-        "year",
-        ...Object.entries(FIELD_RULES)
-          .filter(([, rule]) => rule.required)
-          .map(([field]) => field),
-      ],
-    }));
+    const property = applyIdealFractionDefault(
+      validateInput(input, {
+        requiredFields: [
+          "year",
+          ...Object.entries(FIELD_RULES)
+            .filter(([, rule]) => rule.required)
+            .map(([field]) => field),
+        ],
+      }),
+    );
     if (!Object.hasOwn(property, "annual")) property.annual = false;
     return property;
   });
   const annual = properties[0].annual;
   if (properties.some((property) => property.annual !== annual)) {
     throw new ValidationError({
-      message: "Todos os imóveis da importação devem ter a mesma situação de atualização.",
-      action: "Confira o campo Atualizado e gere novamente a prévia do arquivo.",
+      message:
+        "Todos os imóveis da importação devem ter a mesma situação de atualização.",
+      action:
+        "Confira o campo Atualizado e gere novamente a prévia do arquivo.",
     });
   }
 
@@ -482,7 +490,8 @@ async function createMany(inputValues, { overwriteExisting = false } = {}) {
           "Foram encontrados " +
           existing.rowCount +
           " imóvel(is) já cadastrado(s) para o mesmo ano e código físico. Se continuar, os registros existentes serão atualizados e os novos serão inseridos.",
-        action: "Escolha Continuar para atualizar os existentes ou Cancelar para interromper a importação.",
+        action:
+          "Escolha Continuar para atualizar os existentes ou Cancelar para interromper a importação.",
       });
     }
 
