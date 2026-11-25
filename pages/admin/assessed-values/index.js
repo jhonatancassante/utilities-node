@@ -762,7 +762,6 @@ function AssessedValuesPage() {
                     )}
                   />
                   <AdminPagination
-                    page={page}
                     setPage={setPage}
                     pageSize={pageSize}
                     setPageSize={setPageSize}

@@ -177,7 +177,7 @@ async function insertManyRecords(client, properties, { annual }) {
     );
     const valueGroups = batch.map((_, rowIndex) => {
       const placeholders = columns.map(
-        (_, columnIndex) => `${rowIndex * columns.length + columnIndex + 1}`,
+        (_, columnIndex) => `$${rowIndex * columns.length + columnIndex + 1}`,
       );
       return `(${placeholders.join(", ")})`;
     });
