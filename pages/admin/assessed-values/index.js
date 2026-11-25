@@ -18,7 +18,6 @@ import {
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
-const PAGE_SIZES = [10, 20, 50, 100];
 const CSV_FIELDS = [
   "year",
   "decree",
@@ -728,7 +727,8 @@ function AssessedValuesPage() {
                   <AdminDataTable
                     records={visibleRecords}
                     columns={TABLE_COLUMNS.map((column) => ({
-                      ...column,
+                      key: column.name,
+                      label: column.label,
                       render: (record) =>
                         column.name === "year" ? (
                           <strong>{record.year}</strong>

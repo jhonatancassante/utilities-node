@@ -18,7 +18,6 @@ import {
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
-const PAGE_SIZES = [10, 20, 50, 100];
 const TABLE_FIELDS = [
   ["physical_registration", "Inscrição física"],
   ["ctm", "CTM"],
