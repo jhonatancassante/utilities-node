@@ -228,6 +228,39 @@ function filterOutput(user, feature, resource) {
       : filterAssessedValue(resource);
   }
 
+
+  if (feature === "read:real_estate_properties") {
+    const filterProperty = (item) => ({
+      id: item.id,
+      year: item.year,
+      physical_property_id: item.physical_property_id,
+      physical_registration: item.physical_registration,
+      ctm: item.ctm,
+      ctm_count: item.ctm_count,
+      grouping: item.grouping,
+      property_block: item.property_block,
+      property_lots: item.property_lots,
+      land_area: item.land_area,
+      built_area: item.built_area,
+      property_neighborhood: item.property_neighborhood,
+      owner_name: item.owner_name,
+      promissory_buyer: item.promissory_buyer,
+      land_sector: item.land_sector,
+      property_street: item.property_street,
+      property_number: item.property_number,
+      property_complement: item.property_complement,
+      construction_type: item.construction_type,
+      ideal_fraction: item.ideal_fraction,
+      points: item.points,
+      annual: item.annual,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    });
+    return Array.isArray(resource)
+      ? resource.map(filterProperty)
+      : filterProperty(resource);
+  }
+
   if (feature === "read:status") {
     const output = {
       updated_at: resource.updated_at,

@@ -42,6 +42,14 @@ export const adminSections = [
     requiredFeature: "read:assessed_values",
   },
   {
+    id: "real-estate-properties",
+    title: "Imóveis",
+    description: "Consulte e gerencie os dados cadastrais dos imóveis.",
+    href: "/admin/real-estate-properties",
+    icon: "fa-home",
+    requiredFeature: "read:real_estate_properties",
+  },
+  {
     id: "status",
     title: "Status do sistema",
     description: "Acesse as métricas do sistema e a versão do banco de dados.",
