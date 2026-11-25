@@ -61,7 +61,7 @@ const NUMBER_FIELDS = [
   "ideal_fraction",
 ];
 
-function parseCsv(source) {
+function parseCsv(source, delimiter) {
   const rows = [];
   let row = [];
   let cell = "";
@@ -73,7 +73,7 @@ function parseCsv(source) {
         cell += '"';
         index += 1;
       } else quoted = !quoted;
-    } else if (character === ";" && !quoted) {
+    } else if (character === delimiter && !quoted) {
       row.push(cell);
       cell = "";
     } else if ((character === "\n" || character === "\r") && !quoted) {
@@ -129,11 +129,13 @@ function parseValue(field, raw, rowNumber) {
 function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
   const [file, setFile] = useState(null);
   const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [encoding, setEncoding] = useState("UTF-8");
+  const [delimiter, setDelimiter] = useState(";");
   const [isUpdated, setIsUpdated] = useState(false);
   const [records, setRecords] = useState(null);
   const [error, setError] = useState("");
 
-  function handleReadFile() {
+  async function handleReadFile() {
     if (
       !year.trim() ||
       !Number.isInteger(Number(year)) ||
@@ -147,12 +149,20 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
       setError("Selecione um arquivo CSV.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
+    try {
+      const buffer = await file.arrayBuffer();
+      let source;
       try {
-        const rows = parseCsv(
-          String(reader.result || "").replace(/^\uFEFF/, ""),
+        source = new TextDecoder(encoding, { fatal: true }).decode(buffer);
+      } catch {
+        throw new Error(
+          "O arquivo não corresponde à codificação selecionada (" + encoding + ").",
         );
+      }
+      const rows = parseCsv(
+        source.replace(/^\uFEFF/, ""),
+        delimiter === "\\t" ? "\t" : delimiter,
+      );
         if (rows.length < 2)
           throw new Error(
             "O arquivo precisa conter cabeçalho e ao menos um imóvel.",
@@ -209,7 +219,10 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
     };
     reader.onerror = () =>
       setError("Não foi possível ler o arquivo selecionado.");
-    reader.readAsText(file, "UTF-8");
+    } catch (parseError) {
+      setRecords(null);
+      setError(parseError.message);
+    }
   }
 
   return (
@@ -226,6 +239,24 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
           <span className={shared.label}>Ano *</span>
           <input className={shared.input} type="number" min="1" max="9999" step="1" value={year}
             onChange={(event) => { setYear(event.target.value); setRecords(null); setError(""); }} required />
+        </label>
+        <label>
+          <span className={shared.label}>Codificação *</span>
+          <select className={shared.input} value={encoding}
+            onChange={(event) => { setEncoding(event.target.value); setRecords(null); setError(""); }}>
+            <option value="UTF-8">UTF-8</option>
+            <option value="windows-1252">Windows-1252 (ANSI)</option>
+            <option value="ISO-8859-1">ISO-8859-1</option>
+          </select>
+        </label>
+        <label>
+          <span className={shared.label}>Delimitador *</span>
+          <select className={shared.input} value={delimiter}
+            onChange={(event) => { setDelimiter(event.target.value); setRecords(null); setError(""); }}>
+            <option value=";">Ponto e vírgula (;)</option>
+            <option value=",">Vírgula (,)</option>
+            <option value="\\t">Tabulação</option>
+          </select>
         </label>
         <label className={styles.switchField}>
           <span className={shared.label}>Atualizado</span>
