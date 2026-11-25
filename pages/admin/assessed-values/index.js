@@ -14,6 +14,15 @@ import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 const PAGE_SIZES = [10, 20, 50, 100];
+const PAGINATION_BUTTON_STYLE = {
+  width: 32,
+  minWidth: 32,
+  height: 32,
+  minHeight: 32,
+  padding: 6,
+  fontSize: 12,
+  flexShrink: 0,
+};
 const CSV_FIELDS = [
   "year", "decree",
   "sector_1", "sector_2", "sector_3", "sector_4", "sector_5", "sector_6", "sector_7", "sector_8", "sector_9", "sector_9a", "sector_10", "sector_11", "sector_11a", "sector_11b", "sector_12", "sector_13", "sector_14", "sector_15", "sector_16", "sector_17",
@@ -153,9 +162,11 @@ function AssessedValuesPage() {
     if (!term) return records;
     return records.filter((record) => String(record.year).includes(term) || String(record.decree || "").toLowerCase().includes(term));
   }, [records, search]);
-  const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
+  const pageCount = pageSize === "all" ? 1 : Math.max(1, Math.ceil(filteredRecords.length / pageSize));
   const currentPage = Math.min(page, pageCount);
-  const visibleRecords = filteredRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const visibleRecords = pageSize === "all"
+    ? filteredRecords
+    : filteredRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const paginationStart = Math.max(1, Math.min(currentPage - 2, pageCount - 3));
   const paginationEnd = Math.min(pageCount, paginationStart + 3);
   const paginationPages = Array.from(
@@ -323,7 +334,7 @@ function AssessedValuesPage() {
               {canDelete && selectedIds.length > 0 && <Button type="button" variant="danger" icon="fa-trash" onClick={handleDeleteSelected} disabled={isDeleting}>{isDeleting ? "Excluindo..." : "Excluir selecionados (" + selectedIds.length + ")"}</Button>}
             </div>
             {isLoadingRecords ? <p className={styles.empty}>Carregando registros...</p> : filteredRecords.length === 0 ? <p className={styles.empty}>Nenhum registro encontrado.</p> : <>
-              <div className={styles.tableWrapper}><table><thead><tr>
+              <div className={styles.tableWrapper} style={{ maxHeight: "min(940px, 70vh)", overflowY: "auto" }}><table><thead><tr>
                 {canDelete && <th><input type="checkbox" aria-label="Selecionar todos desta página" checked={allVisibleSelected} onChange={(event) => togglePageSelection(event.target.checked)} /></th>}
                 {TABLE_COLUMNS.map((column) => <th key={column.name}>{column.label}</th>)}<th>Ações</th>
               </tr></thead><tbody>{visibleRecords.map((record) => <tr key={record.id}>
@@ -336,7 +347,7 @@ function AssessedValuesPage() {
                 <td><Link className={styles.actionLink} href={"/admin/assessed-values/" + record.id}><i className={"fas " + (canUpdate ? "fa-edit" : "fa-eye")} aria-hidden="true"></i> {canUpdate ? "Editar" : "Visualizar"}</Link></td>
               </tr>)}</tbody></table></div>
               <div className={styles.pagination}>
-                <label>Registros por página <select className={shared.input} value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}>{PAGE_SIZES.map((size) => <option value={size} key={size}>{size}</option>)}</select></label>
+                <label>Registros por página <select className={shared.input} value={pageSize} onChange={(event) => { setPageSize(event.target.value === "all" ? "all" : Number(event.target.value)); setPage(1); }}>{PAGE_SIZES.map((size) => <option value={size} key={size}>{size}</option>)}<option value="all">Todos</option></select></label>
                 <div>
                   <span>Página {currentPage} de {pageCount}</span>
                   <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px" }} aria-label="Navegação de páginas">
@@ -348,7 +359,7 @@ function AssessedValuesPage() {
                       aria-label="Primeira página"
                       onClick={() => setPage(1)}
                       disabled={currentPage === 1}
-                      style={{ minHeight: 36, minWidth: 36, padding: 8, fontSize: 13 }}
+                      style={PAGINATION_BUTTON_STYLE}
                     />
                     <Button
                       type="button"
@@ -358,7 +369,7 @@ function AssessedValuesPage() {
                       aria-label="Página anterior"
                       onClick={() => setPage(currentPage - 1)}
                       disabled={currentPage === 1}
-                      style={{ minHeight: 36, minWidth: 36, padding: 8, fontSize: 13 }}
+                      style={PAGINATION_BUTTON_STYLE}
                     />
                     {paginationStart > 1 && <span aria-hidden="true">…</span>}
                     {paginationPages.map((pageNumber) => (
@@ -369,7 +380,7 @@ function AssessedValuesPage() {
                         onClick={() => setPage(pageNumber)}
                         aria-label={"Página " + pageNumber}
                         aria-current={pageNumber === currentPage ? "page" : undefined}
-                        style={{ minHeight: 36, minWidth: 36, padding: 8, fontSize: 13 }}
+                        style={PAGINATION_BUTTON_STYLE}
                       >
                         {pageNumber}
                       </Button>
@@ -383,7 +394,7 @@ function AssessedValuesPage() {
                       aria-label="Próxima página"
                       onClick={() => setPage(currentPage + 1)}
                       disabled={currentPage === pageCount}
-                      style={{ minHeight: 36, minWidth: 36, padding: 8, fontSize: 13 }}
+                      style={PAGINATION_BUTTON_STYLE}
                     />
                     <Button
                       type="button"
@@ -393,7 +404,7 @@ function AssessedValuesPage() {
                       aria-label="Última página"
                       onClick={() => setPage(pageCount)}
                       disabled={currentPage === pageCount}
-                      style={{ minHeight: 36, minWidth: 36, padding: 8, fontSize: 13 }}
+                      style={PAGINATION_BUTTON_STYLE}
                     />
                   </div>
                 </div>
