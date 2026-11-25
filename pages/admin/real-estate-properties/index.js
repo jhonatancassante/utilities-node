@@ -498,6 +498,7 @@ function RealEstatePropertiesPage() {
                     )}
                   />
                   <AdminPagination
+                    page={page}
                     setPage={setPage}
                     pageSize={pageSize}
                     setPageSize={setPageSize}

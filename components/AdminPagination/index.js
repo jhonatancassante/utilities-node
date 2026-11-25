@@ -14,6 +14,7 @@ const PAGINATION_BUTTON_STYLE = {
 };
 
 function AdminPagination({
+  page,
   setPage,
   pageSize,
   setPageSize,
