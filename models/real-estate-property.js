@@ -325,7 +325,7 @@ async function update(id, inputValues) {
     if (field === "ideal_fraction" && property.ideal_fraction === undefined) {
       return "ideal_fraction = land_area";
     }
-    return `${field} = ${parameterIndex++}`;
+    return field + " = $" + parameterIndex++;
   });
   const results = await database.query({
     text: `
