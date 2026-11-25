@@ -32,7 +32,6 @@ function AssessedValueEditor({ recordId }) {
   useEffect(() => {
     if (!recordId || !user || !hasAdminSectionAccess(user, "assessed-values")) return undefined;
     let active = true;
-    setIsLoadingRecord(true);
     requestAPI("/api/v1/admin/assessed-values/" + encodeURIComponent(recordId))
       .then((data) => { if (active) setRecord(data); })
       .catch((requestError) => {

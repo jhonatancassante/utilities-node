@@ -108,7 +108,9 @@ function AssessedValuesPage() {
   }, []);
 
   useEffect(() => {
-    if (user && hasAdminSectionAccess(user, "assessed-values")) loadRecords();
+    if (user && hasAdminSectionAccess(user, "assessed-values")) {
+      Promise.resolve().then(loadRecords);
+    }
   }, [loadRecords, user]);
 
   const filteredRecords = useMemo(() => {
@@ -117,9 +119,8 @@ function AssessedValuesPage() {
     return records.filter((record) => String(record.year).includes(term) || String(record.decree || "").toLowerCase().includes(term));
   }, [records, search]);
   const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
-  const visibleRecords = filteredRecords.slice((page - 1) * pageSize, page * pageSize);
-
-  useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
+  const currentPage = Math.min(page, pageCount);
+  const visibleRecords = filteredRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   function toggleSelection(id) {
     setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
@@ -267,7 +268,7 @@ function AssessedValuesPage() {
               </tr>)}</tbody></table></div>
               <div className={styles.pagination}>
                 <label>Registros por página <select className={shared.input} value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}>{PAGE_SIZES.map((size) => <option value={size} key={size}>{size}</option>)}</select></label>
-                <div><span>Página {page} de {pageCount}</span><Button variant="outline" type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1}>Anterior</Button><Button variant="outline" type="button" onClick={() => setPage((current) => Math.min(pageCount, current + 1))} disabled={page >= pageCount}>Próxima</Button></div>
+                <div><span>Página {currentPage} de {pageCount}</span><Button variant="outline" type="button" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1}>Anterior</Button><Button variant="outline" type="button" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= pageCount}>Próxima</Button></div>
               </div>
             </>}
           </section>

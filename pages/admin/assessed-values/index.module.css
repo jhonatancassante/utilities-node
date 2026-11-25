@@ -29,7 +29,6 @@
 .tableWrapper tbody tr:last-child td { border-bottom: 0; }
 .tableWrapper tbody tr:hover { background: var(--accent-soft); }
 .tableWrapper td strong { color: var(--text-primary); }
-.tableWrapper input { accent-color: var(--accent); }
 .actionLink { display: inline-flex; align-items: center; gap: 7px; color: var(--accent); font-weight: 700; text-decoration: none; }
 .readOnly { color: var(--text-faint); font-size: 12px; }
 .empty { padding: 26px; border: 1px dashed var(--border-color); border-radius: var(--radius-md); color: var(--text-secondary); text-align: center; }

@@ -213,4 +213,6 @@ async function createMany(inputValues) {
   });
 }
 
-export default { create, findAll, findOneById, update, delete: deleteAssessedValue, createMany };
+const assessedValueModel = { create, findAll, findOneById, update, delete: deleteAssessedValue, createMany };
+
+export default assessedValueModel;
