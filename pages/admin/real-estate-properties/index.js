@@ -180,14 +180,16 @@ function RealEstatePropertiesPage() {
         ) {
           throw requestError;
         }
-        setDialog({
-          type: "bulk-import",
-          records,
-          message:
-            requestError.message +
-            "\n\nDeseja continuar com a atualização dos registros existentes?",
+        return await new Promise((resolve) => {
+          setDialog({
+            type: "bulk-import",
+            records,
+            resolve,
+            message:
+              requestError.message +
+              "\n\nDeseja continuar com a atualização dos registros existentes?",
+          });
         });
-        return false;
       }
 
       await loadRecords();
@@ -223,7 +225,6 @@ function RealEstatePropertiesPage() {
     setDialog(null);
 
     if (currentDialog.type === "bulk-import") {
-      setIsSaving(true);
       setFeedback(null);
       try {
         await requestAPI("/api/v1/admin/real-estate-properties/bulk", {
@@ -240,6 +241,7 @@ function RealEstatePropertiesPage() {
             currentDialog.records.length +
             " imóvel(is) importado(s) com sucesso.",
         });
+        currentDialog.resolve(true);
       } catch (requestError) {
         setFeedback({
           type: "error",
@@ -247,8 +249,7 @@ function RealEstatePropertiesPage() {
           message: requestError.message,
           action: requestError.action,
         });
-      } finally {
-        setIsSaving(false);
+        currentDialog.resolve(false);
       }
       return;
     }
@@ -508,7 +509,10 @@ function RealEstatePropertiesPage() {
           type="confirmation"
           resetKey={dialog.type + "-" + (dialog.ids?.join(",") || "bulk")}
           onConfirm={confirmDialog}
-          onCancel={() => setDialog(null)}
+          onCancel={() => {
+            dialog.resolve?.(false);
+            setDialog(null);
+          }}
         >
           {dialog.message}
         </StatusMessage>
