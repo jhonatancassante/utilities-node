@@ -162,8 +162,8 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
         );
       }
       const rows = parseCsv(
-        source.replace(/^\\uFEFF/, ""),
-        delimiter === "tab" ? "\\t" : delimiter,
+        source.replace(/^\uFEFF/, ""),
+        delimiter === "tab" ? "\t" : delimiter,
       );
       if (rows.length < 2) {
         throw new Error(
@@ -256,7 +256,7 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
             onChange={(event) => { setDelimiter(event.target.value); setRecords(null); setError(""); }}>
             <option value=";">Ponto e vírgula (;)</option>
             <option value=",">Vírgula (,)</option>
-            <option value="\\t">Tabulação</option>
+            <option value="tab">Tabulação</option>
           </select>
         </label>
         <label className={styles.switchField}>
