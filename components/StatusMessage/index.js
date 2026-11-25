@@ -85,7 +85,11 @@ function StatusMessage({
   const [dismissedKey, setDismissedKey] = useState(null);
   const [toastState, setToastState] = useState({ items: [], nextId: 0 });
   const [lastToastKey, setLastToastKey] = useState(null);
-  const isToast = !name && !["inline-error", "critical"].includes(type);
+  const isToast =
+    !name &&
+    !["inline-error", "critical", "warning-modal", "confirmation"].includes(
+      type,
+    );
 
   if (isToast && children && messageKey !== lastToastKey) {
     setLastToastKey(messageKey);
