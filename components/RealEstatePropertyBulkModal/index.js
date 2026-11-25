@@ -4,6 +4,8 @@ import FileDropzone from "@/components/FileDropzone";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
+const MAX_IMPORT_RECORDS = 100000;
+
 const CSV_FIELDS = [
   ["IdFisico", "physical_property_id"],
   ["InscrFisico", "physical_registration"],
@@ -170,8 +172,12 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
           "O arquivo precisa conter cabeçalho e ao menos um imóvel.",
         );
       }
-      if (rows.length - 1 > 500) {
-        throw new Error("O limite por importação é de 500 imóveis.");
+      if (rows.length - 1 > MAX_IMPORT_RECORDS) {
+        throw new Error(
+          "O limite por importação é de " +
+            MAX_IMPORT_RECORDS.toLocaleString("pt-BR") +
+            " imóveis.",
+        );
       }
       const headers = rows[0].map((header) => header.trim().toLowerCase());
       const expectedHeaders = CSV_FIELDS.map(([header]) =>
@@ -231,7 +237,7 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
       <div className={styles.sectionTitle}>
         <div>
           <h2>Importar imóveis por arquivo CSV</h2>
-          <p>Informe o exercício e a situação de atualização. O arquivo deve conter os 19 campos do cadastro e pode importar até 500 imóveis.</p>
+          <p>Informe o exercício e a situação de atualização. O arquivo deve conter os 19 campos do cadastro e pode importar até 100.000 imóveis.</p>
         </div>
         <i className="fas fa-file-csv" aria-hidden="true"></i>
       </div>
@@ -293,6 +299,15 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
           if (succeeded) { setFile(null); setRecords(null); setError(""); }
         }} disabled={isSaving}>{isSaving ? "Importando..." : "Importar " + records.length + " imóvel(is)"}</Button>}
       </div>
+      {isSaving && (
+        <div className={styles.importProgress} role="status" aria-live="polite">
+          <i className="fas fa-spinner fa-spin" aria-hidden="true"></i>
+          <span>
+            Importando {records?.length.toLocaleString("pt-BR")} imóvel(is).
+            Esse processo pode levar alguns minutos. Não feche esta página.
+          </span>
+        </div>
+      )}
       {error && <p className={styles.error} role="alert">{error}</p>}
       {records && <div className={styles.preview}>
         <div className={styles.previewHeading}>
