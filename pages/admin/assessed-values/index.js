@@ -156,6 +156,12 @@ function AssessedValuesPage() {
   const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const visibleRecords = filteredRecords.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginationStart = Math.max(1, Math.min(currentPage - 2, pageCount - 3));
+  const paginationEnd = Math.min(pageCount, paginationStart + 3);
+  const paginationPages = Array.from(
+    { length: paginationEnd - paginationStart + 1 },
+    (_, index) => paginationStart + index,
+  );
 
   function toggleSelection(id) {
     setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
@@ -331,7 +337,66 @@ function AssessedValuesPage() {
               </tr>)}</tbody></table></div>
               <div className={styles.pagination}>
                 <label>Registros por página <select className={shared.input} value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}>{PAGE_SIZES.map((size) => <option value={size} key={size}>{size}</option>)}</select></label>
-                <div><span>Página {currentPage} de {pageCount}</span><Button variant="outline" type="button" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1}>Anterior</Button><Button variant="outline" type="button" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= pageCount}>Próxima</Button></div>
+                <div>
+                  <span>Página {currentPage} de {pageCount}</span>
+                  <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px" }} aria-label="Navegação de páginas">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      icon="fa-angle-double-left"
+                      title="Primeira página"
+                      aria-label="Primeira página"
+                      onClick={() => setPage(1)}
+                      disabled={currentPage === 1}
+                      style={{ minHeight: 36, minWidth: 36, padding: 8, fontSize: 13 }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      icon="fa-chevron-left"
+                      title="Página anterior"
+                      aria-label="Página anterior"
+                      onClick={() => setPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      style={{ minHeight: 36, minWidth: 36, padding: 8, fontSize: 13 }}
+                    />
+                    {paginationStart > 1 && <span aria-hidden="true">…</span>}
+                    {paginationPages.map((pageNumber) => (
+                      <Button
+                        key={pageNumber}
+                        type="button"
+                        variant={pageNumber === currentPage ? "primary" : "outline"}
+                        onClick={() => setPage(pageNumber)}
+                        aria-label={"Página " + pageNumber}
+                        aria-current={pageNumber === currentPage ? "page" : undefined}
+                        style={{ minHeight: 36, minWidth: 36, padding: 8, fontSize: 13 }}
+                      >
+                        {pageNumber}
+                      </Button>
+                    ))}
+                    {paginationEnd < pageCount && <span aria-hidden="true">…</span>}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      icon="fa-chevron-right"
+                      title="Próxima página"
+                      aria-label="Próxima página"
+                      onClick={() => setPage(currentPage + 1)}
+                      disabled={currentPage === pageCount}
+                      style={{ minHeight: 36, minWidth: 36, padding: 8, fontSize: 13 }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      icon="fa-angle-double-right"
+                      title="Última página"
+                      aria-label="Última página"
+                      onClick={() => setPage(pageCount)}
+                      disabled={currentPage === pageCount}
+                      style={{ minHeight: 36, minWidth: 36, padding: 8, fontSize: 13 }}
+                    />
+                  </div>
+                </div>
               </div>
             </>}
           </section>
