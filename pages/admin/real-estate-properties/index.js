@@ -18,14 +18,25 @@ import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 const TABLE_FIELDS = [
-  ["physical_registration", "Inscrição física"],
-  ["ctm", "CTM"],
-  ["owner_name", "Proprietário"],
-  ["property_street", "Logradouro"],
-  ["property_number", "Número"],
-  ["property_neighborhood", "Bairro"],
-  ["land_area", "Área do terreno"],
-  ["built_area", "Área construída"],
+  ["physical_property_id", "IdFisico"],
+  ["physical_registration", "InscrFisico"],
+  ["ctm", "Ctm"],
+  ["ctm_count", "CtmCount"],
+  ["grouping", "Englobamento"],
+  ["property_block", "ImovelQuadra"],
+  ["property_lots", "ImovelLotes"],
+  ["land_area", "AreaTerreno"],
+  ["built_area", "AreaEdificada"],
+  ["property_neighborhood", "ImovelBairro"],
+  ["owner_name", "Proprietario"],
+  ["promissory_buyer", "Compromissario"],
+  ["land_sector", "SetorTerreno"],
+  ["property_street", "ImovelLogradouro"],
+  ["property_number", "ImovelNumero"],
+  ["property_complement", "ImovelComplemento"],
+  ["construction_type", "TipoConstr"],
+  ["ideal_fraction", "FracaoIdeal"],
+  ["points", "Pontos"],
 ];
 
 function RealEstatePropertiesPage() {
