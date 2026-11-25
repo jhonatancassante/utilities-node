@@ -333,34 +333,71 @@ function RealEstatePropertiesPage() {
               />
             )}
             <div className={styles.toolbar}>
-              <label className={styles.searchField}>
-                <span className={shared.label}>Pesquisar por ID ou cadastro</span>
-                <input className={shared.input} type="search" value={search}
-                  onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-                  placeholder="ID, inscrição física ou CTM..." />
-              </label>
-              <label className={styles.filterField}>
-                <span className={shared.label}>Ano</span>
-                <select className={shared.input} value={yearFilter}
-                  onChange={(event) => { setYearFilter(event.target.value); setPage(1); }}>
-                  {!availableYears.includes(Number(yearFilter)) && <option value={yearFilter}>{yearFilter}</option>}
-                  {availableYears.map((year) => <option key={year} value={year}>{year}</option>)}
-                </select>
-              </label>
-              <label className={styles.switchField}>
-                <span className={shared.label}>Atualizado</span>
-                <span className={styles.switchControl}>
-                  <input type="checkbox" role="switch" checked={updatedFilter}
-                    onChange={(event) => { setUpdatedFilter(event.target.checked); setPage(1); }} />
-                  <span aria-hidden="true"></span>
-                </span>
-              </label>
+              <div className={styles.toolbarFilters}>
+                <label className={styles.searchField}>
+                  <span className={shared.label}>
+                    Pesquisar por ID ou cadastro
+                  </span>
+                  <input
+                    className={shared.input}
+                    type="search"
+                    value={search}
+                    onChange={(event) => {
+                      setSearch(event.target.value);
+                      setPage(1);
+                    }}
+                    placeholder="ID, inscrição física ou CTM..."
+                  />
+                </label>
+                <label className={styles.filterField}>
+                  <span className={shared.label}>Ano</span>
+                  <select
+                    className={shared.input}
+                    value={yearFilter}
+                    onChange={(event) => {
+                      setYearFilter(event.target.value);
+                      setPage(1);
+                    }}
+                  >
+                    {!availableYears.includes(Number(yearFilter)) && (
+                      <option value={yearFilter}>{yearFilter}</option>
+                    )}
+                    {availableYears.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={styles.switchField}>
+                  <span className={shared.label}>Atualizado</span>
+                  <span className={styles.switchControl}>
+                    <input
+                      type="checkbox"
+                      role="switch"
+                      checked={updatedFilter}
+                      onChange={(event) => {
+                        setUpdatedFilter(event.target.checked);
+                        setPage(1);
+                      }}
+                    />
+                    <span aria-hidden="true"></span>
+                  </span>
+                </label>
+              </div>
               {canCreate && (
                 <div className={styles.toolbarActions}>
-                  <Button type="button" icon="fa-plus" onClick={() => {
-                    setModalRecord(null);
-                    setIsModalOpen(true);
-                  }}>Novo imóvel</Button>
+                  <button
+                    type="button"
+                    className={styles.linkButton}
+                    onClick={() => {
+                      setModalRecord(null);
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    <i className="fas fa-plus" aria-hidden="true"></i> Novo
+                    imóvel
+                  </button>
                 </div>
               )}
             </div>

@@ -23,19 +23,48 @@
 .toolbar {
   display: flex;
   align-items: flex-end;
+  justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
 }
-.toolbarActions { display: flex; flex-wrap: wrap; gap: 9px; }
-.searchField {
-  min-width: 220px;
-  max-width: 520px;
+.toolbarFilters {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  min-width: 0;
   flex: 1;
+}
+.searchField {
+  width: 100%;
+  max-width: 420px;
+  min-width: 220px;
 }
 .toolbarActions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 9px;
+  margin-left: auto;
+}
+.linkButton {
+  min-height: 44px;
+  padding: 11px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: filter var(--transition-fast);
+}
+.linkButton:hover {
+  filter: brightness(1.08);
 }
 .results {
   margin-top: 24px;
@@ -65,6 +94,7 @@
 }
 @media (max-width: 760px) {
   .toolbar,
+  .toolbarFilters,
   .resultsHeading {
     align-items: stretch;
     flex-direction: column;
@@ -72,8 +102,12 @@
   .searchField {
     max-width: none;
   }
+  .filterField {
+    width: 100%;
+  }
   .toolbarActions {
     width: 100%;
+    margin-left: 0;
   }
   .toolbarActions button {
     flex: 1;
