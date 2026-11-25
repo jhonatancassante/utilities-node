@@ -30,6 +30,8 @@ const FIELD_RULES = {
   annual: { type: "boolean" },
 };
 const WRITABLE_FIELDS = Object.keys(FIELD_RULES);
+const MAX_BULK_RECORDS = 100000;
+const INSERT_BATCH_SIZE = 500;
 
 function validateInput(inputValues, { requiredFields = [] } = {}) {
   if (
@@ -140,6 +142,66 @@ async function insertRecord(client, property) {
     values,
   });
   return results.rows[0];
+}
+
+
+async function insertManyRecords(client, properties, { annual }) {
+  const records = new Array(properties.length);
+  let start = 0;
+
+  while (start < properties.length) {
+    const columns = getColumns(properties[start]);
+    let end = start + 1;
+
+    while (
+      end < properties.length &&
+      end - start < INSERT_BATCH_SIZE &&
+      JSON.stringify(getColumns(properties[end])) === JSON.stringify(columns)
+    ) {
+      end += 1;
+    }
+
+    const batch = properties.slice(start, end);
+    const values = batch.flatMap((property) =>
+      columns.map((field) => property[field]),
+    );
+    const valueGroups = batch.map((_, rowIndex) => {
+      const placeholders = columns.map(
+        (_, columnIndex) =>
+          `${rowIndex * columns.length + columnIndex + 1}`,
+      );
+      return `(${placeholders.join(", ")})`;
+    });
+    const updateFields = columns.filter((field) =>
+      annual
+        ? !["year", "physical_property_id"].includes(field)
+        : field !== "physical_property_id",
+    );
+    const updates = updateFields.map(
+      (field) => `${field} = EXCLUDED.${field}`,
+    );
+    updates.push("updated_at = timezone('utc', now())");
+    const conflictTarget = annual
+      ? "(year, physical_property_id) WHERE annual = true AND deleted_at IS NULL"
+      : "(physical_property_id) WHERE annual = false AND deleted_at IS NULL";
+    const result = await client.query({
+      text: `
+        INSERT INTO real_estate_properties (${columns.join(", ")})
+        VALUES ${valueGroups.join(", ")}
+        ON CONFLICT ${conflictTarget}
+        DO UPDATE SET ${updates.join(", ")}
+        RETURNING *
+      ;`,
+      values,
+    });
+
+    result.rows.forEach((record, index) => {
+      records[start + index] = record;
+    });
+    start = end;
+  }
+
+  return records;
 }
 
 async function create(inputValues) {
@@ -321,10 +383,10 @@ async function createMany(inputValues, { overwriteExisting = false } = {}) {
   if (
     !Array.isArray(inputValues) ||
     inputValues.length === 0 ||
-    inputValues.length > 500
+    inputValues.length > MAX_BULK_RECORDS
   ) {
     throw new ValidationError({
-      message: "O cadastro em lote deve conter entre 1 e 500 imóveis.",
+      message: "O cadastro em lote deve conter entre 1 e 100.000 imóveis.",
       action: "Revise os dados enviados e tente novamente.",
     });
   }
@@ -372,11 +434,7 @@ async function createMany(inputValues, { overwriteExisting = false } = {}) {
       await client.query(
         "DELETE FROM real_estate_properties WHERE annual = false;",
       );
-      const records = [];
-      for (const property of properties) {
-        records.push(await insertRecord(client, property));
-      }
-      return records;
+      return insertManyRecords(client, properties, { annual: false });
     }
 
     const existing = await client.query({
@@ -406,32 +464,7 @@ async function createMany(inputValues, { overwriteExisting = false } = {}) {
       });
     }
 
-    const records = [];
-    for (const property of properties) {
-      const columns = getColumns(property);
-      const values = columns.map((field) => property[field]);
-      const placeholders = columns.map((field, index) => `$${index + 1}`);
-      const updateFields = columns.filter(
-        (field) => !["year", "physical_property_id"].includes(field),
-      );
-      const updates = updateFields.map(
-        (field) => `${field} = EXCLUDED.${field}`,
-      );
-      updates.push("updated_at = timezone('utc', now())");
-      const result = await client.query({
-        text: `
-          INSERT INTO real_estate_properties (${columns.join(", ")})
-          VALUES (${placeholders.join(", ")})
-          ON CONFLICT (year, physical_property_id)
-            WHERE annual = true AND deleted_at IS NULL
-          DO UPDATE SET ${updates.join(", ")}
-          RETURNING *
-        ;`,
-        values,
-      });
-      records.push(result.rows[0]);
-    }
-    return records;
+    return insertManyRecords(client, properties, { annual: true });
   });
 }
 
