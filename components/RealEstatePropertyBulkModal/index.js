@@ -156,69 +156,70 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
         source = new TextDecoder(encoding, { fatal: true }).decode(buffer);
       } catch {
         throw new Error(
-          "O arquivo não corresponde à codificação selecionada (" + encoding + ").",
+          "O arquivo não corresponde à codificação selecionada (" +
+            encoding +
+            ").",
         );
       }
       const rows = parseCsv(
-        source.replace(/^\uFEFF/, ""),
-        delimiter === "\\t" ? "\t" : delimiter,
+        source.replace(/^\\uFEFF/, ""),
+        delimiter === "tab" ? "\\t" : delimiter,
       );
-        if (rows.length < 2)
-          throw new Error(
-            "O arquivo precisa conter cabeçalho e ao menos um imóvel.",
-          );
-        if (rows.length - 1 > 500)
-          throw new Error("O limite por importação é de 500 imóveis.");
-        const headers = rows[0].map((header) => header.trim().toLowerCase());
-        const expectedHeaders = CSV_FIELDS.map(([header]) =>
-          header.toLowerCase(),
+      if (rows.length < 2) {
+        throw new Error(
+          "O arquivo precisa conter cabeçalho e ao menos um imóvel.",
         );
-        const missing = expectedHeaders.filter(
-          (field) => !headers.includes(field),
-        );
-        const duplicates = headers.filter(
-          (field, index) => headers.indexOf(field) !== index,
-        );
-        const unexpected = headers.filter(
-          (field) => !expectedHeaders.includes(field),
-        );
-        if (missing.length)
-          throw new Error("Colunas ausentes: " + missing.join(", ") + ".");
-        if (duplicates.length)
-          throw new Error("O cabeçalho contém colunas duplicadas.");
-        if (unexpected.length)
-          throw new Error(
-            "Colunas não reconhecidas: " + unexpected.join(", ") + ".",
-          );
-        const indexes = Object.fromEntries(
-          CSV_FIELDS.map(([header, field]) => [
-            field,
-            headers.indexOf(header.toLowerCase()),
-          ]),
-        );
-        const parsed = rows.slice(1).map((row, index) => {
-          if (row.length !== headers.length)
-            throw new Error(
-              "Linha " +
-                (index + 2) +
-                ": quantidade de colunas diferente do cabeçalho.",
-            );
-          const record = { year: Number(year), annual: !isUpdated };
-          for (const [, field] of CSV_FIELDS) {
-            const value = parseValue(field, row[indexes[field]], index + 2);
-            if (value !== undefined) record[field] = value;
-          }
-          return record;
-        });
-        setRecords(parsed);
-        setError("");
-      } catch (parseError) {
-        setRecords(null);
-        setError(parseError.message);
       }
-    };
-    reader.onerror = () =>
-      setError("Não foi possível ler o arquivo selecionado.");
+      if (rows.length - 1 > 500) {
+        throw new Error("O limite por importação é de 500 imóveis.");
+      }
+      const headers = rows[0].map((header) => header.trim().toLowerCase());
+      const expectedHeaders = CSV_FIELDS.map(([header]) =>
+        header.toLowerCase(),
+      );
+      const missing = expectedHeaders.filter(
+        (field) => !headers.includes(field),
+      );
+      const duplicates = headers.filter(
+        (field, index) => headers.indexOf(field) !== index,
+      );
+      const unexpected = headers.filter(
+        (field) => !expectedHeaders.includes(field),
+      );
+      if (missing.length) {
+        throw new Error("Colunas ausentes: " + missing.join(", ") + ".");
+      }
+      if (duplicates.length) {
+        throw new Error("O cabeçalho contém colunas duplicadas.");
+      }
+      if (unexpected.length) {
+        throw new Error(
+          "Colunas não reconhecidas: " + unexpected.join(", ") + ".",
+        );
+      }
+      const indexes = Object.fromEntries(
+        CSV_FIELDS.map(([header, field]) => [
+          field,
+          headers.indexOf(header.toLowerCase()),
+        ]),
+      );
+      const parsed = rows.slice(1).map((row, index) => {
+        if (row.length !== headers.length) {
+          throw new Error(
+            "Linha " +
+              (index + 2) +
+              ": quantidade de colunas diferente do cabeçalho.",
+          );
+        }
+        const record = { year: Number(year), annual: !isUpdated };
+        for (const [, field] of CSV_FIELDS) {
+          const value = parseValue(field, row[indexes[field]], index + 2);
+          if (value !== undefined) record[field] = value;
+        }
+        return record;
+      });
+      setRecords(parsed);
+      setError("");
     } catch (parseError) {
       setRecords(null);
       setError(parseError.message);
