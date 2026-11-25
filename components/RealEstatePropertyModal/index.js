@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Button from "@/components/Button";
 import Modal from "@/components/Modal";
 import shared from "@/styles/shared.module.css";
@@ -57,10 +57,6 @@ function RealEstatePropertyModal({ record, onClose, onSubmit, isSaving, isReadOn
   const [form, setForm] = useState(() => createInitialForm(record));
   const [validationError, setValidationError] = useState("");
 
-  useEffect(() => {
-    setForm(createInitialForm(record));
-    setValidationError("");
-  }, [record]);
 
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));

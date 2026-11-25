@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/router";
 import AppHead from "@/components/AppHead";
 import AdminBackButton from "@/components/AdminBackButton";
 import Button from "@/components/Button";
@@ -21,6 +22,7 @@ const TABLE_FIELDS = [
 ];
 
 function RealEstatePropertiesPage() {
+  const router = useRouter();
   const { user, error, isLoading } = useUser();
   const [records, setRecords] = useState([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
@@ -58,12 +60,12 @@ function RealEstatePropertiesPage() {
 
   useEffect(() => {
     if (!isLoading && !user && (!error || [401, 403].includes(error.statusCode))) {
-      window.location.assign("/login");
+      router.replace("/login");
     }
     if (!isLoading && user && !hasAdminSectionAccess(user, "real-estate-properties")) {
-      window.location.assign(hasAdminAccess(user) ? "/admin" : "/perfil");
+      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
     }
-  }, [error, isLoading, user]);
+  }, [error, isLoading, router, user]);
 
   const filteredRecords = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -213,7 +215,7 @@ function RealEstatePropertiesPage() {
           </section>
         </section>
       </main></Layout>
-      {isModalOpen && <RealEstatePropertyModal
+      {isModalOpen && <RealEstatePropertyModal key={modalRecord?.id || "new"}
         record={modalRecord}
         isReadOnly={!modalRecord ? false : !canUpdate}
         isSaving={isSaving}

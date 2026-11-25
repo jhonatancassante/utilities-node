@@ -253,9 +253,12 @@ async function createMany(inputValues) {
 
   const properties = inputValues.map((input) =>
     validateInput(input, {
-      requiredFields: Object.entries(FIELD_RULES)
-        .filter(([, rule]) => rule.required)
-        .map(([field]) => field),
+      requiredFields: [
+        "year",
+        ...Object.entries(FIELD_RULES)
+          .filter(([, rule]) => rule.required)
+          .map(([field]) => field),
+      ],
     }),
   );
   const columns = WRITABLE_FIELDS;
@@ -268,7 +271,12 @@ async function createMany(inputValues) {
   return database.transaction(async (client) => {
     const records = [];
     for (const property of properties) {
-      const values = columns.map((field) => property[field] ?? null);
+      const values = columns.map((field) => {
+        if (Object.hasOwn(property, field)) return property[field];
+        if (field === "built_area") return 0;
+        if (field === "annual") return false;
+        return null;
+      });
       const result = await client.query({ text: queryText, values });
       records.push(result.rows[0]);
     }
