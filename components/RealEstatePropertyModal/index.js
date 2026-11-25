@@ -116,9 +116,13 @@ function RealEstatePropertyModal({ record, onClose, onSubmit, isSaving, isReadOn
             </label>
           ))}
         </div>
-        <label className={styles.checkbox}>
-          <input type="checkbox" checked={form.annual} onChange={(event) => updateField("annual", event.target.checked)} disabled={isSaving || isReadOnly} />
-          <span>Imóvel com lançamento anual</span>
+        <label className={styles.switchField}>
+          <span>Lançamento anual</span>
+          <span className={styles.switchControl}>
+            <input type="checkbox" role="switch" checked={form.annual}
+              onChange={(event) => updateField("annual", event.target.checked)} disabled={isSaving || isReadOnly} />
+            <span aria-hidden="true"></span>
+          </span>
         </label>
         {validationError && <p className={styles.validationError} role="alert">{validationError}</p>}
         <div className={styles.actions}>

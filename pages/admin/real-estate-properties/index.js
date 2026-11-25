@@ -15,7 +15,7 @@ import styles from "./index.module.css";
 
 const PAGE_SIZES = [10, 20, 50, 100];
 const TABLE_FIELDS = [
-  ["year", "Ano"], ["physical_registration", "Inscrição física"],
+  ["physical_registration", "Inscrição física"],
   ["ctm", "CTM"], ["owner_name", "Proprietário"],
   ["property_street", "Logradouro"], ["property_number", "Número"],
   ["property_neighborhood", "Bairro"], ["land_area", "Área do terreno"],
@@ -31,6 +31,8 @@ function RealEstatePropertiesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [search, setSearch] = useState("");
+  const [yearFilter, setYearFilter] = useState(String(new Date().getFullYear()));
+  const [updatedFilter, setUpdatedFilter] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [modalRecord, setModalRecord] = useState(null);
@@ -69,16 +71,20 @@ function RealEstatePropertiesPage() {
     }
   }, [error, isLoading, router, user]);
 
+  const availableYears = useMemo(() => Array.from(new Set(records.map((record) => Number(record.year))))
+    .filter((year) => Number.isInteger(year))
+    .sort((first, second) => second - first), [records]);
   const filteredRecords = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return records;
-    return records.filter((record) =>
-      [record.year, record.physical_registration, record.ctm, record.owner_name,
-        record.promissory_buyer, record.property_street, record.property_number,
-        record.property_neighborhood, record.property_block, record.property_lots]
-        .some((value) => String(value ?? "").toLowerCase().includes(term)),
-    );
-  }, [records, search]);
+    return records.filter((record) => {
+      const matchesYear = String(record.year) === yearFilter;
+      const matchesUpdated = Boolean(record.annual) !== updatedFilter;
+      const matchesSearch = !term || [record.id, record.physical_property_id,
+        record.physical_registration, record.ctm]
+        .some((value) => String(value ?? "").toLowerCase().includes(term));
+      return matchesYear && matchesUpdated && matchesSearch;
+    });
+  }, [records, search, yearFilter, updatedFilter]);
   const pageCount = pageSize === "all" ? 1 : Math.max(1, Math.ceil(filteredRecords.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const visibleRecords = pageSize === "all"
@@ -180,10 +186,26 @@ function RealEstatePropertiesPage() {
           {feedback && <div className={styles.feedback}><StatusMessage type={feedback.type === "success" ? "success" : "inline-error"} name={feedback.name} action={feedback.action}>{feedback.message}</StatusMessage></div>}
           <div className={styles.toolbar}>
             <label className={styles.searchField}>
-              <span className={shared.label}>Pesquisar imóveis</span>
+              <span className={shared.label}>Pesquisar por ID ou cadastro</span>
               <input className={shared.input} type="search" value={search}
                 onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-                placeholder="Inscrição, CTM, proprietário, endereço..." />
+                placeholder="ID, inscrição física ou CTM..." />
+            </label>
+            <label className={styles.filterField}>
+              <span className={shared.label}>Ano</span>
+              <select className={shared.input} value={yearFilter}
+                onChange={(event) => { setYearFilter(event.target.value); setPage(1); }}>
+                {!availableYears.includes(Number(yearFilter)) && <option value={yearFilter}>{yearFilter}</option>}
+                {availableYears.map((year) => <option key={year} value={year}>{year}</option>)}
+              </select>
+            </label>
+            <label className={styles.switchField}>
+              <span className={shared.label}>Atualizado</span>
+              <span className={styles.switchControl}>
+                <input type="checkbox" role="switch" checked={updatedFilter}
+                  onChange={(event) => { setUpdatedFilter(event.target.checked); setPage(1); }} />
+                <span aria-hidden="true"></span>
+              </span>
             </label>
             {canCreate && <div className={styles.toolbarActions}>
               <Button type="button" variant="outline" icon="fa-file-csv" onClick={() => setIsBulkModalOpen(true)}>Importar CSV</Button>
