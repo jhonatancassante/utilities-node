@@ -5,6 +5,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import RealEstatePropertyModal from "@/components/RealEstatePropertyModal";
+import RealEstatePropertyBulkModal from "@/components/RealEstatePropertyBulkModal";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
@@ -34,6 +35,7 @@ function RealEstatePropertiesPage() {
   const [pageSize, setPageSize] = useState(10);
   const [modalRecord, setModalRecord] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const canCreate = user?.features?.includes("create:real_estate_properties");
   const canUpdate = user?.features?.includes("update:real_estate_properties");
@@ -115,6 +117,24 @@ function RealEstatePropertiesPage() {
     }
   }
 
+  async function handleBulkImport(records) {
+    setIsSaving(true);
+    setFeedback(null);
+    try {
+      await requestAPI("/api/v1/admin/real-estate-properties/bulk", {
+        method: "POST",
+        body: JSON.stringify({ records }),
+      });
+      setIsBulkModalOpen(false);
+      await loadRecords();
+      setFeedback({ type: "success", message: records.length + " imóvel(is) importado(s) com sucesso." });
+    } catch (requestError) {
+      setFeedback({ type: "error", name: requestError.name, message: requestError.message, action: requestError.action });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   async function handleDelete(ids) {
     if (!ids.length || !window.confirm("Deseja excluir " + ids.length + " imóvel(is) selecionado(s)?")) return;
     setIsDeleting(true);
@@ -165,7 +185,10 @@ function RealEstatePropertiesPage() {
                 onChange={(event) => { setSearch(event.target.value); setPage(1); }}
                 placeholder="Inscrição, CTM, proprietário, endereço..." />
             </label>
-            {canCreate && <Button type="button" icon="fa-plus" onClick={() => { setModalRecord(null); setIsModalOpen(true); }}>Novo imóvel</Button>}
+            {canCreate && <div className={styles.toolbarActions}>
+              <Button type="button" variant="outline" icon="fa-file-csv" onClick={() => setIsBulkModalOpen(true)}>Importar CSV</Button>
+              <Button type="button" icon="fa-plus" onClick={() => { setModalRecord(null); setIsModalOpen(true); }}>Novo imóvel</Button>
+            </div>}
           </div>
           <section className={styles.results}>
             <div className={styles.resultsHeading}>
@@ -215,6 +238,11 @@ function RealEstatePropertiesPage() {
           </section>
         </section>
       </main></Layout>
+      {isBulkModalOpen && <RealEstatePropertyBulkModal
+        isSaving={isSaving}
+        onClose={() => { if (!isSaving) setIsBulkModalOpen(false); }}
+        onSubmit={handleBulkImport}
+      />}
       {isModalOpen && <RealEstatePropertyModal key={modalRecord?.id || "new"}
         record={modalRecord}
         isReadOnly={!modalRecord ? false : !canUpdate}

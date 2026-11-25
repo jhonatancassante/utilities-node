@@ -5,6 +5,7 @@
 .feedback { margin: 14px 0; }
 .toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
 .searchField { min-width: 220px; max-width: 520px; flex: 1; }
+.toolbarActions { display: flex; flex-wrap: wrap; gap: 9px; }
 .results { margin-top: 24px; }
 .resultsHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .resultsHeading h2 { margin: 0 0 5px; color: var(--text-primary); font-size: 18px; }
@@ -25,5 +26,7 @@
 @media (max-width: 760px) {
   .toolbar, .pagination, .resultsHeading { align-items: stretch; flex-direction: column; }
   .searchField { max-width: none; }
+  .toolbarActions { width: 100%; }
+  .toolbarActions button { flex: 1; }
   .pagination > div { justify-content: space-between; }
 }
