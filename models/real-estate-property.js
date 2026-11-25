@@ -315,12 +315,18 @@ async function update(id, inputValues) {
       action: "Informe ao menos um campo que deseja alterar.",
     });
   }
-  const values = columns.map((field) => property[field]);
-  const setClauses = columns.map((field, index) =>
-    field === "ideal_fraction" && property.ideal_fraction === undefined
-      ? "ideal_fraction = land_area"
-      : `${field} = ${index + 2}`,
-  );
+  const values = columns
+    .filter(
+      (field) => field !== "ideal_fraction" || property.ideal_fraction !== undefined,
+    )
+    .map((field) => property[field]);
+  let parameterIndex = 2;
+  const setClauses = columns.map((field) => {
+    if (field === "ideal_fraction" && property.ideal_fraction === undefined) {
+      return "ideal_fraction = land_area";
+    }
+    return `${field} = ${parameterIndex++}`;
+  });
   const results = await database.query({
     text: `
       UPDATE real_estate_properties
