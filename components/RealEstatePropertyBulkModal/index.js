@@ -269,5 +269,6 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
       </div>}
     </section>
   );
+}
 
 export default RealEstatePropertyBulkModal;
