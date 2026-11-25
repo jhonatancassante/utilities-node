@@ -6,7 +6,6 @@ import Button from "@/components/Button";
 import AdminDataTable from "@/components/AdminDataTable";
 import AdminPagination from "@/components/AdminPagination";
 import Layout from "@/components/Layout";
-import RealEstatePropertyModal from "@/components/RealEstatePropertyModal";
 import RealEstatePropertyBulkModal from "@/components/RealEstatePropertyBulkModal";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
@@ -44,8 +43,6 @@ function RealEstatePropertiesPage() {
   const [updatedFilter, setUpdatedFilter] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [modalRecord, setModalRecord] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const canCreate = user?.features?.includes("create:real_estate_properties");
   const canUpdate = user?.features?.includes("update:real_estate_properties");
@@ -150,39 +147,6 @@ function RealEstatePropertiesPage() {
         ? Array.from(new Set([...current, ...visibleIds]))
         : current.filter((id) => !visibleIds.includes(id)),
     );
-  }
-
-  async function handleSave(payload) {
-    setIsSaving(true);
-    setFeedback(null);
-    try {
-      const isEditing = Boolean(modalRecord?.id);
-      await requestAPI(
-        isEditing
-          ? "/api/v1/admin/real-estate-properties/" +
-              encodeURIComponent(modalRecord.id)
-          : "/api/v1/admin/real-estate-properties",
-        { method: isEditing ? "PATCH" : "POST", body: JSON.stringify(payload) },
-      );
-      setIsModalOpen(false);
-      setModalRecord(null);
-      await loadRecords();
-      setFeedback({
-        type: "success",
-        message: isEditing
-          ? "Imóvel atualizado com sucesso."
-          : "Imóvel cadastrado com sucesso.",
-      });
-    } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
-    } finally {
-      setIsSaving(false);
-    }
   }
 
   async function handleBulkImport(records) {
@@ -390,10 +354,7 @@ function RealEstatePropertiesPage() {
                   <button
                     type="button"
                     className={styles.linkButton}
-                    onClick={() => {
-                      setModalRecord(null);
-                      setIsModalOpen(true);
-                    }}
+                    onClick={() => router.push("/admin/real-estate-properties/new")}
                   >
                     <i className="fas fa-plus" aria-hidden="true"></i> Novo
                     imóvel
@@ -442,10 +403,12 @@ function RealEstatePropertiesPage() {
                       <button
                         type="button"
                         className={actionClassName}
-                        onClick={() => {
-                          setModalRecord(record);
-                          setIsModalOpen(true);
-                        }}
+                        onClick={() =>
+                          router.push(
+                            "/admin/real-estate-properties/" +
+                              encodeURIComponent(record.id),
+                          )
+                        }
                       >
                         <i
                           className={"fas " + (canUpdate ? "fa-edit" : "fa-eye")}
@@ -469,21 +432,7 @@ function RealEstatePropertiesPage() {
           </section>
         </main>
       </Layout>
-      {isModalOpen && (
-        <RealEstatePropertyModal
-          key={modalRecord?.id || "new"}
-          record={modalRecord}
-          isReadOnly={!modalRecord ? false : !canUpdate}
-          isSaving={isSaving}
-          onClose={() => {
-            if (!isSaving) {
-              setIsModalOpen(false);
-              setModalRecord(null);
-            }
-          }}
-          onSubmit={handleSave}
-        />
-      )}
+
     </>
   );
 }
