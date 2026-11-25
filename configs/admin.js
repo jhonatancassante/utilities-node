@@ -36,7 +36,8 @@ export const adminSections = [
   {
     id: "assessed-values",
     title: "Valores venais",
-    description: "Consulte, cadastre, atualize e importe os valores venais anuais.",
+    description:
+      "Consulte, cadastre, atualize e importe os valores venais anuais.",
     href: "/admin/assessed-values",
     icon: "fa-calculator",
     requiredFeature: "read:assessed_values",

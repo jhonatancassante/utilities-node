@@ -228,7 +228,6 @@ function filterOutput(user, feature, resource) {
       : filterAssessedValue(resource);
   }
 
-
   if (feature === "read:real_estate_properties") {
     const filterProperty = (item) => ({
       id: item.id,

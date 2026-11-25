@@ -22,20 +22,32 @@ export default controller.createController(
 async function getHandler(request, response) {
   const currentUser = request.context.user;
   const record = await assessedValue.findOneById(request.query.id);
-  const output = authorization.filterOutput(currentUser, "read:assessed_values", record);
+  const output = authorization.filterOutput(
+    currentUser,
+    "read:assessed_values",
+    record,
+  );
   return response.status(200).json(output);
 }
 
 async function patchHandler(request, response) {
   const currentUser = request.context.user;
   const record = await assessedValue.update(request.query.id, request.body);
-  const output = authorization.filterOutput(currentUser, "read:assessed_values", record);
+  const output = authorization.filterOutput(
+    currentUser,
+    "read:assessed_values",
+    record,
+  );
   return response.status(200).json(output);
 }
 
 async function deleteHandler(request, response) {
   const currentUser = request.context.user;
   const record = await assessedValue.delete(request.query.id);
-  const output = authorization.filterOutput(currentUser, "read:assessed_values", record);
+  const output = authorization.filterOutput(
+    currentUser,
+    "read:assessed_values",
+    record,
+  );
   return response.status(200).json(output);
 }

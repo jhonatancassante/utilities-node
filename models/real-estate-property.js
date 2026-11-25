@@ -20,14 +20,23 @@ const FIELD_RULES = {
   property_number: { type: "number", min: 0, nullable: true },
   property_complement: { type: "string", maxLength: 100, nullable: true },
   construction_type: { type: "integer", min: 0, nullable: true },
-  ideal_fraction: { type: "number", min: 0, max: 9999999999.99, nullable: true },
+  ideal_fraction: {
+    type: "number",
+    min: 0,
+    max: 9999999999.99,
+    nullable: true,
+  },
   points: { type: "integer", min: 0, nullable: true },
   annual: { type: "boolean" },
 };
 const WRITABLE_FIELDS = Object.keys(FIELD_RULES);
 
 function validateInput(inputValues, { requiredFields = [] } = {}) {
-  if (!inputValues || typeof inputValues !== "object" || Array.isArray(inputValues)) {
+  if (
+    !inputValues ||
+    typeof inputValues !== "object" ||
+    Array.isArray(inputValues)
+  ) {
     throw new ValidationError({
       message: "Os dados do imóvel devem ser enviados em um objeto.",
       action: "Envie um objeto com os campos cadastrais do imóvel.",
@@ -71,8 +80,11 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
     }
 
     if (rule.type === "string") {
-      if (typeof value !== "string" || !value.trim() ||
-        (rule.maxLength && value.trim().length > rule.maxLength)) {
+      if (
+        typeof value !== "string" ||
+        !value.trim() ||
+        (rule.maxLength && value.trim().length > rule.maxLength)
+      ) {
         throw new ValidationError({
           message: `O campo ${field} deve ser um texto válido${rule.maxLength ? ` de até ${rule.maxLength} caracteres` : ""}.`,
           action: "Revise o texto informado.",
@@ -93,11 +105,14 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
       continue;
     }
 
-    if (typeof value !== "number" || !Number.isFinite(value) ||
+    if (
+      typeof value !== "number" ||
+      !Number.isFinite(value) ||
       (rule.type === "integer" && !Number.isInteger(value)) ||
       (rule.min !== undefined && value < rule.min) ||
       (rule.max !== undefined && value > rule.max) ||
-      (rule.type === "number" && Math.round(value * 100) / 100 !== value)) {
+      (rule.type === "number" && Math.round(value * 100) / 100 !== value)
+    ) {
       throw new ValidationError({
         message: `O campo ${field} contém um valor numérico inválido.`,
         action: "Revise o número informado e respeite os limites do campo.",
@@ -213,9 +228,13 @@ async function deleteProperty(id, client = database) {
 }
 
 async function deleteMany(ids) {
-  if (!Array.isArray(ids) || ids.length === 0 || ids.length > 500 ||
+  if (
+    !Array.isArray(ids) ||
+    ids.length === 0 ||
+    ids.length > 500 ||
     ids.some((id) => typeof id !== "string" || !id.trim()) ||
-    new Set(ids).size !== ids.length) {
+    new Set(ids).size !== ids.length
+  ) {
     throw new ValidationError({
       message: "A exclusão em lote deve conter entre 1 e 500 IDs únicos.",
       action: "Revise a seleção de imóveis e tente novamente.",
@@ -235,7 +254,8 @@ async function deleteMany(ids) {
     });
     if (results.rowCount !== ids.length) {
       throw new NotFoundError({
-        message: "Um ou mais imóveis selecionados não foram encontrados ou já foram excluídos.",
+        message:
+          "Um ou mais imóveis selecionados não foram encontrados ou já foram excluídos.",
         action: "Atualize a listagem e confira os registros selecionados.",
       });
     }
@@ -244,7 +264,11 @@ async function deleteMany(ids) {
 }
 
 async function createMany(inputValues) {
-  if (!Array.isArray(inputValues) || inputValues.length === 0 || inputValues.length > 500) {
+  if (
+    !Array.isArray(inputValues) ||
+    inputValues.length === 0 ||
+    inputValues.length > 500
+  ) {
     throw new ValidationError({
       message: "O cadastro em lote deve conter entre 1 e 500 imóveis.",
       action: "Revise os dados enviados e tente novamente.",

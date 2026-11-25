@@ -11,7 +11,8 @@ beforeAll(async () => {
 async function createSessionWithFeatures(features) {
   const testUser = await orchestrator.createUser();
   await orchestrator.activateUser(testUser);
-  if (features.length > 0) await orchestrator.addFeaturesToUser(testUser, features);
+  if (features.length > 0)
+    await orchestrator.addFeaturesToUser(testUser, features);
   return await orchestrator.createSession(testUser);
 }
 
@@ -55,13 +56,17 @@ describe("GET /api/v1/admin/real-estate-properties", () => {
   });
 
   test("Consultando imóveis ativos com saída filtrada", async () => {
-    const sessionObject = await createSessionWithFeatures(["read:real_estate_properties"]);
+    const sessionObject = await createSessionWithFeatures([
+      "read:real_estate_properties",
+    ]);
     const created = await realEstateProperty.create(createPropertyInput());
-    const removed = await realEstateProperty.create(createPropertyInput({
-      physical_property_id: 12346,
-      physical_registration: "001.002.004",
-      ctm: "01.002.004.0001",
-    }));
+    const removed = await realEstateProperty.create(
+      createPropertyInput({
+        physical_property_id: 12346,
+        physical_registration: "001.002.004",
+        ctm: "01.002.004.0001",
+      }),
+    );
     await realEstateProperty.delete(removed.id);
 
     const response = await fetch(collectionEndpoint(), {
@@ -123,7 +128,9 @@ describe("POST /api/v1/admin/real-estate-properties", () => {
 
 describe("GET, PATCH e DELETE /api/v1/admin/real-estate-properties/[id]", () => {
   test("Consultando um imóvel", async () => {
-    const sessionObject = await createSessionWithFeatures(["read:real_estate_properties"]);
+    const sessionObject = await createSessionWithFeatures([
+      "read:real_estate_properties",
+    ]);
     const record = await realEstateProperty.create(createPropertyInput());
     const response = await fetch(itemEndpoint(record.id), {
       headers: { Cookie: `session_id=${sessionObject.token}` },
@@ -147,7 +154,10 @@ describe("GET, PATCH e DELETE /api/v1/admin/real-estate-properties/[id]", () => 
         "Content-Type": "application/json",
         Cookie: `session_id=${sessionObject.token}`,
       },
-      body: JSON.stringify({ owner_name: "Novo proprietário", built_area: 125.75 }),
+      body: JSON.stringify({
+        owner_name: "Novo proprietário",
+        built_area: 125.75,
+      }),
     });
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
@@ -187,8 +197,16 @@ describe("POST e DELETE /api/v1/admin/real-estate-properties/bulk", () => {
       "read:real_estate_properties",
     ]);
     const records = [
-      createPropertyInput({ physical_property_id: 20001, physical_registration: "002.001", ctm: "02.001" }),
-      createPropertyInput({ physical_property_id: 20002, physical_registration: "002.002", ctm: "02.002" }),
+      createPropertyInput({
+        physical_property_id: 20001,
+        physical_registration: "002.001",
+        ctm: "02.001",
+      }),
+      createPropertyInput({
+        physical_property_id: 20002,
+        physical_registration: "002.002",
+        ctm: "02.002",
+      }),
     ];
     const response = await fetch(bulkEndpoint(), {
       method: "POST",
@@ -201,7 +219,9 @@ describe("POST e DELETE /api/v1/admin/real-estate-properties/bulk", () => {
     expect(response.status).toBe(201);
     const body = await response.json();
     expect(body).toHaveLength(2);
-    expect(body.map((item) => item.physical_property_id)).toEqual([20001, 20002]);
+    expect(body.map((item) => item.physical_property_id)).toEqual([
+      20001, 20002,
+    ]);
     expect(body.every((item) => !("deleted_at" in item))).toBe(true);
   });
 
@@ -211,8 +231,16 @@ describe("POST e DELETE /api/v1/admin/real-estate-properties/bulk", () => {
       "read:real_estate_properties",
     ]);
     const records = await realEstateProperty.createMany([
-      createPropertyInput({ physical_property_id: 30001, physical_registration: "003.001", ctm: "03.001" }),
-      createPropertyInput({ physical_property_id: 30002, physical_registration: "003.002", ctm: "03.002" }),
+      createPropertyInput({
+        physical_property_id: 30001,
+        physical_registration: "003.001",
+        ctm: "03.001",
+      }),
+      createPropertyInput({
+        physical_property_id: 30002,
+        physical_registration: "003.002",
+        ctm: "03.002",
+      }),
     ]);
     const response = await fetch(bulkEndpoint(), {
       method: "DELETE",

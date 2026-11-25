@@ -5,7 +5,7 @@ export const up = (pgm) => {
       label,
       group_name,
       description,
-      is_removable,
+      is_self_removable,
       is_privileged,
       is_protected
     )

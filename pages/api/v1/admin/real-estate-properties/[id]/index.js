@@ -32,7 +32,10 @@ async function getHandler(request, response) {
 
 async function patchHandler(request, response) {
   const currentUser = request.context.user;
-  const record = await realEstateProperty.update(request.query.id, request.body);
+  const record = await realEstateProperty.update(
+    request.query.id,
+    request.body,
+  );
   const output = authorization.filterOutput(
     currentUser,
     "read:real_estate_properties",

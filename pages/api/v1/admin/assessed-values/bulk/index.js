@@ -16,6 +16,10 @@ export default controller.createController(
 async function postHandler(request, response) {
   const currentUser = request.context.user;
   const records = await assessedValue.createMany(request.body?.records);
-  const output = authorization.filterOutput(currentUser, "read:assessed_values", records);
+  const output = authorization.filterOutput(
+    currentUser,
+    "read:assessed_values",
+    records,
+  );
   return response.status(201).json(output);
 }
