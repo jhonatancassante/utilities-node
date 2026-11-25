@@ -125,6 +125,13 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
   return property;
 }
 
+function applyIdealFractionDefault(property) {
+  if (property.ideal_fraction == null && Object.hasOwn(property, "land_area")) {
+    property.ideal_fraction = property.land_area;
+  }
+  return property;
+}
+
 function getColumns(property) {
   return WRITABLE_FIELDS.filter((field) => Object.hasOwn(property, field));
 }
@@ -205,11 +212,11 @@ async function insertManyRecords(client, properties, { annual }) {
 }
 
 async function create(inputValues) {
-  const property = validateInput(inputValues, {
+  const property = applyIdealFractionDefault(validateInput(inputValues, {
     requiredFields: Object.entries(FIELD_RULES)
       .filter(([, rule]) => rule.required)
       .map(([field]) => field),
-  });
+  }));
   if (!Object.hasOwn(property, "annual")) property.annual = false;
 
   return database.transaction(async (client) => {
@@ -296,6 +303,11 @@ async function findOneById(id) {
 
 async function update(id, inputValues) {
   const property = validateInput(inputValues);
+  if (property.ideal_fraction === null && !Object.hasOwn(property, "land_area")) {
+    property.ideal_fraction = undefined;
+  } else {
+    applyIdealFractionDefault(property);
+  }
   const columns = getColumns(property);
   if (!columns.length) {
     throw new ValidationError({
@@ -304,7 +316,11 @@ async function update(id, inputValues) {
     });
   }
   const values = columns.map((field) => property[field]);
-  const setClauses = columns.map((field, index) => `${field} = $${index + 2}`);
+  const setClauses = columns.map((field, index) =>
+    field === "ideal_fraction" && property.ideal_fraction === undefined
+      ? "ideal_fraction = land_area"
+      : `${field} = ${index + 2}`,
+  );
   const results = await database.query({
     text: `
       UPDATE real_estate_properties
@@ -392,14 +408,14 @@ async function createMany(inputValues, { overwriteExisting = false } = {}) {
   }
 
   const properties = inputValues.map((input) => {
-    const property = validateInput(input, {
+    const property = applyIdealFractionDefault(validateInput(input, {
       requiredFields: [
         "year",
         ...Object.entries(FIELD_RULES)
           .filter(([, rule]) => rule.required)
           .map(([field]) => field),
       ],
-    });
+    }));
     if (!Object.hasOwn(property, "annual")) property.annual = false;
     return property;
   });
