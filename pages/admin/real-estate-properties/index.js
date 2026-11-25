@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 import AppHead from "@/components/AppHead";
 import AdminBackButton from "@/components/AdminBackButton";
 import Button from "@/components/Button";
+import AdminDataTable from "@/components/AdminDataTable";
+import AdminPagination from "@/components/AdminPagination";
 import Layout from "@/components/Layout";
 import RealEstatePropertyModal from "@/components/RealEstatePropertyModal";
 import RealEstatePropertyBulkModal from "@/components/RealEstatePropertyBulkModal";
@@ -133,6 +135,14 @@ function RealEstatePropertiesPage() {
   const allVisibleSelected =
     visibleRecords.length > 0 &&
     visibleRecords.every((record) => selectedIds.includes(record.id));
+
+  function toggleSelection(id) {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
+    );
+  }
 
   function togglePageSelection(checked) {
     const visibleIds = visibleRecords.map((record) => record.id);
@@ -381,147 +391,42 @@ function RealEstatePropertiesPage() {
                 <p className={styles.empty}>Nenhum imóvel encontrado.</p>
               ) : (
                 <>
-                  <div className={styles.tableWrapper}>
-                    <table>
-                      <thead>
-                        <tr>
-                          {canDelete && (
-                            <th>
-                              <input
-                                type="checkbox"
-                                aria-label="Selecionar todos desta página"
-                                checked={allVisibleSelected}
-                                onChange={(event) =>
-                                  togglePageSelection(event.target.checked)
-                                }
-                              />
-                            </th>
-                          )}
-                          {TABLE_FIELDS.map(([field, label]) => (
-                            <th key={field}>{label}</th>
-                          ))}
-                          <th>Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {visibleRecords.map((record) => (
-                          <tr key={record.id}>
-                            {canDelete && (
-                              <td>
-                                <input
-                                  type="checkbox"
-                                  aria-label={
-                                    "Selecionar imóvel " +
-                                    record.physical_registration
-                                  }
-                                  checked={selectedIds.includes(record.id)}
-                                  onChange={() =>
-                                    setSelectedIds((current) =>
-                                      current.includes(record.id)
-                                        ? current.filter(
-                                            (id) => id !== record.id,
-                                          )
-                                        : [...current, record.id],
-                                    )
-                                  }
-                                />
-                              </td>
-                            )}
-                            {TABLE_FIELDS.map(([field]) => (
-                              <td key={field}>{record[field] ?? "—"}</td>
-                            ))}
-                            <td className={styles.actions}>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                icon={canUpdate ? "fa-edit" : "fa-eye"}
-                                onClick={() => {
-                                  setModalRecord(record);
-                                  setIsModalOpen(true);
-                                }}
-                              >
-                                {canUpdate ? "Editar" : "Visualizar"}
-                              </Button>
-                              {canDelete && (
-                                <Button
-                                  type="button"
-                                  variant="danger"
-                                  icon="fa-trash"
-                                  onClick={() => handleDelete([record.id])}
-                                  disabled={isDeleting}
-                                >
-                                  Excluir
-                                </Button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className={styles.pagination}>
-                    <label>
-                      Registros por página{" "}
-                      <select
-                        className={shared.input}
-                        value={pageSize}
-                        onChange={(event) => {
-                          setPageSize(
-                            event.target.value === "all"
-                              ? "all"
-                              : Number(event.target.value),
-                          );
-                          setPage(1);
+                  <AdminDataTable
+                    records={visibleRecords}
+                    columns={TABLE_FIELDS.map(([key, label]) => ({ key, label }))}
+                    selectable={canDelete}
+                    selectedIds={selectedIds}
+                    allVisibleSelected={allVisibleSelected}
+                    onToggleRecord={toggleSelection}
+                    onTogglePage={togglePageSelection}
+                    getSelectionLabel={(record) =>
+                      "Selecionar imóvel " + record.physical_registration
+                    }
+                    renderActions={(record, actionClassName) => (
+                      <button
+                        type="button"
+                        className={actionClassName}
+                        onClick={() => {
+                          setModalRecord(record);
+                          setIsModalOpen(true);
                         }}
                       >
-                        {PAGE_SIZES.map((size) => (
-                          <option value={size} key={size}>
-                            {size}
-                          </option>
-                        ))}
-                        <option value="all">Todos</option>
-                      </select>
-                    </label>
-                    <div>
-                      <span>
-                        Página {currentPage} de {pageCount}
-                      </span>
-                      <div className={styles.pageButtons}>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setPage(1)}
-                          disabled={currentPage === 1}
-                        >
-                          «
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setPage(currentPage - 1)}
-                          disabled={currentPage === 1}
-                        >
-                          ‹
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setPage(currentPage + 1)}
-                          disabled={currentPage === pageCount}
-                        >
-                          ›
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setPage(pageCount)}
-                          disabled={currentPage === pageCount}
-                        >
-                          »
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                        <i
+                          className={"fas " + (canUpdate ? "fa-edit" : "fa-eye")}
+                          aria-hidden="true"
+                        ></i>{" "}
+                        {canUpdate ? "Editar" : "Visualizar"}
+                      </button>
+                    )}
+                  />
+                  <AdminPagination
+                    page={page}
+                    setPage={setPage}
+                    pageSize={pageSize}
+                    setPageSize={setPageSize}
+                    pageCount={pageCount}
+                    currentPage={currentPage}
+                  />
                 </>
               )}
             </section>

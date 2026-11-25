@@ -4,6 +4,8 @@ import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
+import AdminDataTable from "@/components/AdminDataTable";
+import AdminPagination from "@/components/AdminPagination";
 import FileDropzone from "@/components/FileDropzone";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
@@ -17,15 +19,6 @@ import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 const PAGE_SIZES = [10, 20, 50, 100];
-const PAGINATION_BUTTON_STYLE = {
-  width: 32,
-  minWidth: 32,
-  height: 32,
-  minHeight: 32,
-  padding: 6,
-  fontSize: 12,
-  flexShrink: 0,
-};
 const CSV_FIELDS = [
   "year",
   "decree",
@@ -276,12 +269,6 @@ function AssessedValuesPage() {
           (currentPage - 1) * pageSize,
           currentPage * pageSize,
         );
-  const paginationStart = Math.max(1, Math.min(currentPage - 2, pageCount - 3));
-  const paginationEnd = Math.min(pageCount, paginationStart + 3);
-  const paginationPages = Array.from(
-    { length: paginationEnd - paginationStart + 1 },
-    (_, index) => paginationStart + index,
-  );
 
   function toggleSelection(id) {
     setSelectedIds((current) =>
@@ -738,176 +725,46 @@ function AssessedValuesPage() {
                 <p className={styles.empty}>Nenhum registro encontrado.</p>
               ) : (
                 <>
-                  <div
-                    className={styles.tableWrapper}
-                    style={{ maxHeight: "min(940px, 70vh)", overflowY: "auto" }}
-                  >
-                    <table>
-                      <thead>
-                        <tr>
-                          {canDelete && (
-                            <th>
-                              <input
-                                type="checkbox"
-                                aria-label="Selecionar todos desta página"
-                                checked={allVisibleSelected}
-                                onChange={(event) =>
-                                  togglePageSelection(event.target.checked)
-                                }
-                              />
-                            </th>
-                          )}
-                          {TABLE_COLUMNS.map((column) => (
-                            <th key={column.name}>{column.label}</th>
-                          ))}
-                          <th>Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {visibleRecords.map((record) => (
-                          <tr key={record.id}>
-                            {canDelete && (
-                              <td>
-                                <input
-                                  type="checkbox"
-                                  aria-label={"Selecionar ano " + record.year}
-                                  checked={selectedIds.includes(record.id)}
-                                  onChange={() => toggleSelection(record.id)}
-                                />
-                              </td>
-                            )}
-                            {TABLE_COLUMNS.map((column) => (
-                              <td key={column.name}>
-                                {column.name === "year" ? (
-                                  <strong>{record.year}</strong>
-                                ) : column.name === "decree" ? (
-                                  record.decree || "—"
-                                ) : (
-                                  formatTableValue(record[column.name])
-                                )}
-                              </td>
-                            ))}
-                            <td>
-                              <Link
-                                className={styles.actionLink}
-                                href={"/admin/assessed-values/" + record.id}
-                              >
-                                <i
-                                  className={
-                                    "fas " + (canUpdate ? "fa-edit" : "fa-eye")
-                                  }
-                                  aria-hidden="true"
-                                ></i>{" "}
-                                {canUpdate ? "Editar" : "Visualizar"}
-                              </Link>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className={styles.pagination}>
-                    <label>
-                      Registros por página{" "}
-                      <select
-                        className={shared.input}
-                        value={pageSize}
-                        onChange={(event) => {
-                          setPageSize(
-                            event.target.value === "all"
-                              ? "all"
-                              : Number(event.target.value),
-                          );
-                          setPage(1);
-                        }}
+                  <AdminDataTable
+                    records={visibleRecords}
+                    columns={TABLE_COLUMNS.map((column) => ({
+                      ...column,
+                      render: (record) =>
+                        column.name === "year" ? (
+                          <strong>{record.year}</strong>
+                        ) : column.name === "decree" ? (
+                          record.decree || "—"
+                        ) : (
+                          formatTableValue(record[column.name])
+                        ),
+                    }))}
+                    selectable={canDelete}
+                    selectedIds={selectedIds}
+                    allVisibleSelected={allVisibleSelected}
+                    onToggleRecord={toggleSelection}
+                    onTogglePage={togglePageSelection}
+                    getSelectionLabel={(record) => "Selecionar ano " + record.year}
+                    renderActions={(record, actionClassName) => (
+                      <Link
+                        className={actionClassName}
+                        href={"/admin/assessed-values/" + record.id}
                       >
-                        {PAGE_SIZES.map((size) => (
-                          <option value={size} key={size}>
-                            {size}
-                          </option>
-                        ))}
-                        <option value="all">Todos</option>
-                      </select>
-                    </label>
-                    <div>
-                      <span>
-                        Página {currentPage} de {pageCount}
-                      </span>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                          gap: "6px",
-                        }}
-                        aria-label="Navegação de páginas"
-                      >
-                        <Button
-                          type="button"
-                          variant="outline"
-                          icon="fa-angle-double-left"
-                          title="Primeira página"
-                          aria-label="Primeira página"
-                          onClick={() => setPage(1)}
-                          disabled={currentPage === 1}
-                          style={PAGINATION_BUTTON_STYLE}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          icon="fa-chevron-left"
-                          title="Página anterior"
-                          aria-label="Página anterior"
-                          onClick={() => setPage(currentPage - 1)}
-                          disabled={currentPage === 1}
-                          style={PAGINATION_BUTTON_STYLE}
-                        />
-                        {paginationStart > 1 && (
-                          <span aria-hidden="true">…</span>
-                        )}
-                        {paginationPages.map((pageNumber) => (
-                          <Button
-                            key={pageNumber}
-                            type="button"
-                            variant={
-                              pageNumber === currentPage ? "primary" : "outline"
-                            }
-                            onClick={() => setPage(pageNumber)}
-                            aria-label={"Página " + pageNumber}
-                            aria-current={
-                              pageNumber === currentPage ? "page" : undefined
-                            }
-                            style={PAGINATION_BUTTON_STYLE}
-                          >
-                            {pageNumber}
-                          </Button>
-                        ))}
-                        {paginationEnd < pageCount && (
-                          <span aria-hidden="true">…</span>
-                        )}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          icon="fa-chevron-right"
-                          title="Próxima página"
-                          aria-label="Próxima página"
-                          onClick={() => setPage(currentPage + 1)}
-                          disabled={currentPage === pageCount}
-                          style={PAGINATION_BUTTON_STYLE}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          icon="fa-angle-double-right"
-                          title="Última página"
-                          aria-label="Última página"
-                          onClick={() => setPage(pageCount)}
-                          disabled={currentPage === pageCount}
-                          style={PAGINATION_BUTTON_STYLE}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                        <i
+                          className={"fas " + (canUpdate ? "fa-edit" : "fa-eye")}
+                          aria-hidden="true"
+                        ></i>{" "}
+                        {canUpdate ? "Editar" : "Visualizar"}
+                      </Link>
+                    )}
+                  />
+                  <AdminPagination
+                    page={page}
+                    setPage={setPage}
+                    pageSize={pageSize}
+                    setPageSize={setPageSize}
+                    pageCount={pageCount}
+                    currentPage={currentPage}
+                  />
                 </>
               )}
             </section>
