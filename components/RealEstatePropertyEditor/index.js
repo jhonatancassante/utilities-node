@@ -233,7 +233,7 @@ function RealEstatePropertyEditor({ recordId }) {
                   </label>
                 </div>
                 <div className={styles.actions}>
-                  <Button type="button" variant="outline" onClick={() => router.push("/admin/real-estate-properties")} disabled={isSaving}>Voltar</Button>
+                  <Button type="button" variant="outline" onClick={() => router.push("/admin/real-estate-properties")} disabled={isSaving}>Cancelar</Button>
                   {!isReadOnly && <Button type="submit" icon="fa-save" disabled={isSaving}>{isSaving ? "Salvando..." : isEditing ? "Salvar alterações" : "Cadastrar imóvel"}</Button>}
                 </div>
               </form>
