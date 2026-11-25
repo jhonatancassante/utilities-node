@@ -334,7 +334,7 @@ function AssessedValuesPage() {
               {canDelete && selectedIds.length > 0 && <Button type="button" variant="danger" icon="fa-trash" onClick={handleDeleteSelected} disabled={isDeleting}>{isDeleting ? "Excluindo..." : "Excluir selecionados (" + selectedIds.length + ")"}</Button>}
             </div>
             {isLoadingRecords ? <p className={styles.empty}>Carregando registros...</p> : filteredRecords.length === 0 ? <p className={styles.empty}>Nenhum registro encontrado.</p> : <>
-              <div className={styles.tableWrapper} style={{ maxHeight: "min(1880px, 140vh)", overflowY: "auto" }}><table><thead><tr>
+              <div className={styles.tableWrapper} style={{ maxHeight: "min(940px, 70vh)", overflowY: "auto" }}><table><thead><tr>
                 {canDelete && <th><input type="checkbox" aria-label="Selecionar todos desta página" checked={allVisibleSelected} onChange={(event) => togglePageSelection(event.target.checked)} /></th>}
                 {TABLE_COLUMNS.map((column) => <th key={column.name}>{column.label}</th>)}<th>Ações</th>
               </tr></thead><tbody>{visibleRecords.map((record) => <tr key={record.id}>
