@@ -2,6 +2,14 @@ import controller from "@/infra/controller.js";
 import realEstateProperty from "@/models/real-estate-property.js";
 import authorization from "@/models/authorization.js";
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "100mb",
+    },
+  },
+};
+
 export default controller.createController(
   {
     POST: [
