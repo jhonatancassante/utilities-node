@@ -1,7 +1,9 @@
 export const up = (pgm) => {
-  pgm.addColumn("users", "deleted_at", {
-    type: "timestamptz",
-    notNull: false,
+  pgm.addColumn("users", {
+    deleted_at: {
+      type: "timestamptz",
+      notNull: false,
+    },
   });
 };
 
