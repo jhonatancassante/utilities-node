@@ -81,8 +81,8 @@ function AssessedValueEditor({ recordId }) {
           </header>
           {feedback && <StatusMessage type="inline-error" name={feedback.name} action={feedback.action}>{feedback.message}</StatusMessage>}
           {isEditing && !record ? <p>Não foi possível carregar o registro informado.</p> : (
-            <AssessedValueForm initialValue={record} onSubmit={handleSubmit} isSaving={isSaving} isReadOnly={!canUpdate}
-              submitLabel={isEditing ? "Salvar alterações" : "Cadastrar valores"} />
+            <AssessedValueForm initialValue={record} onSubmit={handleSubmit} onCancel={() => router.push("/admin/assessed-values")}
+              isSaving={isSaving} isReadOnly={!canUpdate} submitLabel={isEditing ? "Salvar alterações" : "Cadastrar valores"} />
           )}
         </section>
       </main></Layout>

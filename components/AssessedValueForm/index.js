@@ -37,11 +37,16 @@ const EMPTY_FORM = {
   ...Object.fromEntries(ALL_NUMERIC_FIELDS.map((field) => [field.name, ""])),
 };
 
-function AssessedValueForm({ initialValue, onSubmit, isSaving, isReadOnly, submitLabel }) {
+function AssessedValueForm({ initialValue, onSubmit, onCancel, isSaving, isReadOnly, submitLabel }) {
   const [form, setForm] = useState(() => ({
     ...EMPTY_FORM,
     ...Object.fromEntries(Object.entries(initialValue || {}).map(([key, value]) => [
-      key, value === null || value === undefined ? "" : String(value),
+      key,
+      value === null || value === undefined
+        ? ""
+        : ALL_NUMERIC_FIELDS.some((field) => field.name === key)
+          ? String(value).replace(".", ",")
+          : String(value),
     ])),
   }));
   const [validationError, setValidationError] = useState("");
@@ -109,9 +114,12 @@ function AssessedValueForm({ initialValue, onSubmit, isSaving, isReadOnly, submi
         </fieldset>
       ))}
       {validationError && <p className={styles.validationError} role="alert">{validationError}</p>}
-      {!isReadOnly && <div className={styles.actions}><Button type="submit" icon="fa-save" disabled={isSaving}>
-        {isSaving ? "Salvando..." : submitLabel}
-      </Button></div>}
+      <div className={styles.actions}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>Cancelar</Button>
+        {!isReadOnly && <Button type="submit" icon="fa-save" disabled={isSaving}>
+          {isSaving ? "Salvando..." : submitLabel}
+        </Button>}
+      </div>
     </form>
   );
 }

@@ -14,7 +14,9 @@
 .sectionTitle > i { color: var(--accent); font-size: 28px; }
 .importControls { display: grid; grid-template-columns: minmax(220px, 2fr) repeat(2, minmax(150px, 1fr)); gap: 14px; margin-top: 18px; }
 .importControls label { min-width: 0; }
-.fileField input { width: 100%; min-height: 44px; padding: 8px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-card); color: var(--text-primary); }
+.fileField { min-width: 0; }
+.selectedFile { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.selectedFile span { min-width: 0; overflow-wrap: anywhere; color: var(--text-secondary); font-size: 12px; }
 .importActions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 .preview { padding-top: 18px; margin-top: 18px; border-top: 1px solid var(--border-color); }
 .previewHeading strong { color: var(--text-primary); font-size: 14px; }

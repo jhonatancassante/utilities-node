@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
+import FileDropzone from "@/components/FileDropzone";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
@@ -28,6 +29,40 @@ const COLUMNS = [
   { name: "garbage", label: "Lixo" },
   { name: "rural", label: "Rural" },
 ];
+const SECTOR_COLUMNS = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, "9a", 10, 11, "11a", "11b", 12, 13, 14, 15, 16, 17,
+].map((number) => ({ name: "sector_" + number, label: "Setor " + number }));
+const PROPERTY_LABELS = {
+  precarious: "Precário",
+  simple: "Simples",
+  regular: "Regular",
+  medium: "Médio",
+  good: "Bom",
+  sophisticated: "Sofisticado",
+};
+const PROPERTY_COLUMNS = ["residential", "commercial", "industrial"].flatMap((type) =>
+  Object.entries(PROPERTY_LABELS).map(([level, label]) => ({
+    name: type + "_" + level,
+    label: (type === "residential" ? "Residencial" : type === "commercial" ? "Comercial" : "Industrial") + " - " + label,
+  })),
+);
+const TABLE_COLUMNS = [
+  { name: "year", label: "Ano" },
+  { name: "decree", label: "Decreto" },
+  ...SECTOR_COLUMNS,
+  ...PROPERTY_COLUMNS,
+  { name: "cleaning", label: "Limpeza" },
+  { name: "garbage", label: "Coleta de lixo" },
+  { name: "rural", label: "Área rural" },
+];
+
+function formatTableValue(value) {
+  if (value === null || value === undefined || value === "") return "—";
+  const number = Number(value);
+  return Number.isFinite(number)
+    ? number.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : value;
+}
 
 function parseDelimitedText(source, delimiter) {
   const rows = [];
@@ -227,16 +262,31 @@ function AssessedValuesPage() {
             <p>Consulte e mantenha os valores venais de cada exercício, com suporte a cadastro individual e importação de planilhas CSV.</p>
           </header>
           {feedback && <div className={styles.feedback}><StatusMessage type={feedback.type === "success" ? "success" : "inline-error"} name={feedback.name} action={feedback.action}>{feedback.message}</StatusMessage></div>}
-          <div className={styles.toolbar}>
-            <label className={styles.searchField}><span className={shared.label}>Pesquisar por ano ou decreto</span>
-              <input className={shared.input} type="search" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Ex.: 2026 ou 123/2026" />
-            </label>
-            {canCreate && <Link href="/admin/assessed-values/new" className={styles.linkButton}><i className="fas fa-plus" aria-hidden="true"></i> Novo cadastro</Link>}
-          </div>
           {canCreate && <section className={styles.importSection}>
             <div className={styles.sectionTitle}><div><h2>Importar arquivo CSV</h2><p>Leia, valide e confira os registros antes de gravá-los no banco.</p></div><i className="fas fa-file-csv" aria-hidden="true"></i></div>
             <div className={styles.importControls}>
-              <label className={styles.fileField}><span className={shared.label}>Arquivo CSV</span><input type="file" accept=".csv,text/csv" onChange={(event) => { setCsvFile(event.target.files?.[0] || null); setPreview(null); }} /></label>
+              <div className={styles.fileField}>
+                <span className={shared.label}>Arquivo CSV</span>
+                <FileDropzone
+                  label="Arraste um arquivo CSV ou clique para selecionar"
+                  accept=".csv,text/csv"
+                  onFiles={(files) => {
+                    const file = files[0];
+                    if (!file) return;
+                    if (!file.name.toLowerCase().endsWith(".csv")) {
+                      setFeedback({ type: "error", message: "Selecione um arquivo com extensão .csv." });
+                      return;
+                    }
+                    setCsvFile(file);
+                    setPreview(null);
+                    setFeedback(null);
+                  }}
+                />
+                {csvFile && <div className={styles.selectedFile}>
+                  <span>{csvFile.name}</span>
+                  <Button type="button" variant="outline" onClick={() => { setCsvFile(null); setPreview(null); setFeedback(null); }}>Limpar arquivo</Button>
+                </div>}
+              </div>
               <label><span className={shared.label}>Codificação</span><select className={shared.input} value={encoding} onChange={(event) => setEncoding(event.target.value)}><option value="UTF-8">UTF-8</option><option value="windows-1252">Windows-1252</option><option value="ISO-8859-1">ISO-8859-1</option></select></label>
               <label><span className={shared.label}>Delimitador</span><select className={shared.input} value={delimiter} onChange={(event) => setDelimiter(event.target.value)}><option value=";">Ponto e vírgula (;)</option><option value=",">Vírgula (,)</option><option value={"\t"}>Tabulação</option><option value="|">Barra vertical (|)</option></select></label>
             </div>
@@ -248,10 +298,20 @@ function AssessedValuesPage() {
             {preview && <div className={styles.preview}>
               <div className={styles.previewHeading}><strong>Prévia: {preview.fileName}</strong><span>{preview.records.length} registro(s) validados</span></div>
               <p>Os dados abaixo são uma amostra. Todos os registros foram validados antes da importação.</p>
-              <div className={styles.tableWrapper}><table><thead><tr>{COLUMNS.map((column) => <th key={column.name}>{column.label}</th>)}</tr></thead><tbody>{preview.records.slice(0, 5).map((record, index) => <tr key={index}>{COLUMNS.map((column) => <td key={column.name}>{record[column.name] ?? "—"}</td>)}</tr>)}</tbody></table></div>
+              <div className={styles.tableWrapper}><table><thead><tr>{COLUMNS.map((column) => <th key={column.name}>{column.label}</th>)}</tr></thead><tbody>{preview.records.slice(0, 5).map((record, index) => <tr key={index}>{COLUMNS.map((column) => (
+                  <td key={column.name}>
+                    {column.name === "year" ? record.year : column.name === "decree" ? record.decree || "—" : formatTableValue(record[column.name])}
+                  </td>
+                ))}</tr>)}</tbody></table></div>
               {preview.records.length > 5 && <small>Exibindo os primeiros 5 registros de {preview.records.length}.</small>}
             </div>}
           </section>}
+          <div className={styles.toolbar}>
+            <label className={styles.searchField}><span className={shared.label}>Pesquisar por ano ou decreto</span>
+              <input className={shared.input} type="search" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Ex.: 2026 ou 123/2026" />
+            </label>
+            {canCreate && <Link href="/admin/assessed-values/new" className={styles.linkButton}><i className="fas fa-plus" aria-hidden="true"></i> Novo cadastro</Link>}
+          </div>
           <section className={styles.results}>
             <div className={styles.resultsHeading}><div><h2>Registros cadastrados</h2><span>{filteredRecords.length} registro(s)</span></div>
               {canDelete && selectedIds.length > 0 && <Button type="button" variant="danger" icon="fa-trash" onClick={handleDeleteSelected} disabled={isDeleting}>{isDeleting ? "Excluindo..." : "Excluir selecionados (" + selectedIds.length + ")"}</Button>}
@@ -259,11 +319,14 @@ function AssessedValuesPage() {
             {isLoadingRecords ? <p className={styles.empty}>Carregando registros...</p> : filteredRecords.length === 0 ? <p className={styles.empty}>Nenhum registro encontrado.</p> : <>
               <div className={styles.tableWrapper}><table><thead><tr>
                 {canDelete && <th><input type="checkbox" aria-label="Selecionar todos desta página" checked={allVisibleSelected} onChange={(event) => togglePageSelection(event.target.checked)} /></th>}
-                {COLUMNS.map((column) => <th key={column.name}>{column.label}</th>)}<th>Última atualização</th><th>Ações</th>
+                {TABLE_COLUMNS.map((column) => <th key={column.name}>{column.label}</th>)}<th>Ações</th>
               </tr></thead><tbody>{visibleRecords.map((record) => <tr key={record.id}>
                 {canDelete && <td><input type="checkbox" aria-label={"Selecionar ano " + record.year} checked={selectedIds.includes(record.id)} onChange={() => toggleSelection(record.id)} /></td>}
-                <td><strong>{record.year}</strong></td><td>{record.decree || "—"}</td><td>{record.cleaning ?? "—"}</td><td>{record.garbage ?? "—"}</td><td>{record.rural ?? "—"}</td>
-                <td>{record.updated_at ? new Date(record.updated_at).toLocaleDateString("pt-BR") : "—"}</td>
+                {TABLE_COLUMNS.map((column) => (
+                  <td key={column.name}>
+                    {column.name === "year" ? <strong>{record.year}</strong> : column.name === "decree" ? record.decree || "—" : formatTableValue(record[column.name])}
+                  </td>
+                ))}
                 <td><Link className={styles.actionLink} href={"/admin/assessed-values/" + record.id}><i className={"fas " + (canUpdate ? "fa-edit" : "fa-eye")} aria-hidden="true"></i> {canUpdate ? "Editar" : "Visualizar"}</Link></td>
               </tr>)}</tbody></table></div>
               <div className={styles.pagination}>
