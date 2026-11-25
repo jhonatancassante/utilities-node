@@ -54,7 +54,8 @@
   color: var(--text-primary);
 }
 .actionCell {
-  min-width: 112px;
+  width: 1%;
+  min-width: 0;
 }
 .actionLink {
   display: inline-flex;
