@@ -60,7 +60,7 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
     const value = inputValues[field];
 
     if (value === null || value === "") {
-      if (rule.required || (value === "" && !rule.nullable && rule.type !== "string")) {
+      if (rule.required || !rule.nullable) {
         throw new ValidationError({
           message: `O campo ${field} não pode ficar vazio.`,
           action: "Preencha o campo obrigatório e tente novamente.",
