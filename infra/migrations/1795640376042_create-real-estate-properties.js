@@ -48,7 +48,7 @@ export const up = (pgm) => {
       default: 0,
     },
     property_neighborhood: {
-      type: "varchar(50)",
+      type: "varchar(70)",
       notNull: true,
     },
     owner_name: {

@@ -86,7 +86,7 @@ const SECTIONS = [
         name: "property_neighborhood",
         label: "Bairro",
         required: true,
-        maxLength: 50,
+        maxLength: 70,
         width: "half",
       },
       {

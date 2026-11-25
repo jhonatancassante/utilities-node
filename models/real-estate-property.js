@@ -16,7 +16,7 @@ const FIELD_RULES = {
   property_lots: { type: "string", maxLength: 20, nullable: true },
   land_area: { type: "number", min: 0, max: 9999999999.99, required: true },
   built_area: { type: "number", min: 0, max: 9999999999.99 },
-  property_neighborhood: { type: "string", maxLength: 50, required: true },
+  property_neighborhood: { type: "string", maxLength: 70, required: true },
   owner_name: { type: "string", maxLength: 150, required: true },
   promissory_buyer: { type: "string", maxLength: 150, nullable: true },
   land_sector: { type: "integer", min: 0, required: true },

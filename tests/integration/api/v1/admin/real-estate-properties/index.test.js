@@ -133,6 +133,26 @@ describe("POST /api/v1/admin/real-estate-properties", () => {
     });
   });
 
+  test("Aceitando bairro com até 70 caracteres", async () => {
+    const input = createPropertyInput({
+      property_neighborhood: "B".repeat(70),
+    });
+    const record = await realEstateProperty.create(input);
+    expect(record.property_neighborhood).toBe("B".repeat(70));
+  });
+
+  test("Rejeitando bairro com mais de 70 caracteres", async () => {
+    await expect(
+      realEstateProperty.create(
+        createPropertyInput({
+          property_neighborhood: "B".repeat(71),
+        }),
+      ),
+    ).rejects.toThrow(
+      "O campo property_neighborhood deve ser um texto válido de até 70 caracteres.",
+    );
+  });
+
   test("Rejeitando cadastro sem campo obrigatório", async () => {
     const sessionObject = await createSessionWithFeatures([
       "create:real_estate_properties",
