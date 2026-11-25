@@ -55,6 +55,7 @@ function RealEstatePropertiesPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [feedback, setFeedback] = useState(null);
+  const [dialog, setDialog] = useState(null);
   const canCreate = user?.features?.includes("create:real_estate_properties");
   const canUpdate = user?.features?.includes("update:real_estate_properties");
   const canDelete = user?.features?.includes("delete:real_estate_properties");
@@ -179,11 +180,14 @@ function RealEstatePropertiesPage() {
         ) {
           throw requestError;
         }
-        const shouldContinue = window.confirm(
-          requestError.message + "\n\nDeseja continuar com a atualização dos registros existentes?",
-        );
-        if (!shouldContinue) return false;
-        await request(true);
+        setDialog({
+          type: "bulk-import",
+          records,
+          message:
+            requestError.message +
+            "\n\nDeseja continuar com a atualização dos registros existentes?",
+        });
+        return false;
       }
 
       await loadRecords();
@@ -205,13 +209,52 @@ function RealEstatePropertiesPage() {
     }
   }
   async function handleDelete(ids) {
-    if (
-      !ids.length ||
-      !window.confirm(
-        "Deseja excluir " + ids.length + " imóvel(is) selecionado(s)?",
-      )
-    )
+    if (!ids.length) return;
+    setDialog({
+      type: "delete",
+      ids,
+      message: "Deseja excluir " + ids.length + " imóvel(is) selecionado(s)?",
+    });
+  }
+
+  async function confirmDialog() {
+    const currentDialog = dialog;
+    if (!currentDialog) return;
+    setDialog(null);
+
+    if (currentDialog.type === "bulk-import") {
+      setIsSaving(true);
+      setFeedback(null);
+      try {
+        await requestAPI("/api/v1/admin/real-estate-properties/bulk", {
+          method: "POST",
+          body: JSON.stringify({
+            records: currentDialog.records,
+            overwriteExisting: true,
+          }),
+        });
+        await loadRecords();
+        setFeedback({
+          type: "success",
+          message:
+            currentDialog.records.length +
+            " imóvel(is) importado(s) com sucesso.",
+        });
+      } catch (requestError) {
+        setFeedback({
+          type: "error",
+          name: requestError.name,
+          message: requestError.message,
+          action: requestError.action,
+        });
+      } finally {
+        setIsSaving(false);
+      }
       return;
+    }
+
+    if (currentDialog.type !== "delete") return;
+    const ids = currentDialog.ids;
     setIsDeleting(true);
     setFeedback(null);
     try {
@@ -460,7 +503,16 @@ function RealEstatePropertiesPage() {
           </section>
         </main>
       </Layout>
-
+      {dialog && (
+        <StatusMessage
+          type="confirmation"
+          resetKey={dialog.type + "-" + (dialog.ids?.join(",") || "bulk")}
+          onConfirm={confirmDialog}
+          onCancel={() => setDialog(null)}
+        >
+          {dialog.message}
+        </StatusMessage>
+      )}
     </>
   );
 }
