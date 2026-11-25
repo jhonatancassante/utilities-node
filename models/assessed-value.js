@@ -183,4 +183,34 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
   return assessedValue;
 }
 
-export default { create, findAll, findOneById, update, delete: deleteAssessedValue };
+async function createMany(inputValues) {
+  if (!Array.isArray(inputValues) || inputValues.length === 0 || inputValues.length > 500) {
+    throw new ValidationError({
+      message: "A importação deve conter entre 1 e 500 registros.",
+      action: "Revise o arquivo CSV e tente importar novamente.",
+    });
+  }
+
+  const assessedValues = inputValues.map((input) =>
+    validateInput(input, { requiredFields: ["year"] }),
+  );
+  const columns = UPDATABLE_FIELDS;
+  const placeholders = columns.map((field, index) => "$" + (index + 1));
+  const queryText = `
+    INSERT INTO assessed_values (${columns.join(", ")})
+    VALUES (${placeholders.join(", ")})
+    RETURNING *
+  `;
+
+  return database.transaction(async (client) => {
+    const records = [];
+    for (const assessedValue of assessedValues) {
+      const values = columns.map((field) => assessedValue[field] ?? null);
+      const result = await client.query({ text: queryText, values });
+      records.push(result.rows[0]);
+    }
+    return records;
+  });
+}
+
+export default { create, findAll, findOneById, update, delete: deleteAssessedValue, createMany };
