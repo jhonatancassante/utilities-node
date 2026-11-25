@@ -4,7 +4,7 @@
 .header p { max-width: 760px; margin: 0 auto; color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
 .feedback { margin-bottom: 22px; }
 .form { display: grid; gap: 28px; }
-.formSection { padding: 22px; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--surface-secondary); }
+.formSection { padding: 22px; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--box-bg); }
 .sectionHeading { margin-bottom: 20px; }
 .sectionHeading h2 { margin: 0 0 5px; color: var(--text-primary); font-size: 17px; }
 .sectionHeading p { margin: 0; color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
