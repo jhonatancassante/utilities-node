@@ -241,24 +241,6 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
           <input className={shared.input} type="number" min="1" max="9999" step="1" value={year}
             onChange={(event) => { setYear(event.target.value); setRecords(null); setError(""); }} required />
         </label>
-        <label>
-          <span className={shared.label}>Codificação *</span>
-          <select className={shared.input} value={encoding}
-            onChange={(event) => { setEncoding(event.target.value); setRecords(null); setError(""); }}>
-            <option value="UTF-8">UTF-8</option>
-            <option value="windows-1252">Windows-1252 (ANSI)</option>
-            <option value="ISO-8859-1">ISO-8859-1</option>
-          </select>
-        </label>
-        <label>
-          <span className={shared.label}>Delimitador *</span>
-          <select className={shared.input} value={delimiter}
-            onChange={(event) => { setDelimiter(event.target.value); setRecords(null); setError(""); }}>
-            <option value=";">Ponto e vírgula (;)</option>
-            <option value=",">Vírgula (,)</option>
-            <option value="tab">Tabulação</option>
-          </select>
-        </label>
         <label className={styles.switchField}>
           <span className={shared.label}>Atualizado</span>
           <span className={styles.switchControl}>
@@ -283,6 +265,26 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
           <span>{file.name}</span>
           <Button type="button" variant="outline" onClick={() => { setFile(null); setRecords(null); setError(""); }} disabled={isSaving}>Limpar arquivo</Button>
         </div>}
+      </div>
+      <div className={styles.formatSettings}>
+        <label>
+          <span className={shared.label}>Codificação *</span>
+          <select className={shared.input} value={encoding}
+            onChange={(event) => { setEncoding(event.target.value); setRecords(null); setError(""); }}>
+            <option value="UTF-8">UTF-8</option>
+            <option value="windows-1252">Windows-1252 (ANSI)</option>
+            <option value="ISO-8859-1">ISO-8859-1</option>
+          </select>
+        </label>
+        <label>
+          <span className={shared.label}>Delimitador *</span>
+          <select className={shared.input} value={delimiter}
+            onChange={(event) => { setDelimiter(event.target.value); setRecords(null); setError(""); }}>
+            <option value=";">Ponto e vírgula (;)</option>
+            <option value=",">Vírgula (,)</option>
+            <option value="tab">Tabulação</option>
+          </select>
+        </label>
       </div>
       <div className={styles.importActions}>
         <Button type="button" variant="outline" icon="fa-eye" onClick={handleReadFile} disabled={!file || isSaving || !year.trim()}>Ler e validar CSV</Button>
