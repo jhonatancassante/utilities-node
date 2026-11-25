@@ -174,6 +174,60 @@ function filterOutput(user, feature, resource) {
       : filterFeature(resource);
   }
 
+  if (feature === "read:assessed_values") {
+    const filterAssessedValue = (item) => ({
+      id: item.id,
+      year: item.year,
+      decree: item.decree,
+      sector_1: item.sector_1,
+      sector_2: item.sector_2,
+      sector_3: item.sector_3,
+      sector_4: item.sector_4,
+      sector_5: item.sector_5,
+      sector_6: item.sector_6,
+      sector_7: item.sector_7,
+      sector_8: item.sector_8,
+      sector_9: item.sector_9,
+      sector_9a: item.sector_9a,
+      sector_10: item.sector_10,
+      sector_11: item.sector_11,
+      sector_11a: item.sector_11a,
+      sector_11b: item.sector_11b,
+      sector_12: item.sector_12,
+      sector_13: item.sector_13,
+      sector_14: item.sector_14,
+      sector_15: item.sector_15,
+      sector_16: item.sector_16,
+      sector_17: item.sector_17,
+      residential_precarious: item.residential_precarious,
+      residential_simple: item.residential_simple,
+      residential_regular: item.residential_regular,
+      residential_medium: item.residential_medium,
+      residential_good: item.residential_good,
+      residential_sophisticated: item.residential_sophisticated,
+      commercial_precarious: item.commercial_precarious,
+      commercial_simple: item.commercial_simple,
+      commercial_regular: item.commercial_regular,
+      commercial_medium: item.commercial_medium,
+      commercial_good: item.commercial_good,
+      commercial_sophisticated: item.commercial_sophisticated,
+      industrial_precarious: item.industrial_precarious,
+      industrial_simple: item.industrial_simple,
+      industrial_regular: item.industrial_regular,
+      industrial_medium: item.industrial_medium,
+      industrial_good: item.industrial_good,
+      industrial_sophisticated: item.industrial_sophisticated,
+      cleaning: item.cleaning,
+      garbage: item.garbage,
+      rural: item.rural,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    });
+    return Array.isArray(resource)
+      ? resource.map(filterAssessedValue)
+      : filterAssessedValue(resource);
+  }
+
   if (feature === "read:status") {
     const output = {
       updated_at: resource.updated_at,
