@@ -79,17 +79,26 @@ async function calculateVenalValue({
     });
   }
 
+  const ctmCount = ctmCount;
+
+  if (!Number.isInteger(ctmCount) || ctmCount < 1) {
+    throw new ValidationError({
+      message: `O CTM ${property.ctm} informa uma contagem inválida de ${property.ctm_count} cadastros vinculados.`,
+      action: "Corrija a contagem de cadastros vinculados ao CTM antes de emitir a certidão.",
+    });
+  }
+
   const assessedValues = await assessedValue.findOneByYear(requestedYear);
   let properties = [property];
 
-  if (Number(property.ctm_count) > 1) {
+  if (ctmCount > 1) {
     let groupedProperties = await realEstateProperty.findByCtmAndYear(
       property.ctm,
       propertyYear,
       annual,
     );
 
-    if (groupedProperties.length !== Number(property.ctm_count)) {
+    if (groupedProperties.length !== ctmCount) {
       const normalizedCtm = String(property.ctm).replace(/\D/g, "");
       const allProperties = await realEstateProperty.findAll();
       const matchingProperties = allProperties.filter(
@@ -104,7 +113,7 @@ async function calculateVenalValue({
       }
     }
 
-    if (groupedProperties.length !== Number(property.ctm_count)) {
+    if (groupedProperties.length !== ctmCount) {
       throw new ValidationError({
         message: `O CTM ${property.ctm} informa ${property.ctm_count} cadastros vinculados, mas foram encontrados ${groupedProperties.length} cadastros ativos no exercício utilizado.`,
         action: "Revise os cadastros vinculados ao CTM antes de emitir a certidão.",

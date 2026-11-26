@@ -436,6 +436,94 @@ describe("GET e POST /api/v1/certificates", () => {
     });
   });
 
+  test("Rejeitando contagem de CTM igual a zero", async () => {
+    const session = await createSessionWithFeatures([
+      "create:certificate",
+      "read:certificate",
+    ]);
+    const property = await createProperty({
+      physical_property_id: 987670,
+      ctm: "25.00003.0170",
+      ctm_count: 0,
+      grouping: "I",
+    });
+    await assessedValue.create({
+      year: 2026,
+      sector_1: 200,
+      residential_medium: 1200,
+    });
+
+    const response = await fetch(collectionEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${session.token}`,
+      },
+      body: JSON.stringify({
+        applicant_name: "Requerente de teste",
+        purpose: "Valor venal",
+        physical_property_id: property.physical_property_id,
+        year: 2026,
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      message: expect.stringContaining("25.00003.0170"),
+    });
+  });
+
+  test.each([
+    ["todos A, sem cadastro P", "25.00003.0171", "A", "A"],
+    ["P fora da inscrição .01", "25.00003.0172", "A", "P"],
+    ["mais de um cadastro P", "25.00003.0173", "P", "P"],
+    ["mistura de I com A", "25.00003.0174", "I", "A"],
+  ])("Rejeitando englobamento inválido: %s", async (description, ctm, mainGrouping, secondGrouping) => {
+    const session = await createSessionWithFeatures([
+      "create:certificate",
+      "read:certificate",
+    ]);
+    const physicalPropertyId = 987671;
+    await createProperty({
+      physical_property_id: physicalPropertyId,
+      physical_registration: `${ctm}.01`,
+      ctm,
+      ctm_count: 2,
+      grouping: mainGrouping,
+    });
+    await createProperty({
+      physical_property_id: physicalPropertyId + 1,
+      physical_registration: `${ctm}.02`,
+      ctm,
+      ctm_count: 2,
+      grouping: secondGrouping,
+    });
+    await assessedValue.create({
+      year: 2026,
+      sector_1: 200,
+      residential_medium: 1200,
+    });
+
+    const response = await fetch(collectionEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${session.token}`,
+      },
+      body: JSON.stringify({
+        applicant_name: "Requerente de teste",
+        purpose: "Valor venal",
+        physical_property_id: physicalPropertyId,
+        year: 2026,
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      message: expect.stringContaining(ctm),
+    });
+  });
+
   test("Rejeitando mistura de I com P ou A no mesmo CTM", async () => {
     const session = await createSessionWithFeatures([
       "create:certificate",
