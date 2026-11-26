@@ -153,7 +153,7 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
         if (!active || !draft) return;
         setRecords(draft);
         setYear(String(draft[0]?.year ?? new Date().getFullYear()));
-        setIsUpdated(Boolean(draft[0]?.annual) === false);
+        setIsUpdated(!draft[0]?.annual);
         setGroupingIssues(getGroupingIssues(draft));
       })
       .catch(() => {
@@ -264,7 +264,6 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
       setGroupingIssues(getGroupingIssues(parsed));
       setProgress(null);
       setError("");
-      saveRealEstatePropertyImportDraft(parsed).catch(() => {});
     } catch (parseError) {
       setRecords(null);
       setGroupingIssues([]);
