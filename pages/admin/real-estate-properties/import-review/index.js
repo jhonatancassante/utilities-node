@@ -174,7 +174,7 @@ function RealEstatePropertyGroupingReviewPage() {
                       getRowKey={(record) => record.physical_property_id}
                       sortState={sortState}
                       onSort={handleSort}
-                      sortAnnouncement={sortAnnouncement}
+                      sortAnnouncement={group.ctm === groups[0]?.ctm ? sortAnnouncement : ""}
                       caption={"Cadastros do CTM " + group.ctm}
                     />
                   </section>
