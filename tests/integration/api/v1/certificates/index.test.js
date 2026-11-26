@@ -328,6 +328,55 @@ describe("GET e POST /api/v1/certificates", () => {
     },
   );
 
+  test.each([
+    [null, 250, "50000.00", "120000.00", "170000.00"],
+    ["12.345.678-9", 0, "25000.00", "60000.00", "85000.00"],
+    ["12.345.678-9", 500, "25000.00", "60000.00", "85000.00"],
+    ["12.345.678-9", 500.01, "35000.00", "84000.00", "119000.00"],
+    ["12.345.678-9", 1000, "35000.00", "84000.00", "119000.00"],
+    ["12.345.678-9", 1000.01, "50000.00", "120000.00", "170000.00"],
+  ])(
+    "Aplicando o desconto por RG para área de terreno de %s m²",
+    async (ownerRg, landArea, expectedLandValue, expectedBuildingValue, expectedTotalValue, index) => {
+      const session = await createSessionWithFeatures([
+        "create:certificate",
+        "read:certificate",
+      ]);
+      const physicalPropertyId = 987680 + index;
+      const property = await createProperty({
+        physical_property_id: physicalPropertyId,
+        land_area: landArea,
+      });
+      await assessedValue.create({
+        year: 2026,
+        sector_1: 200,
+        residential_medium: 1200,
+      });
+
+      const response = await fetch(collectionEndpoint(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${session.token}`,
+        },
+        body: JSON.stringify({
+          applicant_name: "Requerente de teste",
+          purpose: "Valor venal",
+          physical_property_id: property.physical_property_id,
+          year: 2026,
+          owner_rg: ownerRg,
+        }),
+      });
+
+      expect(response.status).toBe(201);
+      expect(await response.json()).toMatchObject({
+        land_value: expectedLandValue,
+        building_value: expectedBuildingValue,
+        total_value: expectedTotalValue,
+      });
+    },
+  );
+
   test("Calculando imóveis englobados a partir do cadastro terminado em 01", async () => {
     const session = await createSessionWithFeatures([
       "create:certificate",
@@ -388,6 +437,64 @@ describe("GET e POST /api/v1/certificates", () => {
       land_value: "100.00",
       building_value: "60000.00",
       total_value: "60100.00",
+    });
+  });
+
+  test("Aplicando o desconto por RG ao cálculo de imóvel englobado", async () => {
+    const session = await createSessionWithFeatures([
+      "create:certificate",
+      "read:certificate",
+    ]);
+    const physicalPropertyId = 987690;
+    const ctm = "25.00003.0166";
+
+    await createProperty({
+      physical_property_id: physicalPropertyId,
+      physical_registration: `${ctm}.01`,
+      ctm,
+      ctm_count: 2,
+      grouping: "P",
+      land_area: 500,
+      built_area: 10,
+      ideal_fraction: 0.1,
+    });
+    await createProperty({
+      physical_property_id: physicalPropertyId + 1,
+      physical_registration: `${ctm}.02`,
+      ctm,
+      ctm_count: 2,
+      grouping: "A",
+      land_area: 999,
+      built_area: 10,
+      ideal_fraction: 0.1,
+    });
+    await assessedValue.create({
+      year: 2026,
+      sector_1: 200,
+      residential_medium: 1200,
+    });
+
+    const response = await fetch(collectionEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${session.token}`,
+      },
+      body: JSON.stringify({
+        applicant_name: "Requerente de teste",
+        purpose: "Valor venal",
+        physical_property_id: physicalPropertyId,
+        year: 2026,
+        owner_rg: "12.345.678-9",
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({
+      land_area: "500.00",
+      land_value: "20.00",
+      building_value: "12000.00",
+      total_value: "12020.00",
     });
   });
 

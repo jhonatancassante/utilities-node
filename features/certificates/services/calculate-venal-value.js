@@ -217,13 +217,28 @@ async function calculateVenalValue({
   const calculated = properties.map((item) =>
     calculateSimple(item, assessedValues, requestedYear),
   );
-  const landValue = sum(calculated.map((item) => item.land_value));
-  const buildingValue = sum(calculated.map((item) => item.building_value));
 
   const totalBuiltArea = sum(
     properties.map((item) => Number(item.built_area || 0)),
   );
   const firstProperty = properties[0];
+  const landArea = Number(firstProperty.land_area);
+  const hasOwnerRg = typeof ownerRg === "string" && ownerRg.trim().length > 0;
+  const discountRate = hasOwnerRg
+    ? landArea >= 0 && landArea <= 500
+      ? 0.5
+      : landArea > 500 && landArea <= 1000
+        ? 0.3
+        : 0
+    : 0;
+  const discountFactor = 1 - discountRate;
+
+  const landValue = sum([
+    sum(calculated.map((item) => item.land_value)) * discountFactor,
+  ]);
+  const buildingValue = sum([
+    sum(calculated.map((item) => item.building_value)) * discountFactor,
+  ]);
 
   return {
     year: requestedYear,
