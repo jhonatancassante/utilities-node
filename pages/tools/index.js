@@ -10,8 +10,7 @@ function Home() {
   const { user } = useUser();
   const visibleTools = tools.filter(
     (tool) =>
-      !tool.requiredFeature ||
-      user?.features?.includes(tool.requiredFeature),
+      !tool.requiredFeature || user?.features?.includes(tool.requiredFeature),
   );
 
   return (
@@ -36,7 +35,9 @@ function Home() {
                   Encontre a ferramenta certa para sua tarefa
                 </h2>
               </div>
-              <span className={styles.count}>{visibleTools.length} ferramentas</span>
+              <span className={styles.count}>
+                {visibleTools.length} ferramentas
+              </span>
             </div>
 
             <ul className={styles.grid}>

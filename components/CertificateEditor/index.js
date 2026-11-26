@@ -74,8 +74,10 @@ function CertificateEditor({ recordId, viewOnly = false }) {
         setForm({
           applicant_name: data.applicant_name ?? "",
           purpose: data.purpose ?? "",
-          protocol_number: data.protocol_number == null ? "" : String(data.protocol_number),
-          protocol_year: data.protocol_year == null ? "" : String(data.protocol_year),
+          protocol_number:
+            data.protocol_number == null ? "" : String(data.protocol_number),
+          protocol_year:
+            data.protocol_year == null ? "" : String(data.protocol_year),
           physical_property_id: String(data.physical_property_id ?? ""),
           year: String(data.year ?? ""),
           is_updated: data.is_updated ?? true,
@@ -158,8 +160,12 @@ function CertificateEditor({ recordId, viewOnly = false }) {
       const payload = {
         applicant_name: form.applicant_name.trim(),
         purpose: form.purpose.trim(),
-        protocol_number: form.protocol_number.trim() ? Number(form.protocol_number) : null,
-        protocol_year: form.protocol_year.trim() ? Number(form.protocol_year) : null,
+        protocol_number: form.protocol_number.trim()
+          ? Number(form.protocol_number)
+          : null,
+        protocol_year: form.protocol_year.trim()
+          ? Number(form.protocol_year)
+          : null,
         physical_property_id: Number(form.physical_property_id),
         year: Number(form.year),
         is_updated: form.is_updated,
@@ -242,11 +248,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
     );
   }
 
-  if (
-    !user ||
-    !canRead ||
-    (!isEditing && !canCreate)
-  ) {
+  if (!user || !canRead || (!isEditing && !canCreate)) {
     return null;
   }
 
@@ -337,7 +339,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         min="1"
                         step="1"
                         value={form.protocol_number}
-                        onChange={(event) => updateField("protocol_number", event.target.value)}
+                        onChange={(event) =>
+                          updateField("protocol_number", event.target.value)
+                        }
                         disabled={isReadOnly || isSaving}
                       />
                     </label>
@@ -350,7 +354,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         max="9999"
                         step="1"
                         value={form.protocol_year}
-                        onChange={(event) => updateField("protocol_year", event.target.value)}
+                        onChange={(event) =>
+                          updateField("protocol_year", event.target.value)
+                        }
                         disabled={isReadOnly || isSaving}
                       />
                     </label>

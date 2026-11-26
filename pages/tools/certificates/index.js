@@ -151,10 +151,9 @@ function CertificatesPage() {
     setFeedback(null);
     try {
       if (ids.length === 1) {
-        await requestAPI(
-          "/api/v1/certificates/" + encodeURIComponent(ids[0]),
-          { method: "DELETE" },
-        );
+        await requestAPI("/api/v1/certificates/" + encodeURIComponent(ids[0]), {
+          method: "DELETE",
+        });
       } else {
         await requestAPI("/api/v1/certificates/bulk", {
           method: "DELETE",
@@ -247,12 +246,14 @@ function CertificatesPage() {
     {
       key: "land_area",
       label: "Área do terreno",
-      render: (record) => Number(record.land_area).toLocaleString("pt-BR") + " m²",
+      render: (record) =>
+        Number(record.land_area).toLocaleString("pt-BR") + " m²",
     },
     {
       key: "built_area",
       label: "Área construída",
-      render: (record) => Number(record.built_area).toLocaleString("pt-BR") + " m²",
+      render: (record) =>
+        Number(record.built_area).toLocaleString("pt-BR") + " m²",
     },
     ...["land_value", "building_value", "total_value"].map((key) => ({
       key,
@@ -294,10 +295,7 @@ function CertificatesPage() {
               shared.card + " " + shared.cardUltraWide + " " + styles.card
             }
           >
-            <AdminBackButton
-              href="/tools"
-              label="Voltar às ferramentas"
-            />
+            <AdminBackButton href="/tools" label="Voltar às ferramentas" />
             <header className={styles.header}>
               <div className={shared.icon} aria-hidden="true">
                 <i className="fas fa-file-alt"></i>
@@ -311,7 +309,9 @@ function CertificatesPage() {
             {feedback && (
               <div className={styles.feedback}>
                 <StatusMessage
-                  type={feedback.type === "success" ? "success" : "inline-error"}
+                  type={
+                    feedback.type === "success" ? "success" : "inline-error"
+                  }
                   name={feedback.name}
                   action={feedback.action}
                 >

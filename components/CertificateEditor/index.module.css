@@ -209,7 +209,6 @@
   }
 }
 
-
 @media print {
   .card :global([data-admin-back-button]),
   .card .actions,

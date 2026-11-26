@@ -6,9 +6,6 @@ export default function EditCertificatePage() {
   const id = typeof router.query.id === "string" ? router.query.id : null;
   if (!router.isReady || !id) return null;
   return (
-    <CertificateEditor
-      recordId={id}
-      viewOnly={router.query.mode === "view"}
-    />
+    <CertificateEditor recordId={id} viewOnly={router.query.mode === "view"} />
   );
 }
