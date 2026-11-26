@@ -12,7 +12,9 @@ async function createSessionWithFeatures(features) {
   const testUser = await orchestrator.createUser();
   await orchestrator.activateUser(testUser);
   if (features.length) await orchestrator.addFeaturesToUser(testUser, features);
-  return orchestrator.createSession(testUser);
+  const session = await orchestrator.createSession(testUser);
+  session.userId = testUser.id;
+  return session;
 }
 
 async function createProperty() {
@@ -40,7 +42,7 @@ function itemEndpoint(id) {
   return `${collectionEndpoint()}/${id}`;
 }
 
-async function createCertificate(overrides = {}) {
+async function createCertificate(overrides = {}, userId) {
   const property = await createProperty();
   return certificate.create({
     protocol_number: "123",
@@ -50,7 +52,7 @@ async function createCertificate(overrides = {}) {
     real_estate_property_id: property.id,
     property_number: 123,
     ...overrides,
-  }, (await orchestrator.createUser()).id);
+  }, userId ?? (await orchestrator.createUser()).id);
 }
 
 describe("GET e POST /api/v1/certificates", () => {
@@ -149,7 +151,7 @@ describe("GET, PATCH e DELETE /api/v1/certificates/[id]", () => {
       "update:certificates",
       "read:certificates",
     ]);
-    const record = await createCertificate();
+    const record = await createCertificate({}, session.userId);
     const response = await fetch(itemEndpoint(record.id), {
       method: "PATCH",
       headers: {

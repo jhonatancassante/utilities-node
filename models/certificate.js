@@ -171,7 +171,7 @@ async function update(id, inputValues) {
     await validatePropertyReference(certificate.real_estate_property_id);
   }
   const values = fields.map((field) => certificate[field]);
-  const setClauses = fields.map((field, index) => `${field} = ${index + 2}`);
+  const setClauses = fields.map((field, index) => `${field} = $${index + 2}`);
   const results = await database.query({
     text: `
       UPDATE certificates
