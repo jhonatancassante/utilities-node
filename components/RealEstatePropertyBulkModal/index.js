@@ -264,7 +264,7 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
       setGroupingIssues(getGroupingIssues(parsed));
       setProgress(null);
       setError("");
-      await deleteRealEstatePropertyImportDraft();
+      saveRealEstatePropertyImportDraft(parsed).catch(() => {});
     } catch (parseError) {
       setRecords(null);
       setGroupingIssues([]);
@@ -297,6 +297,8 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
             onChange={(event) => {
               setYear(event.target.value);
               setRecords(null);
+              setGroupingIssues([]);
+              deleteRealEstatePropertyImportDraft().catch(() => {});
               setError("");
             }}
             required
@@ -312,6 +314,8 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
               onChange={(event) => {
                 setIsUpdated(event.target.checked);
                 setRecords(null);
+                setGroupingIssues([]);
+                deleteRealEstatePropertyImportDraft().catch(() => {});
                 setError("");
               }}
             />
@@ -330,11 +334,15 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
             if (!selectedFile.name.toLowerCase().endsWith(".csv")) {
               setFile(null);
               setRecords(null);
+              setGroupingIssues([]);
+              deleteRealEstatePropertyImportDraft().catch(() => {});
               setError("Selecione um arquivo com extensão .csv.");
               return;
             }
             setFile(selectedFile);
             setRecords(null);
+            setGroupingIssues([]);
+            deleteRealEstatePropertyImportDraft().catch(() => {});
             setError("");
           }}
         />
@@ -347,6 +355,8 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
               onClick={() => {
                 setFile(null);
                 setRecords(null);
+                setGroupingIssues([]);
+                deleteRealEstatePropertyImportDraft().catch(() => {});
                 setError("");
               }}
               disabled={isSaving}
@@ -365,6 +375,8 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
             onChange={(event) => {
               setEncoding(event.target.value);
               setRecords(null);
+              setGroupingIssues([]);
+              deleteRealEstatePropertyImportDraft().catch(() => {});
               setError("");
             }}
           >
@@ -381,6 +393,8 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
             onChange={(event) => {
               setDelimiter(event.target.value);
               setRecords(null);
+              setGroupingIssues([]);
+              deleteRealEstatePropertyImportDraft().catch(() => {});
               setError("");
             }}
           >
@@ -422,7 +436,7 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
                 setRecords(null);
                 setGroupingIssues([]);
                 setError("");
-                await deleteRealEstatePropertyImportDraft();
+                deleteRealEstatePropertyImportDraft().catch(() => {});
               }
             }}
             disabled={isSaving}
