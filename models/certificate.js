@@ -104,10 +104,24 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
   return certificate;
 }
 
+async function validatePropertyReference(propertyId) {
+  const result = await database.query({
+    text: "SELECT id FROM real_estate_properties WHERE id = $1 AND deleted_at IS NULL LIMIT 1;",
+    values: [propertyId],
+  });
+  if (!result.rowCount) {
+    throw new NotFoundError({
+      message: "O imóvel vinculado à certidão não foi encontrado.",
+      action: "Selecione um imóvel cadastrado e ativo.",
+    });
+  }
+}
+
 async function create(inputValues) {
   const certificate = validateInput(inputValues, {
     requiredFields: ["protocol_number", "protocol_year", "applicant_name", "purpose", "real_estate_property_id", "property_number"],
   });
+  await validatePropertyReference(certificate.real_estate_property_id);
   const columns = WRITABLE_FIELDS.filter((field) => Object.hasOwn(certificate, field));
   const values = columns.map((field) => certificate[field]);
   const placeholders = columns.map((field, index) => `$${index + 1}`);
@@ -153,8 +167,11 @@ async function update(id, inputValues) {
       action: "Informe ao menos um campo que deseja alterar.",
     });
   }
+  if (Object.hasOwn(certificate, "real_estate_property_id")) {
+    await validatePropertyReference(certificate.real_estate_property_id);
+  }
   const values = fields.map((field) => certificate[field]);
-  const setClauses = fields.map((field, index) => `${field} = $${index + 2}`);
+  const setClauses = fields.map((field, index) => `${field} = ${index + 2}`);
   const results = await database.query({
     text: `
       UPDATE certificates
