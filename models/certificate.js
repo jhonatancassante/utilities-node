@@ -2,22 +2,38 @@ import database from "@/infra/database.js";
 import { NotFoundError, ValidationError } from "@/infra/errors.js";
 
 const FIELD_RULES = {
-  protocol_number: {
-    type: "string",
-    required: true,
-    maxLength: 6,
-    pattern: /^[0-9]{1,6}$/,
+  protocol_number: { type: "integer", nullable: true },
+  protocol_year: {
+    type: "integer",
+    nullable: true,
+    min: 1900,
+    max: 9999,
   },
-  protocol_year: { type: "integer", required: true, min: 1900, max: 9999 },
   applicant_name: { type: "string", required: true, maxLength: 150 },
   year: { type: "integer", min: 1, max: 9999 },
   purpose: { type: "string", required: true, maxLength: 50 },
   real_estate_property_id: { type: "uuid", required: true },
-  property_number: { type: "number", required: true, min: 0 },
-  applicant_rg: { type: "string", nullable: true, maxLength: 20 },
-  observations: { type: "string", nullable: true, maxLength: 150 },
+  physical_registration: { type: "string", required: true },
+  owner_name: { type: "string", required: true, maxLength: 150 },
+  promissory_buyer: { type: "string", required: true, maxLength: 150 },
+  property_street: { type: "string", required: true, maxLength: 150 },
+  property_number: { type: "number", nullable: true },
+  property_neighborhood: {
+    type: "string",
+    required: true,
+    maxLength: 70,
+  },
+  property_block: { type: "string", nullable: true, maxLength: 20 },
+  property_lots: { type: "string", nullable: true, maxLength: 20 },
+  property_complement: { type: "string", nullable: true, maxLength: 150 },
+  owner_rg: { type: "string", nullable: true, maxLength: 20 },
+  land_area: { type: "number", required: true, scale: 2 },
+  built_area: { type: "number", required: true, scale: 2 },
+  land_value: { type: "number", required: true, scale: 2 },
+  building_value: { type: "number", required: true, scale: 2 },
+  total_value: { type: "number", required: true, scale: 2 },
+  observations: { type: "string", required: true, maxLength: 150 },
   validity_days: { type: "integer", min: 1, max: 2147483647 },
-  is_updated: { type: "boolean" },
 };
 const WRITABLE_FIELDS = Object.keys(FIELD_RULES);
 
@@ -73,14 +89,14 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
       if (
         typeof value !== "string" ||
         !value.trim() ||
-        value.trim().length > rule.maxLength ||
-        (rule.pattern && !rule.pattern.test(value.trim()))
+        (rule.maxLength !== undefined &&
+          value.trim().length > rule.maxLength)
       ) {
         throw new ValidationError({
           message: `O campo ${field} contém um texto inválido.`,
-          action: rule.pattern
-            ? "Informe o número do protocolo com até seis dígitos."
-            : `Informe um texto de até ${rule.maxLength} caracteres.`,
+          action: rule.maxLength
+            ? `Informe um texto de até ${rule.maxLength} caracteres.`
+            : "Informe um texto válido.",
         });
       }
       certificate[field] = value.trim();
@@ -104,24 +120,14 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
       continue;
     }
 
-    if (rule.type === "boolean") {
-      if (typeof value !== "boolean") {
-        throw new ValidationError({
-          message: `O campo ${field} deve ser verdadeiro ou falso.`,
-          action: "Informe um valor booleano.",
-        });
-      }
-      certificate[field] = value;
-      continue;
-    }
-
     if (
       typeof value !== "number" ||
       !Number.isFinite(value) ||
       (rule.type === "integer" && !Number.isInteger(value)) ||
       (rule.min !== undefined && value < rule.min) ||
       (rule.max !== undefined && value > rule.max) ||
-      (rule.type === "number" && Math.round(value * 100) / 100 !== value)
+      (rule.scale !== undefined &&
+        Math.round(value * 100) / 100 !== value)
     ) {
       throw new ValidationError({
         message: `O campo ${field} contém um valor numérico inválido.`,
@@ -149,12 +155,20 @@ async function validatePropertyReference(propertyId) {
 async function create(inputValues, userId) {
   const certificate = validateInput(inputValues, {
     requiredFields: [
-      "protocol_number",
-      "protocol_year",
       "applicant_name",
       "purpose",
       "real_estate_property_id",
-      "property_number",
+      "physical_registration",
+      "owner_name",
+      "promissory_buyer",
+      "property_street",
+      "property_neighborhood",
+      "land_area",
+      "built_area",
+      "land_value",
+      "building_value",
+      "total_value",
+      "observations",
     ],
   });
   await validatePropertyReference(certificate.real_estate_property_id);
@@ -180,7 +194,7 @@ async function findAll() {
       SELECT *
       FROM certificates
       WHERE deleted_at IS NULL
-      ORDER BY protocol_year DESC, protocol_number DESC, created_at DESC
+      ORDER BY year DESC, protocol_year DESC NULLS LAST, protocol_number DESC NULLS LAST, created_at DESC
     ;`,
   });
   return results.rows;
