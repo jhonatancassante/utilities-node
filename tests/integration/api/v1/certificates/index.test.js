@@ -2,6 +2,10 @@ import orchestrator from "tests/orchestrator.js";
 import certificate from "@/models/certificate.js";
 import realEstateProperty from "@/models/real-estate-property.js";
 import assessedValue from "@/models/assessed-value.js";
+import {
+  calculateSimple,
+  getPropertyClassification,
+} from "@/features/certificates/services/calculators/calculate-simple.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -77,6 +81,119 @@ async function createCertificate(overrides = {}, userId) {
     userId ?? (await orchestrator.createUser()).id,
   );
 }
+
+describe("Cálculo simples e classificação construtiva", () => {
+  test.each([
+    [2015, "residential", 35, "precarious"],
+    [2015, "commercial", 36, "simple"],
+    [2015, "industrial", 46, "regular"],
+    [2015, "residential", 66, "medium"],
+    [2015, "commercial", 96, "good"],
+    [2015, "industrial", 141, "sophisticated"],
+    [2016, "residential", 35, "precarious"],
+    [2016, "residential", 36, "simple"],
+    [2016, "residential", 46, "medium"],
+    [2016, "residential", 96, "good"],
+    [2016, "residential", 141, "sophisticated"],
+    [2016, "commercial", 45, "simple"],
+    [2016, "industrial", 46, "medium"],
+    [2016, "commercial", 96, "good"],
+  ])("Classificando %s, %s, %s pontos como %s", (year, category, points, expected) => {
+    expect(getPropertyClassification(points, year, category)).toBe(expected);
+  });
+
+  test("Calculando o terreno com o setor especial 9a", () => {
+    const result = calculateSimple(
+      {
+        land_sector: "9a",
+        ideal_fraction: 0.5,
+        built_area: 0,
+        construction_type: null,
+        points: null,
+      },
+      { sector_9a: 100 },
+      2026,
+    );
+
+    expect(result).toEqual({
+      land_value: 50,
+      building_value: 0,
+      total_value: 50,
+    });
+  });
+
+  test("Zerando a construção quando não há área construída", () => {
+    const result = calculateSimple(
+      {
+        land_sector: "1",
+        ideal_fraction: 0.5,
+        built_area: 0,
+        construction_type: 10,
+        points: null,
+      },
+      { sector_1: 200 },
+      2026,
+    );
+
+    expect(result).toEqual({
+      land_value: 100,
+      building_value: 0,
+      total_value: 100,
+    });
+  });
+
+  test("Zerando a construção quando o tipo construtivo está vazio", () => {
+    const result = calculateSimple(
+      {
+        land_sector: "1",
+        ideal_fraction: 0.5,
+        built_area: 100,
+        construction_type: null,
+        points: null,
+      },
+      { sector_1: 200 },
+      2026,
+    );
+
+    expect(result).toEqual({
+      land_value: 100,
+      building_value: 0,
+      total_value: 100,
+    });
+  });
+
+  test("Rejeitando cálculo quando falta pontuação para uma construção", () => {
+    expect(() =>
+      calculateSimple(
+        {
+          land_sector: "1",
+          ideal_fraction: 0.5,
+          built_area: 100,
+          construction_type: 10,
+          points: null,
+        },
+        { sector_1: 200 },
+        2026,
+      ),
+    ).toThrow("A pontuação do imóvel é necessária para calcular o valor da construção.");
+  });
+
+  test("Rejeitando cálculo quando falta o valor venal do setor", () => {
+    expect(() =>
+      calculateSimple(
+        {
+          land_sector: "1",
+          ideal_fraction: 0.5,
+          built_area: 0,
+          construction_type: null,
+          points: null,
+        },
+        {},
+        2026,
+      ),
+    ).toThrow("O valor venal do terreno para o setor 1 não está cadastrado em 2026.");
+  });
+});
 
 describe("GET e POST /api/v1/certificates", () => {
   test("Rejeitando consulta sem a feature correspondente", async () => {
