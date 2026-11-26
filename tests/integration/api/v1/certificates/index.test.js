@@ -29,6 +29,7 @@ async function createProperty() {
     built_area: 100,
     property_neighborhood: "Centro",
     owner_name: "Proprietário de teste",
+    promissory_buyer: "Compromissário de teste",
     land_sector: 1,
     property_street: "Rua de Teste",
   });
@@ -46,12 +47,27 @@ async function createCertificate(overrides = {}, userId) {
   const property = await createProperty();
   return certificate.create(
     {
-      protocol_number: "123",
+      protocol_number: 123,
       protocol_year: 2026,
       applicant_name: "Requerente de teste",
       purpose: "Valor venal",
       real_estate_property_id: property.id,
+      physical_registration: property.physical_registration,
+      owner_name: property.owner_name,
+      promissory_buyer: property.promissory_buyer,
+      property_street: property.property_street,
       property_number: 123,
+      property_neighborhood: property.property_neighborhood,
+      property_block: null,
+      property_lots: null,
+      property_complement: null,
+      owner_rg: null,
+      land_area: 250,
+      built_area: 100,
+      land_value: 50000,
+      building_value: 120000,
+      total_value: 170000,
+      observations: "Certidão emitida para teste.",
       ...overrides,
     },
     userId ?? (await orchestrator.createUser()).id,
@@ -92,23 +108,38 @@ describe("GET e POST /api/v1/certificates", () => {
         Cookie: `session_id=${session.token}`,
       },
       body: JSON.stringify({
-        protocol_number: "456",
+        protocol_number: 456,
         protocol_year: 2026,
         applicant_name: "Novo requerente",
         purpose: "Valor venal",
         real_estate_property_id: property.id,
-        property_number: 456,
+        physical_registration: property.physical_registration,
+        owner_name: property.owner_name,
+        promissory_buyer: property.promissory_buyer,
+        property_street: property.property_street,
+        property_number: null,
+        property_neighborhood: property.property_neighborhood,
+        property_block: null,
+        property_lots: null,
+        property_complement: null,
+        owner_rg: null,
+        land_area: 250,
+        built_area: 100,
+        land_value: 50000,
+        building_value: 120000,
+        total_value: 170000,
+        observations: "Certidão emitida para teste.",
       }),
     });
     expect(response.status).toBe(201);
     const body = await response.json();
     expect(body).toMatchObject({
-      protocol_number: "456",
+      protocol_number: 456,
       protocol_year: 2026,
       applicant_name: "Novo requerente",
       validity_days: 30,
-      is_updated: true,
     });
+    expect(body).not.toHaveProperty("is_updated");
     expect(body).not.toHaveProperty("deleted_at");
     expect(body).toHaveProperty("user_id");
   });
@@ -123,12 +154,20 @@ describe("GET e POST /api/v1/certificates", () => {
         Cookie: `session_id=${session.token}`,
       },
       body: JSON.stringify({
-        protocol_number: "789",
-        protocol_year: 2026,
         applicant_name: "Requerente",
         purpose: "Valor venal",
         real_estate_property_id: property.id,
-        property_number: 789,
+        physical_registration: property.physical_registration,
+        owner_name: property.owner_name,
+        promissory_buyer: property.promissory_buyer,
+        property_street: property.property_street,
+        property_neighborhood: property.property_neighborhood,
+        land_area: 250,
+        built_area: 100,
+        land_value: 50000,
+        building_value: 120000,
+        total_value: 170000,
+        observations: "Certidão emitida para teste.",
       }),
     });
     expect(response.status).toBe(403);
