@@ -260,6 +260,29 @@ function filterOutput(user, feature, resource) {
       : filterProperty(resource);
   }
 
+
+  if (feature === "read:certificates") {
+    const filterCertificate = (item) => ({
+      id: item.id,
+      protocol_number: item.protocol_number,
+      protocol_year: item.protocol_year,
+      applicant_name: item.applicant_name,
+      year: item.year,
+      purpose: item.purpose,
+      real_estate_property_id: item.real_estate_property_id,
+      property_number: item.property_number,
+      applicant_rg: item.applicant_rg,
+      observations: item.observations,
+      validity_days: item.validity_days,
+      is_updated: item.is_updated,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    });
+    return Array.isArray(resource)
+      ? resource.map(filterCertificate)
+      : filterCertificate(resource);
+  }
+
   if (feature === "read:status") {
     const output = {
       updated_at: resource.updated_at,
