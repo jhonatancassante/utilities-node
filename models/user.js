@@ -32,15 +32,17 @@ async function create(userInputValues) {
     const results = await database.query({
       text: `
         INSERT INTO
-          users (id, username, email, password, features, profile_photo_url, profile_photo_public_id)
+          users (id, username, name, position, email, password, features, profile_photo_url, profile_photo_public_id)
         VALUES
-          (COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7)
+          (COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING
           *
         ;`,
       values: [
         userInputValues.id ?? null,
         userInputValues.username,
+        userInputValues.username,
+        "Não informado",
         userInputValues.email,
         userInputValues.password,
         userInputValues.features,

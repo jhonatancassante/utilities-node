@@ -10,7 +10,7 @@ beforeAll(async () => {
 
 async function insertUser(client, email) {
   return await client.query({
-    text: `INSERT INTO users (username, email, password) VALUES ($1, $2, 'x') RETURNING id;`,
+    text: `INSERT INTO users (username, name, position, email, password) VALUES ($1, $1, 'Não informado', $2, 'x') RETURNING id;`,
     values: [email.split("@")[0], email],
   });
 }
