@@ -231,10 +231,13 @@ async function create(inputValues) {
         text: `
           SELECT id
           FROM real_estate_properties
-          WHERE physical_property_id = $1 AND deleted_at IS NULL
+          WHERE physical_property_id = $1
+            AND year = $2
+            AND annual = true
+            AND deleted_at IS NULL
           LIMIT 1
         ;`,
-        values: [property.physical_property_id],
+        values: [property.physical_property_id, property.year],
       });
       if (existing.rowCount) {
         throw new ConflictError({
@@ -499,33 +502,34 @@ async function createMany(inputValues, { overwriteExisting = false } = {}) {
   });
 }
 
-async function findByPhysicalPropertyIdAndYear(physicalPropertyId, year) {
+async function findByPhysicalPropertyIdAndYear(physicalPropertyId, year, annual) {
   const results = await database.query({
     text: `
       SELECT *
       FROM real_estate_properties
       WHERE physical_property_id = $1
         AND year = $2
+        AND annual = $3
         AND deleted_at IS NULL
-      ORDER BY annual ASC, updated_at DESC
       LIMIT 1
     ;`,
-    values: [physicalPropertyId, year],
+    values: [physicalPropertyId, year, annual],
   });
   return results.rows[0] || null;
 }
 
-async function findByCtmAndYear(ctm, year) {
+async function findByCtmAndYear(ctm, year, annual) {
   const results = await database.query({
     text: `
-      SELECT DISTINCT ON (physical_property_id) *
+      SELECT *
       FROM real_estate_properties
       WHERE ctm = $1
         AND year = $2
+        AND annual = $3
         AND deleted_at IS NULL
-      ORDER BY physical_property_id, annual ASC, updated_at DESC, physical_registration
+      ORDER BY physical_registration
     ;`,
-    values: [ctm, year],
+    values: [ctm, year, annual],
   });
   return results.rows;
 }

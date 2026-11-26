@@ -28,6 +28,7 @@ async function postHandler(request, response) {
     physical_property_id: request.body.physical_property_id,
     year: request.body.year,
     owner_rg: request.body.owner_rg,
+    is_updated: request.body.is_updated,
   });
   const record = await certificate.create(
     { ...request.body, ...calculatedValues },

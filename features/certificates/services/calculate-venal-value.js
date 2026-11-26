@@ -44,14 +44,23 @@ async function calculateVenalValue({
   physical_property_id: physicalPropertyId,
   year,
   owner_rg: ownerRg = null,
+  is_updated: isUpdated = true,
 } = {}) {
   const requestedYear = year ?? new Date().getFullYear();
   validateRequest(physicalPropertyId, requestedYear);
+  if (typeof isUpdated !== "boolean") {
+    throw new ValidationError({
+      message: "A opção Atualizado deve ser verdadeira ou falsa.",
+      action: "Informe true para utilizar o cadastro atualizado ou false para utilizar o lançamento anual.",
+    });
+  }
+  const annual = !isUpdated;
 
   let propertyYear = requestedYear;
   let property = await realEstateProperty.findByPhysicalPropertyIdAndYear(
     physicalPropertyId,
     requestedYear,
+    annual,
   );
 
   if (!property) {
@@ -59,6 +68,7 @@ async function calculateVenalValue({
     property = await realEstateProperty.findByPhysicalPropertyIdAndYear(
       physicalPropertyId,
       propertyYear,
+      annual,
     );
   }
 
@@ -76,6 +86,7 @@ async function calculateVenalValue({
     const groupedProperties = await realEstateProperty.findByCtmAndYear(
       property.ctm,
       propertyYear,
+      annual,
     );
     if (groupedProperties.length !== Number(property.ctm_count)) {
       throw new ValidationError({

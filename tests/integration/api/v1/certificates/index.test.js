@@ -262,6 +262,60 @@ describe("GET e POST /api/v1/certificates", () => {
     expect(body).toHaveProperty("user_id");
   });
 
+  test.each([
+    [true, "50000.00", "12000.00", "62000.00"],
+    [false, "60000.00", "24000.00", "84000.00"],
+  ])(
+    "Selecionando a versão correta do imóvel quando Atualizado é %s",
+    async (isUpdated, expectedLandValue, expectedBuildingValue, expectedTotalValue) => {
+      const session = await createSessionWithFeatures([
+        "create:certificate",
+        "read:certificate",
+      ]);
+      const physicalPropertyId = isUpdated ? 987659 : 987658;
+      await createProperty({
+        physical_property_id: physicalPropertyId,
+        land_area: 250,
+        ideal_fraction: 250,
+        built_area: 10,
+      });
+      await createProperty({
+        physical_property_id: physicalPropertyId,
+        annual: true,
+        land_area: 300,
+        ideal_fraction: 300,
+        built_area: 20,
+      });
+      await assessedValue.create({
+        year: 2026,
+        sector_1: 200,
+        residential_medium: 1200,
+      });
+
+      const response = await fetch(collectionEndpoint(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${session.token}`,
+        },
+        body: JSON.stringify({
+          applicant_name: "Requerente de teste",
+          purpose: "Valor venal",
+          physical_property_id: physicalPropertyId,
+          year: 2026,
+          is_updated: isUpdated,
+        }),
+      });
+
+      expect(response.status).toBe(201);
+      expect(await response.json()).toMatchObject({
+        land_value: expectedLandValue,
+        building_value: expectedBuildingValue,
+        total_value: expectedTotalValue,
+      });
+    },
+  );
+
   test("Calculando imóveis englobados a partir do cadastro terminado em 01", async () => {
     const session = await createSessionWithFeatures([
       "create:certificate",
