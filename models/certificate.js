@@ -12,7 +12,7 @@ const FIELD_RULES = {
   applicant_name: { type: "string", required: true, maxLength: 150 },
   year: { type: "integer", min: 1, max: 9999 },
   purpose: { type: "string", required: true, maxLength: 50 },
-  real_estate_property_id: { type: "uuid", required: true },
+  physical_property_id: { type: "integer", required: true, min: 1 },
   physical_registration: { type: "string", required: true },
   owner_name: { type: "string", required: true, maxLength: 150 },
   promissory_buyer: { type: "string", required: true, maxLength: 150 },
@@ -103,23 +103,6 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
       continue;
     }
 
-    if (rule.type === "uuid") {
-      if (
-        typeof value !== "string" ||
-        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-          value,
-        )
-      ) {
-        throw new ValidationError({
-          message:
-            "O campo real_estate_property_id deve conter um UUID válido.",
-          action: "Selecione um imóvel cadastrado.",
-        });
-      }
-      certificate[field] = value;
-      continue;
-    }
-
     if (
       typeof value !== "number" ||
       !Number.isFinite(value) ||
@@ -139,15 +122,15 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
   return certificate;
 }
 
-async function validatePropertyReference(propertyId) {
+async function validatePhysicalPropertyReference(physicalPropertyId) {
   const result = await database.query({
-    text: "SELECT id FROM real_estate_properties WHERE id = $1 AND deleted_at IS NULL LIMIT 1;",
-    values: [propertyId],
+    text: "SELECT physical_property_id FROM real_estate_properties WHERE physical_property_id = $1 AND deleted_at IS NULL LIMIT 1;",
+    values: [physicalPropertyId],
   });
   if (!result.rowCount) {
     throw new NotFoundError({
-      message: "O imóvel vinculado à certidão não foi encontrado.",
-      action: "Selecione um imóvel cadastrado e ativo.",
+      message: "O código físico do imóvel vinculado à certidão não foi encontrado.",
+      action: "Informe um código físico de imóvel cadastrado e ativo.",
     });
   }
 }
@@ -157,7 +140,7 @@ async function create(inputValues, userId) {
     requiredFields: [
       "applicant_name",
       "purpose",
-      "real_estate_property_id",
+      "physical_property_id",
       "physical_registration",
       "owner_name",
       "promissory_buyer",
@@ -171,7 +154,7 @@ async function create(inputValues, userId) {
       "observations",
     ],
   });
-  await validatePropertyReference(certificate.real_estate_property_id);
+  await validatePhysicalPropertyReference(certificate.physical_property_id);
   const columns = [
     "user_id",
     ...WRITABLE_FIELDS.filter((field) => Object.hasOwn(certificate, field)),
@@ -225,8 +208,8 @@ async function update(id, inputValues) {
       action: "Informe ao menos um campo que deseja alterar.",
     });
   }
-  if (Object.hasOwn(certificate, "real_estate_property_id")) {
-    await validatePropertyReference(certificate.real_estate_property_id);
+  if (Object.hasOwn(certificate, "physical_property_id")) {
+    await validatePhysicalPropertyReference(certificate.physical_property_id);
   }
   const values = fields.map((field) => certificate[field]);
   const setClauses = fields.map((field, index) => `${field} = $${index + 2}`);
