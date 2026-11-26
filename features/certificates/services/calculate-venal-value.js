@@ -77,6 +77,13 @@ async function calculateVenalValue({
       property.ctm,
       propertyYear,
     );
+    if (groupedProperties.length !== Number(property.ctm_count)) {
+      throw new ValidationError({
+        message: `O imóvel informa ${property.ctm_count} cadastros vinculados ao CTM, mas foram encontrados ${groupedProperties.length} cadastros ativos no exercício utilizado.`,
+        action: "Revise os cadastros do imóvel englobado antes de emitir a certidão.",
+      });
+    }
+
     if (groupedProperties.length > 1) {
       properties = sortPropertiesByRegistration(groupedProperties);
       const mainProperty = properties.find((item) =>
