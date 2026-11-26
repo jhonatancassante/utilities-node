@@ -10,6 +10,7 @@ function AdminDataTable({
   onTogglePage,
   getSelectionLabel,
   renderActions,
+  onRowClick,
   maxHeight = "min(940px, 70vh)",
 }) {
   return (
@@ -38,9 +39,24 @@ function AdminDataTable({
         </thead>
         <tbody>
           {records.map((record) => (
-            <tr key={record.id}>
+            <tr
+              key={record.id}
+              className={onRowClick ? styles.clickableRow : undefined}
+              tabIndex={onRowClick ? 0 : undefined}
+              onClick={onRowClick ? () => onRowClick(record) : undefined}
+              onKeyDown={
+                onRowClick
+                  ? (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onRowClick(record);
+                      }
+                    }
+                  : undefined
+              }
+            >
               {selectable && (
-                <td>
+                <td onClick={(event) => event.stopPropagation()}>
                   <input
                     type="checkbox"
                     aria-label={getSelectionLabel(record)}
@@ -56,7 +72,10 @@ function AdminDataTable({
                     : (record[column.key] ?? "—")}
                 </td>
               ))}
-              <td className={styles.actionCell}>
+              <td
+                className={styles.actionCell}
+                onClick={(event) => event.stopPropagation()}
+              >
                 {renderActions(record, styles.actionLink)}
               </td>
             </tr>

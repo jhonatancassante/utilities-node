@@ -17,7 +17,7 @@ function formatCurrency(value) {
   });
 }
 
-function CertificateEditor({ recordId }) {
+function CertificateEditor({ recordId, viewOnly = false }) {
   const router = useRouter();
   const { user, error, isLoading } = useUser();
   const isEditing = Boolean(recordId);
@@ -46,6 +46,7 @@ function CertificateEditor({ recordId }) {
   const canUpdateOthers = user?.features?.includes("update:certificate:others");
   const canEdit =
     canUpdateOthers || (canUpdateOwn && record?.user_id === user?.id);
+  const isReadOnly = viewOnly || (isEditing && !canEdit);
 
   useEffect(() => {
     if (
@@ -143,6 +144,7 @@ function CertificateEditor({ recordId }) {
 
   async function handleSave(event) {
     event.preventDefault();
+    if (isReadOnly) return;
     if (!calculation) {
       setFeedback({
         type: "error",
@@ -198,10 +200,9 @@ function CertificateEditor({ recordId }) {
     }
   }
 
-  const isReadOnly = isEditing && !canEdit;
   const title = isEditing
     ? isReadOnly
-      ? "Consultar certidão"
+      ? "Visualizar certidão"
       : "Editar certidão"
     : "Emitir nova certidão";
 
@@ -404,6 +405,32 @@ function CertificateEditor({ recordId }) {
                     </label>
                   </div>
                 </section>
+                {isReadOnly && record && (
+                  <section className={styles.formSection}>
+                    <div className={styles.sectionHeading}>
+                      <h2>Dados da emissão</h2>
+                      <p>Informações registradas no momento da emissão.</p>
+                    </div>
+                    <div className={styles.summaryGrid}>
+                      <div className={styles.summaryItem}>
+                        <span>Tipo de cadastro</span>
+                        <strong>
+                          {record.is_updated ? "Atualizado" : "Anual"}
+                        </strong>
+                      </div>
+                      <div className={styles.summaryItem}>
+                        <span>Data de emissão</span>
+                        <strong>
+                          {record.created_at
+                            ? new Date(record.created_at).toLocaleDateString(
+                                "pt-BR",
+                              )
+                            : "—"}
+                        </strong>
+                      </div>
+                    </div>
+                  </section>
+                )}
                 {!isEditing && (
                   <section className={styles.options}>
                     <label className={styles.switchField}>

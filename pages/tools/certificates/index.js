@@ -415,6 +415,13 @@ function CertificatesPage() {
                         ? record.protocol_number + "/" + record.protocol_year
                         : record.id)
                     }
+                    onRowClick={(record) =>
+                      router.push(
+                        "/tools/certificates/" +
+                          encodeURIComponent(record.id) +
+                          "?mode=view",
+                      )
+                    }
                     renderActions={(record, actionClassName) => {
                       const canEdit =
                         canUpdateOthers ||
@@ -426,7 +433,8 @@ function CertificatesPage() {
                           onClick={() =>
                             router.push(
                               "/tools/certificates/" +
-                                encodeURIComponent(record.id),
+                                encodeURIComponent(record.id) +
+                                (canEdit ? "" : "?mode=view"),
                             )
                           }
                         >
