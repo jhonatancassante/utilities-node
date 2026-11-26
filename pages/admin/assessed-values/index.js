@@ -256,18 +256,12 @@ function AssessedValuesPage() {
           .includes(term),
     );
   }, [records, search]);
-  const pageCount =
-    pageSize === "all"
-      ? 1
-      : Math.max(1, Math.ceil(filteredRecords.length / pageSize));
+  const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
   const currentPage = Math.min(page, pageCount);
-  const visibleRecords =
-    pageSize === "all"
-      ? filteredRecords
-      : filteredRecords.slice(
-          (currentPage - 1) * pageSize,
-          currentPage * pageSize,
-        );
+  const visibleRecords = filteredRecords.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
   function toggleSelection(id) {
     setSelectedIds((current) =>

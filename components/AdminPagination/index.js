@@ -2,7 +2,7 @@ import Button from "@/components/Button";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
-const PAGE_SIZES = [10, 20, 50, 100];
+const PAGE_SIZES = [10, 20, 50, 100, 200, 500];
 const PAGINATION_BUTTON_STYLE = {
   width: 32,
   minWidth: 32,
@@ -36,9 +36,7 @@ function AdminPagination({
           className={shared.input}
           value={pageSize}
           onChange={(event) => {
-            setPageSize(
-              event.target.value === "all" ? "all" : Number(event.target.value),
-            );
+            setPageSize(Number(event.target.value));
             setPage(1);
           }}
         >
@@ -47,7 +45,6 @@ function AdminPagination({
               {size}
             </option>
           ))}
-          <option value="all">Todos</option>
         </select>
       </label>
       <div>
