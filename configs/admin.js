@@ -40,7 +40,7 @@ export const adminSections = [
       "Consulte, cadastre, atualize e importe os valores venais anuais.",
     href: "/admin/assessed-values",
     icon: "fa-calculator",
-    requiredFeature: "read:assessed_values",
+    requiredFeature: "read:assessed_value",
   },
   {
     id: "real-estate-properties",
@@ -48,7 +48,7 @@ export const adminSections = [
     description: "Consulte e gerencie os dados cadastrais dos imóveis.",
     href: "/admin/real-estate-properties",
     icon: "fa-home",
-    requiredFeature: "read:real_estate_properties",
+    requiredFeature: "read:real_estate_property",
   },
   {
     id: "status",

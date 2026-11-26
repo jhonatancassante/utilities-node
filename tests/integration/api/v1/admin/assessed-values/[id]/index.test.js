@@ -41,7 +41,7 @@ describe("GET /api/v1/admin/assessed-values/[id]", () => {
 
   test("Consultando registro com saída filtrada", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "read:assessed_values",
+      "read:assessed_value",
     ]);
     const record = await createRecord();
     const response = await fetch(endpoint(record.id), {
@@ -60,7 +60,7 @@ describe("GET /api/v1/admin/assessed-values/[id]", () => {
 
   test("Retornando 404 para registro inexistente", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "read:assessed_values",
+      "read:assessed_value",
     ]);
     const response = await fetch(
       endpoint("99999999-9999-4999-8999-999999999999"),
@@ -75,7 +75,7 @@ describe("GET /api/v1/admin/assessed-values/[id]", () => {
 describe("PATCH /api/v1/admin/assessed-values/[id]", () => {
   test("Rejeitando usuário sem a feature correspondente", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "read:assessed_values",
+      "read:assessed_value",
     ]);
     const record = await createRecord();
     const response = await fetch(endpoint(record.id), {
@@ -91,8 +91,8 @@ describe("PATCH /api/v1/admin/assessed-values/[id]", () => {
 
   test("Atualizando registro", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "update:assessed_values",
-      "read:assessed_values",
+      "update:assessed_value",
+      "read:assessed_value",
     ]);
     const record = await createRecord();
     const response = await fetch(endpoint(record.id), {
@@ -114,8 +114,8 @@ describe("PATCH /api/v1/admin/assessed-values/[id]", () => {
 
   test("Rejeitando atualização sem campos", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "update:assessed_values",
-      "read:assessed_values",
+      "update:assessed_value",
+      "read:assessed_value",
     ]);
     const record = await createRecord();
     const response = await fetch(endpoint(record.id), {
@@ -137,7 +137,7 @@ describe("PATCH /api/v1/admin/assessed-values/[id]", () => {
 describe("DELETE /api/v1/admin/assessed-values/[id]", () => {
   test("Rejeitando usuário sem a feature correspondente", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "read:assessed_values",
+      "read:assessed_value",
     ]);
     const record = await createRecord();
     const response = await fetch(endpoint(record.id), {
@@ -149,8 +149,8 @@ describe("DELETE /api/v1/admin/assessed-values/[id]", () => {
 
   test("Excluindo logicamente sem remover a linha do banco", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "delete:assessed_values",
-      "read:assessed_values",
+      "delete:assessed_value",
+      "read:assessed_value",
     ]);
     const record = await createRecord();
     const response = await fetch(endpoint(record.id), {
@@ -163,7 +163,7 @@ describe("DELETE /api/v1/admin/assessed-values/[id]", () => {
       "O registro de valores venais informado não foi encontrado.",
     );
     const result = await database.query({
-      text: "SELECT deleted_at FROM assessed_values WHERE id = $1;",
+      text: "SELECT deleted_at FROM assessed_value WHERE id = $1;",
       values: [record.id],
     });
     expect(result.rowCount).toBe(1);

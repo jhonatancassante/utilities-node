@@ -11,7 +11,7 @@ export const up = (pgm) => {
     )
     VALUES
       (
-        'read:certificates',
+        'read:certificate',
         'Consultar certidões',
         'Certidões',
         'Permite consultar as certidões de valor venal cadastradas no sistema.',
@@ -20,7 +20,7 @@ export const up = (pgm) => {
         false
       ),
       (
-        'create:certificates',
+        'create:certificate',
         'Cadastrar certidões',
         'Certidões',
         'Permite cadastrar certidões de valor venal no sistema.',
@@ -29,7 +29,7 @@ export const up = (pgm) => {
         false
       ),
       (
-        'update:certificates',
+        'update:certificate',
         'Alterar certidões',
         'Certidões',
         'Permite alterar as certidões de valor venal cadastradas no sistema.',
@@ -38,7 +38,7 @@ export const up = (pgm) => {
         false
       ),
       (
-        'delete:certificates',
+        'delete:certificate',
         'Excluir certidões',
         'Certidões',
         'Permite excluir logicamente as certidões de valor venal cadastradas no sistema.',

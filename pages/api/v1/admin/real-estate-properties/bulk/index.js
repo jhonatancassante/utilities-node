@@ -13,13 +13,13 @@ export const config = {
 export default controller.createController(
   {
     POST: [
-      controller.canRequest("create:real_estate_properties"),
-      controller.canRequest("read:real_estate_properties"),
+      controller.canRequest("create:real_estate_property"),
+      controller.canRequest("read:real_estate_property"),
       postHandler,
     ],
     DELETE: [
-      controller.canRequest("delete:real_estate_properties"),
-      controller.canRequest("read:real_estate_properties"),
+      controller.canRequest("delete:real_estate_property"),
+      controller.canRequest("read:real_estate_property"),
       deleteHandler,
     ],
   },
@@ -33,7 +33,7 @@ async function postHandler(request, response) {
   });
   const output = authorization.filterOutput(
     currentUser,
-    "read:real_estate_properties",
+    "read:real_estate_property",
     records,
   );
   return response.status(201).json(output);
@@ -44,7 +44,7 @@ async function deleteHandler(request, response) {
   const records = await realEstateProperty.deleteMany(request.body?.ids);
   const output = authorization.filterOutput(
     currentUser,
-    "read:real_estate_properties",
+    "read:real_estate_property",
     records,
   );
   return response.status(200).json(output);

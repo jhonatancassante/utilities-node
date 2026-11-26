@@ -4,15 +4,15 @@ import authorization from "@/models/authorization.js";
 
 export default controller.createController(
   {
-    GET: [controller.canRequest("read:assessed_values"), getHandler],
+    GET: [controller.canRequest("read:assessed_value"), getHandler],
     PATCH: [
-      controller.canRequest("update:assessed_values"),
-      controller.canRequest("read:assessed_values"),
+      controller.canRequest("update:assessed_value"),
+      controller.canRequest("read:assessed_value"),
       patchHandler,
     ],
     DELETE: [
-      controller.canRequest("delete:assessed_values"),
-      controller.canRequest("read:assessed_values"),
+      controller.canRequest("delete:assessed_value"),
+      controller.canRequest("read:assessed_value"),
       deleteHandler,
     ],
   },
@@ -24,7 +24,7 @@ async function getHandler(request, response) {
   const record = await assessedValue.findOneById(request.query.id);
   const output = authorization.filterOutput(
     currentUser,
-    "read:assessed_values",
+    "read:assessed_value",
     record,
   );
   return response.status(200).json(output);
@@ -35,7 +35,7 @@ async function patchHandler(request, response) {
   const record = await assessedValue.update(request.query.id, request.body);
   const output = authorization.filterOutput(
     currentUser,
-    "read:assessed_values",
+    "read:assessed_value",
     record,
   );
   return response.status(200).json(output);
@@ -46,7 +46,7 @@ async function deleteHandler(request, response) {
   const record = await assessedValue.delete(request.query.id);
   const output = authorization.filterOutput(
     currentUser,
-    "read:assessed_values",
+    "read:assessed_value",
     record,
   );
   return response.status(200).json(output);

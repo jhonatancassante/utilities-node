@@ -19,9 +19,9 @@ function can(user, feature, resource) {
     }
   }
 
-  if (feature === "update:certificates" && resource) {
+  if (feature === "update:certificate" && resource) {
     authorized =
-      user.features.includes("update:certificates") &&
+      user.features.includes("update:certificate") &&
       (user.id === resource.user_id ||
         can(user, "update:certificate:others"));
   }
@@ -181,7 +181,7 @@ function filterOutput(user, feature, resource) {
       : filterFeature(resource);
   }
 
-  if (feature === "read:assessed_values") {
+  if (feature === "read:assessed_value") {
     const filterAssessedValue = (item) => ({
       id: item.id,
       year: item.year,
@@ -235,7 +235,7 @@ function filterOutput(user, feature, resource) {
       : filterAssessedValue(resource);
   }
 
-  if (feature === "read:real_estate_properties") {
+  if (feature === "read:real_estate_property") {
     const filterProperty = (item) => ({
       id: item.id,
       year: item.year,
@@ -268,7 +268,7 @@ function filterOutput(user, feature, resource) {
   }
 
 
-  if (feature === "read:certificates") {
+  if (feature === "read:certificate") {
     const filterCertificate = (item) => ({
       id: item.id,
       user_id: item.user_id,

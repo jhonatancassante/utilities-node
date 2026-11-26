@@ -4,10 +4,10 @@ import authorization from "@/models/authorization.js";
 
 export default controller.createController(
   {
-    GET: [controller.canRequest("read:real_estate_properties"), getHandler],
+    GET: [controller.canRequest("read:real_estate_property"), getHandler],
     POST: [
-      controller.canRequest("create:real_estate_properties"),
-      controller.canRequest("read:real_estate_properties"),
+      controller.canRequest("create:real_estate_property"),
+      controller.canRequest("read:real_estate_property"),
       postHandler,
     ],
   },
@@ -19,7 +19,7 @@ async function getHandler(request, response) {
   const records = await realEstateProperty.findAll();
   const output = authorization.filterOutput(
     currentUser,
-    "read:real_estate_properties",
+    "read:real_estate_property",
     records,
   );
   return response.status(200).json(output);
@@ -30,7 +30,7 @@ async function postHandler(request, response) {
   const record = await realEstateProperty.create(request.body);
   const output = authorization.filterOutput(
     currentUser,
-    "read:real_estate_properties",
+    "read:real_estate_property",
     record,
   );
   return response.status(201).json(output);

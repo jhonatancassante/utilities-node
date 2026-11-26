@@ -5,8 +5,8 @@ import authorization from "@/models/authorization.js";
 export default controller.createController(
   {
     POST: [
-      controller.canRequest("create:assessed_values"),
-      controller.canRequest("read:assessed_values"),
+      controller.canRequest("create:assessed_value"),
+      controller.canRequest("read:assessed_value"),
       postHandler,
     ],
   },
@@ -18,7 +18,7 @@ async function postHandler(request, response) {
   const records = await assessedValue.createMany(request.body?.records);
   const output = authorization.filterOutput(
     currentUser,
-    "read:assessed_values",
+    "read:assessed_value",
     records,
   );
   return response.status(201).json(output);

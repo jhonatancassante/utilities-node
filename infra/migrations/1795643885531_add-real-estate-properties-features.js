@@ -11,7 +11,7 @@ export const up = (pgm) => {
     )
     VALUES
       (
-        'read:real_estate_properties',
+        'read:real_estate_property',
         'Consultar imóveis',
         'Imóveis',
         'Permite consultar os dados cadastrais dos imóveis.',
@@ -20,7 +20,7 @@ export const up = (pgm) => {
         false
       ),
       (
-        'create:real_estate_properties',
+        'create:real_estate_property',
         'Cadastrar imóveis',
         'Imóveis',
         'Permite cadastrar os dados cadastrais dos imóveis.',
@@ -29,7 +29,7 @@ export const up = (pgm) => {
         false
       ),
       (
-        'update:real_estate_properties',
+        'update:real_estate_property',
         'Alterar imóveis',
         'Imóveis',
         'Permite alterar os dados cadastrais dos imóveis.',
@@ -38,7 +38,7 @@ export const up = (pgm) => {
         false
       ),
       (
-        'delete:real_estate_properties',
+        'delete:real_estate_property',
         'Excluir imóveis',
         'Imóveis',
         'Permite excluir logicamente os dados cadastrais dos imóveis.',

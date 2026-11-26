@@ -4,10 +4,10 @@ import authorization from "@/models/authorization.js";
 
 export default controller.createController(
   {
-    GET: [controller.canRequest("read:assessed_values"), getHandler],
+    GET: [controller.canRequest("read:assessed_value"), getHandler],
     POST: [
-      controller.canRequest("create:assessed_values"),
-      controller.canRequest("read:assessed_values"),
+      controller.canRequest("create:assessed_value"),
+      controller.canRequest("read:assessed_value"),
       postHandler,
     ],
   },
@@ -19,7 +19,7 @@ async function getHandler(request, response) {
   const records = await assessedValue.findAll();
   const output = authorization.filterOutput(
     currentUser,
-    "read:assessed_values",
+    "read:assessed_value",
     records,
   );
   return response.status(200).json(output);
@@ -30,7 +30,7 @@ async function postHandler(request, response) {
   const record = await assessedValue.create(request.body);
   const output = authorization.filterOutput(
     currentUser,
-    "read:assessed_values",
+    "read:assessed_value",
     record,
   );
   return response.status(201).json(output);

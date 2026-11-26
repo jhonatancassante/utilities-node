@@ -65,7 +65,7 @@ describe("GET e POST /api/v1/certificates", () => {
   });
 
   test("Consultando certidões ativas com saída filtrada", async () => {
-    const session = await createSessionWithFeatures(["read:certificates"]);
+    const session = await createSessionWithFeatures(["read:certificate"]);
     const record = await createCertificate();
     const response = await fetch(collectionEndpoint(), {
       headers: { Cookie: `session_id=${session.token}` },
@@ -78,8 +78,8 @@ describe("GET e POST /api/v1/certificates", () => {
 
   test("Cadastrando uma certidão e filtrando a resposta", async () => {
     const session = await createSessionWithFeatures([
-      "create:certificates",
-      "read:certificates",
+      "create:certificate",
+      "read:certificate",
     ]);
     const property = await createProperty();
     const response = await fetch(collectionEndpoint(), {
@@ -111,7 +111,7 @@ describe("GET e POST /api/v1/certificates", () => {
   });
 
   test("Rejeitando criação sem a feature correspondente", async () => {
-    const session = await createSessionWithFeatures(["read:certificates"]);
+    const session = await createSessionWithFeatures(["read:certificate"]);
     const property = await createProperty();
     const response = await fetch(collectionEndpoint(), {
       method: "POST",
@@ -134,7 +134,7 @@ describe("GET e POST /api/v1/certificates", () => {
 
 describe("GET, PATCH e DELETE /api/v1/certificates/[id]", () => {
   test("Consultando uma certidão", async () => {
-    const session = await createSessionWithFeatures(["read:certificates"]);
+    const session = await createSessionWithFeatures(["read:certificate"]);
     const record = await createCertificate();
     const response = await fetch(itemEndpoint(record.id), {
       headers: { Cookie: `session_id=${session.token}` },
@@ -148,8 +148,8 @@ describe("GET, PATCH e DELETE /api/v1/certificates/[id]", () => {
 
   test("Atualizando uma única certidão", async () => {
     const session = await createSessionWithFeatures([
-      "update:certificates",
-      "read:certificates",
+      "update:certificate",
+      "read:certificate",
     ]);
     const record = await createCertificate({}, session.userId);
     const response = await fetch(itemEndpoint(record.id), {
@@ -169,8 +169,8 @@ describe("GET, PATCH e DELETE /api/v1/certificates/[id]", () => {
 
   test("Excluindo logicamente uma única certidão", async () => {
     const session = await createSessionWithFeatures([
-      "delete:certificates",
-      "read:certificates",
+      "delete:certificate",
+      "read:certificate",
     ]);
     const record = await createCertificate();
     const response = await fetch(itemEndpoint(record.id), {

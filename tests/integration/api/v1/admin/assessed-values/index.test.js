@@ -30,7 +30,7 @@ describe("GET /api/v1/admin/assessed-values", () => {
 
   test("Consultando registros ativos com saída filtrada", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "read:assessed_values",
+      "read:assessed_value",
     ]);
     const created = await assessedValue.create({
       year: 2026,
@@ -71,7 +71,7 @@ describe("POST /api/v1/admin/assessed-values", () => {
 
   test("Rejeitando usuário sem a feature correspondente", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "read:assessed_values",
+      "read:assessed_value",
     ]);
     const response = await fetch(endpoint(), {
       method: "POST",
@@ -86,8 +86,8 @@ describe("POST /api/v1/admin/assessed-values", () => {
 
   test("Cadastrando registro e filtrando a resposta", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:assessed_values",
-      "read:assessed_values",
+      "create:assessed_value",
+      "read:assessed_value",
     ]);
     const response = await fetch(endpoint(), {
       method: "POST",
@@ -110,8 +110,8 @@ describe("POST /api/v1/admin/assessed-values", () => {
 
   test("Rejeitando ano inválido", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:assessed_values",
-      "read:assessed_values",
+      "create:assessed_value",
+      "read:assessed_value",
     ]);
     const response = await fetch(endpoint(), {
       method: "POST",
@@ -130,8 +130,8 @@ describe("POST /api/v1/admin/assessed-values", () => {
 
   test("Rejeitando valor numérico negativo", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:assessed_values",
-      "read:assessed_values",
+      "create:assessed_value",
+      "read:assessed_value",
     ]);
     const response = await fetch(endpoint(), {
       method: "POST",

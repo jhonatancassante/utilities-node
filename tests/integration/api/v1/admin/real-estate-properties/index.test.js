@@ -57,7 +57,7 @@ describe("GET /api/v1/admin/real-estate-properties", () => {
 
   test("Consultando imóveis ativos com saída filtrada", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "read:real_estate_properties",
+      "read:real_estate_property",
     ]);
     const created = await realEstateProperty.create(createPropertyInput());
     const removed = await realEstateProperty.create(
@@ -84,8 +84,8 @@ describe("GET /api/v1/admin/real-estate-properties", () => {
 describe("POST /api/v1/admin/real-estate-properties", () => {
   test("Cadastrando imóvel e filtrando a resposta", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:real_estate_properties",
-      "read:real_estate_properties",
+      "create:real_estate_property",
+      "read:real_estate_property",
     ]);
     const input = createPropertyInput();
     const response = await fetch(collectionEndpoint(), {
@@ -109,8 +109,8 @@ describe("POST /api/v1/admin/real-estate-properties", () => {
 
   test("Preenchendo a fração ideal com a área do terreno quando não informada", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:real_estate_properties",
-      "read:real_estate_properties",
+      "create:real_estate_property",
+      "read:real_estate_property",
     ]);
     const response = await fetch(collectionEndpoint(), {
       method: "POST",
@@ -155,8 +155,8 @@ describe("POST /api/v1/admin/real-estate-properties", () => {
 
   test("Rejeitando cadastro sem campo obrigatório", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:real_estate_properties",
-      "read:real_estate_properties",
+      "create:real_estate_property",
+      "read:real_estate_property",
     ]);
     const input = createPropertyInput();
     delete input.owner_name;
@@ -175,7 +175,7 @@ describe("POST /api/v1/admin/real-estate-properties", () => {
 describe("GET, PATCH e DELETE /api/v1/admin/real-estate-properties/[id]", () => {
   test("Consultando um imóvel", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "read:real_estate_properties",
+      "read:real_estate_property",
     ]);
     const record = await realEstateProperty.create(createPropertyInput());
     const response = await fetch(itemEndpoint(record.id), {
@@ -190,8 +190,8 @@ describe("GET, PATCH e DELETE /api/v1/admin/real-estate-properties/[id]", () => 
 
   test("Atualizando um imóvel", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "update:real_estate_properties",
-      "read:real_estate_properties",
+      "update:real_estate_property",
+      "read:real_estate_property",
     ]);
     const record = await realEstateProperty.create(createPropertyInput());
     const response = await fetch(itemEndpoint(record.id), {
@@ -215,8 +215,8 @@ describe("GET, PATCH e DELETE /api/v1/admin/real-estate-properties/[id]", () => 
 
   test("Excluindo logicamente um imóvel", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "delete:real_estate_properties",
-      "read:real_estate_properties",
+      "delete:real_estate_property",
+      "read:real_estate_property",
     ]);
     const record = await realEstateProperty.create(createPropertyInput());
     const response = await fetch(itemEndpoint(record.id), {
@@ -228,7 +228,7 @@ describe("GET, PATCH e DELETE /api/v1/admin/real-estate-properties/[id]", () => 
       "O imóvel informado não foi encontrado.",
     );
     const result = await database.query({
-      text: "SELECT deleted_at FROM real_estate_properties WHERE id = $1;",
+      text: "SELECT deleted_at FROM real_estate_property WHERE id = $1;",
       values: [record.id],
     });
     expect(result.rowCount).toBe(1);
@@ -239,8 +239,8 @@ describe("GET, PATCH e DELETE /api/v1/admin/real-estate-properties/[id]", () => 
 describe("Regras de cadastro atualizado e anual", () => {
   test("Atualizando o cadastro annual=false pelo código físico", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:real_estate_properties",
-      "read:real_estate_properties",
+      "create:real_estate_property",
+      "read:real_estate_property",
     ]);
     const first = await realEstateProperty.create(
       createPropertyInput({ physical_property_id: 41001, annual: false }),
@@ -269,8 +269,8 @@ describe("Regras de cadastro atualizado e anual", () => {
 
   test("Rejeitando cadastro annual=true quando o código físico já existe", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:real_estate_properties",
-      "read:real_estate_properties",
+      "create:real_estate_property",
+      "read:real_estate_property",
     ]);
     await realEstateProperty.create(
       createPropertyInput({ physical_property_id: 41002, annual: true }),
@@ -297,8 +297,8 @@ describe("Regras de cadastro atualizado e anual", () => {
 
   test("Excluindo fisicamente todos os annual=false antes da importação em lote", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:real_estate_properties",
-      "read:real_estate_properties",
+      "create:real_estate_property",
+      "read:real_estate_property",
     ]);
     const previousCurrent = await realEstateProperty.create(
       createPropertyInput({ physical_property_id: 41003, annual: false }),
@@ -323,7 +323,7 @@ describe("Regras de cadastro atualizado e anual", () => {
     });
     expect(response.status).toBe(201);
     const deleted = await database.query({
-      text: "SELECT id FROM real_estate_properties WHERE id = $1;",
+      text: "SELECT id FROM real_estate_property WHERE id = $1;",
       values: [previousCurrent.id],
     });
     expect(deleted.rowCount).toBe(0);
@@ -334,8 +334,8 @@ describe("Regras de cadastro atualizado e anual", () => {
 
   test("Solicitando confirmação e atualizando annual=true em lote", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:real_estate_properties",
-      "read:real_estate_properties",
+      "create:real_estate_property",
+      "read:real_estate_property",
     ]);
     const existing = await realEstateProperty.create(
       createPropertyInput({
@@ -383,8 +383,8 @@ describe("Regras de cadastro atualizado e anual", () => {
 describe("POST e DELETE /api/v1/admin/real-estate-properties/bulk", () => {
   test("Cadastrando imóveis em lote", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:real_estate_properties",
-      "read:real_estate_properties",
+      "create:real_estate_property",
+      "read:real_estate_property",
     ]);
     const records = [
       createPropertyInput({
@@ -417,8 +417,8 @@ describe("POST e DELETE /api/v1/admin/real-estate-properties/bulk", () => {
 
   test("Preenchendo a fração ideal com a área do terreno na importação em lote", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "create:real_estate_properties",
-      "read:real_estate_properties",
+      "create:real_estate_property",
+      "read:real_estate_property",
     ]);
     const response = await fetch(bulkEndpoint(), {
       method: "POST",
@@ -446,8 +446,8 @@ describe("POST e DELETE /api/v1/admin/real-estate-properties/bulk", () => {
 
   test("Excluindo vários imóveis em uma única operação", async () => {
     const sessionObject = await createSessionWithFeatures([
-      "delete:real_estate_properties",
-      "read:real_estate_properties",
+      "delete:real_estate_property",
+      "read:real_estate_property",
     ]);
     const records = await realEstateProperty.createMany([
       createPropertyInput({

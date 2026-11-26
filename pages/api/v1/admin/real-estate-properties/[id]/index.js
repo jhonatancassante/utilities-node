@@ -4,15 +4,15 @@ import authorization from "@/models/authorization.js";
 
 export default controller.createController(
   {
-    GET: [controller.canRequest("read:real_estate_properties"), getHandler],
+    GET: [controller.canRequest("read:real_estate_property"), getHandler],
     PATCH: [
-      controller.canRequest("update:real_estate_properties"),
-      controller.canRequest("read:real_estate_properties"),
+      controller.canRequest("update:real_estate_property"),
+      controller.canRequest("read:real_estate_property"),
       patchHandler,
     ],
     DELETE: [
-      controller.canRequest("delete:real_estate_properties"),
-      controller.canRequest("read:real_estate_properties"),
+      controller.canRequest("delete:real_estate_property"),
+      controller.canRequest("read:real_estate_property"),
       deleteHandler,
     ],
   },
@@ -24,7 +24,7 @@ async function getHandler(request, response) {
   const record = await realEstateProperty.findOneById(request.query.id);
   const output = authorization.filterOutput(
     currentUser,
-    "read:real_estate_properties",
+    "read:real_estate_property",
     record,
   );
   return response.status(200).json(output);
@@ -38,7 +38,7 @@ async function patchHandler(request, response) {
   );
   const output = authorization.filterOutput(
     currentUser,
-    "read:real_estate_properties",
+    "read:real_estate_property",
     record,
   );
   return response.status(200).json(output);
@@ -49,7 +49,7 @@ async function deleteHandler(request, response) {
   const record = await realEstateProperty.delete(request.query.id);
   const output = authorization.filterOutput(
     currentUser,
-    "read:real_estate_properties",
+    "read:real_estate_property",
     record,
   );
   return response.status(200).json(output);
