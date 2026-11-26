@@ -563,6 +563,15 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                   >
                     Voltar
                   </Button>
+                  {viewOnly && record && (
+                    <Button
+                      type="button"
+                      icon="fa-print"
+                      onClick={() => window.print()}
+                    >
+                      Imprimir
+                    </Button>
+                  )}
                   {!isReadOnly && (
                     <Button
                       type="submit"

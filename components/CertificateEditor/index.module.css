@@ -208,3 +208,18 @@
     width: 100%;
   }
 }
+
+
+@media print {
+  [data-admin-back-button],
+  .actions,
+  .feedback {
+    display: none !important;
+  }
+
+  .card {
+    max-width: none;
+    border: 0;
+    box-shadow: none;
+  }
+}
