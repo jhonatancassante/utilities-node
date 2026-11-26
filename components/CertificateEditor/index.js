@@ -563,7 +563,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                   >
                     Voltar
                   </Button>
-                  {viewOnly && record && (
+                  {isReadOnly && record && (
                     <Button
                       type="button"
                       icon="fa-print"
