@@ -120,6 +120,21 @@ async function calculateVenalValue({
       });
     }
 
+    const inconsistentCountProperties = groupedProperties.filter(
+      (item) => Number(item.ctm_count) !== ctmCount,
+    );
+
+    if (inconsistentCountProperties.length > 0) {
+      const registrations = inconsistentCountProperties
+        .map((item) => `${item.physical_registration} (contagem ${item.ctm_count})`)
+        .join(", ");
+
+      throw new ValidationError({
+        message: `O CTM ${property.ctm} possui contagens divergentes entre os cadastros: ${registrations}.`,
+        action: "Corrija a contagem de cadastros vinculados em todos os imóveis do CTM antes de emitir a certidão.",
+      });
+    }
+
     const invalidGroupingProperties = groupedProperties.filter(
       (item) => !["I", "P", "A"].includes(item.grouping),
     );

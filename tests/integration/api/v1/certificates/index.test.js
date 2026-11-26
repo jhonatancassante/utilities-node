@@ -384,7 +384,7 @@ describe("GET e POST /api/v1/certificates", () => {
       "create:certificate",
       "read:certificate",
     ]);
-    const physicalPropertyId = 987661;
+    const physicalPropertyId = 987665;
     await createProperty({
       physical_property_id: physicalPropertyId,
       physical_registration: "25.00003.0165.01",
@@ -483,7 +483,7 @@ describe("GET e POST /api/v1/certificates", () => {
       "create:certificate",
       "read:certificate",
     ]);
-    const physicalPropertyId = 987671;
+    const physicalPropertyId = 987671 + Number(ctm.slice(-1));
     await createProperty({
       physical_property_id: physicalPropertyId,
       physical_registration: `${ctm}.01`,
@@ -524,12 +524,59 @@ describe("GET e POST /api/v1/certificates", () => {
     });
   });
 
+  test("Rejeitando contagens divergentes entre cadastros do mesmo CTM", async () => {
+    const session = await createSessionWithFeatures([
+      "create:certificate",
+      "read:certificate",
+    ]);
+    const physicalPropertyId = 987676;
+    const ctm = "25.00003.0175";
+    await createProperty({
+      physical_property_id: physicalPropertyId,
+      physical_registration: `${ctm}.01`,
+      ctm,
+      ctm_count: 2,
+      grouping: "P",
+    });
+    await createProperty({
+      physical_property_id: physicalPropertyId + 1,
+      physical_registration: `${ctm}.02`,
+      ctm,
+      ctm_count: 3,
+      grouping: "A",
+    });
+    await assessedValue.create({
+      year: 2026,
+      sector_1: 200,
+      residential_medium: 1200,
+    });
+
+    const response = await fetch(collectionEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${session.token}`,
+      },
+      body: JSON.stringify({
+        applicant_name: "Requerente de teste",
+        purpose: "Valor venal",
+        physical_property_id: physicalPropertyId,
+        year: 2026,
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      message: expect.stringContaining(ctm),
+    });
+  });
+
   test("Rejeitando mistura de I com P ou A no mesmo CTM", async () => {
     const session = await createSessionWithFeatures([
       "create:certificate",
       "read:certificate",
     ]);
-    const physicalPropertyId = 987663;
+    const physicalPropertyId = 987667;
     await createProperty({
       physical_property_id: physicalPropertyId,
       physical_registration: "25.00003.0164.01",
