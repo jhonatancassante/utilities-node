@@ -87,3 +87,20 @@
     width: 100%;
   }
 }
+
+.selectionActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+@media (max-width: 760px) {
+  .resultsHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .selectionActions {
+    justify-content: flex-start;
+  }
+}

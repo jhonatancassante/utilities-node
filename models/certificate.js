@@ -248,11 +248,48 @@ async function deleteCertificate(id) {
   return results.rows[0];
 }
 
+async function deleteMany(ids) {
+  if (
+    !Array.isArray(ids) ||
+    ids.length === 0 ||
+    ids.length > 500 ||
+    ids.some((id) => typeof id !== "string" || !id.trim()) ||
+    new Set(ids).size !== ids.length
+  ) {
+    throw new ValidationError({
+      message: "A exclusão em lote deve conter entre 1 e 500 IDs únicos.",
+      action: "Revise a seleção de certidões e tente novamente.",
+    });
+  }
+
+  return database.transaction(async (client) => {
+    const results = await client.query({
+      text: `
+        UPDATE certificates
+        SET deleted_at = timezone('utc', now()),
+            updated_at = timezone('utc', now())
+        WHERE id = ANY($1::uuid[]) AND deleted_at IS NULL
+        RETURNING *
+      ;`,
+      values: [ids],
+    });
+    if (results.rowCount !== ids.length) {
+      throw new NotFoundError({
+        message:
+          "Uma ou mais certidões selecionadas não foram encontradas ou já foram excluídas.",
+        action: "Atualize a listagem e confira os registros selecionados.",
+      });
+    }
+    return results.rows;
+  });
+}
+
 const certificateModel = {
   create,
   findAll,
   findOneById,
   update,
   delete: deleteCertificate,
+  deleteMany,
 };
 export default certificateModel;

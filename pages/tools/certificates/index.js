@@ -4,6 +4,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import AdminDataTable from "@/components/AdminDataTable";
 import AdminPagination from "@/components/AdminPagination";
+import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
@@ -26,16 +27,21 @@ function CertificatesPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [feedback, setFeedback] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [dialog, setDialog] = useState(null);
 
   const canRead = user?.features?.includes("read:certificate");
   const canCreate = user?.features?.includes("create:certificate");
   const canUpdateOwn = user?.features?.includes("update:certificate");
   const canUpdateOthers = user?.features?.includes("update:certificate:others");
+  const canDelete = user?.features?.includes("delete:certificate");
 
   const loadRecords = useCallback(async () => {
     setIsLoadingRecords(true);
     try {
       setRecords(await requestAPI("/api/v1/certificates"));
+      setSelectedIds([]);
     } catch (requestError) {
       setFeedback({
         type: "error",
@@ -104,6 +110,84 @@ function CertificatesPage() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
+
+  const allVisibleSelected =
+    visibleRecords.length > 0 &&
+    visibleRecords.every((record) => selectedIds.includes(record.id));
+
+  function toggleSelection(id) {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
+    );
+  }
+
+  function togglePageSelection(checked) {
+    const visibleIds = visibleRecords.map((record) => record.id);
+    setSelectedIds((current) =>
+      checked
+        ? Array.from(new Set([...current, ...visibleIds]))
+        : current.filter((id) => !visibleIds.includes(id)),
+    );
+  }
+
+  function handleDelete(ids) {
+    if (!ids.length || !canDelete) return;
+    setDialog({
+      ids,
+      message:
+        "Deseja excluir " +
+        ids.length +
+        " certidão(ões) selecionada(s)? A exclusão será lógica.",
+    });
+  }
+
+  async function confirmDelete() {
+    if (!dialog || !canDelete) return;
+    const ids = dialog.ids;
+    setDialog(null);
+    setIsDeleting(true);
+    setFeedback(null);
+    try {
+      if (ids.length === 1) {
+        await requestAPI(
+          "/api/v1/certificates/" + encodeURIComponent(ids[0]),
+          { method: "DELETE" },
+        );
+      } else {
+        await requestAPI("/api/v1/certificates/bulk", {
+          method: "DELETE",
+          body: JSON.stringify({ ids }),
+        });
+      }
+      await loadRecords();
+      setFeedback({
+        type: "success",
+        message: ids.length + " certidão(ões) excluída(s) com sucesso.",
+      });
+    } catch (requestError) {
+      setFeedback({
+        type: "error",
+        name: requestError.name,
+        message: requestError.message,
+        action: requestError.action,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  function handlePrint() {
+    if (!selectedIds.length) return;
+    setFeedback({
+      type: "success",
+      message:
+        "A ação de impressão foi executada para " +
+        selectedIds.length +
+        " certidão(ões). A impressão ainda será implementada.",
+    });
+  }
 
   if (isLoading || (!user && !error)) {
     return (
@@ -285,6 +369,31 @@ function CertificatesPage() {
                   <h2>Certidões emitidas</h2>
                   <span>{filteredRecords.length} registro(s)</span>
                 </div>
+                <div className={styles.selectionActions}>
+                  {canDelete && selectedIds.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="danger"
+                      icon="fa-trash"
+                      onClick={() => handleDelete(selectedIds)}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting
+                        ? "Excluindo..."
+                        : "Excluir selecionadas (" + selectedIds.length + ")"}
+                    </Button>
+                  )}
+                  {selectedIds.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      icon="fa-print"
+                      onClick={handlePrint}
+                    >
+                      Imprimir ({selectedIds.length})
+                    </Button>
+                  )}
+                </div>
               </div>
               {isLoadingRecords ? (
                 <p className={styles.empty}>Carregando certidões...</p>
@@ -295,6 +404,17 @@ function CertificatesPage() {
                   <AdminDataTable
                     records={visibleRecords}
                     columns={columns}
+                    selectable
+                    selectedIds={selectedIds}
+                    allVisibleSelected={allVisibleSelected}
+                    onToggleRecord={toggleSelection}
+                    onTogglePage={togglePageSelection}
+                    getSelectionLabel={(record) =>
+                      "Selecionar certidão " +
+                      (record.protocol_number
+                        ? record.protocol_number + "/" + record.protocol_year
+                        : record.id)
+                    }
                     renderActions={(record, actionClassName) => {
                       const canEdit =
                         canUpdateOthers ||
@@ -335,6 +455,19 @@ function CertificatesPage() {
           </section>
         </main>
       </Layout>
+      {dialog && (
+        <StatusMessage
+          type="confirmation"
+          resetKey={"delete-certificates-" + dialog.ids.join(",")}
+          onConfirm={confirmDelete}
+          onCancel={() => setDialog(null)}
+        >
+          {dialog.message}
+        </StatusMessage>
+      )}
+      {feedback?.type === "success" && (
+        <StatusMessage type="success">{feedback.message}</StatusMessage>
+      )}
     </>
   );
 }
