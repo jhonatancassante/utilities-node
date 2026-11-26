@@ -32,7 +32,7 @@ const FIELD_RULES = {
   land_value: { type: "number", required: true, scale: 2 },
   building_value: { type: "number", required: true, scale: 2 },
   total_value: { type: "number", required: true, scale: 2 },
-  observations: { type: "string", required: true, maxLength: 150 },
+  observations: { type: "string", nullable: true, maxLength: 150 },
   validity_days: { type: "integer", min: 1, max: 2147483647 },
 };
 const WRITABLE_FIELDS = Object.keys(FIELD_RULES);
@@ -151,7 +151,6 @@ async function create(inputValues, userId) {
       "land_value",
       "building_value",
       "total_value",
-      "observations",
     ],
   });
   await validatePhysicalPropertyReference(certificate.physical_property_id);
