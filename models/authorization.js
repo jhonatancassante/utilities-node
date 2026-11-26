@@ -8,9 +8,11 @@ function can(user, feature, resource) {
   let authorized = user.features.includes(feature);
 
   if (feature === "update:user" && resource) {
-    authorized =
-      user.features.includes("update:user") &&
-      (user.id === resource.id || can(user, "update:user:others"));
+    authorized = false;
+
+    if (user.id === resource.id || can(user, "update:user:others")) {
+      authorized = true;
+    }
   }
 
   if (feature === "update:certificate" && resource) {
