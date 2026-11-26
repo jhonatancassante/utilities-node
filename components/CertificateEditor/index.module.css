@@ -212,9 +212,9 @@
 
 @media print {
   .card :global([data-admin-back-button]),
-  .actions,
-  .feedback {
-    display: none !important;
+  .card .actions,
+  .card .feedback {
+    display: none;
   }
 
   .card {
