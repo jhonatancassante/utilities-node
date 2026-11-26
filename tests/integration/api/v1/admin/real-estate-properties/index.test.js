@@ -277,7 +277,7 @@ describe("Regras de cadastro atualizado e anual", () => {
     expect(body.owner_name).toBe("Proprietário atualizado");
   });
 
-  test("Rejeitando cadastro annual=true quando o código físico já existe", async () => {
+  test("Rejeitando cadastro annual=true quando o código físico e o ano já existem", async () => {
     const sessionObject = await createSessionWithFeatures([
       "create:real_estate_property",
       "read:real_estate_property",
@@ -294,7 +294,7 @@ describe("Regras de cadastro atualizado e anual", () => {
       body: JSON.stringify(
         createPropertyInput({
           physical_property_id: 41002,
-          year: 2027,
+          year: 2026,
           annual: true,
         }),
       ),
