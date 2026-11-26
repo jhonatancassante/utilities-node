@@ -134,7 +134,7 @@ async function calculateVenalValue({
         (item) => item.grouping === "P",
       );
       const invalidProperties = sortedProperties.filter((item) => {
-        const isMainRegistration = String(item.physical_registration).endsWith(".01");
+        const isMainRegistration = String(item.physical_registration).replace(/\D/g, "").endsWith("01");
         return isMainRegistration
           ? item.grouping !== "P"
           : item.grouping !== "A";

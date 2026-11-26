@@ -327,7 +327,10 @@ describe("GET e POST /api/v1/certificates", () => {
     for (const [index, suffix] of registrations.entries()) {
       const property = await createProperty({
         physical_property_id: 987660 + index,
-        physical_registration: `25.00003.0163.${suffix}`,
+        physical_registration:
+          suffix === "01"
+            ? "2500003016301"
+            : `25.00003.0163.${suffix}`,
         ctm: suffix === "02" ? "25000030163" : "25.00003.0163",
         ctm_count: 5,
         grouping: suffix === "01" ? "P" : "A",
@@ -364,7 +367,7 @@ describe("GET e POST /api/v1/certificates", () => {
 
     expect(response.status).toBe(201);
     expect(await response.json()).toMatchObject({
-      physical_registration: "25.00003.0163.01/02/03/04/05",
+      physical_registration: "2500003016301/02/03/04/05",
       owner_name: "Proprietário principal",
       promissory_buyer: "Proprietário principal",
       property_street: "Rua do cadastro principal",
