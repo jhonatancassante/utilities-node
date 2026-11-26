@@ -117,13 +117,13 @@ async function validatePropertyReference(propertyId) {
   }
 }
 
-async function create(inputValues) {
+async function create(inputValues, userId) {
   const certificate = validateInput(inputValues, {
     requiredFields: ["protocol_number", "protocol_year", "applicant_name", "purpose", "real_estate_property_id", "property_number"],
   });
   await validatePropertyReference(certificate.real_estate_property_id);
-  const columns = WRITABLE_FIELDS.filter((field) => Object.hasOwn(certificate, field));
-  const values = columns.map((field) => certificate[field]);
+  const columns = ["user_id", ...WRITABLE_FIELDS.filter((field) => Object.hasOwn(certificate, field))];
+  const values = [userId, ...columns.slice(1).map((field) => certificate[field])];
   const placeholders = columns.map((field, index) => `$${index + 1}`);
   const results = await database.query({
     text: `INSERT INTO certificates (${columns.join(", ")}) VALUES (${placeholders.join(", ")}) RETURNING *;`,

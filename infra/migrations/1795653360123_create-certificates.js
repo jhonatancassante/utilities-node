@@ -5,6 +5,11 @@ export const up = (pgm) => {
       primaryKey: true,
       default: pgm.func("gen_random_uuid()"),
     },
+    user_id: {
+      type: "uuid",
+      notNull: true,
+      references: "users",
+    },
     protocol_number: {
       type: "varchar(6)",
       notNull: true,

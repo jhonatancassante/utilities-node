@@ -23,7 +23,7 @@ async function getHandler(request, response) {
 
 async function postHandler(request, response) {
   const currentUser = request.context.user;
-  const record = await certificate.create(request.body);
+  const record = await certificate.create(request.body, currentUser.id);
   const output = authorization.filterOutput(currentUser, "read:certificates", record);
   return response.status(201).json(output);
 }

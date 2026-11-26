@@ -19,6 +19,13 @@ function can(user, feature, resource) {
     }
   }
 
+  if (feature === "update:certificates" && resource) {
+    authorized =
+      user.features.includes("update:certificates") &&
+      (user.id === resource.user_id ||
+        can(user, "update:certificate:others"));
+  }
+
   return authorized;
 }
 
@@ -264,6 +271,7 @@ function filterOutput(user, feature, resource) {
   if (feature === "read:certificates") {
     const filterCertificate = (item) => ({
       id: item.id,
+      user_id: item.user_id,
       protocol_number: item.protocol_number,
       protocol_year: item.protocol_year,
       applicant_name: item.applicant_name,

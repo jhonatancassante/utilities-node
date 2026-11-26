@@ -43,7 +43,16 @@ export const up = (pgm) => {
         'Certidões',
         'Permite excluir logicamente as certidões de valor venal cadastradas no sistema.',
         true,
-        false,
+        true,
+        false
+      ),
+      (
+        'update:certificate:others',
+        'Alterar certidões de outros usuários',
+        'Certidões',
+        'Permite alterar certidões de valor venal cadastradas por outros usuários.',
+        true,
+        true,
         false
       );
   `);

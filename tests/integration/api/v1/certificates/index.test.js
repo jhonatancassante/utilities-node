@@ -50,7 +50,7 @@ async function createCertificate(overrides = {}) {
     real_estate_property_id: property.id,
     property_number: 123,
     ...overrides,
-  });
+  }, (await orchestrator.createUser()).id);
 }
 
 describe("GET e POST /api/v1/certificates", () => {
@@ -105,6 +105,7 @@ describe("GET e POST /api/v1/certificates", () => {
       is_updated: true,
     });
     expect(body).not.toHaveProperty("deleted_at");
+    expect(body).toHaveProperty("user_id");
   });
 
   test("Rejeitando criação sem a feature correspondente", async () => {
