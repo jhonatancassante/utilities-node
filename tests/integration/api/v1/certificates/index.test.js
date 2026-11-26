@@ -346,6 +346,7 @@ describe("GET e POST /api/v1/certificates", () => {
       const property = await createProperty({
         physical_property_id: physicalPropertyId,
         land_area: landArea,
+        ideal_fraction: 250,
       });
       await assessedValue.create({
         year: 2026,
