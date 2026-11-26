@@ -8,15 +8,14 @@ export const up = (pgm) => {
     user_id: {
       type: "uuid",
       notNull: true,
-      references: "users",
     },
     protocol_number: {
-      type: "varchar(6)",
-      notNull: true,
+      type: "integer",
+      notNull: false,
     },
     protocol_year: {
       type: "integer",
-      notNull: true,
+      notNull: false,
     },
     applicant_name: {
       type: "varchar(150)",
@@ -34,29 +33,75 @@ export const up = (pgm) => {
     real_estate_property_id: {
       type: "uuid",
       notNull: true,
-      references: "real_estate_properties",
+    },
+    physical_registration: {
+      type: "text",
+      notNull: true,
+    },
+    owner_name: {
+      type: "varchar(150)",
+      notNull: true,
+    },
+    promissory_buyer: {
+      type: "varchar(150)",
+      notNull: true,
+    },
+    property_street: {
+      type: "varchar(150)",
+      notNull: true,
     },
     property_number: {
       type: "numeric",
+      notNull: false,
+    },
+    property_neighborhood: {
+      type: "varchar(70)",
       notNull: true,
     },
-    applicant_rg: {
+    property_block: {
       type: "varchar(20)",
       notNull: false,
     },
-    observations: {
+    property_lots: {
+      type: "varchar(20)",
+      notNull: false,
+    },
+    property_complement: {
       type: "varchar(150)",
       notNull: false,
+    },
+    owner_rg: {
+      type: "varchar(20)",
+      notNull: false,
+    },
+    land_area: {
+      type: "numeric(12, 2)",
+      notNull: true,
+    },
+    built_area: {
+      type: "numeric(12, 2)",
+      notNull: true,
+    },
+    land_value: {
+      type: "numeric(12, 2)",
+      notNull: true,
+    },
+    building_value: {
+      type: "numeric(12, 2)",
+      notNull: true,
+    },
+    total_value: {
+      type: "numeric(12, 2)",
+      notNull: true,
+    },
+    observations: {
+      type: "varchar(150)",
+      notNull: true,
     },
     validity_days: {
       type: "integer",
       notNull: true,
       default: 30,
-    },
-    is_updated: {
-      type: "boolean",
-      notNull: true,
-      default: true,
     },
     deleted_at: {
       type: "timestamptz",
@@ -75,14 +120,6 @@ export const up = (pgm) => {
   });
 
   pgm.sql(`
-    ALTER TABLE certificates
-    ADD CONSTRAINT certificates_protocol_number_format_check
-    CHECK (protocol_number ~ '^[0-9]{1,6}$');
-
-    ALTER TABLE certificates
-    ADD CONSTRAINT certificates_protocol_year_check
-    CHECK (protocol_year BETWEEN 1900 AND 9999);
-
     ALTER TABLE certificates
     ADD CONSTRAINT certificates_validity_days_check
     CHECK (validity_days > 0);
