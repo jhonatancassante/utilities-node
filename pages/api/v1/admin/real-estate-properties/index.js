@@ -5,10 +5,7 @@ import authorization from "@/models/authorization.js";
 export default controller.createController(
   {
     GET: [controller.canRequest("read:real_estate_property"), getHandler],
-    POST: [
-      controller.canRequest("create:real_estate_property"),
-      postHandler,
-    ],
+    POST: [controller.canRequest("create:real_estate_property"), postHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );

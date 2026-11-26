@@ -5,14 +5,8 @@ import authorization from "@/models/authorization.js";
 export default controller.createController(
   {
     GET: [controller.canRequest("read:assessed_value"), getHandler],
-    PATCH: [
-      controller.canRequest("update:assessed_value"),
-      patchHandler,
-    ],
-    DELETE: [
-      controller.canRequest("delete:assessed_value"),
-      deleteHandler,
-    ],
+    PATCH: [controller.canRequest("update:assessed_value"), patchHandler],
+    DELETE: [controller.canRequest("delete:assessed_value"), deleteHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );

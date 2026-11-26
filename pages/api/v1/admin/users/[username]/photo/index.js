@@ -5,10 +5,7 @@ import { deleteProfilePhoto } from "@/lib/server/cloudinary.js";
 
 export default controller.createController(
   {
-    DELETE: [
-      controller.canRequest("update:user:others"),
-      deleteHandler,
-    ],
+    DELETE: [controller.canRequest("update:user:others"), deleteHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );

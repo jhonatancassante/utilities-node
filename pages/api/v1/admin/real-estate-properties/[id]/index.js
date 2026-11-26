@@ -5,10 +5,7 @@ import authorization from "@/models/authorization.js";
 export default controller.createController(
   {
     GET: [controller.canRequest("read:real_estate_property"), getHandler],
-    PATCH: [
-      controller.canRequest("update:real_estate_property"),
-      patchHandler,
-    ],
+    PATCH: [controller.canRequest("update:real_estate_property"), patchHandler],
     DELETE: [
       controller.canRequest("delete:real_estate_property"),
       deleteHandler,

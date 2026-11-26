@@ -5,10 +5,7 @@ import authorization from "@/models/authorization.js";
 export default controller.createController(
   {
     GET: [controller.canRequest("read:certificate"), getHandler],
-    POST: [
-      controller.canRequest("create:certificate"),
-      postHandler,
-    ],
+    POST: [controller.canRequest("create:certificate"), postHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );

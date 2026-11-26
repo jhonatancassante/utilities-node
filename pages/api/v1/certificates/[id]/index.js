@@ -6,14 +6,8 @@ import { ForbiddenError } from "@/infra/errors.js";
 export default controller.createController(
   {
     GET: [controller.canRequest("read:certificate"), getHandler],
-    PATCH: [
-      controller.canRequest("update:certificate"),
-      patchHandler,
-    ],
-    DELETE: [
-      controller.canRequest("delete:certificate"),
-      deleteHandler,
-    ],
+    PATCH: [controller.canRequest("update:certificate"), patchHandler],
+    DELETE: [controller.canRequest("delete:certificate"), deleteHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );

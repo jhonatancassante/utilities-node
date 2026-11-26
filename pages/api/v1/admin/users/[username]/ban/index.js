@@ -4,14 +4,8 @@ import authorization from "@/models/authorization.js";
 
 export default controller.createController(
   {
-    POST: [
-      controller.canRequest("update:user:status"),
-      postHandler,
-    ],
-    DELETE: [
-      controller.canRequest("update:user:status"),
-      deleteHandler,
-    ],
+    POST: [controller.canRequest("update:user:status"), postHandler],
+    DELETE: [controller.canRequest("update:user:status"), deleteHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );

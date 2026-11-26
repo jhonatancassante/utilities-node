@@ -4,10 +4,7 @@ import authorization from "@/models/authorization.js";
 
 export default controller.createController(
   {
-    POST: [
-      controller.canRequest("create:assessed_value"),
-      postHandler,
-    ],
+    POST: [controller.canRequest("create:assessed_value"), postHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );

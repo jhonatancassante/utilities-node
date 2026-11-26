@@ -5,10 +5,7 @@ import authorization from "@/models/authorization.js";
 export default controller.createController(
   {
     GET: [controller.canRequest("read:feature"), getHandler],
-    POST: [
-      controller.canRequest("create:feature"),
-      postHandler,
-    ],
+    POST: [controller.canRequest("create:feature"), postHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );
