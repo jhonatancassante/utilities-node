@@ -90,11 +90,11 @@ async function calculateVenalValue({
     );
 
     if (groupedProperties.length !== Number(property.ctm_count)) {
-      const normalizedCtm = String(property.ctm).replace(/\\D/g, "");
+      const normalizedCtm = String(property.ctm).replace(/\D/g, "");
       const allProperties = await realEstateProperty.findAll();
       const matchingProperties = allProperties.filter(
         (item) =>
-          String(item.ctm).replace(/\\D/g, "") === normalizedCtm &&
+          String(item.ctm).replace(/\D/g, "") === normalizedCtm &&
           Number(item.year) === propertyYear &&
           item.annual === annual,
       );
