@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import Button from "@/components/Button";
 import FileDropzone from "@/components/FileDropzone";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
+import getGroupingIssues from "@/lib/client/real-estate-property-grouping.js";
+import {
+  deleteRealEstatePropertyImportDraft,
+  getRealEstatePropertyImportDraft,
+  saveRealEstatePropertyImportDraft,
+} from "@/lib/client/real-estate-property-import-draft.js";
 
 const MAX_IMPORT_RECORDS = 100000;
 
@@ -128,14 +135,43 @@ function parseValue(field, raw, rowNumber) {
 }
 
 function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
+  const router = useRouter();
   const [file, setFile] = useState(null);
   const [year, setYear] = useState(String(new Date().getFullYear()));
   const [encoding, setEncoding] = useState("UTF-8");
   const [delimiter, setDelimiter] = useState(";");
   const [isUpdated, setIsUpdated] = useState(false);
   const [records, setRecords] = useState(null);
+  const [groupingIssues, setGroupingIssues] = useState([]);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    getRealEstatePropertyImportDraft()
+      .then((draft) => {
+        if (!active || !draft) return;
+        setRecords(draft);
+        setYear(String(draft[0]?.year ?? new Date().getFullYear()));
+        setIsUpdated(Boolean(draft[0]?.annual) === false);
+        setGroupingIssues(getGroupingIssues(draft));
+      })
+      .catch(() => {
+        if (active) setError("Não foi possível recuperar a prévia salva neste navegador.");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function handleOpenGroupingReview() {
+    try {
+      await saveRealEstatePropertyImportDraft(records);
+      await router.push("/admin/real-estate-properties/import-review");
+    } catch {
+      setError("Não foi possível preparar a página de correção. Verifique o armazenamento do navegador.");
+    }
+  }
 
   async function handleReadFile() {
     if (
@@ -225,10 +261,13 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
         return record;
       });
       setRecords(parsed);
+      setGroupingIssues(getGroupingIssues(parsed));
       setProgress(null);
       setError("");
+      await deleteRealEstatePropertyImportDraft();
     } catch (parseError) {
       setRecords(null);
+      setGroupingIssues([]);
       setError(parseError.message);
     }
   }
@@ -361,6 +400,17 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
         >
           Ler e validar CSV
         </Button>
+        {records && groupingIssues.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            icon="fa-triangle-exclamation"
+            onClick={handleOpenGroupingReview}
+            disabled={isSaving}
+          >
+            Revisar englobamento ({groupingIssues.length} CTM)
+          </Button>
+        )}
         {records && (
           <Button
             type="button"
@@ -370,7 +420,9 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
               if (succeeded) {
                 setFile(null);
                 setRecords(null);
+                setGroupingIssues([]);
                 setError("");
+                await deleteRealEstatePropertyImportDraft();
               }
             }}
             disabled={isSaving}
@@ -406,15 +458,19 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
       {records && (
         <div className={styles.preview}>
           <div className={styles.previewHeading}>
-            <strong>{records.length} imóvel(is) validados.</strong>
+            <strong>{records.length} imóvel(is) lidos.</strong>
             <span>
               Ano: {year} · Atualizado: {isUpdated ? "Sim" : "Não"}
             </span>
           </div>
-          <p>
-            Todos os registros foram validados. Confira a quantidade antes de
-            concluir a importação.
-          </p>
+          {groupingIssues.length > 0 ? (
+            <div className={styles.groupingWarning} role="alert">
+              <strong>Foram encontradas inconsistências de englobamento em {groupingIssues.length} CTM(s).</strong>
+              <p>Revise os cadastros antes de importar. Este aviso não impede a gravação no banco de dados.</p>
+            </div>
+          ) : (
+            <p>Nenhuma inconsistência de englobamento foi encontrada. Confira a quantidade antes de concluir a importação.</p>
+          )}
         </div>
       )}
     </section>
