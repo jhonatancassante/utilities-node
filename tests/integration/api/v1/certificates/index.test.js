@@ -376,6 +376,109 @@ describe("GET e POST /api/v1/certificates", () => {
     });
   });
 
+  test("Calculando individualmente quando todos os cadastros do CTM são I", async () => {
+    const session = await createSessionWithFeatures([
+      "create:certificate",
+      "read:certificate",
+    ]);
+    const physicalPropertyId = 987661;
+    await createProperty({
+      physical_property_id: physicalPropertyId,
+      physical_registration: "25.00003.0165.01",
+      ctm: "25.00003.0165",
+      ctm_count: 2,
+      grouping: "I",
+      land_area: 100,
+      ideal_fraction: 100,
+      built_area: 10,
+    });
+    await createProperty({
+      physical_property_id: physicalPropertyId + 1,
+      physical_registration: "25.00003.0165.02",
+      ctm: "25.00003.0165",
+      ctm_count: 2,
+      grouping: "I",
+      land_area: 200,
+      ideal_fraction: 200,
+      built_area: 20,
+    });
+    await assessedValue.create({
+      year: 2026,
+      sector_1: 200,
+      residential_medium: 1200,
+    });
+
+    const response = await fetch(collectionEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${session.token}`,
+      },
+      body: JSON.stringify({
+        applicant_name: "Requerente de teste",
+        purpose: "Valor venal",
+        physical_property_id: physicalPropertyId + 1,
+        year: 2026,
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({
+      physical_registration: "25.00003.0165.02",
+      land_area: "200.00",
+      built_area: "20.00",
+      land_value: "40000.00",
+      building_value: "24000.00",
+      total_value: "64000.00",
+    });
+  });
+
+  test("Rejeitando mistura de I com P ou A no mesmo CTM", async () => {
+    const session = await createSessionWithFeatures([
+      "create:certificate",
+      "read:certificate",
+    ]);
+    const physicalPropertyId = 987663;
+    await createProperty({
+      physical_property_id: physicalPropertyId,
+      physical_registration: "25.00003.0164.01",
+      ctm: "25.00003.0164",
+      ctm_count: 2,
+      grouping: "P",
+    });
+    await createProperty({
+      physical_property_id: physicalPropertyId + 1,
+      physical_registration: "25.00003.0164.02",
+      ctm: "25.00003.0164",
+      ctm_count: 2,
+      grouping: "I",
+    });
+    await assessedValue.create({
+      year: 2026,
+      sector_1: 200,
+      residential_medium: 1200,
+    });
+
+    const response = await fetch(collectionEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${session.token}`,
+      },
+      body: JSON.stringify({
+        applicant_name: "Requerente de teste",
+        purpose: "Valor venal",
+        physical_property_id: physicalPropertyId,
+        year: 2026,
+      }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      message: expect.stringContaining("25.00003.0164"),
+    });
+  });
+
   test("Usando o cadastro físico atual sem alterar o exercício solicitado", async () => {
     const session = await createSessionWithFeatures([
       "create:certificate",

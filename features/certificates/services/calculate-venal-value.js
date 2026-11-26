@@ -82,14 +82,7 @@ async function calculateVenalValue({
   const assessedValues = await assessedValue.findOneByYear(requestedYear);
   let properties = [property];
 
-  if (!["I", "P", "A"].includes(property.grouping)) {
-    throw new ValidationError({
-      message: `O CTM ${property.ctm} possui um valor inválido no campo de englobamento do cadastro ${property.physical_registration}: "${property.grouping}".`,
-      action: "Corrija o englobamento para I, P ou A antes de emitir a certidão.",
-    });
-  }
-
-  if (property.grouping !== "I") {
+  if (Number(property.ctm_count) > 1) {
     let groupedProperties = await realEstateProperty.findByCtmAndYear(
       property.ctm,
       propertyYear,
@@ -118,38 +111,60 @@ async function calculateVenalValue({
       });
     }
 
-    properties = sortPropertiesByRegistration(groupedProperties);
-    const invalidProperties = properties.filter((item) => {
-      const isMainRegistration = String(item.physical_registration).endsWith(".01");
-      return isMainRegistration
-        ? item.grouping !== "P"
-        : item.grouping !== "A";
-    });
-    const mainProperties = properties.filter((item) => item.grouping === "P");
+    const invalidGroupingProperties = groupedProperties.filter(
+      (item) => !["I", "P", "A"].includes(item.grouping),
+    );
 
-    if (mainProperties.length !== 1 || invalidProperties.length > 0) {
-      const invalidRegistrations = invalidProperties.map(
-        (item) => `${item.physical_registration} (englobamento ${item.grouping})`,
-      );
-      if (mainProperties.length !== 1 && invalidProperties.length === 0) {
-        invalidRegistrations.push(
-          mainProperties.length === 0
-            ? "nenhum cadastro marcado como P"
-            : "mais de um cadastro marcado como P",
-        );
-      }
+    if (invalidGroupingProperties.length > 0) {
+      const registrations = invalidGroupingProperties
+        .map((item) => `${item.physical_registration} (englobamento ${item.grouping})`)
+        .join(", ");
 
       throw new ValidationError({
-        message: `O CTM ${property.ctm} possui inconsistências no englobamento: ${invalidRegistrations.join(", ")}.`,
-        action: "O cadastro terminado em .01 deve ser P e todos os demais devem ser A. Corrija os cadastros informados antes de emitir a certidão.",
+        message: `O CTM ${property.ctm} possui valores inválidos no campo de englobamento: ${registrations}.`,
+        action: "Corrija o englobamento para I, P ou A antes de emitir a certidão.",
       });
     }
 
-    const mainProperty = mainProperties[0];
-    properties = [
-      mainProperty,
-      ...properties.filter((item) => item.id !== mainProperty.id),
-    ];
+    const allIndividual = groupedProperties.every((item) => item.grouping === "I");
+
+    if (!allIndividual) {
+      const sortedProperties = sortPropertiesByRegistration(groupedProperties);
+      const mainProperties = sortedProperties.filter(
+        (item) => item.grouping === "P",
+      );
+      const invalidProperties = sortedProperties.filter((item) => {
+        const isMainRegistration = String(item.physical_registration).endsWith(".01");
+        return isMainRegistration
+          ? item.grouping !== "P"
+          : item.grouping !== "A";
+      });
+
+      if (mainProperties.length !== 1 || invalidProperties.length > 0) {
+        const invalidRegistrations = sortedProperties
+          .filter((item) => invalidProperties.includes(item))
+          .map(
+            (item) => `${item.physical_registration} (englobamento ${item.grouping})`,
+          );
+
+        if (mainProperties.length === 0) {
+          invalidRegistrations.push("nenhum cadastro marcado como P");
+        } else if (mainProperties.length > 1) {
+          invalidRegistrations.push("mais de um cadastro marcado como P");
+        }
+
+        throw new ValidationError({
+          message: `O CTM ${property.ctm} possui inconsistências no englobamento: ${invalidRegistrations.join(", ")}.`,
+          action: "Todos os cadastros devem ser I ou, no caso de englobamento, o cadastro terminado em .01 deve ser P e todos os demais devem ser A.",
+        });
+      }
+
+      const mainProperty = mainProperties[0];
+      properties = [
+        mainProperty,
+        ...sortedProperties.filter((item) => item.id !== mainProperty.id),
+      ];
+    }
   }
 
   const calculated = properties.map((item) =>
