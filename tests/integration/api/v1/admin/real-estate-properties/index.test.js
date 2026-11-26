@@ -228,7 +228,7 @@ describe("GET, PATCH e DELETE /api/v1/admin/real-estate-properties/[id]", () => 
       "O imóvel informado não foi encontrado.",
     );
     const result = await database.query({
-      text: "SELECT deleted_at FROM real_estate_property WHERE id = $1;",
+      text: "SELECT deleted_at FROM real_estate_properties WHERE id = $1;",
       values: [record.id],
     });
     expect(result.rowCount).toBe(1);
@@ -323,7 +323,7 @@ describe("Regras de cadastro atualizado e anual", () => {
     });
     expect(response.status).toBe(201);
     const deleted = await database.query({
-      text: "SELECT id FROM real_estate_property WHERE id = $1;",
+      text: "SELECT id FROM real_estate_properties WHERE id = $1;",
       values: [previousCurrent.id],
     });
     expect(deleted.rowCount).toBe(0);

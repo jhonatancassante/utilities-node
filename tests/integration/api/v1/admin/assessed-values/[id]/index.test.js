@@ -163,7 +163,7 @@ describe("DELETE /api/v1/admin/assessed-values/[id]", () => {
       "O registro de valores venais informado não foi encontrado.",
     );
     const result = await database.query({
-      text: "SELECT deleted_at FROM assessed_value WHERE id = $1;",
+      text: "SELECT deleted_at FROM assessed_values WHERE id = $1;",
       values: [record.id],
     });
     expect(result.rowCount).toBe(1);
