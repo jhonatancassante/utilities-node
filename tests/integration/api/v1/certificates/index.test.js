@@ -732,6 +732,50 @@ describe("GET, PATCH e DELETE /api/v1/certificates/[id]", () => {
     });
   });
 
+  test("Atualizando e limpando número e ano opcionais do protocolo", async () => {
+    const session = await createSessionWithFeatures([
+      "update:certificate",
+      "read:certificate",
+    ]);
+    const record = await createCertificate({}, session.userId);
+
+    const updateResponse = await fetch(itemEndpoint(record.id), {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${session.token}`,
+      },
+      body: JSON.stringify({
+        protocol_number: 456,
+        protocol_year: 2026,
+      }),
+    });
+
+    expect(updateResponse.status).toBe(200);
+    expect(await updateResponse.json()).toMatchObject({
+      protocol_number: 456,
+      protocol_year: 2026,
+    });
+
+    const clearResponse = await fetch(itemEndpoint(record.id), {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${session.token}`,
+      },
+      body: JSON.stringify({
+        protocol_number: null,
+        protocol_year: null,
+      }),
+    });
+
+    expect(clearResponse.status).toBe(200);
+    expect(await clearResponse.json()).toMatchObject({
+      protocol_number: null,
+      protocol_year: null,
+    });
+  });
+
   test("Excluindo logicamente uma única certidão", async () => {
     const session = await createSessionWithFeatures([
       "delete:certificate",

@@ -74,7 +74,7 @@ function CertificateEditor({ recordId }) {
           applicant_name: data.applicant_name ?? "",
           purpose: data.purpose ?? "",
           protocol_number: data.protocol_number == null ? "" : String(data.protocol_number),
-          protocol_year: String(data.protocol_year ?? new Date().getFullYear()),
+          protocol_year: data.protocol_year == null ? "" : String(data.protocol_year),
           physical_property_id: String(data.physical_property_id ?? ""),
           year: String(data.year ?? ""),
           is_updated: data.is_updated ?? true,
@@ -176,6 +176,8 @@ function CertificateEditor({ recordId }) {
               ? {
                   applicant_name: payload.applicant_name,
                   purpose: payload.purpose,
+                  protocol_number: payload.protocol_number,
+                  protocol_year: payload.protocol_year,
                   observations: payload.observations,
                   validity_days: payload.validity_days,
                 }
@@ -340,7 +342,7 @@ function CertificateEditor({ recordId }) {
                       />
                     </label>
                     <label className={styles.third}>
-                      <span className={shared.label}>Ano do protocolo *</span>
+                      <span className={shared.label}>Ano do protocolo</span>
                       <input
                         className={shared.input}
                         type="number"
@@ -349,7 +351,6 @@ function CertificateEditor({ recordId }) {
                         step="1"
                         value={form.protocol_year}
                         onChange={(event) => updateField("protocol_year", event.target.value)}
-                        required
                         disabled={isReadOnly || isSaving}
                       />
                     </label>
