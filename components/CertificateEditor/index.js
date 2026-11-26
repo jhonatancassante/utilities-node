@@ -167,7 +167,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
         observations: form.observations.trim() || null,
         validity_days: Number(form.validity_days),
       };
-      const saved = await requestAPI(
+      await requestAPI(
         isEditing
           ? "/api/v1/certificates/" + encodeURIComponent(recordId)
           : "/api/v1/certificates",
