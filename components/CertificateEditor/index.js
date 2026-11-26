@@ -567,7 +567,13 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <Button
                       type="button"
                       icon="fa-print"
-                      onClick={() => window.print()}
+                      onClick={() =>
+                        setFeedback({
+                          type: "success",
+                          message:
+                            "A ação de impressão foi executada para 1 certidão(ões). A impressão ainda será implementada.",
+                        })
+                      }
                     >
                       Imprimir
                     </Button>
