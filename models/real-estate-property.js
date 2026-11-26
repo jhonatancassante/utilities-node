@@ -164,8 +164,12 @@ async function insertRecord(client, property) {
   return results.rows[0];
 }
 
-async function insertManyRecords(client, properties, { annual }) {
-  const records = new Array(properties.length);
+async function insertManyRecords(
+  client,
+  properties,
+  { annual, returnRecords = true },
+) {
+  const records = returnRecords ? new Array(properties.length) : null;
   let start = 0;
 
   while (start < properties.length) {
@@ -206,18 +210,20 @@ async function insertManyRecords(client, properties, { annual }) {
         VALUES ${valueGroups.join(", ")}
         ON CONFLICT ${conflictTarget}
         DO UPDATE SET ${updates.join(", ")}
-        RETURNING *
+        RETURNING ${returnRecords ? "*" : "id"}
       ;`,
       values,
     });
 
-    result.rows.forEach((record, index) => {
-      records[start + index] = record;
-    });
+    if (returnRecords) {
+      result.rows.forEach((record, index) => {
+        records[start + index] = record;
+      });
+    }
     start = end;
   }
 
-  return records;
+  return returnRecords ? records : properties.length;
 }
 
 async function create(inputValues) {
@@ -443,12 +449,17 @@ function prepareBulkRecords(inputValues) {
   return properties;
 }
 
-async function persistBulkRecords(client, properties, overwriteExisting) {
+async function persistBulkRecords(
+  client,
+  properties,
+  overwriteExisting,
+  returnRecords = true,
+) {
   const annual = properties[0].annual;
   await client.query("LOCK TABLE real_estate_properties IN SHARE ROW EXCLUSIVE MODE;");
   if (!annual) {
     await client.query("DELETE FROM real_estate_properties WHERE annual = false;");
-    return insertManyRecords(client, properties, { annual: false });
+    return insertManyRecords(client, properties, { annual: false, returnRecords });
   }
   const existing = await client.query({
     text: "SELECT year, physical_property_id FROM real_estate_properties WHERE annual = true AND deleted_at IS NULL AND (year, physical_property_id) IN (SELECT * FROM unnest($1::integer[], $2::integer[])) ORDER BY year, physical_property_id;",
@@ -460,7 +471,7 @@ async function persistBulkRecords(client, properties, overwriteExisting) {
       action: "Escolha Continuar para atualizar os existentes ou Cancelar para interromper a importação.",
     });
   }
-  return insertManyRecords(client, properties, { annual: true });
+  return insertManyRecords(client, properties, { annual: true, returnRecords });
 }
 
 async function createMany(inputValues, { overwriteExisting = false } = {}) {
@@ -535,9 +546,14 @@ async function finalizeImport({ importId, userId, overwriteExisting = false }) {
     }
     const records = chunks.flatMap((chunk) => chunk.records);
     const properties = prepareBulkRecords(records);
-    const output = await persistBulkRecords(client, properties, overwriteExisting);
+    const importedCount = await persistBulkRecords(
+      client,
+      properties,
+      overwriteExisting,
+      false,
+    );
     await client.query("DELETE FROM real_estate_property_imports WHERE id = $1;", [importId]);
-    return output;
+    return { importedCount };
   });
 }
 

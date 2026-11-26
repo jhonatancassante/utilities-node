@@ -561,7 +561,7 @@ describe("Importação de imóveis em lotes temporários", () => {
 
     const finalized = await finalizeImportRequest(sessionObject, importSession.id);
     expect(finalized.status).toBe(201);
-    expect(await finalized.json()).toHaveLength(2);
+    expect(await finalized.json()).toEqual({ importedCount: 2 });
 
     const remaining = await database.query({
       text: "SELECT physical_property_id FROM real_estate_properties WHERE annual = false ORDER BY physical_property_id;",
@@ -611,9 +611,13 @@ describe("Importação de imóveis em lotes temporários", () => {
 
     const confirmedFinalize = await finalizeImportRequest(sessionObject, importSession.id, true);
     expect(confirmedFinalize.status).toBe(201);
-    const body = await confirmedFinalize.json();
-    expect(body).toHaveLength(1);
-    expect(body[0].id).toBe(existing.id);
-    expect(body[0].owner_name).toBe("Proprietário atualizado");
+    expect(await confirmedFinalize.json()).toEqual({ importedCount: 1 });
+    const updated = await realEstateProperty.findByPhysicalPropertyIdAndYear(
+      52005,
+      2026,
+      true,
+    );
+    expect(updated.id).toBe(existing.id);
+    expect(updated.owner_name).toBe("Proprietário atualizado");
   });
 });
