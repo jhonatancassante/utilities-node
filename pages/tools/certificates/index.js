@@ -312,7 +312,7 @@ function CertificatesPage() {
             {feedback && (
               <div className={styles.feedback}>
                 <StatusMessage
-                  type="inline-error"
+                  type={feedback.type === "success" ? "success" : "inline-error"}
                   name={feedback.name}
                   action={feedback.action}
                 >
@@ -464,9 +464,6 @@ function CertificatesPage() {
         >
           {dialog.message}
         </StatusMessage>
-      )}
-      {feedback?.type === "success" && (
-        <StatusMessage type="success">{feedback.message}</StatusMessage>
       )}
     </>
   );
