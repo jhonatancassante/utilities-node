@@ -336,13 +336,13 @@ describe("GET e POST /api/v1/certificates", () => {
     ["12.345.678-9", 1000, "35000.00", "84000.00", "119000.00"],
     ["12.345.678-9", 1000.01, "50000.00", "120000.00", "170000.00"],
   ])(
-    "Aplicando o desconto por RG para área de terreno de %s m²",
-    async (ownerRg, landArea, expectedLandValue, expectedBuildingValue, expectedTotalValue, index) => {
+    "Aplicando o desconto por RG no cenário %#",
+    async (ownerRg, landArea, expectedLandValue, expectedBuildingValue, expectedTotalValue) => {
       const session = await createSessionWithFeatures([
         "create:certificate",
         "read:certificate",
       ]);
-      const physicalPropertyId = 987680 + index;
+      const physicalPropertyId = 987680 + Math.round(landArea * 100);
       const property = await createProperty({
         physical_property_id: physicalPropertyId,
         land_area: landArea,
