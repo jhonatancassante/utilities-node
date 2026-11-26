@@ -474,11 +474,11 @@ describe("GET e POST /api/v1/certificates", () => {
   });
 
   test.each([
-    ["todos A, sem cadastro P", "25.00003.0171", "A", "A"],
-    ["P fora da inscrição .01", "25.00003.0172", "A", "P"],
-    ["mais de um cadastro P", "25.00003.0173", "P", "P"],
-    ["mistura de I com A", "25.00003.0174", "I", "A"],
-  ])("Rejeitando englobamento inválido: %s", async (description, ctm, mainGrouping, secondGrouping) => {
+    ["25.00003.0171", "A", "A"],
+    ["25.00003.0172", "A", "P"],
+    ["25.00003.0173", "P", "P"],
+    ["25.00003.0174", "I", "A"],
+  ])("Rejeitando englobamento inválido para o CTM %s", async (ctm, mainGrouping, secondGrouping) => {
     const session = await createSessionWithFeatures([
       "create:certificate",
       "read:certificate",

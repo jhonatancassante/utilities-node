@@ -79,7 +79,7 @@ async function calculateVenalValue({
     });
   }
 
-  const ctmCount = ctmCount;
+  const ctmCount = Number(property.ctm_count);
 
   if (!Number.isInteger(ctmCount) || ctmCount < 1) {
     throw new ValidationError({
