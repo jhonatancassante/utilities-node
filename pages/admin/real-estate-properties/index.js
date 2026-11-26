@@ -169,13 +169,18 @@ function RealEstatePropertiesPage() {
       for (const record of records) {
         const recordBytes = encoder.encode(JSON.stringify(record)).length;
         const additionalBytes = recordBytes + (currentChunk.length ? 1 : 0);
-        if (currentChunk.length && currentChunkBytes + additionalBytes > targetChunkBytes) {
+        if (
+          currentChunk.length &&
+          currentChunkBytes + additionalBytes > targetChunkBytes
+        ) {
           chunks.push(currentChunk);
           currentChunk = [];
           currentChunkBytes = 2;
         }
         if (recordBytes + 2 > targetChunkBytes) {
-          throw new Error("Um registro excede o tamanho máximo permitido para um lote.");
+          throw new Error(
+            "Um registro excede o tamanho máximo permitido para um lote.",
+          );
         }
         currentChunk.push(record);
         currentChunkBytes += recordBytes + (currentChunk.length > 1 ? 1 : 0);
@@ -186,13 +191,20 @@ function RealEstatePropertiesPage() {
         "/api/v1/admin/real-estate-properties/bulk/imports",
         {
           method: "POST",
-          body: JSON.stringify({ totalRecords: records.length, totalChunks: chunks.length }),
+          body: JSON.stringify({
+            totalRecords: records.length,
+            totalChunks: chunks.length,
+          }),
         },
       );
       importId = importSession.id;
 
       for (let index = 0; index < chunks.length; index += 1) {
-        onProgress?.({ stage: "uploading", current: index + 1, total: chunks.length });
+        onProgress?.({
+          stage: "uploading",
+          current: index + 1,
+          total: chunks.length,
+        });
         await requestAPI(
           "/api/v1/admin/real-estate-properties/bulk/imports/" +
             encodeURIComponent(importId) +
@@ -210,10 +222,16 @@ function RealEstatePropertiesPage() {
           "/api/v1/admin/real-estate-properties/bulk/imports/" +
             encodeURIComponent(importId) +
             "/finalize",
-          { method: "POST", body: JSON.stringify({ overwriteExisting: false }) },
+          {
+            method: "POST",
+            body: JSON.stringify({ overwriteExisting: false }),
+          },
         );
       } catch (requestError) {
-        if (requestError.statusCode !== 409 || !records.every((record) => record.annual === true)) {
+        if (
+          requestError.statusCode !== 409 ||
+          !records.every((record) => record.annual === true)
+        ) {
           throw requestError;
         }
         return await new Promise((resolve) => {

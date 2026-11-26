@@ -337,7 +337,13 @@ describe("GET e POST /api/v1/certificates", () => {
     ["12.345.678-9", 1000.01, "50000.00", "120000.00", "170000.00"],
   ])(
     "Aplicando o desconto por RG no cenário %#",
-    async (ownerRg, landArea, expectedLandValue, expectedBuildingValue, expectedTotalValue) => {
+    async (
+      ownerRg,
+      landArea,
+      expectedLandValue,
+      expectedBuildingValue,
+      expectedTotalValue,
+    ) => {
       const session = await createSessionWithFeatures([
         "create:certificate",
         "read:certificate",

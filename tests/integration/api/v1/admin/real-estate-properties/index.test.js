@@ -489,7 +489,6 @@ describe("POST e DELETE /api/v1/admin/real-estate-properties/bulk", () => {
   });
 });
 
-
 describe("Importação de imóveis em lotes temporários", () => {
   function importsEndpoint() {
     return bulkEndpoint() + "/imports";
@@ -523,7 +522,11 @@ describe("Importação de imóveis em lotes temporários", () => {
     });
   }
 
-  async function finalizeImportRequest(sessionObject, importId, overwriteExisting = false) {
+  async function finalizeImportRequest(
+    sessionObject,
+    importId,
+    overwriteExisting = false,
+  ) {
     return fetch(importEndpoint(importId) + "/finalize", {
       method: "POST",
       headers: {
@@ -548,25 +551,51 @@ describe("Importação de imóveis em lotes temporários", () => {
     ];
     const importSession = await createImportSession(sessionObject, 2, 2);
 
-    const firstChunk = await sendImportChunk(sessionObject, importSession.id, 0, [records[0]]);
+    const firstChunk = await sendImportChunk(
+      sessionObject,
+      importSession.id,
+      0,
+      [records[0]],
+    );
     expect(firstChunk.status).toBe(200);
-    expect(await firstChunk.json()).toMatchObject({ received: true, duplicate: false });
+    expect(await firstChunk.json()).toMatchObject({
+      received: true,
+      duplicate: false,
+    });
 
-    const repeatedChunk = await sendImportChunk(sessionObject, importSession.id, 0, [records[0]]);
+    const repeatedChunk = await sendImportChunk(
+      sessionObject,
+      importSession.id,
+      0,
+      [records[0]],
+    );
     expect(repeatedChunk.status).toBe(200);
-    expect(await repeatedChunk.json()).toMatchObject({ received: true, duplicate: true });
+    expect(await repeatedChunk.json()).toMatchObject({
+      received: true,
+      duplicate: true,
+    });
 
-    const secondChunk = await sendImportChunk(sessionObject, importSession.id, 1, [records[1]]);
+    const secondChunk = await sendImportChunk(
+      sessionObject,
+      importSession.id,
+      1,
+      [records[1]],
+    );
     expect(secondChunk.status).toBe(200);
 
-    const finalized = await finalizeImportRequest(sessionObject, importSession.id);
+    const finalized = await finalizeImportRequest(
+      sessionObject,
+      importSession.id,
+    );
     expect(finalized.status).toBe(201);
     expect(await finalized.json()).toEqual({ importedCount: 2 });
 
     const remaining = await database.query({
       text: "SELECT physical_property_id FROM real_estate_properties WHERE annual = false ORDER BY physical_property_id;",
     });
-    expect(remaining.rows.map((record) => record.physical_property_id)).toEqual([52002, 52003]);
+    expect(remaining.rows.map((record) => record.physical_property_id)).toEqual(
+      [52002, 52003],
+    );
   });
 
   test("Impedindo a finalização quando há lote ausente", async () => {
@@ -575,12 +604,18 @@ describe("Importação de imóveis em lotes temporários", () => {
       "read:real_estate_property",
     ]);
     const importSession = await createImportSession(sessionObject, 2, 2);
-    const firstChunk = await sendImportChunk(sessionObject, importSession.id, 0, [
-      createPropertyInput({ physical_property_id: 52004, annual: false }),
-    ]);
+    const firstChunk = await sendImportChunk(
+      sessionObject,
+      importSession.id,
+      0,
+      [createPropertyInput({ physical_property_id: 52004, annual: false })],
+    );
     expect(firstChunk.status).toBe(200);
 
-    const response = await finalizeImportRequest(sessionObject, importSession.id);
+    const response = await finalizeImportRequest(
+      sessionObject,
+      importSession.id,
+    );
     expect(response.status).toBe(400);
     expect(await response.json()).toMatchObject({
       message: expect.stringContaining("todos os lotes"),
@@ -603,13 +638,25 @@ describe("Importação de imóveis em lotes temporários", () => {
       }),
     ];
     const importSession = await createImportSession(sessionObject, 1, 1);
-    const chunk = await sendImportChunk(sessionObject, importSession.id, 0, records);
+    const chunk = await sendImportChunk(
+      sessionObject,
+      importSession.id,
+      0,
+      records,
+    );
     expect(chunk.status).toBe(200);
 
-    const firstFinalize = await finalizeImportRequest(sessionObject, importSession.id);
+    const firstFinalize = await finalizeImportRequest(
+      sessionObject,
+      importSession.id,
+    );
     expect(firstFinalize.status).toBe(409);
 
-    const confirmedFinalize = await finalizeImportRequest(sessionObject, importSession.id, true);
+    const confirmedFinalize = await finalizeImportRequest(
+      sessionObject,
+      importSession.id,
+      true,
+    );
     expect(confirmedFinalize.status).toBe(201);
     expect(await confirmedFinalize.json()).toEqual({ importedCount: 1 });
     const updated = await realEstateProperty.findByPhysicalPropertyIdAndYear(

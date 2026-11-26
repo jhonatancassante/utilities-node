@@ -393,8 +393,8 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
                 "..."
               : progress?.stage === "finalizing"
                 ? "Finalizando a importação e gravando os imóveis..."
-                : "Preparando a importação..."}
-            {" "}Não feche esta página.
+                : "Preparando a importação..."}{" "}
+            Não feche esta página.
           </span>
         </div>
       )}
