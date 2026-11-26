@@ -7,10 +7,6 @@ import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
-import {
-  hasAdminAccess,
-  hasAdminSectionAccess,
-} from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -42,6 +38,7 @@ function CertificateEditor({ recordId }) {
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
+  const canRead = user?.features?.includes("read:certificate");
   const canCreate = user?.features?.includes("create:certificate");
   const canUpdateOwn = user?.features?.includes("update:certificate");
   const canUpdateOthers = user?.features?.includes("update:certificate:others");
@@ -56,13 +53,13 @@ function CertificateEditor({ recordId }) {
     ) {
       router.replace("/login");
     }
-    if (!isLoading && user && !hasAdminSectionAccess(user, "certificates")) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
+    if (!isLoading && user && !canRead) {
+      router.replace("/tools");
     }
-    if (!isLoading && user && !isEditing && !canCreate) {
-      router.replace("/admin/certificates");
+    if (!isLoading && user && canRead && !isEditing && !canCreate) {
+      router.replace("/tools/certificates");
     }
-  }, [canCreate, error, isEditing, isLoading, router, user]);
+  }, [canCreate, canRead, error, isEditing, isLoading, router, user]);
 
   useEffect(() => {
     if (!recordId || !user) return undefined;
@@ -180,7 +177,7 @@ function CertificateEditor({ recordId }) {
           ),
         },
       );
-      router.push("/admin/certificates/" + encodeURIComponent(saved.id));
+      router.push("/tools/certificates/" + encodeURIComponent(saved.id));
       if (!isEditing) {
         setFeedback({
           type: "success",
@@ -244,7 +241,7 @@ function CertificateEditor({ recordId }) {
 
   if (
     !user ||
-    !hasAdminSectionAccess(user, "certificates") ||
+    !canRead ||
     (!isEditing && !canCreate)
   ) {
     return null;
@@ -264,14 +261,14 @@ function CertificateEditor({ recordId }) {
             }
           >
             <AdminBackButton
-              href="/admin/certificates"
+              href="/tools/certificates"
               label="Voltar às certidões"
             />
             <header className={styles.header}>
               <div className={shared.icon} aria-hidden="true">
                 <i className="fas fa-file-alt"></i>
               </div>
-              <span className={shared.badge}>ADMINISTRAÇÃO</span>
+              <span className={shared.badge}>FERRAMENTAS</span>
               <h1>{title}</h1>
               <p>
                 {isReadOnly
@@ -505,7 +502,7 @@ function CertificateEditor({ recordId }) {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => router.push("/admin/certificates")}
+                    onClick={() => router.push("/tools/certificates")}
                     disabled={isSaving}
                   >
                     Voltar

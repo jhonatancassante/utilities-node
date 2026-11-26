@@ -188,7 +188,13 @@ function Header() {
                 id="tools-menu"
                 className={`${styles.dropdown} ${isToolsOpen ? styles.dropdownOpen : ""}`}
               >
-                {tools.map((tool) => (
+                {tools
+                  .filter(
+                    (tool) =>
+                      !tool.requiredFeature ||
+                      user?.features?.includes(tool.requiredFeature),
+                  )
+                  .map((tool) => (
                   <li key={tool.slug}>
                     {tool.isAvailable ? (
                       <Link

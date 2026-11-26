@@ -8,10 +8,6 @@ import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
-import {
-  hasAdminAccess,
-  hasAdminSectionAccess,
-} from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -31,6 +27,7 @@ function CertificatesPage() {
   const [pageSize, setPageSize] = useState(10);
   const [feedback, setFeedback] = useState(null);
 
+  const canRead = user?.features?.includes("read:certificate");
   const canCreate = user?.features?.includes("create:certificate");
   const canUpdateOwn = user?.features?.includes("update:certificate");
   const canUpdateOthers = user?.features?.includes("update:certificate:others");
@@ -59,16 +56,16 @@ function CertificatesPage() {
     ) {
       router.replace("/login");
     }
-    if (!isLoading && user && !hasAdminSectionAccess(user, "certificates")) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
+    if (!isLoading && user && !canRead) {
+      router.replace("/tools");
     }
-  }, [error, isLoading, router, user]);
+  }, [canRead, error, isLoading, router, user]);
 
   useEffect(() => {
-    if (user && hasAdminSectionAccess(user, "certificates")) {
+    if (user && canRead) {
       Promise.resolve().then(loadRecords);
     }
-  }, [loadRecords, user]);
+  }, [canRead, loadRecords, user]);
 
   const availableYears = useMemo(
     () =>
@@ -144,7 +141,7 @@ function CertificatesPage() {
     );
   }
 
-  if (!user || !hasAdminSectionAccess(user, "certificates")) return null;
+  if (!user || !canRead) return null;
 
   const columns = [
     { key: "protocol_number", label: "Protocolo" },
@@ -181,12 +178,15 @@ function CertificatesPage() {
               shared.card + " " + shared.cardUltraWide + " " + styles.card
             }
           >
-            <AdminBackButton />
+            <AdminBackButton
+              href="/tools"
+              label="Voltar às ferramentas"
+            />
             <header className={styles.header}>
               <div className={shared.icon} aria-hidden="true">
                 <i className="fas fa-file-alt"></i>
               </div>
-              <span className={shared.badge}>ADMINISTRAÇÃO</span>
+              <span className={shared.badge}>FERRAMENTAS</span>
               <h1>Certidões</h1>
               <p>
                 Consulte as certidões emitidas e faça novas emissões com cálculo
@@ -240,7 +240,7 @@ function CertificatesPage() {
                 <button
                   type="button"
                   className={styles.primaryButton}
-                  onClick={() => router.push("/admin/certificates/new")}
+                  onClick={() => router.push("/tools/certificates/new")}
                 >
                   <i className="fas fa-plus" aria-hidden="true"></i>
                   Nova certidão
@@ -273,7 +273,7 @@ function CertificatesPage() {
                           className={actionClassName}
                           onClick={() =>
                             router.push(
-                              "/admin/certificates/" +
+                              "/tools/certificates/" +
                                 encodeURIComponent(record.id),
                             )
                           }

@@ -3,9 +3,17 @@ import Link from "next/link";
 import AppHead from "@/components/AppHead";
 import Layout from "@/components/Layout";
 import { tools } from "@/configs/tools.js";
+import useUser from "@/hooks/use-user.js";
 import styles from "./index.module.css";
 
 function Home() {
+  const { user } = useUser();
+  const visibleTools = tools.filter(
+    (tool) =>
+      !tool.requiredFeature ||
+      user?.features?.includes(tool.requiredFeature),
+  );
+
   return (
     <>
       <AppHead description="Utilitários de apoio ao trabalho: QR Code, PDF, conversores de arquivos e mais." />
@@ -28,11 +36,11 @@ function Home() {
                   Encontre a ferramenta certa para sua tarefa
                 </h2>
               </div>
-              <span className={styles.count}>{tools.length} ferramentas</span>
+              <span className={styles.count}>{visibleTools.length} ferramentas</span>
             </div>
 
             <ul className={styles.grid}>
-              {tools.map((tool) => (
+              {visibleTools.map((tool) => (
                 <li key={tool.slug}>
                   {tool.isAvailable ? (
                     <Link href={tool.href} className={styles.card}>
