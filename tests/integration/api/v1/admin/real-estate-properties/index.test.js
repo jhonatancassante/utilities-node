@@ -107,6 +107,16 @@ describe("POST /api/v1/admin/real-estate-properties", () => {
     expect(body).not.toHaveProperty("deleted_at");
   });
 
+  test("Normalizando o CTM para o formato 12.12345.1234", async () => {
+    const record = await realEstateProperty.create(
+      createPropertyInput({
+        physical_property_id: 12348,
+        ctm: "13.005.640.228",
+      }),
+    );
+    expect(record.ctm).toBe("13.00564.0228");
+  });
+
   test("Preenchendo a fração ideal com a área do terreno quando não informada", async () => {
     const sessionObject = await createSessionWithFeatures([
       "create:real_estate_property",
