@@ -105,7 +105,8 @@ function CertificatesPage() {
     });
   }, [records, search, yearFilter]);
 
-  const { sortedRecords, sortState, handleSort, sortAnnouncement } = useSortableData(filteredRecords);
+  const { sortedRecords, sortState, handleSort, sortAnnouncement } =
+    useSortableData(filteredRecords);
 
   const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
   const currentPage = Math.min(page, pageCount);

@@ -82,7 +82,12 @@ export default function AdminMigrationAuditPage() {
     };
   }, [isLoading, user]);
 
-  const { sortedRecords: sortedMigrations, sortState, handleSort, sortAnnouncement } = useSortableData(migrations);
+  const {
+    sortedRecords: sortedMigrations,
+    sortState,
+    handleSort,
+    sortAnnouncement,
+  } = useSortableData(migrations);
 
   if (isLoading || (!user && !error)) {
     return (
@@ -183,8 +188,16 @@ export default function AdminMigrationAuditPage() {
                 records={sortedMigrations}
                 columns={[
                   { key: "id", label: "ID" },
-                  { key: "name", label: "Migration", render: (migration) => <strong>{migration.name}</strong> },
-                  { key: "run_on", label: "Executada em", render: (migration) => formatDate(migration.run_on) },
+                  {
+                    key: "name",
+                    label: "Migration",
+                    render: (migration) => <strong>{migration.name}</strong>,
+                  },
+                  {
+                    key: "run_on",
+                    label: "Executada em",
+                    render: (migration) => formatDate(migration.run_on),
+                  },
                 ]}
                 showActions={false}
                 sortState={sortState}

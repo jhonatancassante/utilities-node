@@ -8,15 +8,22 @@ export default function useSortableData(records) {
     () => sortRecords(records, sortState),
     [records, sortState],
   );
-  const handleSort = useCallback((key, label) => {
-    const nextSortState = getNextSortState(sortState, key);
-    setSortState(nextSortState);
-    setSortAnnouncement(
-      nextSortState
-        ? "Ordenado por " + label + ", ordem " +
-            (nextSortState.direction === "asc" ? "crescente." : "decrescente.")
-        : "Ordenação removida. A ordem original foi restaurada.",
-    );
-  }, [sortState]);
+  const handleSort = useCallback(
+    (key, label) => {
+      const nextSortState = getNextSortState(sortState, key);
+      setSortState(nextSortState);
+      setSortAnnouncement(
+        nextSortState
+          ? "Ordenado por " +
+              label +
+              ", ordem " +
+              (nextSortState.direction === "asc"
+                ? "crescente."
+                : "decrescente.")
+          : "Ordenação removida. A ordem original foi restaurada.",
+      );
+    },
+    [sortState],
+  );
   return { sortedRecords, sortState, handleSort, sortAnnouncement };
 }

@@ -1,16 +1,29 @@
 import styles from "./index.module.css";
 
 function AdminDataTable({
-  records, columns, selectable = false, selectedIds = [],
-  allVisibleSelected = false, onToggleRecord, onTogglePage,
-  getSelectionLabel, renderActions, showActions = true, onRowClick,
-  getRowKey = (record) => record.id, sortState = null, onSort,
-  sortAnnouncement = "", caption = "Tabela de dados",
+  records,
+  columns,
+  selectable = false,
+  selectedIds = [],
+  allVisibleSelected = false,
+  onToggleRecord,
+  onTogglePage,
+  getSelectionLabel,
+  renderActions,
+  showActions = true,
+  onRowClick,
+  getRowKey = (record) => record.id,
+  sortState = null,
+  onSort,
+  sortAnnouncement = "",
+  caption = "Tabela de dados",
   maxHeight = "min(940px, 70vh)",
 }) {
   return (
     <div
-      className={styles.tableWrapper + (showActions ? " " + styles.hasActions : "")}
+      className={
+        styles.tableWrapper + (showActions ? " " + styles.hasActions : "")
+      }
       style={{ maxHeight, overflowY: "auto" }}
     >
       <table>
@@ -30,16 +43,24 @@ function AdminDataTable({
             {columns.map((column) => {
               const isSorted = sortState?.key === column.key;
               const ariaSort = isSorted
-                ? sortState.direction === "asc" ? "ascending" : "descending"
+                ? sortState.direction === "asc"
+                  ? "ascending"
+                  : "descending"
                 : undefined;
               return (
                 <th
                   key={column.key}
                   scope="col"
                   aria-sort={ariaSort}
-                  className={column.sortable === false ? undefined : styles.sortableHeader}
+                  className={
+                    column.sortable === false
+                      ? undefined
+                      : styles.sortableHeader
+                  }
                 >
-                  {column.sortable === false || !onSort ? column.label : (
+                  {column.sortable === false || !onSort ? (
+                    column.label
+                  ) : (
                     <button
                       type="button"
                       className={styles.sortButton}
@@ -47,9 +68,14 @@ function AdminDataTable({
                     >
                       <span>{column.label}</span>
                       <i
-                        className={"fas " + (isSorted
-                          ? sortState.direction === "asc" ? "fa-sort-up" : "fa-sort-down"
-                          : "fa-sort")}
+                        className={
+                          "fas " +
+                          (isSorted
+                            ? sortState.direction === "asc"
+                              ? "fa-sort-up"
+                              : "fa-sort-down"
+                            : "fa-sort")
+                        }
                         aria-hidden="true"
                       ></i>
                     </button>
@@ -57,7 +83,11 @@ function AdminDataTable({
                 </th>
               );
             })}
-            {showActions && <th scope="col" className={styles.actionsHeader}>Ações</th>}
+            {showActions && (
+              <th scope="col" className={styles.actionsHeader}>
+                Ações
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -67,12 +97,19 @@ function AdminDataTable({
               className={onRowClick ? styles.clickableRow : undefined}
               tabIndex={onRowClick ? 0 : undefined}
               onClick={onRowClick ? () => onRowClick(record) : undefined}
-              onKeyDown={onRowClick ? (event) => {
-                if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
-                  event.preventDefault();
-                  onRowClick(record);
-                }
-              } : undefined}
+              onKeyDown={
+                onRowClick
+                  ? (event) => {
+                      if (
+                        event.target === event.currentTarget &&
+                        (event.key === "Enter" || event.key === " ")
+                      ) {
+                        event.preventDefault();
+                        onRowClick(record);
+                      }
+                    }
+                  : undefined
+              }
             >
               {selectable && (
                 <td onClick={(event) => event.stopPropagation()}>
@@ -86,11 +123,16 @@ function AdminDataTable({
               )}
               {columns.map((column) => (
                 <td key={column.key}>
-                  {column.render ? column.render(record) : (record[column.key] ?? "—")}
+                  {column.render
+                    ? column.render(record)
+                    : (record[column.key] ?? "—")}
                 </td>
               ))}
               {showActions && (
-                <td className={styles.actionCell} onClick={(event) => event.stopPropagation()}>
+                <td
+                  className={styles.actionCell}
+                  onClick={(event) => event.stopPropagation()}
+                >
                   {renderActions?.(record, styles.actionLink)}
                 </td>
               )}

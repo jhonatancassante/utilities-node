@@ -129,7 +129,8 @@ function RealEstatePropertiesPage() {
       return matchesYear && matchesUpdated && matchesSearch;
     });
   }, [records, search, yearFilter, updatedFilter]);
-  const { sortedRecords, sortState, handleSort, sortAnnouncement } = useSortableData(filteredRecords);
+  const { sortedRecords, sortState, handleSort, sortAnnouncement } =
+    useSortableData(filteredRecords);
   const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
   const currentPage = Math.min(page, pageCount);
   const visibleRecords = sortedRecords.slice(

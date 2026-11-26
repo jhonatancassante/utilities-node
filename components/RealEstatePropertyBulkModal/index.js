@@ -157,7 +157,10 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
         setGroupingIssues(getGroupingIssues(draft));
       })
       .catch(() => {
-        if (active) setError("Não foi possível recuperar a prévia salva neste navegador.");
+        if (active)
+          setError(
+            "Não foi possível recuperar a prévia salva neste navegador.",
+          );
       });
     return () => {
       active = false;
@@ -169,7 +172,9 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
       await saveRealEstatePropertyImportDraft(records);
       await router.push("/admin/real-estate-properties/import-review");
     } catch {
-      setError("Não foi possível preparar a página de correção. Verifique o armazenamento do navegador.");
+      setError(
+        "Não foi possível preparar a página de correção. Verifique o armazenamento do navegador.",
+      );
     }
   }
 
@@ -478,11 +483,20 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
           </div>
           {groupingIssues.length > 0 ? (
             <div className={styles.groupingWarning} role="alert">
-              <strong>Foram encontradas inconsistências de englobamento em {groupingIssues.length} CTM(s).</strong>
-              <p>Revise os cadastros antes de importar. Este aviso não impede a gravação no banco de dados.</p>
+              <strong>
+                Foram encontradas inconsistências de englobamento em{" "}
+                {groupingIssues.length} CTM(s).
+              </strong>
+              <p>
+                Revise os cadastros antes de importar. Este aviso não impede a
+                gravação no banco de dados.
+              </p>
             </div>
           ) : (
-            <p>Nenhuma inconsistência de englobamento foi encontrada. Confira a quantidade antes de concluir a importação.</p>
+            <p>
+              Nenhuma inconsistência de englobamento foi encontrada. Confira a
+              quantidade antes de concluir a importação.
+            </p>
           )}
         </div>
       )}

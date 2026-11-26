@@ -257,8 +257,12 @@ function AssessedValuesPage() {
           .includes(term),
     );
   }, [records, search]);
-  const { sortedRecords, sortState, handleSort, sortAnnouncement } = useSortableData(filteredRecords);
-  const previewSample = useMemo(() => preview?.records.slice(0, 5) ?? [], [preview]);
+  const { sortedRecords, sortState, handleSort, sortAnnouncement } =
+    useSortableData(filteredRecords);
+  const previewSample = useMemo(
+    () => preview?.records.slice(0, 5) ?? [],
+    [preview],
+  );
   const {
     sortedRecords: sortedPreviewRecords,
     sortState: previewSortState,
@@ -645,8 +649,10 @@ function AssessedValuesPage() {
                         key: column.name,
                         label: column.label,
                         render: (record) =>
-                          column.name === "year" ? record.year
-                            : column.name === "decree" ? record.decree || "—"
+                          column.name === "year"
+                            ? record.year
+                            : column.name === "decree"
+                              ? record.decree || "—"
                               : formatTableValue(record[column.name]),
                       }))}
                       showActions={false}
