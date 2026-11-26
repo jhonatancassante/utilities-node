@@ -499,8 +499,41 @@ async function createMany(inputValues, { overwriteExisting = false } = {}) {
   });
 }
 
+async function findByPhysicalPropertyIdAndYear(physicalPropertyId, year) {
+  const results = await database.query({
+    text: `
+      SELECT *
+      FROM real_estate_properties
+      WHERE physical_property_id = $1
+        AND year = $2
+        AND deleted_at IS NULL
+      ORDER BY annual ASC, updated_at DESC
+      LIMIT 1
+    ;`,
+    values: [physicalPropertyId, year],
+  });
+  return results.rows[0] || null;
+}
+
+async function findByCtmAndYear(ctm, year) {
+  const results = await database.query({
+    text: `
+      SELECT DISTINCT ON (physical_property_id) *
+      FROM real_estate_properties
+      WHERE ctm = $1
+        AND year = $2
+        AND deleted_at IS NULL
+      ORDER BY physical_property_id, annual ASC, updated_at DESC, physical_registration
+    ;`,
+    values: [ctm, year],
+  });
+  return results.rows;
+}
+
 const realEstateProperty = {
   create,
+  findByPhysicalPropertyIdAndYear,
+  findByCtmAndYear,
   createMany,
   findAll,
   findOneById,

@@ -1,0 +1,108 @@
+import { NotFoundError, ValidationError } from "@/infra/errors.js";
+import assessedValue from "@/models/assessed-value.js";
+import realEstateProperty from "@/models/real-estate-property.js";
+import { calculateSimple } from "@/features/certificates/services/calculators/calculate-simple.js";
+
+function validateRequest(physicalPropertyId, requestedYear) {
+  if (!Number.isInteger(physicalPropertyId) || physicalPropertyId < 1) {
+    throw new ValidationError({
+      message: "O código físico do imóvel deve ser um número inteiro positivo.",
+      action: "Informe um código físico válido.",
+    });
+  }
+  if (!Number.isInteger(requestedYear) || requestedYear < 1 || requestedYear > 9999) {
+    throw new ValidationError({
+      message: "O exercício da certidão deve ser um ano válido.",
+      action: "Informe um exercício entre 1 e 9999.",
+    });
+  }
+}
+
+function formatPhysicalRegistration(properties) {
+  const [first, ...remaining] = properties;
+  return [
+    first.physical_registration,
+    ...remaining.map((property) => property.physical_registration.slice(-2)),
+  ].join("/");
+}
+
+function sum(values) {
+  return Number(values.reduce((total, value) => total + value, 0).toFixed(2));
+}
+
+async function calculateVenalValue({
+  physical_property_id: physicalPropertyId,
+  year,
+  owner_rg: ownerRg = null,
+} = {}) {
+  const requestedYear = year ?? new Date().getFullYear();
+  validateRequest(physicalPropertyId, requestedYear);
+
+  let propertyYear = requestedYear;
+  let property = await realEstateProperty.findByPhysicalPropertyIdAndYear(
+    physicalPropertyId,
+    requestedYear,
+  );
+
+  if (!property) {
+    propertyYear = new Date().getFullYear();
+    property = await realEstateProperty.findByPhysicalPropertyIdAndYear(
+      physicalPropertyId,
+      propertyYear,
+    );
+  }
+
+  if (!property) {
+    throw new NotFoundError({
+      message: "O imóvel não foi encontrado no exercício solicitado nem no cadastro do ano corrente.",
+      action: "Confira o código físico informado e verifique se o imóvel está cadastrado.",
+    });
+  }
+
+  const assessedValues = await assessedValue.findOneByYear(requestedYear);
+  let properties = [property];
+
+  if (property.ctm_count > 1) {
+    const groupedProperties = await realEstateProperty.findByCtmAndYear(
+      property.ctm,
+      propertyYear,
+    );
+    if (groupedProperties.length > 1) {
+      properties = [
+        property,
+        ...groupedProperties.filter((item) => item.id !== property.id),
+      ];
+    }
+  }
+
+  const calculated = properties.map((item) =>
+    calculateSimple(item, assessedValues, requestedYear),
+  );
+  const landValue = sum(calculated.map((item) => item.land_value));
+  const buildingValue = sum(calculated.map((item) => item.building_value));
+
+  const totalBuiltArea = sum(properties.map((item) => Number(item.built_area || 0)));
+  const firstProperty = properties[0];
+
+  return {
+    year: requestedYear,
+    physical_property_id: physicalPropertyId,
+    physical_registration: formatPhysicalRegistration(properties),
+    owner_name: firstProperty.owner_name,
+    promissory_buyer: firstProperty.promissory_buyer || firstProperty.owner_name,
+    property_street: firstProperty.property_street,
+    property_number: firstProperty.property_number == null ? null : Number(firstProperty.property_number),
+    property_neighborhood: firstProperty.property_neighborhood,
+    property_block: firstProperty.property_block,
+    property_lots: firstProperty.property_lots,
+    property_complement: firstProperty.property_complement,
+    owner_rg: ownerRg,
+    land_area: Number(firstProperty.land_area),
+    built_area: totalBuiltArea,
+    land_value: landValue,
+    building_value: buildingValue,
+    total_value: sum([landValue, buildingValue]),
+  };
+}
+
+export default calculateVenalValue;

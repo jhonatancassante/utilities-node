@@ -1,5 +1,6 @@
 import controller from "@/infra/controller.js";
 import certificate from "@/models/certificate.js";
+import calculateVenalValue from "@/features/certificates/services/calculate-venal-value.js";
 import authorization from "@/models/authorization.js";
 
 export default controller.createController(
@@ -23,7 +24,15 @@ async function getHandler(request, response) {
 
 async function postHandler(request, response) {
   const currentUser = request.context.user;
-  const record = await certificate.create(request.body, currentUser.id);
+  const calculatedValues = await calculateVenalValue({
+    physical_property_id: request.body.physical_property_id,
+    year: request.body.year,
+    owner_rg: request.body.owner_rg,
+  });
+  const record = await certificate.create(
+    { ...request.body, ...calculatedValues },
+    currentUser.id,
+  );
   const output = authorization.filterOutput(
     currentUser,
     "read:certificate",

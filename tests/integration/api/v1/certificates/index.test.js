@@ -1,6 +1,7 @@
 import orchestrator from "tests/orchestrator.js";
 import certificate from "@/models/certificate.js";
 import realEstateProperty from "@/models/real-estate-property.js";
+import assessedValue from "@/models/assessed-value.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -27,6 +28,8 @@ async function createProperty() {
     grouping: "A",
     land_area: 250,
     built_area: 100,
+    construction_type: 10,
+    points: 70,
     property_neighborhood: "Centro",
     owner_name: "Proprietário de teste",
     promissory_buyer: "Compromissário de teste",
@@ -101,6 +104,11 @@ describe("GET e POST /api/v1/certificates", () => {
       "read:certificate",
     ]);
     const property = await createProperty();
+    await assessedValue.create({
+      year: 2026,
+      sector_1: 200,
+      residential_medium: 1200,
+    });
     const response = await fetch(collectionEndpoint(), {
       method: "POST",
       headers: {
@@ -113,21 +121,8 @@ describe("GET e POST /api/v1/certificates", () => {
         applicant_name: "Novo requerente",
         purpose: "Valor venal",
         physical_property_id: property.physical_property_id,
-        physical_registration: property.physical_registration,
-        owner_name: property.owner_name,
-        promissory_buyer: property.promissory_buyer,
-        property_street: property.property_street,
-        property_number: null,
-        property_neighborhood: property.property_neighborhood,
-        property_block: null,
-        property_lots: null,
-        property_complement: null,
+        year: 2026,
         owner_rg: null,
-        land_area: 250,
-        built_area: 100,
-        land_value: 50000,
-        building_value: 120000,
-        total_value: 170000,
         observations: "Certidão emitida para teste.",
       }),
     });
@@ -138,10 +133,50 @@ describe("GET e POST /api/v1/certificates", () => {
       protocol_year: 2026,
       applicant_name: "Novo requerente",
       validity_days: 30,
+      year: 2026,
+      physical_property_id: 987654,
+      land_value: "50000.00",
+      building_value: "120000.00",
+      total_value: "170000.00",
     });
     expect(body).not.toHaveProperty("is_updated");
     expect(body).not.toHaveProperty("deleted_at");
     expect(body).toHaveProperty("user_id");
+  });
+
+  test("Usando o cadastro físico atual sem alterar o exercício solicitado", async () => {
+    const session = await createSessionWithFeatures([
+      "create:certificate",
+      "read:certificate",
+    ]);
+    const property = await createProperty();
+    await assessedValue.create({
+      year: 2024,
+      sector_1: 100,
+      residential_medium: 500,
+    });
+    const response = await fetch(collectionEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${session.token}`,
+      },
+      body: JSON.stringify({
+        applicant_name: "Requerente de teste",
+        purpose: "Valor venal",
+        physical_property_id: property.physical_property_id,
+        year: 2024,
+        observations: "Certidão emitida para teste.",
+      }),
+    });
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({
+      year: 2024,
+      physical_property_id: property.physical_property_id,
+      land_value: "25000.00",
+      building_value: "50000.00",
+      total_value: "75000.00",
+    });
   });
 
   test("Rejeitando criação sem a feature correspondente", async () => {

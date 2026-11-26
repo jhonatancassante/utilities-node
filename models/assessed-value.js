@@ -247,8 +247,29 @@ async function createMany(inputValues) {
   });
 }
 
+async function findOneByYear(year) {
+  const results = await database.query({
+    text: `
+      SELECT *
+      FROM assessed_values
+      WHERE year = $1 AND deleted_at IS NULL
+      ORDER BY created_at DESC
+      LIMIT 1
+    ;`,
+    values: [year],
+  });
+  if (!results.rowCount) {
+    throw new NotFoundError({
+      message: `Não foram encontrados valores venais cadastrados para o exercício ${year}.`,
+      action: "Cadastre os valores venais do exercício solicitado e tente novamente.",
+    });
+  }
+  return results.rows[0];
+}
+
 const assessedValueModel = {
   create,
+  findOneByYear,
   findAll,
   findOneById,
   update,
