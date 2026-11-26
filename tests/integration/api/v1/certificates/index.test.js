@@ -18,7 +18,7 @@ async function createSessionWithFeatures(features) {
   return session;
 }
 
-async function createProperty() {
+async function createProperty(overrides = {}) {
   return realEstateProperty.create({
     year: 2026,
     physical_property_id: 987654,
@@ -35,6 +35,7 @@ async function createProperty() {
     promissory_buyer: "Compromissário de teste",
     land_sector: "1",
     property_street: "Rua de Teste",
+    ...overrides,
   });
 }
 
@@ -142,6 +143,65 @@ describe("GET e POST /api/v1/certificates", () => {
     expect(body).not.toHaveProperty("is_updated");
     expect(body).not.toHaveProperty("deleted_at");
     expect(body).toHaveProperty("user_id");
+  });
+
+  test("Calculando imóveis englobados a partir do cadastro terminado em 01", async () => {
+    const session = await createSessionWithFeatures([
+      "create:certificate",
+      "read:certificate",
+    ]);
+    const registrations = ["01", "02", "03", "04", "05"];
+    let requestedProperty;
+
+    for (const [index, suffix] of registrations.entries()) {
+      const property = await createProperty({
+        physical_property_id: 987660 + index,
+        physical_registration: `25.00003.0163.${suffix}`,
+        ctm: "25.00003.0163",
+        ctm_count: 5,
+        land_area: suffix === "01" ? 1000 : 999,
+        built_area: 10,
+        ideal_fraction: 0.1,
+        owner_name: suffix === "01" ? "Proprietário principal" : `Proprietário ${suffix}`,
+        promissory_buyer: null,
+        property_street: suffix === "01" ? "Rua do cadastro principal" : `Rua ${suffix}`,
+      });
+      if (suffix === "03") requestedProperty = property;
+    }
+
+    await assessedValue.create({
+      year: 2026,
+      sector_1: 200,
+      residential_medium: 1200,
+    });
+
+    const response = await fetch(collectionEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${session.token}`,
+      },
+      body: JSON.stringify({
+        applicant_name: "Requerente de teste",
+        purpose: "Valor venal",
+        physical_property_id: requestedProperty.physical_property_id,
+        year: 2026,
+        observations: "Certidão de imóvel englobado.",
+      }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({
+      physical_registration: "25.00003.0163.01/02/03/04/05",
+      owner_name: "Proprietário principal",
+      promissory_buyer: "Proprietário principal",
+      property_street: "Rua do cadastro principal",
+      land_area: "1000.00",
+      built_area: "50.00",
+      land_value: "100.00",
+      building_value: "60000.00",
+      total_value: "60100.00",
+    });
   });
 
   test("Usando o cadastro físico atual sem alterar o exercício solicitado", async () => {
