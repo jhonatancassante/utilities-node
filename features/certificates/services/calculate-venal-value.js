@@ -18,6 +18,16 @@ function validateRequest(physicalPropertyId, requestedYear) {
   }
 }
 
+function sortPropertiesByRegistration(properties) {
+  return [...properties].sort((first, second) =>
+    first.physical_registration.localeCompare(
+      second.physical_registration,
+      undefined,
+      { numeric: true },
+    ),
+  );
+}
+
 function formatPhysicalRegistration(properties) {
   const [first, ...remaining] = properties;
   return [
@@ -68,9 +78,21 @@ async function calculateVenalValue({
       propertyYear,
     );
     if (groupedProperties.length > 1) {
+      properties = sortPropertiesByRegistration(groupedProperties);
+      const mainProperty = properties.find((item) =>
+        /(?:^|\\.)01$/.test(item.physical_registration),
+      );
+
+      if (!mainProperty) {
+        throw new ValidationError({
+          message: "O cadastro principal do imóvel englobado, terminado em 01, não foi encontrado.",
+          action: "Revise os cadastros vinculados ao mesmo CTM antes de emitir a certidão.",
+        });
+      }
+
       properties = [
-        property,
-        ...groupedProperties.filter((item) => item.id !== property.id),
+        mainProperty,
+        ...properties.filter((item) => item.id !== mainProperty.id),
       ];
     }
   }
