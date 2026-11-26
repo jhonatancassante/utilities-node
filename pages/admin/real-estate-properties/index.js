@@ -4,6 +4,7 @@ import AppHead from "@/components/AppHead";
 import AdminBackButton from "@/components/AdminBackButton";
 import Button from "@/components/Button";
 import AdminDataTable from "@/components/AdminDataTable";
+import useSortableData from "@/hooks/use-sortable-data.js";
 import AdminPagination from "@/components/AdminPagination";
 import Layout from "@/components/Layout";
 import RealEstatePropertyBulkModal from "@/components/RealEstatePropertyBulkModal";
@@ -128,9 +129,10 @@ function RealEstatePropertiesPage() {
       return matchesYear && matchesUpdated && matchesSearch;
     });
   }, [records, search, yearFilter, updatedFilter]);
+  const { sortedRecords, sortState, handleSort, sortAnnouncement } = useSortableData(filteredRecords);
   const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
   const currentPage = Math.min(page, pageCount);
-  const visibleRecords = filteredRecords.slice(
+  const visibleRecords = sortedRecords.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
@@ -539,6 +541,10 @@ function RealEstatePropertiesPage() {
                       key,
                       label,
                     }))}
+                    sortState={sortState}
+                    onSort={handleSort}
+                    sortAnnouncement={sortAnnouncement}
+                    caption="Cadastros de imóveis"
                     selectable={canDelete}
                     selectedIds={selectedIds}
                     allVisibleSelected={allVisibleSelected}

@@ -5,6 +5,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import AdminDataTable from "@/components/AdminDataTable";
+import useSortableData from "@/hooks/use-sortable-data.js";
 import AdminPagination from "@/components/AdminPagination";
 import FileDropzone from "@/components/FileDropzone";
 import Layout from "@/components/Layout";
@@ -256,9 +257,17 @@ function AssessedValuesPage() {
           .includes(term),
     );
   }, [records, search]);
+  const { sortedRecords, sortState, handleSort, sortAnnouncement } = useSortableData(filteredRecords);
+  const previewSample = useMemo(() => preview?.records.slice(0, 5) ?? [], [preview]);
+  const {
+    sortedRecords: sortedPreviewRecords,
+    sortState: previewSortState,
+    handleSort: handlePreviewSort,
+    sortAnnouncement: previewSortAnnouncement,
+  } = useSortableData(previewSample);
   const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
   const currentPage = Math.min(page, pageCount);
-  const visibleRecords = filteredRecords.slice(
+  const visibleRecords = sortedRecords.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
@@ -630,32 +639,23 @@ function AssessedValuesPage() {
                       Os dados abaixo são uma amostra. Todos os registros foram
                       validados antes da importação.
                     </p>
-                    <div className={styles.tableWrapper}>
-                      <table>
-                        <thead>
-                          <tr>
-                            {COLUMNS.map((column) => (
-                              <th key={column.name}>{column.label}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {preview.records.slice(0, 5).map((record, index) => (
-                            <tr key={index}>
-                              {COLUMNS.map((column) => (
-                                <td key={column.name}>
-                                  {column.name === "year"
-                                    ? record.year
-                                    : column.name === "decree"
-                                      ? record.decree || "—"
-                                      : formatTableValue(record[column.name])}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    <AdminDataTable
+                      records={sortedPreviewRecords}
+                      columns={COLUMNS.map((column) => ({
+                        key: column.name,
+                        label: column.label,
+                        render: (record) =>
+                          column.name === "year" ? record.year
+                            : column.name === "decree" ? record.decree || "—"
+                              : formatTableValue(record[column.name]),
+                      }))}
+                      showActions={false}
+                      getRowKey={(record, index) => record.id ?? index}
+                      sortState={previewSortState}
+                      onSort={handlePreviewSort}
+                      sortAnnouncement={previewSortAnnouncement}
+                      caption="Prévia dos valores venais do arquivo CSV"
+                    />
                     {preview.records.length > 5 && (
                       <small>
                         Exibindo os primeiros 5 registros de{" "}
@@ -732,6 +732,10 @@ function AssessedValuesPage() {
                           formatTableValue(record[column.name])
                         ),
                     }))}
+                    sortState={sortState}
+                    onSort={handleSort}
+                    sortAnnouncement={sortAnnouncement}
+                    caption="Valores venais cadastrados"
                     selectable={canDelete}
                     selectedIds={selectedIds}
                     allVisibleSelected={allVisibleSelected}

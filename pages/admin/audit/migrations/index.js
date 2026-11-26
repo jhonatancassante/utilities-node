@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
+import AdminDataTable from "@/components/AdminDataTable";
+import useSortableData from "@/hooks/use-sortable-data.js";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
@@ -79,6 +81,8 @@ export default function AdminMigrationAuditPage() {
       active = false;
     };
   }, [isLoading, user]);
+
+  const { sortedRecords: sortedMigrations, sortState, handleSort, sortAnnouncement } = useSortableData(migrations);
 
   if (isLoading || (!user && !error)) {
     return (
@@ -175,28 +179,19 @@ export default function AdminMigrationAuditPage() {
                 Ainda não há migrations registradas neste banco de dados.
               </p>
             ) : (
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Migration</th>
-                      <th>Executada em</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {migrations.map((migration) => (
-                      <tr key={migration.id}>
-                        <td>{migration.id}</td>
-                        <td>
-                          <strong>{migration.name}</strong>
-                        </td>
-                        <td>{formatDate(migration.run_on)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdminDataTable
+                records={sortedMigrations}
+                columns={[
+                  { key: "id", label: "ID" },
+                  { key: "name", label: "Migration", render: (migration) => <strong>{migration.name}</strong> },
+                  { key: "run_on", label: "Executada em", render: (migration) => formatDate(migration.run_on) },
+                ]}
+                showActions={false}
+                sortState={sortState}
+                onSort={handleSort}
+                sortAnnouncement={sortAnnouncement}
+                caption="Migrations executadas"
+              />
             )}
 
             <p className={styles.footnote}>

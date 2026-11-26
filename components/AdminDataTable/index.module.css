@@ -78,3 +78,63 @@
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
+
+
+.tableWrapper .sortableHeader {
+  padding: 0;
+}
+.sortButton {
+  width: 100%;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.sortButton i {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+.sortButton:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.sortButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.hasActions th:last-child,
+.hasActions td:last-child {
+  position: sticky;
+  right: 0;
+}
+.hasActions th:last-child {
+  z-index: 4;
+}
+.hasActions td:last-child {
+  z-index: 1;
+  background: var(--bg-elevated);
+  box-shadow: -6px 0 8px rgba(0, 0, 0, 0.06);
+}
+.hasActions tbody tr:hover td:last-child {
+  background: var(--accent-soft);
+}
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

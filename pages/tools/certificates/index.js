@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import AdminDataTable from "@/components/AdminDataTable";
+import useSortableData from "@/hooks/use-sortable-data.js";
 import AdminPagination from "@/components/AdminPagination";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
@@ -104,9 +105,11 @@ function CertificatesPage() {
     });
   }, [records, search, yearFilter]);
 
+  const { sortedRecords, sortState, handleSort, sortAnnouncement } = useSortableData(filteredRecords);
+
   const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
   const currentPage = Math.min(page, pageCount);
-  const visibleRecords = filteredRecords.slice(
+  const visibleRecords = sortedRecords.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
@@ -403,6 +406,10 @@ function CertificatesPage() {
                   <AdminDataTable
                     records={visibleRecords}
                     columns={columns}
+                    sortState={sortState}
+                    onSort={handleSort}
+                    sortAnnouncement={sortAnnouncement}
+                    caption="Certidões emitidas"
                     selectable
                     selectedIds={selectedIds}
                     allVisibleSelected={allVisibleSelected}

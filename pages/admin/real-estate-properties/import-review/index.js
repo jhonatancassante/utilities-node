@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import AppHead from "@/components/AppHead";
 import AdminBackButton from "@/components/AdminBackButton";
+import AdminDataTable from "@/components/AdminDataTable";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
 import { hasAdminAccess, hasAdminSectionAccess } from "@/models/authorization.js";
 import getGroupingIssues from "@/lib/client/real-estate-property-grouping.js";
+import { getNextSortState, sortRecords } from "@/lib/client/sort-records.js";
 import {
   getRealEstatePropertyImportDraft,
   saveRealEstatePropertyImportDraft,
@@ -22,6 +24,16 @@ function RealEstatePropertyGroupingReviewPage() {
   const [isLoadingDraft, setIsLoadingDraft] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const [sortState, setSortState] = useState(null);
+  const [sortAnnouncement, setSortAnnouncement] = useState("");
+
+  function handleSort(key, label) {
+    const nextSortState = getNextSortState(sortState, key);
+    setSortState(nextSortState);
+    setSortAnnouncement(nextSortState
+      ? "Ordenado por " + label + ", ordem " + (nextSortState.direction === "asc" ? "crescente." : "decrescente.")
+      : "Ordenação removida. A ordem original foi restaurada.");
+  }
 
   useEffect(() => {
     let active = true;
@@ -139,28 +151,32 @@ function RealEstatePropertyGroupingReviewPage() {
                     <ul className={styles.issueList}>
                       {group.issues.map((issue) => <li key={issue}>{issue}</li>)}
                     </ul>
-                    <div className={styles.tableWrapper}>
-                      <table className={styles.table}>
-                        <thead><tr><th>ID físico</th><th>Cadastro do imóvel</th><th>CTM</th><th>CTM Count</th><th>Englobamento</th></tr></thead>
-                        <tbody>
-                          {group.properties.map((record) => (
-                            <tr key={record.physical_property_id}>
-                              <td>{record.physical_property_id}</td>
-                              <td>{record.physical_registration}</td>
-                              <td>{record.ctm}</td>
-                              <td>{record.ctm_count}</td>
-                              <td>
-                                <select className={shared.input} value={record.grouping} onChange={(event) => updateGrouping(record.physical_property_id, event.target.value)} aria-label={"Englobamento do cadastro " + record.physical_registration}>
-                                  <option value="I">I — Individual</option>
-                                  <option value="P">P — Principal</option>
-                                  <option value="A">A — Agregado</option>
-                                </select>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                    <AdminDataTable
+                      records={sortRecords(group.properties, sortState)}
+                      columns={[
+                        { key: "physical_property_id", label: "ID físico" },
+                        { key: "physical_registration", label: "Cadastro do imóvel" },
+                        { key: "ctm", label: "CTM" },
+                        { key: "ctm_count", label: "CTM Count" },
+                        {
+                          key: "grouping",
+                          label: "Englobamento",
+                          render: (record) => (
+                            <select className={shared.input} value={record.grouping} onChange={(event) => updateGrouping(record.physical_property_id, event.target.value)} aria-label={"Englobamento do cadastro " + record.physical_registration}>
+                              <option value="I">I — Individual</option>
+                              <option value="P">P — Principal</option>
+                              <option value="A">A — Agregado</option>
+                            </select>
+                          ),
+                        },
+                      ]}
+                      showActions={false}
+                      getRowKey={(record) => record.physical_property_id}
+                      sortState={sortState}
+                      onSort={handleSort}
+                      sortAnnouncement={sortAnnouncement}
+                      caption={"Cadastros do CTM " + group.ctm}
+                    />
                   </section>
                 ))}
               </>
