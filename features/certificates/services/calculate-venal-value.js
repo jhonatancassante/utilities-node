@@ -82,7 +82,14 @@ async function calculateVenalValue({
   const assessedValues = await assessedValue.findOneByYear(requestedYear);
   let properties = [property];
 
-  if (property.ctm_count > 1) {
+  if (!["I", "P", "A"].includes(property.grouping)) {
+    throw new ValidationError({
+      message: `O CTM ${property.ctm} possui um valor inválido no campo de englobamento do cadastro ${property.physical_registration}: "${property.grouping}".`,
+      action: "Corrija o englobamento para I, P ou A antes de emitir a certidão.",
+    });
+  }
+
+  if (property.grouping !== "I") {
     let groupedProperties = await realEstateProperty.findByCtmAndYear(
       property.ctm,
       propertyYear,
@@ -106,29 +113,43 @@ async function calculateVenalValue({
 
     if (groupedProperties.length !== Number(property.ctm_count)) {
       throw new ValidationError({
-        message: `O imóvel informa ${property.ctm_count} cadastros vinculados ao CTM, mas foram encontrados ${groupedProperties.length} cadastros ativos no exercício utilizado.`,
-        action: "Revise os cadastros do imóvel englobado antes de emitir a certidão.",
+        message: `O CTM ${property.ctm} informa ${property.ctm_count} cadastros vinculados, mas foram encontrados ${groupedProperties.length} cadastros ativos no exercício utilizado.`,
+        action: "Revise os cadastros vinculados ao CTM antes de emitir a certidão.",
       });
     }
 
-    if (groupedProperties.length > 1) {
-      properties = sortPropertiesByRegistration(groupedProperties);
-      const mainProperty = properties.find((item) =>
-        item.physical_registration.endsWith(".01"),
-      );
+    properties = sortPropertiesByRegistration(groupedProperties);
+    const invalidProperties = properties.filter((item) => {
+      const isMainRegistration = String(item.physical_registration).endsWith(".01");
+      return isMainRegistration
+        ? item.grouping !== "P"
+        : item.grouping !== "A";
+    });
+    const mainProperties = properties.filter((item) => item.grouping === "P");
 
-      if (!mainProperty) {
-        throw new ValidationError({
-          message: "O cadastro principal do imóvel englobado, terminado em 01, não foi encontrado.",
-          action: "Revise os cadastros vinculados ao mesmo CTM antes de emitir a certidão.",
-        });
+    if (mainProperties.length !== 1 || invalidProperties.length > 0) {
+      const invalidRegistrations = invalidProperties.map(
+        (item) => `${item.physical_registration} (englobamento ${item.grouping})`,
+      );
+      if (mainProperties.length !== 1 && invalidProperties.length === 0) {
+        invalidRegistrations.push(
+          mainProperties.length === 0
+            ? "nenhum cadastro marcado como P"
+            : "mais de um cadastro marcado como P",
+        );
       }
 
-      properties = [
-        mainProperty,
-        ...properties.filter((item) => item.id !== mainProperty.id),
-      ];
+      throw new ValidationError({
+        message: `O CTM ${property.ctm} possui inconsistências no englobamento: ${invalidRegistrations.join(", ")}.`,
+        action: "O cadastro terminado em .01 deve ser P e todos os demais devem ser A. Corrija os cadastros informados antes de emitir a certidão.",
+      });
     }
+
+    const mainProperty = mainProperties[0];
+    properties = [
+      mainProperty,
+      ...properties.filter((item) => item.id !== mainProperty.id),
+    ];
   }
 
   const calculated = properties.map((item) =>
