@@ -80,7 +80,7 @@ async function calculateVenalValue({
     if (groupedProperties.length > 1) {
       properties = sortPropertiesByRegistration(groupedProperties);
       const mainProperty = properties.find((item) =>
-        /(?:^|\\.)01$/.test(item.physical_registration),
+        item.physical_registration.endsWith(".01"),
       );
 
       if (!mainProperty) {
