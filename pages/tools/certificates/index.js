@@ -192,7 +192,7 @@ function CertificatesPage() {
   if (isLoading || (!user && !error)) {
     return (
       <>
-        <AppHead title="Certidões" />
+        <AppHead title="Certidão de Valor Venal" />
         <Layout>
           <main className={shared.container}>
             <section className={shared.card}>
@@ -284,7 +284,7 @@ function CertificatesPage() {
   return (
     <>
       <AppHead
-        title="Certidões"
+        title="Certidão de Valor Venal"
         description="Consulte e emita certidões de valor venal."
       />
       <Layout>
@@ -302,8 +302,7 @@ function CertificatesPage() {
               <div className={shared.icon} aria-hidden="true">
                 <i className="fas fa-file-alt"></i>
               </div>
-              <span className={shared.badge}>FERRAMENTAS</span>
-              <h1>Certidões</h1>
+              <h1>Certidão de Valor Venal</h1>
               <p>
                 Consulte as certidões emitidas e faça novas emissões com cálculo
                 automático dos valores venais.
@@ -367,7 +366,7 @@ function CertificatesPage() {
               <div className={styles.resultsHeading}>
                 <div>
                   <h2>Certidões emitidas</h2>
-                  <span>{filteredRecords.length} registro(s)</span>
+                  <span>{filteredRecords.length} certidão(ões)</span>
                 </div>
                 <div className={styles.selectionActions}>
                   {canDelete && selectedIds.length > 0 && (

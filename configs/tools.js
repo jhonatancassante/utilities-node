@@ -75,7 +75,7 @@ const toolsList = [
   },
   {
     slug: "certificates",
-    title: "Certidões",
+    title: "Certidão de Valor Venal",
     description: "Consulte e emita certidões de valor venal.",
     icon: "fa-file-alt",
     status: TOOL_STATUS.available,

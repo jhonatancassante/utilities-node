@@ -202,9 +202,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
 
   const title = isEditing
     ? isReadOnly
-      ? "Visualizar certidão"
-      : "Editar certidão"
-    : "Emitir nova certidão";
+      ? "Visualizar Certidão de Valor Venal"
+      : "Editar Certidão de Valor Venal"
+    : "Emitir Certidão de Valor Venal";
 
   if (isLoading || (!user && !error) || (isEditing && isLoadingRecord)) {
     return (
@@ -254,7 +254,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
     <>
       <AppHead
         title={title}
-        description="Emita e mantenha certidões de valor venal."
+        description="Emita e mantenha Certidões de Valor Venal."
       />
       <Layout>
         <main className={shared.container + " " + shared.containerUltraWide}>
@@ -271,7 +271,6 @@ function CertificateEditor({ recordId, viewOnly = false }) {
               <div className={shared.icon} aria-hidden="true">
                 <i className="fas fa-file-alt"></i>
               </div>
-              <span className={shared.badge}>FERRAMENTAS</span>
               <h1>{title}</h1>
               <p>
                 {isReadOnly
