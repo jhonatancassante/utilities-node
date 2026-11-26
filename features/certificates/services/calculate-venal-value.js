@@ -10,7 +10,11 @@ function validateRequest(physicalPropertyId, requestedYear) {
       action: "Informe um código físico válido.",
     });
   }
-  if (!Number.isInteger(requestedYear) || requestedYear < 1 || requestedYear > 9999) {
+  if (
+    !Number.isInteger(requestedYear) ||
+    requestedYear < 1 ||
+    requestedYear > 9999
+  ) {
     throw new ValidationError({
       message: "O exercício da certidão deve ser um ano válido.",
       action: "Informe um exercício entre 1 e 9999.",
@@ -51,7 +55,8 @@ async function calculateVenalValue({
   if (typeof isUpdated !== "boolean") {
     throw new ValidationError({
       message: "A opção Atualizado deve ser verdadeira ou falsa.",
-      action: "Informe true para utilizar o cadastro atualizado ou false para utilizar o lançamento anual.",
+      action:
+        "Informe true para utilizar o cadastro atualizado ou false para utilizar o lançamento anual.",
     });
   }
   const annual = !isUpdated;
@@ -74,8 +79,10 @@ async function calculateVenalValue({
 
   if (!property) {
     throw new NotFoundError({
-      message: "O imóvel não foi encontrado no exercício solicitado nem no cadastro do ano corrente.",
-      action: "Confira o código físico informado e verifique se o imóvel está cadastrado.",
+      message:
+        "O imóvel não foi encontrado no exercício solicitado nem no cadastro do ano corrente.",
+      action:
+        "Confira o código físico informado e verifique se o imóvel está cadastrado.",
     });
   }
 
@@ -84,7 +91,8 @@ async function calculateVenalValue({
   if (!Number.isInteger(ctmCount) || ctmCount < 1) {
     throw new ValidationError({
       message: `O CTM ${property.ctm} informa uma contagem inválida de ${property.ctm_count} cadastros vinculados.`,
-      action: "Corrija a contagem de cadastros vinculados ao CTM antes de emitir a certidão.",
+      action:
+        "Corrija a contagem de cadastros vinculados ao CTM antes de emitir a certidão.",
     });
   }
 
@@ -116,7 +124,8 @@ async function calculateVenalValue({
     if (groupedProperties.length !== ctmCount) {
       throw new ValidationError({
         message: `O CTM ${property.ctm} informa ${property.ctm_count} cadastros vinculados, mas foram encontrados ${groupedProperties.length} cadastros ativos no exercício utilizado.`,
-        action: "Revise os cadastros vinculados ao CTM antes de emitir a certidão.",
+        action:
+          "Revise os cadastros vinculados ao CTM antes de emitir a certidão.",
       });
     }
 
@@ -126,12 +135,16 @@ async function calculateVenalValue({
 
     if (inconsistentCountProperties.length > 0) {
       const registrations = inconsistentCountProperties
-        .map((item) => `${item.physical_registration} (contagem ${item.ctm_count})`)
+        .map(
+          (item) =>
+            `${item.physical_registration} (contagem ${item.ctm_count})`,
+        )
         .join(", ");
 
       throw new ValidationError({
         message: `O CTM ${property.ctm} possui contagens divergentes entre os cadastros: ${registrations}.`,
-        action: "Corrija a contagem de cadastros vinculados em todos os imóveis do CTM antes de emitir a certidão.",
+        action:
+          "Corrija a contagem de cadastros vinculados em todos os imóveis do CTM antes de emitir a certidão.",
       });
     }
 
@@ -141,16 +154,22 @@ async function calculateVenalValue({
 
     if (invalidGroupingProperties.length > 0) {
       const registrations = invalidGroupingProperties
-        .map((item) => `${item.physical_registration} (englobamento ${item.grouping})`)
+        .map(
+          (item) =>
+            `${item.physical_registration} (englobamento ${item.grouping})`,
+        )
         .join(", ");
 
       throw new ValidationError({
         message: `O CTM ${property.ctm} possui valores inválidos no campo de englobamento: ${registrations}.`,
-        action: "Corrija o englobamento para I, P ou A antes de emitir a certidão.",
+        action:
+          "Corrija o englobamento para I, P ou A antes de emitir a certidão.",
       });
     }
 
-    const allIndividual = groupedProperties.every((item) => item.grouping === "I");
+    const allIndividual = groupedProperties.every(
+      (item) => item.grouping === "I",
+    );
 
     if (!allIndividual) {
       const sortedProperties = sortPropertiesByRegistration(groupedProperties);
@@ -158,7 +177,9 @@ async function calculateVenalValue({
         (item) => item.grouping === "P",
       );
       const invalidProperties = sortedProperties.filter((item) => {
-        const isMainRegistration = String(item.physical_registration).replace(/\D/g, "").endsWith("01");
+        const isMainRegistration = String(item.physical_registration)
+          .replace(/\D/g, "")
+          .endsWith("01");
         return isMainRegistration
           ? item.grouping !== "P"
           : item.grouping !== "A";
@@ -168,7 +189,8 @@ async function calculateVenalValue({
         const invalidRegistrations = sortedProperties
           .filter((item) => invalidProperties.includes(item))
           .map(
-            (item) => `${item.physical_registration} (englobamento ${item.grouping})`,
+            (item) =>
+              `${item.physical_registration} (englobamento ${item.grouping})`,
           );
 
         if (mainProperties.length === 0) {
@@ -179,7 +201,8 @@ async function calculateVenalValue({
 
         throw new ValidationError({
           message: `O CTM ${property.ctm} possui inconsistências no englobamento: ${invalidRegistrations.join(", ")}.`,
-          action: "Todos os cadastros devem ser I ou, no caso de englobamento, o cadastro terminado em .01 deve ser P e todos os demais devem ser A.",
+          action:
+            "Todos os cadastros devem ser I ou, no caso de englobamento, o cadastro terminado em .01 deve ser P e todos os demais devem ser A.",
         });
       }
 
@@ -197,7 +220,9 @@ async function calculateVenalValue({
   const landValue = sum(calculated.map((item) => item.land_value));
   const buildingValue = sum(calculated.map((item) => item.building_value));
 
-  const totalBuiltArea = sum(properties.map((item) => Number(item.built_area || 0)));
+  const totalBuiltArea = sum(
+    properties.map((item) => Number(item.built_area || 0)),
+  );
   const firstProperty = properties[0];
 
   return {
@@ -205,9 +230,13 @@ async function calculateVenalValue({
     physical_property_id: physicalPropertyId,
     physical_registration: formatPhysicalRegistration(properties),
     owner_name: firstProperty.owner_name,
-    promissory_buyer: firstProperty.promissory_buyer || firstProperty.owner_name,
+    promissory_buyer:
+      firstProperty.promissory_buyer || firstProperty.owner_name,
     property_street: firstProperty.property_street,
-    property_number: firstProperty.property_number == null ? null : Number(firstProperty.property_number),
+    property_number:
+      firstProperty.property_number == null
+        ? null
+        : Number(firstProperty.property_number),
     property_neighborhood: firstProperty.property_neighborhood,
     property_block: firstProperty.property_block,
     property_lots: firstProperty.property_lots,

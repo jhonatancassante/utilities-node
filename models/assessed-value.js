@@ -261,7 +261,8 @@ async function findOneByYear(year) {
   if (!results.rowCount) {
     throw new NotFoundError({
       message: `Não foram encontrados valores venais cadastrados para o exercício ${year}.`,
-      action: "Cadastre os valores venais do exercício solicitado e tente novamente.",
+      action:
+        "Cadastre os valores venais do exercício solicitado e tente novamente.",
     });
   }
   return results.rows[0];

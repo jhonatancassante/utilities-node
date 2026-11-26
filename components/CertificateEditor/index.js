@@ -46,8 +46,7 @@ function CertificateEditor({ recordId }) {
   const canUpdateOwn = user?.features?.includes("update:certificate");
   const canUpdateOthers = user?.features?.includes("update:certificate:others");
   const canEdit =
-    canUpdateOthers ||
-    (canUpdateOwn && record?.user_id === user?.id);
+    canUpdateOthers || (canUpdateOwn && record?.user_id === user?.id);
 
   useEffect(() => {
     if (
@@ -57,11 +56,7 @@ function CertificateEditor({ recordId }) {
     ) {
       router.replace("/login");
     }
-    if (
-      !isLoading &&
-      user &&
-      !hasAdminSectionAccess(user, "certificates")
-    ) {
+    if (!isLoading && user && !hasAdminSectionAccess(user, "certificates")) {
       router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
     }
     if (!isLoading && user && !isEditing && !canCreate) {
@@ -211,11 +206,7 @@ function CertificateEditor({ recordId }) {
       : "Editar certidão"
     : "Emitir nova certidão";
 
-  if (
-    isLoading ||
-    (!user && !error) ||
-    (isEditing && isLoadingRecord)
-  ) {
+  if (isLoading || (!user && !error) || (isEditing && isLoadingRecord)) {
     return (
       <>
         <AppHead title={title} />
@@ -291,7 +282,9 @@ function CertificateEditor({ recordId }) {
             {feedback && (
               <div className={styles.feedback}>
                 <StatusMessage
-                  type={feedback.type === "success" ? "success" : "inline-error"}
+                  type={
+                    feedback.type === "success" ? "success" : "inline-error"
+                  }
                   name={feedback.name}
                   action={feedback.action}
                 >
@@ -300,7 +293,9 @@ function CertificateEditor({ recordId }) {
               </div>
             )}
             {isEditing && !record ? (
-              <p className={styles.empty}>Não foi possível carregar a certidão.</p>
+              <p className={styles.empty}>
+                Não foi possível carregar a certidão.
+              </p>
             ) : (
               <form className={styles.form} onSubmit={handleSave}>
                 <section className={styles.formSection}>
@@ -336,7 +331,9 @@ function CertificateEditor({ recordId }) {
                       />
                     </label>
                     <label className={styles.third}>
-                      <span className={shared.label}>Código físico do imóvel *</span>
+                      <span className={shared.label}>
+                        Código físico do imóvel *
+                      </span>
                       <input
                         className={shared.input}
                         type="number"
@@ -344,7 +341,10 @@ function CertificateEditor({ recordId }) {
                         step="1"
                         value={form.physical_property_id}
                         onChange={(event) =>
-                          updateField("physical_property_id", event.target.value)
+                          updateField(
+                            "physical_property_id",
+                            event.target.value,
+                          )
                         }
                         required
                         disabled={isReadOnly || isSaving || isEditing}
@@ -445,15 +445,21 @@ function CertificateEditor({ recordId }) {
                     <div className={styles.valueGrid}>
                       <div>
                         <span>Valor venal do terreno</span>
-                        <strong>{formatCurrency(calculation.land_value)}</strong>
+                        <strong>
+                          {formatCurrency(calculation.land_value)}
+                        </strong>
                       </div>
                       <div>
                         <span>Valor venal da edificação</span>
-                        <strong>{formatCurrency(calculation.building_value)}</strong>
+                        <strong>
+                          {formatCurrency(calculation.building_value)}
+                        </strong>
                       </div>
                       <div>
                         <span>Valor venal total</span>
-                        <strong>{formatCurrency(calculation.total_value)}</strong>
+                        <strong>
+                          {formatCurrency(calculation.total_value)}
+                        </strong>
                       </div>
                     </div>
                   </section>
@@ -461,7 +467,9 @@ function CertificateEditor({ recordId }) {
                 <section className={styles.formSection}>
                   <div className={styles.sectionHeading}>
                     <h2>Informações complementares</h2>
-                    <p>Validade e observações que serão gravadas na certidão.</p>
+                    <p>
+                      Validade e observações que serão gravadas na certidão.
+                    </p>
                   </div>
                   <div className={styles.grid}>
                     <label className={styles.third}>
@@ -506,10 +514,7 @@ function CertificateEditor({ recordId }) {
                     <Button
                       type="submit"
                       icon="fa-save"
-                      disabled={
-                        isSaving ||
-                        (isEditing ? false : !calculation)
-                      }
+                      disabled={isSaving || (isEditing ? false : !calculation)}
                     >
                       {isSaving
                         ? "Gravando..."

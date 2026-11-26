@@ -40,7 +40,9 @@ const INSERT_BATCH_SIZE = 500;
 function formatCtm(value) {
   const digits = value.replace(/\\D/g, "");
   if (digits.length !== 11) return value;
-  return digits.slice(0, 2) + "." + digits.slice(2, 7) + "." + digits.slice(7, 11);
+  return (
+    digits.slice(0, 2) + "." + digits.slice(2, 7) + "." + digits.slice(7, 11)
+  );
 }
 
 function validateInput(inputValues, { requiredFields = [] } = {}) {
@@ -509,7 +511,11 @@ async function createMany(inputValues, { overwriteExisting = false } = {}) {
   });
 }
 
-async function findByPhysicalPropertyIdAndYear(physicalPropertyId, year, annual) {
+async function findByPhysicalPropertyIdAndYear(
+  physicalPropertyId,
+  year,
+  annual,
+) {
   const results = await database.query({
     text: `
       SELECT *

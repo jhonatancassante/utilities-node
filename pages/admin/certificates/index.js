@@ -59,11 +59,7 @@ function CertificatesPage() {
     ) {
       router.replace("/login");
     }
-    if (
-      !isLoading &&
-      user &&
-      !hasAdminSectionAccess(user, "certificates")
-    ) {
+    if (!isLoading && user && !hasAdminSectionAccess(user, "certificates")) {
       router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
     }
   }, [error, isLoading, router, user]);

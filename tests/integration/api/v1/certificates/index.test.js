@@ -98,9 +98,12 @@ describe("Cálculo simples e classificação construtiva", () => {
     [2016, "commercial", 45, "simple"],
     [2016, "industrial", 46, "medium"],
     [2016, "commercial", 96, "good"],
-  ])("Classificando %s, %s, %s pontos como %s", (year, category, points, expected) => {
-    expect(getPropertyClassification(points, year, category)).toBe(expected);
-  });
+  ])(
+    "Classificando %s, %s, %s pontos como %s",
+    (year, category, points, expected) => {
+      expect(getPropertyClassification(points, year, category)).toBe(expected);
+    },
+  );
 
   test("Calculando o terreno com o setor especial 9a", () => {
     const result = calculateSimple(
@@ -175,7 +178,9 @@ describe("Cálculo simples e classificação construtiva", () => {
         { sector_1: 200 },
         2026,
       ),
-    ).toThrow("A pontuação do imóvel é necessária para calcular o valor da construção.");
+    ).toThrow(
+      "A pontuação do imóvel é necessária para calcular o valor da construção.",
+    );
   });
 
   test("Rejeitando cálculo quando falta o valor venal do setor", () => {
@@ -191,7 +196,9 @@ describe("Cálculo simples e classificação construtiva", () => {
         {},
         2026,
       ),
-    ).toThrow("O valor venal do terreno para o setor 1 não está cadastrado em 2026.");
+    ).toThrow(
+      "O valor venal do terreno para o setor 1 não está cadastrado em 2026.",
+    );
   });
 });
 
@@ -267,7 +274,12 @@ describe("GET e POST /api/v1/certificates", () => {
     [false, "60000.00", "24000.00", "84000.00"],
   ])(
     "Selecionando a versão correta do imóvel quando Atualizado é %s",
-    async (isUpdated, expectedLandValue, expectedBuildingValue, expectedTotalValue) => {
+    async (
+      isUpdated,
+      expectedLandValue,
+      expectedBuildingValue,
+      expectedTotalValue,
+    ) => {
       const session = await createSessionWithFeatures([
         "create:certificate",
         "read:certificate",
@@ -328,18 +340,18 @@ describe("GET e POST /api/v1/certificates", () => {
       const property = await createProperty({
         physical_property_id: 987660 + index,
         physical_registration:
-          suffix === "01"
-            ? "2500003016301"
-            : `25.00003.0163.${suffix}`,
+          suffix === "01" ? "2500003016301" : `25.00003.0163.${suffix}`,
         ctm: suffix === "02" ? "25000030163" : "25.00003.0163",
         ctm_count: 5,
         grouping: suffix === "01" ? "P" : "A",
         land_area: suffix === "01" ? 1000 : 999,
         built_area: 10,
         ideal_fraction: 0.1,
-        owner_name: suffix === "01" ? "Proprietário principal" : `Proprietário ${suffix}`,
+        owner_name:
+          suffix === "01" ? "Proprietário principal" : `Proprietário ${suffix}`,
         promissory_buyer: null,
-        property_street: suffix === "01" ? "Rua do cadastro principal" : `Rua ${suffix}`,
+        property_street:
+          suffix === "01" ? "Rua do cadastro principal" : `Rua ${suffix}`,
       });
       if (suffix === "03") requestedProperty = property;
     }
@@ -478,51 +490,54 @@ describe("GET e POST /api/v1/certificates", () => {
     ["25.00003.0172", "A", "P"],
     ["25.00003.0173", "P", "P"],
     ["25.00003.0174", "I", "A"],
-  ])("Rejeitando englobamento inválido para o CTM %s", async (ctm, mainGrouping, secondGrouping) => {
-    const session = await createSessionWithFeatures([
-      "create:certificate",
-      "read:certificate",
-    ]);
-    const physicalPropertyId = 987671 + Number(ctm.slice(-1));
-    await createProperty({
-      physical_property_id: physicalPropertyId,
-      physical_registration: `${ctm}.01`,
-      ctm,
-      ctm_count: 2,
-      grouping: mainGrouping,
-    });
-    await createProperty({
-      physical_property_id: physicalPropertyId + 1,
-      physical_registration: `${ctm}.02`,
-      ctm,
-      ctm_count: 2,
-      grouping: secondGrouping,
-    });
-    await assessedValue.create({
-      year: 2026,
-      sector_1: 200,
-      residential_medium: 1200,
-    });
-
-    const response = await fetch(collectionEndpoint(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `session_id=${session.token}`,
-      },
-      body: JSON.stringify({
-        applicant_name: "Requerente de teste",
-        purpose: "Valor venal",
+  ])(
+    "Rejeitando englobamento inválido para o CTM %s",
+    async (ctm, mainGrouping, secondGrouping) => {
+      const session = await createSessionWithFeatures([
+        "create:certificate",
+        "read:certificate",
+      ]);
+      const physicalPropertyId = 987671 + Number(ctm.slice(-1));
+      await createProperty({
         physical_property_id: physicalPropertyId,
+        physical_registration: `${ctm}.01`,
+        ctm,
+        ctm_count: 2,
+        grouping: mainGrouping,
+      });
+      await createProperty({
+        physical_property_id: physicalPropertyId + 1,
+        physical_registration: `${ctm}.02`,
+        ctm,
+        ctm_count: 2,
+        grouping: secondGrouping,
+      });
+      await assessedValue.create({
         year: 2026,
-      }),
-    });
+        sector_1: 200,
+        residential_medium: 1200,
+      });
 
-    expect(response.status).toBe(400);
-    expect(await response.json()).toMatchObject({
-      message: expect.stringContaining(ctm),
-    });
-  });
+      const response = await fetch(collectionEndpoint(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${session.token}`,
+        },
+        body: JSON.stringify({
+          applicant_name: "Requerente de teste",
+          purpose: "Valor venal",
+          physical_property_id: physicalPropertyId,
+          year: 2026,
+        }),
+      });
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({
+        message: expect.stringContaining(ctm),
+      });
+    },
+  );
 
   test("Rejeitando contagens divergentes entre cadastros do mesmo CTM", async () => {
     const session = await createSessionWithFeatures([

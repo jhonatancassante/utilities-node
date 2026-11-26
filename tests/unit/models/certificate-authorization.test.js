@@ -7,9 +7,9 @@ describe("Autorização de edição de certidões", () => {
   test("update:certificate permite editar somente a própria certidão", () => {
     const user = { id: "user-1", features: ["update:certificate"] };
 
-    expect(
-      authorization.can(user, "update:certificate", ownCertificate),
-    ).toBe(true);
+    expect(authorization.can(user, "update:certificate", ownCertificate)).toBe(
+      true,
+    );
     expect(
       authorization.can(user, "update:certificate", anotherCertificate),
     ).toBe(false);
@@ -21,9 +21,9 @@ describe("Autorização de edição de certidões", () => {
       features: ["update:certificate:others"],
     };
 
-    expect(
-      authorization.can(user, "update:certificate", ownCertificate),
-    ).toBe(true);
+    expect(authorization.can(user, "update:certificate", ownCertificate)).toBe(
+      true,
+    );
     expect(
       authorization.can(user, "update:certificate", anotherCertificate),
     ).toBe(true);
@@ -32,9 +32,9 @@ describe("Autorização de edição de certidões", () => {
   test("Sem as permissões de edição, nenhuma certidão pode ser alterada", () => {
     const user = { id: "user-1", features: ["read:certificate"] };
 
-    expect(
-      authorization.can(user, "update:certificate", ownCertificate),
-    ).toBe(false);
+    expect(authorization.can(user, "update:certificate", ownCertificate)).toBe(
+      false,
+    );
     expect(
       authorization.can(user, "update:certificate", anotherCertificate),
     ).toBe(false);

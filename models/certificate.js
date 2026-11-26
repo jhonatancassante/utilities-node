@@ -89,8 +89,7 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
       if (
         typeof value !== "string" ||
         !value.trim() ||
-        (rule.maxLength !== undefined &&
-          value.trim().length > rule.maxLength)
+        (rule.maxLength !== undefined && value.trim().length > rule.maxLength)
       ) {
         throw new ValidationError({
           message: `O campo ${field} contém um texto inválido.`,
@@ -109,8 +108,7 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
       (rule.type === "integer" && !Number.isInteger(value)) ||
       (rule.min !== undefined && value < rule.min) ||
       (rule.max !== undefined && value > rule.max) ||
-      (rule.scale !== undefined &&
-        Math.round(value * 100) / 100 !== value)
+      (rule.scale !== undefined && Math.round(value * 100) / 100 !== value)
     ) {
       throw new ValidationError({
         message: `O campo ${field} contém um valor numérico inválido.`,
@@ -129,7 +127,8 @@ async function validatePhysicalPropertyReference(physicalPropertyId) {
   });
   if (!result.rowCount) {
     throw new NotFoundError({
-      message: "O código físico do imóvel vinculado à certidão não foi encontrado.",
+      message:
+        "O código físico do imóvel vinculado à certidão não foi encontrado.",
       action: "Informe um código físico de imóvel cadastrado e ativo.",
     });
   }

@@ -9,19 +9,40 @@ const CONSTRUCTION_TYPES = {
 };
 
 const LAND_SECTOR_COLUMNS = new Set([
-  "sector_1", "sector_2", "sector_3", "sector_4", "sector_5",
-  "sector_6", "sector_7", "sector_8", "sector_9", "sector_9a",
-  "sector_10", "sector_11", "sector_11a", "sector_11b",
-  "sector_12", "sector_13", "sector_14", "sector_15",
-  "sector_16", "sector_17",
+  "sector_1",
+  "sector_2",
+  "sector_3",
+  "sector_4",
+  "sector_5",
+  "sector_6",
+  "sector_7",
+  "sector_8",
+  "sector_9",
+  "sector_9a",
+  "sector_10",
+  "sector_11",
+  "sector_11a",
+  "sector_11b",
+  "sector_12",
+  "sector_13",
+  "sector_14",
+  "sector_15",
+  "sector_16",
+  "sector_17",
 ]);
 
 function getConstructionCategory(constructionType) {
-  if (constructionType === null || constructionType === undefined || constructionType === 0) return null;
+  if (
+    constructionType === null ||
+    constructionType === undefined ||
+    constructionType === 0
+  )
+    return null;
   const category = CONSTRUCTION_TYPES[constructionType];
   if (!category) {
     throw new ValidationError({
-      message: "O tipo de construção do imóvel não possui uma classificação válida.",
+      message:
+        "O tipo de construção do imóvel não possui uma classificação válida.",
       action: "Revise o tipo de construção no cadastro do imóvel.",
     });
   }
@@ -31,8 +52,10 @@ function getConstructionCategory(constructionType) {
 function getPropertyClassification(points, year, category) {
   if (!Number.isInteger(points) || points <= 0) {
     throw new ValidationError({
-      message: "A pontuação do imóvel é necessária para calcular o valor da construção.",
-      action: "Informe uma pontuação válida no cadastro do imóvel e tente novamente.",
+      message:
+        "A pontuação do imóvel é necessária para calcular o valor da construção.",
+      action:
+        "Informe uma pontuação válida no cadastro do imóvel e tente novamente.",
     });
   }
 
@@ -66,7 +89,8 @@ function calculateSimple(property, assessedValues, requestedYear) {
   const landColumn = "sector_" + property.land_sector;
   if (!LAND_SECTOR_COLUMNS.has(landColumn)) {
     throw new ValidationError({
-      message: "O setor do terreno não possui uma coluna de valor venal correspondente.",
+      message:
+        "O setor do terreno não possui uma coluna de valor venal correspondente.",
       action: "Revise o setor do terreno no cadastro do imóvel.",
     });
   }
@@ -82,8 +106,11 @@ function calculateSimple(property, assessedValues, requestedYear) {
   const builtArea = Number(property.built_area || 0);
   let buildingPrice = 0;
 
-  if (builtArea > 0 && property.construction_type !== null &&
-      property.construction_type !== undefined) {
+  if (
+    builtArea > 0 &&
+    property.construction_type !== null &&
+    property.construction_type !== undefined
+  ) {
     const category = getConstructionCategory(property.construction_type);
     if (category) {
       const classification = getPropertyClassification(

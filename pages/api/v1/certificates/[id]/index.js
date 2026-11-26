@@ -42,9 +42,7 @@ async function getHandler(request, response) {
 async function patchHandler(request, response) {
   const currentUser = request.context.user;
   const existingRecord = await certificate.findOneById(request.query.id);
-  if (
-    !authorization.can(currentUser, "update:certificate", existingRecord)
-  ) {
+  if (!authorization.can(currentUser, "update:certificate", existingRecord)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para alterar esta certidão.",
       action:
