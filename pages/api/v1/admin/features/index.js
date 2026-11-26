@@ -7,7 +7,6 @@ export default controller.createController(
     GET: [controller.canRequest("read:feature"), getHandler],
     POST: [
       controller.canRequest("create:feature"),
-      controller.canRequest("read:feature"),
       postHandler,
     ],
   },

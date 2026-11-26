@@ -14,12 +14,10 @@ export default controller.createController(
   {
     POST: [
       controller.canRequest("create:real_estate_property"),
-      controller.canRequest("read:real_estate_property"),
       postHandler,
     ],
     DELETE: [
       controller.canRequest("delete:real_estate_property"),
-      controller.canRequest("read:real_estate_property"),
       deleteHandler,
     ],
   },

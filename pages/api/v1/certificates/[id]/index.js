@@ -8,12 +8,10 @@ export default controller.createController(
     GET: [controller.canRequest("read:certificate"), getHandler],
     PATCH: [
       controller.canRequest("update:certificate"),
-      controller.canRequest("read:certificate"),
       patchHandler,
     ],
     DELETE: [
       controller.canRequest("delete:certificate"),
-      controller.canRequest("read:certificate"),
       deleteHandler,
     ],
   },

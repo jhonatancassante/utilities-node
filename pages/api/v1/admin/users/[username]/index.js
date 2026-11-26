@@ -14,11 +14,7 @@ export const config = {
 export default controller.createController(
   {
     GET: [controller.canRequest("read:user:others"), getHandler],
-    PATCH: [
-      controller.canRequest("read:user:others"),
-      authorizePatch,
-      patchHandler,
-    ],
+    PATCH: [authorizePatch, patchHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );

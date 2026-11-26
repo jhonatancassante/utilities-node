@@ -7,7 +7,6 @@ export default controller.createController(
   {
     DELETE: [
       controller.canRequest("update:user:others"),
-      controller.canRequest("read:user:others"),
       deleteHandler,
     ],
   },

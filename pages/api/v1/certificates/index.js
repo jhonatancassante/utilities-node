@@ -7,7 +7,6 @@ export default controller.createController(
     GET: [controller.canRequest("read:certificate"), getHandler],
     POST: [
       controller.canRequest("create:certificate"),
-      controller.canRequest("read:certificate"),
       postHandler,
     ],
   },

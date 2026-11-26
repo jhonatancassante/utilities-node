@@ -7,7 +7,6 @@ export default controller.createController(
     GET: [controller.canRequest("read:real_estate_property"), getHandler],
     POST: [
       controller.canRequest("create:real_estate_property"),
-      controller.canRequest("read:real_estate_property"),
       postHandler,
     ],
   },

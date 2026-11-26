@@ -6,7 +6,6 @@ export default controller.createController(
   {
     POST: [
       controller.canRequest("create:assessed_value"),
-      controller.canRequest("read:assessed_value"),
       postHandler,
     ],
   },
