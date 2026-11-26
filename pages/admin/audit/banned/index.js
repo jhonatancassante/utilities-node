@@ -175,7 +175,10 @@ export default function AdminBannedAuditPage() {
   }, [actionFilter, events, searchTerm]);
   const sortableEvents = useMemo(() => filteredEvents.map((event) => ({
     ...event,
-    account_age_sort: new Date(event.created_at).getTime() - new Date(event.account_created_at).getTime(),
+    account_age_sort: Number.isFinite(new Date(event.created_at).getTime()) &&
+      Number.isFinite(new Date(event.account_created_at).getTime())
+      ? new Date(event.created_at).getTime() - new Date(event.account_created_at).getTime()
+      : null,
   })), [filteredEvents]);
   const { sortedRecords: sortedEvents, sortState, handleSort, sortAnnouncement } = useSortableData(sortableEvents);
 
