@@ -83,11 +83,27 @@ async function calculateVenalValue({
   let properties = [property];
 
   if (property.ctm_count > 1) {
-    const groupedProperties = await realEstateProperty.findByCtmAndYear(
+    let groupedProperties = await realEstateProperty.findByCtmAndYear(
       property.ctm,
       propertyYear,
       annual,
     );
+
+    if (groupedProperties.length !== Number(property.ctm_count)) {
+      const normalizedCtm = String(property.ctm).replace(/\\D/g, "");
+      const allProperties = await realEstateProperty.findAll();
+      const matchingProperties = allProperties.filter(
+        (item) =>
+          String(item.ctm).replace(/\\D/g, "") === normalizedCtm &&
+          Number(item.year) === propertyYear &&
+          item.annual === annual,
+      );
+
+      if (matchingProperties.length > groupedProperties.length) {
+        groupedProperties = matchingProperties;
+      }
+    }
+
     if (groupedProperties.length !== Number(property.ctm_count)) {
       throw new ValidationError({
         message: `O imóvel informa ${property.ctm_count} cadastros vinculados ao CTM, mas foram encontrados ${groupedProperties.length} cadastros ativos no exercício utilizado.`,

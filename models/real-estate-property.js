@@ -523,7 +523,8 @@ async function findByCtmAndYear(ctm, year, annual) {
     text: `
       SELECT *
       FROM real_estate_properties
-      WHERE ctm = $1
+      WHERE regexp_replace(ctm, '[^0-9]', '', 'g') =
+            regexp_replace($1, '[^0-9]', '', 'g')
         AND year = $2
         AND annual = $3
         AND deleted_at IS NULL
