@@ -24,14 +24,15 @@ async function getHandler(request, response) {
 
 async function postHandler(request, response) {
   const currentUser = request.context.user;
+  const { is_updated: isUpdated = true, ...certificateInput } = request.body;
   const calculatedValues = await calculateVenalValue({
-    physical_property_id: request.body.physical_property_id,
-    year: request.body.year,
-    owner_rg: request.body.owner_rg,
-    is_updated: request.body.is_updated,
+    physical_property_id: certificateInput.physical_property_id,
+    year: certificateInput.year,
+    owner_rg: certificateInput.owner_rg,
+    is_updated: isUpdated,
   });
   const record = await certificate.create(
-    { ...request.body, ...calculatedValues },
+    { ...certificateInput, ...calculatedValues },
     currentUser.id,
   );
   const output = authorization.filterOutput(

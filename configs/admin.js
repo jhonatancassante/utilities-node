@@ -51,6 +51,14 @@ export const adminSections = [
     requiredFeature: "read:real_estate_property",
   },
   {
+    id: "certificates",
+    title: "Certidões",
+    description: "Consulte, emita e gerencie certidões de valor venal.",
+    href: "/admin/certificates",
+    icon: "fa-file-alt",
+    requiredFeature: "read:certificate",
+  },
+  {
     id: "status",
     title: "Status do sistema",
     description: "Acesse as métricas do sistema e a versão do banco de dados.",

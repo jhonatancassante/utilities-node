@@ -5,24 +5,19 @@ function can(user, feature, resource) {
   validateUser(user);
   validateFeature(feature);
 
-  let authorized = false;
-
-  if (user.features.includes(feature)) {
-    authorized = true;
-  }
+  let authorized = user.features.includes(feature);
 
   if (feature === "update:user" && resource) {
-    authorized = false;
-
-    if (user.id === resource.id || can(user, "update:user:others")) {
-      authorized = true;
-    }
+    authorized =
+      user.features.includes("update:user") &&
+      (user.id === resource.id || can(user, "update:user:others"));
   }
 
   if (feature === "update:certificate" && resource) {
     authorized =
-      user.features.includes("update:certificate") &&
-      (user.id === resource.user_id || can(user, "update:certificate:others"));
+      user.features.includes("update:certificate:others") ||
+      (user.features.includes("update:certificate") &&
+        user.id === resource.user_id);
   }
 
   return authorized;
@@ -133,11 +128,7 @@ function filterOutput(user, feature, resource) {
   if (feature === "read:audit") {
     const filterEvent = (event) => {
       if ("name" in event && "run_on" in event) {
-        return {
-          id: event.id,
-          name: event.name,
-          run_on: event.run_on,
-        };
+        return { id: event.id, name: event.name, run_on: event.run_on };
       }
 
       return {
