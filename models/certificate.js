@@ -2,7 +2,12 @@ import database from "@/infra/database.js";
 import { NotFoundError, ValidationError } from "@/infra/errors.js";
 
 const FIELD_RULES = {
-  protocol_number: { type: "string", required: true, maxLength: 6, pattern: /^[0-9]{1,6}$/ },
+  protocol_number: {
+    type: "string",
+    required: true,
+    maxLength: 6,
+    pattern: /^[0-9]{1,6}$/,
+  },
   protocol_year: { type: "integer", required: true, min: 1900, max: 9999 },
   applicant_name: { type: "string", required: true, maxLength: 150 },
   year: { type: "integer", min: 1, max: 9999 },
@@ -17,14 +22,20 @@ const FIELD_RULES = {
 const WRITABLE_FIELDS = Object.keys(FIELD_RULES);
 
 function validateInput(inputValues, { requiredFields = [] } = {}) {
-  if (!inputValues || typeof inputValues !== "object" || Array.isArray(inputValues)) {
+  if (
+    !inputValues ||
+    typeof inputValues !== "object" ||
+    Array.isArray(inputValues)
+  ) {
     throw new ValidationError({
       message: "Os dados da certidão devem ser enviados em um objeto.",
       action: "Envie um objeto com os campos da certidão.",
     });
   }
 
-  const unknownFields = Object.keys(inputValues).filter((field) => !WRITABLE_FIELDS.includes(field));
+  const unknownFields = Object.keys(inputValues).filter(
+    (field) => !WRITABLE_FIELDS.includes(field),
+  );
   if (unknownFields.length) {
     throw new ValidationError({
       message: `Os campos a seguir não podem ser alterados: ${unknownFields.join(", ")}.`,
@@ -32,7 +43,9 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
     });
   }
 
-  const missingFields = requiredFields.filter((field) => !Object.hasOwn(inputValues, field));
+  const missingFields = requiredFields.filter(
+    (field) => !Object.hasOwn(inputValues, field),
+  );
   if (missingFields.length) {
     throw new ValidationError({
       message: `Os campos obrigatórios não foram informados: ${missingFields.join(", ")}.`,
@@ -57,10 +70,17 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
     }
 
     if (rule.type === "string") {
-      if (typeof value !== "string" || !value.trim() || value.trim().length > rule.maxLength || (rule.pattern && !rule.pattern.test(value.trim()))) {
+      if (
+        typeof value !== "string" ||
+        !value.trim() ||
+        value.trim().length > rule.maxLength ||
+        (rule.pattern && !rule.pattern.test(value.trim()))
+      ) {
         throw new ValidationError({
           message: `O campo ${field} contém um texto inválido.`,
-          action: rule.pattern ? "Informe o número do protocolo com até seis dígitos." : `Informe um texto de até ${rule.maxLength} caracteres.`,
+          action: rule.pattern
+            ? "Informe o número do protocolo com até seis dígitos."
+            : `Informe um texto de até ${rule.maxLength} caracteres.`,
         });
       }
       certificate[field] = value.trim();
@@ -68,9 +88,15 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
     }
 
     if (rule.type === "uuid") {
-      if (typeof value !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {
+      if (
+        typeof value !== "string" ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          value,
+        )
+      ) {
         throw new ValidationError({
-          message: "O campo real_estate_property_id deve conter um UUID válido.",
+          message:
+            "O campo real_estate_property_id deve conter um UUID válido.",
           action: "Selecione um imóvel cadastrado.",
         });
       }
@@ -89,11 +115,14 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
       continue;
     }
 
-    if (typeof value !== "number" || !Number.isFinite(value) ||
+    if (
+      typeof value !== "number" ||
+      !Number.isFinite(value) ||
       (rule.type === "integer" && !Number.isInteger(value)) ||
       (rule.min !== undefined && value < rule.min) ||
       (rule.max !== undefined && value > rule.max) ||
-      (rule.type === "number" && Math.round(value * 100) / 100 !== value)) {
+      (rule.type === "number" && Math.round(value * 100) / 100 !== value)
+    ) {
       throw new ValidationError({
         message: `O campo ${field} contém um valor numérico inválido.`,
         action: "Revise o número informado e respeite os limites do campo.",
@@ -119,11 +148,24 @@ async function validatePropertyReference(propertyId) {
 
 async function create(inputValues, userId) {
   const certificate = validateInput(inputValues, {
-    requiredFields: ["protocol_number", "protocol_year", "applicant_name", "purpose", "real_estate_property_id", "property_number"],
+    requiredFields: [
+      "protocol_number",
+      "protocol_year",
+      "applicant_name",
+      "purpose",
+      "real_estate_property_id",
+      "property_number",
+    ],
   });
   await validatePropertyReference(certificate.real_estate_property_id);
-  const columns = ["user_id", ...WRITABLE_FIELDS.filter((field) => Object.hasOwn(certificate, field))];
-  const values = [userId, ...columns.slice(1).map((field) => certificate[field])];
+  const columns = [
+    "user_id",
+    ...WRITABLE_FIELDS.filter((field) => Object.hasOwn(certificate, field)),
+  ];
+  const values = [
+    userId,
+    ...columns.slice(1).map((field) => certificate[field]),
+  ];
   const placeholders = columns.map((field, index) => `$${index + 1}`);
   const results = await database.query({
     text: `INSERT INTO certificates (${columns.join(", ")}) VALUES (${placeholders.join(", ")}) RETURNING *;`,
@@ -160,7 +202,9 @@ async function findOneById(id) {
 
 async function update(id, inputValues) {
   const certificate = validateInput(inputValues);
-  const fields = WRITABLE_FIELDS.filter((field) => Object.hasOwn(certificate, field));
+  const fields = WRITABLE_FIELDS.filter((field) =>
+    Object.hasOwn(certificate, field),
+  );
   if (!fields.length) {
     throw new ValidationError({
       message: "Nenhum dado foi informado para atualização.",
@@ -209,5 +253,11 @@ async function deleteCertificate(id) {
   return results.rows[0];
 }
 
-const certificateModel = { create, findAll, findOneById, update, delete: deleteCertificate };
+const certificateModel = {
+  create,
+  findAll,
+  findOneById,
+  update,
+  delete: deleteCertificate,
+};
 export default certificateModel;

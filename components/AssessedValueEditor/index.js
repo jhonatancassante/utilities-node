@@ -23,8 +23,8 @@ function AssessedValueEditor({ recordId }) {
   const [feedback, setFeedback] = useState(null);
   const isEditing = Boolean(recordId);
   const requiredFeature = isEditing
-    ? "read:assessed_values"
-    : "create:assessed_values";
+    ? "read:assessed_value"
+    : "create:assessed_value";
 
   useEffect(() => {
     if (
@@ -88,7 +88,7 @@ function AssessedValueEditor({ recordId }) {
     }
   }
 
-  const canUpdate = user?.features?.includes("update:assessed_values");
+  const canUpdate = user?.features?.includes("update:assessed_value");
   const title = isEditing
     ? canUpdate
       ? "Editar valores venais"

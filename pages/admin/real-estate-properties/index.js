@@ -56,9 +56,9 @@ function RealEstatePropertiesPage() {
   const [pageSize, setPageSize] = useState(10);
   const [feedback, setFeedback] = useState(null);
   const [dialog, setDialog] = useState(null);
-  const canCreate = user?.features?.includes("create:real_estate_properties");
-  const canUpdate = user?.features?.includes("update:real_estate_properties");
-  const canDelete = user?.features?.includes("delete:real_estate_properties");
+  const canCreate = user?.features?.includes("create:real_estate_property");
+  const canUpdate = user?.features?.includes("update:real_estate_property");
+  const canDelete = user?.features?.includes("delete:real_estate_property");
 
   const loadRecords = useCallback(async () => {
     setIsLoadingRecords(true);

@@ -242,9 +242,9 @@ function RealEstatePropertyEditor({ recordId }) {
   const [feedback, setFeedback] = useState(null);
   const isEditing = Boolean(recordId);
   const requiredFeature = isEditing
-    ? "read:real_estate_properties"
-    : "create:real_estate_properties";
-  const canUpdate = user?.features?.includes("update:real_estate_properties");
+    ? "read:real_estate_property"
+    : "create:real_estate_property";
+  const canUpdate = user?.features?.includes("update:real_estate_property");
 
   useEffect(() => {
     if (

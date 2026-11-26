@@ -206,9 +206,9 @@ function AssessedValuesPage() {
   const [delimiter, setDelimiter] = useState(";");
   const [preview, setPreview] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
-  const canCreate = user?.features?.includes("create:assessed_values");
-  const canUpdate = user?.features?.includes("update:assessed_values");
-  const canDelete = user?.features?.includes("delete:assessed_values");
+  const canCreate = user?.features?.includes("create:assessed_value");
+  const canUpdate = user?.features?.includes("update:assessed_value");
+  const canDelete = user?.features?.includes("delete:assessed_value");
 
   useEffect(() => {
     if (

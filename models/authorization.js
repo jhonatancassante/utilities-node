@@ -22,8 +22,7 @@ function can(user, feature, resource) {
   if (feature === "update:certificate" && resource) {
     authorized =
       user.features.includes("update:certificate") &&
-      (user.id === resource.user_id ||
-        can(user, "update:certificate:others"));
+      (user.id === resource.user_id || can(user, "update:certificate:others"));
   }
 
   return authorized;
@@ -266,7 +265,6 @@ function filterOutput(user, feature, resource) {
       ? resource.map(filterProperty)
       : filterProperty(resource);
   }
-
 
   if (feature === "read:certificate") {
     const filterCertificate = (item) => ({
