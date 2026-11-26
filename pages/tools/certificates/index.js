@@ -147,16 +147,48 @@ function CertificatesPage() {
     { key: "protocol_number", label: "Protocolo" },
     { key: "protocol_year", label: "Ano protocolo" },
     { key: "applicant_name", label: "Requerente" },
+    { key: "purpose", label: "Finalidade" },
     { key: "physical_property_id", label: "Código físico" },
+    { key: "physical_registration", label: "Inscrição física" },
     { key: "year", label: "Exercício" },
+    { key: "owner_name", label: "Proprietário" },
+    { key: "promissory_buyer", label: "Compromissário" },
+    { key: "owner_rg", label: "RG proprietário" },
+    { key: "property_street", label: "Logradouro" },
+    { key: "property_number", label: "Número" },
+    { key: "property_neighborhood", label: "Bairro" },
+    { key: "property_block", label: "Quadra" },
+    { key: "property_lots", label: "Lote(s)" },
+    { key: "property_complement", label: "Complemento" },
     {
-      key: "total_value",
-      label: "Valor venal",
+      key: "land_area",
+      label: "Área do terreno",
+      render: (record) => Number(record.land_area).toLocaleString("pt-BR") + " m²",
+    },
+    {
+      key: "built_area",
+      label: "Área construída",
+      render: (record) => Number(record.built_area).toLocaleString("pt-BR") + " m²",
+    },
+    ...["land_value", "building_value", "total_value"].map((key) => ({
+      key,
+      label:
+        key === "land_value"
+          ? "Valor venal do terreno"
+          : key === "building_value"
+            ? "Valor venal da edificação"
+            : "Valor venal total",
       render: (record) =>
-        Number(record.total_value).toLocaleString("pt-BR", {
+        Number(record[key]).toLocaleString("pt-BR", {
           style: "currency",
           currency: "BRL",
         }),
+    })),
+    { key: "observations", label: "Observações" },
+    {
+      key: "validity_days",
+      label: "Validade",
+      render: (record) => record.validity_days + " dias",
     },
     {
       key: "created_at",

@@ -25,6 +25,8 @@ function CertificateEditor({ recordId }) {
   const [form, setForm] = useState({
     applicant_name: "",
     purpose: "",
+    protocol_number: "",
+    protocol_year: String(new Date().getFullYear()),
     physical_property_id: "",
     year: String(new Date().getFullYear()),
     is_updated: true,
@@ -71,6 +73,8 @@ function CertificateEditor({ recordId }) {
         setForm({
           applicant_name: data.applicant_name ?? "",
           purpose: data.purpose ?? "",
+          protocol_number: data.protocol_number == null ? "" : String(data.protocol_number),
+          protocol_year: String(data.protocol_year ?? new Date().getFullYear()),
           physical_property_id: String(data.physical_property_id ?? ""),
           year: String(data.year ?? ""),
           is_updated: data.is_updated ?? true,
@@ -152,6 +156,8 @@ function CertificateEditor({ recordId }) {
       const payload = {
         applicant_name: form.applicant_name.trim(),
         purpose: form.purpose.trim(),
+        protocol_number: form.protocol_number.trim() ? Number(form.protocol_number) : null,
+        protocol_year: form.protocol_year.trim() ? Number(form.protocol_year) : null,
         physical_property_id: Number(form.physical_property_id),
         year: Number(form.year),
         is_updated: form.is_updated,
@@ -177,13 +183,7 @@ function CertificateEditor({ recordId }) {
           ),
         },
       );
-      router.push("/tools/certificates/" + encodeURIComponent(saved.id));
-      if (!isEditing) {
-        setFeedback({
-          type: "success",
-          message: "Certidão gravada com sucesso.",
-        });
-      }
+      router.push("/tools/certificates");
     } catch (requestError) {
       setFeedback({
         type: "error",
@@ -323,6 +323,32 @@ function CertificateEditor({ recordId }) {
                           updateField("purpose", event.target.value)
                         }
                         maxLength={50}
+                        required
+                        disabled={isReadOnly || isSaving}
+                      />
+                    </label>
+                    <label className={styles.third}>
+                      <span className={shared.label}>Número do protocolo</span>
+                      <input
+                        className={shared.input}
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={form.protocol_number}
+                        onChange={(event) => updateField("protocol_number", event.target.value)}
+                        disabled={isReadOnly || isSaving}
+                      />
+                    </label>
+                    <label className={styles.third}>
+                      <span className={shared.label}>Ano do protocolo *</span>
+                      <input
+                        className={shared.input}
+                        type="number"
+                        min="1900"
+                        max="9999"
+                        step="1"
+                        value={form.protocol_year}
+                        onChange={(event) => updateField("protocol_year", event.target.value)}
                         required
                         disabled={isReadOnly || isSaving}
                       />
