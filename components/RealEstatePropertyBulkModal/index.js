@@ -131,7 +131,7 @@ function parseValue(field, raw, rowNumber) {
     }
     return number;
   }
-  return value;
+  return field === "grouping" ? value.toUpperCase() : value;
 }
 
 function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
