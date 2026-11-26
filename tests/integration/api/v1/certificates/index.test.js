@@ -30,7 +30,7 @@ async function createProperty() {
     property_neighborhood: "Centro",
     owner_name: "Proprietário de teste",
     promissory_buyer: "Compromissário de teste",
-    land_sector: 1,
+    land_sector: "1",
     property_street: "Rua de Teste",
   });
 }

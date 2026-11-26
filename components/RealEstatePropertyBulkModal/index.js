@@ -52,7 +52,6 @@ const NULLABLE_FIELDS = [
 const INTEGER_FIELDS = [
   "physical_property_id",
   "ctm_count",
-  "land_sector",
   "construction_type",
   "points",
 ];

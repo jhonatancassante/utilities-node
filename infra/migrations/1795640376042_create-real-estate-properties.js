@@ -60,7 +60,7 @@ export const up = (pgm) => {
       notNull: false,
     },
     land_sector: {
-      type: "integer",
+      type: "varchar(4)",
       notNull: true,
     },
     property_street: {

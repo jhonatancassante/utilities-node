@@ -40,7 +40,7 @@ function createPropertyInput(overrides = {}) {
     built_area: 100,
     property_neighborhood: "Centro",
     owner_name: "Proprietário de teste",
-    land_sector: 1,
+    land_sector: "1",
     property_street: "Rua de Teste",
     ...overrides,
   };
@@ -87,7 +87,7 @@ describe("POST /api/v1/admin/real-estate-properties", () => {
       "create:real_estate_property",
       "read:real_estate_property",
     ]);
-    const input = createPropertyInput();
+    const input = createPropertyInput({ land_sector: "0001" });
     const response = await fetch(collectionEndpoint(), {
       method: "POST",
       headers: {

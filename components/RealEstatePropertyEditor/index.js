@@ -106,8 +106,8 @@ const SECTIONS = [
       {
         name: "land_sector",
         label: "Setor do terreno",
-        type: "integer",
         required: true,
+        maxLength: 4,
         width: "quarter",
       },
     ],

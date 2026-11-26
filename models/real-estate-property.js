@@ -19,7 +19,7 @@ const FIELD_RULES = {
   property_neighborhood: { type: "string", maxLength: 70, required: true },
   owner_name: { type: "string", maxLength: 150, required: true },
   promissory_buyer: { type: "string", maxLength: 150, nullable: true },
-  land_sector: { type: "integer", min: 0, required: true },
+  land_sector: { type: "string", maxLength: 4, required: true },
   property_street: { type: "string", maxLength: 150, required: true },
   property_number: { type: "number", min: 0, nullable: true },
   property_complement: { type: "string", maxLength: 150, nullable: true },
