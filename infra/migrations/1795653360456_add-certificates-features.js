@@ -1,0 +1,52 @@
+export const up = (pgm) => {
+  pgm.sql(`
+    INSERT INTO features (
+      name,
+      label,
+      group_name,
+      description,
+      is_self_removable,
+      is_privileged,
+      is_protected
+    )
+    VALUES
+      (
+        'read:certificates',
+        'Consultar certidões',
+        'Certidões',
+        'Permite consultar as certidões de valor venal cadastradas no sistema.',
+        true,
+        false,
+        false
+      ),
+      (
+        'create:certificates',
+        'Cadastrar certidões',
+        'Certidões',
+        'Permite cadastrar certidões de valor venal no sistema.',
+        true,
+        false,
+        false
+      ),
+      (
+        'update:certificates',
+        'Alterar certidões',
+        'Certidões',
+        'Permite alterar as certidões de valor venal cadastradas no sistema.',
+        true,
+        false,
+        false
+      ),
+      (
+        'delete:certificates',
+        'Excluir certidões',
+        'Certidões',
+        'Permite excluir logicamente as certidões de valor venal cadastradas no sistema.',
+        true,
+        false,
+        false
+      );
+  `);
+};
+
+export const down = false;
