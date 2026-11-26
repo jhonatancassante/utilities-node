@@ -138,3 +138,18 @@
   white-space: nowrap;
   border: 0;
 }
+
+
+.tableWrapper:not(.hasActions) th:last-child,
+.tableWrapper:not(.hasActions) td:last-child {
+  position: static;
+  right: auto;
+  z-index: auto;
+}
+.tableWrapper:not(.hasActions) td:last-child {
+  background: transparent;
+  box-shadow: none;
+}
+.tableWrapper:not(.hasActions) tbody tr:hover td:last-child {
+  background: var(--accent-soft);
+}
