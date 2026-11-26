@@ -135,6 +135,7 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
   const [isUpdated, setIsUpdated] = useState(false);
   const [records, setRecords] = useState(null);
   const [error, setError] = useState("");
+  const [progress, setProgress] = useState(null);
 
   async function handleReadFile() {
     if (
@@ -224,6 +225,7 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
         return record;
       });
       setRecords(parsed);
+      setProgress(null);
       setError("");
     } catch (parseError) {
       setRecords(null);
@@ -364,7 +366,7 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
             type="button"
             icon="fa-file-import"
             onClick={async () => {
-              const succeeded = await onSubmit(records);
+              const succeeded = await onSubmit(records, setProgress);
               if (succeeded) {
                 setFile(null);
                 setRecords(null);
@@ -383,8 +385,16 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
         <div className={styles.importProgress} role="status" aria-live="polite">
           <i className="fas fa-spinner fa-spin" aria-hidden="true"></i>
           <span>
-            Importando {records?.length.toLocaleString("pt-BR")} imóvel(is).
-            Esse processo pode levar alguns minutos. Não feche esta página.
+            {progress?.stage === "uploading"
+              ? "Enviando lote " +
+                progress.current +
+                " de " +
+                progress.total +
+                "..."
+              : progress?.stage === "finalizing"
+                ? "Finalizando a importação e gravando os imóveis..."
+                : "Preparando a importação..."}
+            {" "}Não feche esta página.
           </span>
         </div>
       )}

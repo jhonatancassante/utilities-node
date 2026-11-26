@@ -488,3 +488,132 @@ describe("POST e DELETE /api/v1/admin/real-estate-properties/bulk", () => {
     }
   });
 });
+
+
+describe("Importação de imóveis em lotes temporários", () => {
+  function importsEndpoint() {
+    return bulkEndpoint() + "/imports";
+  }
+
+  function importEndpoint(id) {
+    return importsEndpoint() + "/" + id;
+  }
+
+  async function createImportSession(sessionObject, totalRecords, totalChunks) {
+    const response = await fetch(importsEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: "session_id=" + sessionObject.token,
+      },
+      body: JSON.stringify({ totalRecords, totalChunks }),
+    });
+    expect(response.status).toBe(201);
+    return response.json();
+  }
+
+  async function sendImportChunk(sessionObject, importId, chunkIndex, records) {
+    return fetch(importEndpoint(importId) + "/chunks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: "session_id=" + sessionObject.token,
+      },
+      body: JSON.stringify({ chunkIndex, records }),
+    });
+  }
+
+  async function finalizeImportRequest(sessionObject, importId, overwriteExisting = false) {
+    return fetch(importEndpoint(importId) + "/finalize", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: "session_id=" + sessionObject.token,
+      },
+      body: JSON.stringify({ overwriteExisting }),
+    });
+  }
+
+  test("Recebendo lotes idempotentes e substituindo annual=false uma única vez", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "create:real_estate_property",
+      "read:real_estate_property",
+    ]);
+    await realEstateProperty.create(
+      createPropertyInput({ physical_property_id: 52001, annual: false }),
+    );
+    const records = [
+      createPropertyInput({ physical_property_id: 52002, annual: false }),
+      createPropertyInput({ physical_property_id: 52003, annual: false }),
+    ];
+    const importSession = await createImportSession(sessionObject, 2, 2);
+
+    const firstChunk = await sendImportChunk(sessionObject, importSession.id, 0, [records[0]]);
+    expect(firstChunk.status).toBe(200);
+    expect(await firstChunk.json()).toMatchObject({ received: true, duplicate: false });
+
+    const repeatedChunk = await sendImportChunk(sessionObject, importSession.id, 0, [records[0]]);
+    expect(repeatedChunk.status).toBe(200);
+    expect(await repeatedChunk.json()).toMatchObject({ received: true, duplicate: true });
+
+    const secondChunk = await sendImportChunk(sessionObject, importSession.id, 1, [records[1]]);
+    expect(secondChunk.status).toBe(200);
+
+    const finalized = await finalizeImportRequest(sessionObject, importSession.id);
+    expect(finalized.status).toBe(201);
+    expect(await finalized.json()).toHaveLength(2);
+
+    const remaining = await database.query({
+      text: "SELECT physical_property_id FROM real_estate_properties WHERE annual = false ORDER BY physical_property_id;",
+    });
+    expect(remaining.rows.map((record) => record.physical_property_id)).toEqual([52002, 52003]);
+  });
+
+  test("Impedindo a finalização quando há lote ausente", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "create:real_estate_property",
+      "read:real_estate_property",
+    ]);
+    const importSession = await createImportSession(sessionObject, 2, 2);
+    const firstChunk = await sendImportChunk(sessionObject, importSession.id, 0, [
+      createPropertyInput({ physical_property_id: 52004, annual: false }),
+    ]);
+    expect(firstChunk.status).toBe(200);
+
+    const response = await finalizeImportRequest(sessionObject, importSession.id);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      message: expect.stringContaining("todos os lotes"),
+    });
+  });
+
+  test("Solicitando confirmação para conflitos annual=true sem reenviar os lotes", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "create:real_estate_property",
+      "read:real_estate_property",
+    ]);
+    const existing = await realEstateProperty.create(
+      createPropertyInput({ physical_property_id: 52005, annual: true }),
+    );
+    const records = [
+      createPropertyInput({
+        physical_property_id: 52005,
+        owner_name: "Proprietário atualizado",
+        annual: true,
+      }),
+    ];
+    const importSession = await createImportSession(sessionObject, 1, 1);
+    const chunk = await sendImportChunk(sessionObject, importSession.id, 0, records);
+    expect(chunk.status).toBe(200);
+
+    const firstFinalize = await finalizeImportRequest(sessionObject, importSession.id);
+    expect(firstFinalize.status).toBe(409);
+
+    const confirmedFinalize = await finalizeImportRequest(sessionObject, importSession.id, true);
+    expect(confirmedFinalize.status).toBe(201);
+    const body = await confirmedFinalize.json();
+    expect(body).toHaveLength(1);
+    expect(body[0].id).toBe(existing.id);
+    expect(body[0].owner_name).toBe("Proprietário atualizado");
+  });
+});

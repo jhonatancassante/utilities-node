@@ -417,98 +417,137 @@ async function deleteMany(ids) {
   });
 }
 
-async function createMany(inputValues, { overwriteExisting = false } = {}) {
-  if (
-    !Array.isArray(inputValues) ||
-    inputValues.length === 0 ||
-    inputValues.length > MAX_BULK_RECORDS
-  ) {
-    throw new ValidationError({
-      message: "O cadastro em lote deve conter entre 1 e 100.000 imóveis.",
-      action: "Revise os dados enviados e tente novamente.",
-    });
-  }
 
+function prepareBulkRecords(inputValues) {
+  if (!Array.isArray(inputValues) || inputValues.length === 0 || inputValues.length > MAX_BULK_RECORDS) {
+    throw new ValidationError({ message: "O cadastro em lote deve conter entre 1 e 100.000 imóveis.", action: "Revise os dados enviados e tente novamente." });
+  }
   const properties = inputValues.map((input) => {
-    const property = applyIdealFractionDefault(
-      validateInput(input, {
-        requiredFields: [
-          "year",
-          ...Object.entries(FIELD_RULES)
-            .filter(([, rule]) => rule.required)
-            .map(([field]) => field),
-        ],
-      }),
-    );
+    const property = applyIdealFractionDefault(validateInput(input, {
+      requiredFields: ["year", ...Object.entries(FIELD_RULES).filter(([, rule]) => rule.required).map(([field]) => field)],
+    }));
     if (!Object.hasOwn(property, "annual")) property.annual = false;
     return property;
   });
   const annual = properties[0].annual;
   if (properties.some((property) => property.annual !== annual)) {
-    throw new ValidationError({
-      message:
-        "Todos os imóveis da importação devem ter a mesma situação de atualização.",
-      action:
-        "Confira o campo Atualizado e gere novamente a prévia do arquivo.",
-    });
+    throw new ValidationError({ message: "Todos os imóveis da importação devem ter a mesma situação de atualização.", action: "Confira o campo Atualizado e gere novamente a prévia do arquivo." });
   }
-
-  const identifiers = properties.map((property) =>
-    annual
-      ? property.year + ":" + property.physical_property_id
-      : String(property.physical_property_id),
-  );
+  const identifiers = properties.map((property) => annual ? property.year + ":" + property.physical_property_id : String(property.physical_property_id));
   if (new Set(identifiers).size !== identifiers.length) {
     throw new ValidationError({
-      message: annual
-        ? "O arquivo contém códigos de imóvel repetidos para o mesmo ano."
-        : "O arquivo contém códigos de imóvel repetidos.",
+      message: annual ? "O arquivo contém códigos de imóvel repetidos para o mesmo ano." : "O arquivo contém códigos de imóvel repetidos.",
       action: "Corrija os registros duplicados no arquivo e tente novamente.",
     });
   }
+  return properties;
+}
 
-  return database.transaction(async (client) => {
-    await client.query(
-      "LOCK TABLE real_estate_properties IN SHARE ROW EXCLUSIVE MODE;",
-    );
-
-    if (!annual) {
-      await client.query(
-        "DELETE FROM real_estate_properties WHERE annual = false;",
-      );
-      return insertManyRecords(client, properties, { annual: false });
-    }
-
-    const existing = await client.query({
-      text: `
-        SELECT year, physical_property_id
-        FROM real_estate_properties
-        WHERE annual = true
-          AND deleted_at IS NULL
-          AND (year, physical_property_id) IN (
-            SELECT * FROM unnest($1::integer[], $2::integer[])
-          )
-        ORDER BY year, physical_property_id
-      ;`,
-      values: [
-        properties.map((property) => property.year),
-        properties.map((property) => property.physical_property_id),
-      ],
-    });
-
-    if (existing.rowCount && !overwriteExisting) {
-      throw new ConflictError({
-        message:
-          "Foram encontrados " +
-          existing.rowCount +
-          " imóvel(is) já cadastrado(s) para o mesmo ano e código físico. Se continuar, os registros existentes serão atualizados e os novos serão inseridos.",
-        action:
-          "Escolha Continuar para atualizar os existentes ou Cancelar para interromper a importação.",
-      });
-    }
-
-    return insertManyRecords(client, properties, { annual: true });
+async function persistBulkRecords(client, properties, overwriteExisting) {
+  const annual = properties[0].annual;
+  await client.query("LOCK TABLE real_estate_properties IN SHARE ROW EXCLUSIVE MODE;");
+  if (!annual) {
+    await client.query("DELETE FROM real_estate_properties WHERE annual = false;");
+    return insertManyRecords(client, properties, { annual: false });
+  }
+  const existing = await client.query({
+    text: "SELECT year, physical_property_id FROM real_estate_properties WHERE annual = true AND deleted_at IS NULL AND (year, physical_property_id) IN (SELECT * FROM unnest($1::integer[], $2::integer[])) ORDER BY year, physical_property_id;",
+    values: [properties.map((property) => property.year), properties.map((property) => property.physical_property_id)],
   });
+  if (existing.rowCount && !overwriteExisting) {
+    throw new ConflictError({
+      message: "Foram encontrados " + existing.rowCount + " imóvel(is) já cadastrado(s) para o mesmo ano e código físico. Se continuar, os registros existentes serão atualizados e os novos serão inseridos.",
+      action: "Escolha Continuar para atualizar os existentes ou Cancelar para interromper a importação.",
+    });
+  }
+  return insertManyRecords(client, properties, { annual: true });
+}
+
+async function createMany(inputValues, { overwriteExisting = false } = {}) {
+  const properties = prepareBulkRecords(inputValues);
+  return database.transaction((client) => persistBulkRecords(client, properties, overwriteExisting));
+}
+
+const MAX_IMPORT_CHUNKS = 1000;
+const MAX_IMPORT_CHUNK_BYTES = 1024 * 1024;
+
+async function createImport({ userId, totalRecords, totalChunks }) {
+  if (typeof userId !== "string" || !Number.isInteger(totalRecords) || totalRecords < 1 || totalRecords > MAX_BULK_RECORDS || !Number.isInteger(totalChunks) || totalChunks < 1 || totalChunks > MAX_IMPORT_CHUNKS || totalChunks > totalRecords) {
+    throw new ValidationError({ message: "Os dados da sessão de importação são inválidos.", action: "Reinicie a importação e confira a quantidade de registros." });
+  }
+  return database.transaction(async (client) => {
+    await client.query("DELETE FROM real_estate_property_imports WHERE expires_at <= now();");
+    const result = await client.query({
+      text: "INSERT INTO real_estate_property_imports (user_id, total_records, total_chunks) VALUES ($1, $2, $3) RETURNING id;",
+      values: [userId, totalRecords, totalChunks],
+    });
+    return { id: result.rows[0].id };
+  });
+}
+
+async function addImportChunk({ importId, userId, chunkIndex, records }) {
+  if (!Array.isArray(records) || records.length === 0 || !Number.isInteger(chunkIndex) || chunkIndex < 0 || Buffer.byteLength(JSON.stringify(records), "utf8") > MAX_IMPORT_CHUNK_BYTES) {
+    throw new ValidationError({ message: "O lote enviado é inválido ou excede o tamanho permitido.", action: "Divida os registros em lotes menores e tente novamente." });
+  }
+  return database.transaction(async (client) => {
+    const importResult = await client.query({
+      text: "SELECT id, total_chunks, status FROM real_estate_property_imports WHERE id = $1 AND user_id = $2 AND expires_at > now() FOR UPDATE;",
+      values: [importId, userId],
+    });
+    if (!importResult.rowCount) throw new NotFoundError({ message: "A sessão de importação não foi encontrada ou expirou.", action: "Inicie uma nova importação do arquivo." });
+    const importSession = importResult.rows[0];
+    if (importSession.status !== "receiving") throw new ConflictError({ message: "A importação não está mais recebendo lotes.", action: "Finalize ou cancele a sessão atual." });
+    if (chunkIndex >= importSession.total_chunks) throw new ValidationError({ message: "O número do lote está fora da sequência esperada.", action: "Reenvie o lote usando o índice informado pela importação." });
+    const existing = await client.query({
+      text: "SELECT records = $3::jsonb AS matches FROM real_estate_property_import_chunks WHERE import_id = $1 AND chunk_index = $2;",
+      values: [importId, chunkIndex, JSON.stringify(records)],
+    });
+    if (existing.rowCount) {
+      if (!existing.rows[0].matches) throw new ConflictError({ message: "O lote já foi recebido com conteúdo diferente.", action: "Não altere os dados de uma importação em andamento." });
+      return { received: true, duplicate: true };
+    }
+    await client.query({
+      text: "INSERT INTO real_estate_property_import_chunks (import_id, chunk_index, records, record_count) VALUES ($1, $2, $3::jsonb, $4);",
+      values: [importId, chunkIndex, JSON.stringify(records), records.length],
+    });
+    return { received: true, duplicate: false };
+  });
+}
+
+async function finalizeImport({ importId, userId, overwriteExisting = false }) {
+  return database.transaction(async (client) => {
+    const importResult = await client.query({
+      text: "SELECT id, total_records, total_chunks, status FROM real_estate_property_imports WHERE id = $1 AND user_id = $2 AND expires_at > now() FOR UPDATE;",
+      values: [importId, userId],
+    });
+    if (!importResult.rowCount) throw new NotFoundError({ message: "A sessão de importação não foi encontrada ou expirou.", action: "Inicie uma nova importação do arquivo." });
+    const importSession = importResult.rows[0];
+    if (importSession.status !== "receiving") throw new ConflictError({ message: "A importação já está sendo finalizada.", action: "Aguarde a conclusão da operação." });
+    const chunksResult = await client.query({
+      text: "SELECT chunk_index, records, record_count FROM real_estate_property_import_chunks WHERE import_id = $1 ORDER BY chunk_index;",
+      values: [importId],
+    });
+    const chunks = chunksResult.rows;
+    const complete = chunks.length === importSession.total_chunks && chunks.every((chunk, index) => chunk.chunk_index === index);
+    const receivedRecords = chunks.reduce((total, chunk) => total + chunk.record_count, 0);
+    if (!complete || receivedRecords !== importSession.total_records) {
+      throw new ValidationError({ message: "A importação ainda não recebeu todos os lotes esperados.", action: "Reenvie os lotes pendentes antes de finalizar." });
+    }
+    const records = chunks.flatMap((chunk) => chunk.records);
+    const properties = prepareBulkRecords(records);
+    const output = await persistBulkRecords(client, properties, overwriteExisting);
+    await client.query("DELETE FROM real_estate_property_imports WHERE id = $1;", [importId]);
+    return output;
+  });
+}
+
+async function cancelImport({ importId, userId }) {
+  const result = await database.query({
+    text: "DELETE FROM real_estate_property_imports WHERE id = $1 AND user_id = $2 RETURNING id;",
+    values: [importId, userId],
+  });
+  if (!result.rowCount) throw new NotFoundError({ message: "A sessão de importação não foi encontrada.", action: "Atualize a página e tente novamente." });
+  return { cancelled: true };
 }
 
 async function findByPhysicalPropertyIdAndYear(
@@ -553,6 +592,10 @@ const realEstateProperty = {
   findByPhysicalPropertyIdAndYear,
   findByCtmAndYear,
   createMany,
+  createImport,
+  addImportChunk,
+  finalizeImport,
+  cancelImport,
   findAll,
   findOneById,
   update,
