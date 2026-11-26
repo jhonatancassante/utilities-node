@@ -24,7 +24,7 @@ function CertificateEditor({ recordId }) {
   const [record, setRecord] = useState(null);
   const [form, setForm] = useState({
     applicant_name: "",
-    purpose: "Valor venal",
+    purpose: "",
     physical_property_id: "",
     year: String(new Date().getFullYear()),
     is_updated: true,
@@ -386,15 +386,18 @@ function CertificateEditor({ recordId }) {
                           Desativado utiliza os dados do lançamento anual.
                         </small>
                       </span>
-                      <input
-                        type="checkbox"
-                        role="switch"
-                        checked={form.is_updated}
-                        onChange={(event) =>
-                          updateField("is_updated", event.target.checked)
-                        }
-                        disabled={isSaving}
-                      />
+                      <span className={styles.switchControl}>
+                        <input
+                          type="checkbox"
+                          role="switch"
+                          checked={form.is_updated}
+                          onChange={(event) =>
+                            updateField("is_updated", event.target.checked)
+                          }
+                          disabled={isSaving}
+                        />
+                        <span aria-hidden="true"></span>
+                      </span>
                     </label>
                     <Button
                       type="button"
