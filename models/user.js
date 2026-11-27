@@ -216,12 +216,16 @@ async function search(searchTerm) {
 async function update(
   username,
   userInputValues,
-  { allowFeatures = false, actorUserId } = {},
+  { allowFeatures = false, allowPosition = false, actorUserId } = {},
 ) {
   const currentUser = await findOneByUsername(username);
   const allowedInputValues = pickUpdatableFields(userInputValues, {
     allowFeatures,
+    allowPosition,
   });
+  if ("position" in allowedInputValues) {
+    allowedInputValues.position = await validatePositionName(allowedInputValues.position);
+  }
 
   if ("name" in allowedInputValues) {
     allowedInputValues.name = normalizeName(allowedInputValues.name);
@@ -388,17 +392,18 @@ async function update(
             });
         }
       }
-      const featuresUpdate = allowFeatures ? "features = $6," : "";
+      const featuresUpdate = allowFeatures ? "features = $7," : "";
       const values = [
         userId,
         userWithNewValues.username,
         userWithNewValues.email,
         userWithNewValues.password,
         userWithNewValues.name,
+        userWithNewValues.position,
       ];
       if (allowFeatures) values.push(userWithNewValues.features);
       const result = await client.query({
-        text: `UPDATE users SET username = $2, email = $3, password = $4, name = $5, ${featuresUpdate} updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
+        text: `UPDATE users SET username = $2, email = $3, password = $4, name = $5, position = $6, ${featuresUpdate} updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
         values,
       });
       return result.rows[0];
@@ -406,20 +411,21 @@ async function update(
     if (allowFeatures && Object.hasOwn(allowedInputValues, "features"))
       return database.transaction(updateUser);
     const result = await database.query({
-      text: "UPDATE users SET username = $2, email = $3, password = $4, name = $5, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;",
+      text: "UPDATE users SET username = $2, email = $3, password = $4, name = $5, position = $6, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;",
       values: [
         userId,
         userWithNewValues.username,
         userWithNewValues.email,
         userWithNewValues.password,
         userWithNewValues.name,
+        userWithNewValues.position,
       ],
     });
     return result.rows[0];
   }
 }
 
-function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
+function pickUpdatableFields(userInputValues, { allowFeatures = false, allowPosition = false } = {}) {
   const isPlainObject =
     userInputValues !== null &&
     typeof userInputValues === "object" &&
@@ -432,9 +438,11 @@ function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
     });
   }
 
-  const updatableFields = allowFeatures
-    ? [...UPDATABLE_FIELDS, "features"]
-    : UPDATABLE_FIELDS;
+  const updatableFields = [
+    ...UPDATABLE_FIELDS,
+    ...(allowPosition ? ["position"] : []),
+    ...(allowFeatures ? ["features"] : []),
+  ];
   const unknownFields = Object.keys(userInputValues).filter(
     (field) => !updatableFields.includes(field),
   );
@@ -447,9 +455,14 @@ function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
 
     throw new ValidationError({
       message: `${message}.`,
-      action: allowFeatures
-        ? "Envie apenas name, username, email, password e features."
-        : "Envie apenas name, username, email e password.",
+      action: (() => {
+        const fields = [
+          ...UPDATABLE_FIELDS,
+          ...(allowPosition ? ["position"] : []),
+          ...(allowFeatures ? ["features"] : []),
+        ];
+        return `Envie apenas ${fields.slice(0, -1).join(", ")} e ${fields.at(-1)}.`;
+      })(),
     });
   }
 
@@ -793,6 +806,27 @@ async function validateUniqueUsername(username) {
       action: "Utilize outro nome de usuário para realizar esta operação.",
     });
   }
+}
+
+async function validatePositionName(positionName) {
+  if (typeof positionName !== "string" || !positionName.trim()) {
+    throw new ValidationError({
+      message: "O cargo deve ser informado como texto.",
+      action: "Selecione um cargo cadastrado no sistema.",
+    });
+  }
+  const normalizedPosition = positionName.trim();
+  const results = await database.query({
+    text: `SELECT name FROM positions WHERE LOWER(name) = LOWER($1) AND deleted_at IS NULL LIMIT 1;`,
+    values: [normalizedPosition],
+  });
+  if (results.rowCount === 0) {
+    throw new ValidationError({
+      message: "O cargo informado não existe ou está inativo.",
+      action: "Selecione um cargo ativo na lista de cargos cadastrados.",
+    });
+  }
+  return results.rows[0].name;
 }
 
 function normalizeName(name) {

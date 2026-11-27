@@ -413,7 +413,7 @@ function ProfileForm({ user, onUpdated }) {
           </div>
         </div>
       )}
-      <span className={shared.badge}>MINHA CONTA</span>
+      <span className={shared.badge}>{user.position || "Não informado"}</span>
       <h1>Meu perfil</h1>
       <p className={styles.description}>
         {isEditing

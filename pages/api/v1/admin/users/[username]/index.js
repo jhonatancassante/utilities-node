@@ -86,6 +86,7 @@ async function patchHandler(request, response) {
     if (Object.keys(userInputValues).length > 0) {
       updatedUser = await user.update(request.query.username, userInputValues, {
         allowFeatures: true,
+        allowPosition: true,
         actorUserId: userTryingToUpdate.id,
       });
     }
