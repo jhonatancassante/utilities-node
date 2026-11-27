@@ -297,6 +297,19 @@ function filterOutput(user, feature, resource) {
       : filterCertificate(resource);
   }
 
+  if (feature === "read:position") {
+    const filterPosition = (item) => ({
+      id: item.id,
+      name: item.name,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    });
+
+    return Array.isArray(resource)
+      ? resource.map(filterPosition)
+      : filterPosition(resource);
+  }
+
   if (feature === "read:status") {
     const output = {
       updated_at: resource.updated_at,

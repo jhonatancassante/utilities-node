@@ -51,6 +51,14 @@ export const adminSections = [
     requiredFeature: "read:real_estate_property",
   },
   {
+    id: "positions",
+    title: "Gerenciar cargos",
+    description: "Consulte e mantenha os cargos disponíveis no sistema.",
+    href: "/admin/positions",
+    icon: "fa-id-badge",
+    requiredFeature: "read:position",
+  },
+  {
     id: "status",
     title: "Status do sistema",
     description: "Acesse as métricas do sistema e a versão do banco de dados.",

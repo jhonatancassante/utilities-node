@@ -1,0 +1,44 @@
+.card {
+  max-width: 760px;
+}
+.header {
+  margin: 24px 0 30px;
+  text-align: center;
+}
+.header h1 {
+  margin: 0 0 10px;
+  color: var(--text-primary);
+  font-size: 28px;
+}
+.header p {
+  max-width: 620px;
+  margin: 0 auto;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.feedback {
+  margin-bottom: 18px;
+}
+.form {
+  display: grid;
+  gap: 24px;
+}
+.counter {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-faint);
+  font-size: 12px;
+  text-align: right;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.empty {
+  padding: 24px;
+  color: var(--text-secondary);
+  text-align: center;
+}
