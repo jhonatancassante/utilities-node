@@ -480,7 +480,14 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <label className={styles.third}>
                       <span className={shared.label}>Número do protocolo</span>
                       <input
-                        className={shared.input}
+                        className={
+                          shared.input +
+                          (fieldErrors.protocol_number ? " " + shared.inputInvalid : "")
+                        }
+                        aria-invalid={Boolean(fieldErrors.protocol_number)}
+                        aria-describedby={
+                          fieldErrors.protocol_number ? "protocol-number-error" : undefined
+                        }
                         type="number"
                         min="1"
                         step="1"
@@ -490,11 +497,23 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         }
                         disabled={isReadOnly || isSaving}
                       />
+                      {fieldErrors.protocol_number && (
+                        <span className={shared.errorText} id="protocol-number-error" role="alert">
+                          {fieldErrors.protocol_number}
+                        </span>
+                      )}
                     </label>
                     <label className={styles.third}>
                       <span className={shared.label}>Ano do protocolo</span>
                       <input
-                        className={shared.input}
+                        className={
+                          shared.input +
+                          (fieldErrors.protocol_year ? " " + shared.inputInvalid : "")
+                        }
+                        aria-invalid={Boolean(fieldErrors.protocol_year)}
+                        aria-describedby={
+                          fieldErrors.protocol_year ? "protocol-year-error" : undefined
+                        }
                         type="number"
                         min="1900"
                         max="9999"
@@ -505,6 +524,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         }
                         disabled={isReadOnly || isSaving}
                       />
+                      {fieldErrors.protocol_year && (
+                        <span className={shared.errorText} id="protocol-year-error" role="alert">
+                          {fieldErrors.protocol_year}
+                        </span>
+                      )}
                     </label>
                     <label className={styles.third}>
                       <span className={shared.label}>
@@ -702,7 +726,14 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <label className={styles.third}>
                       <span className={shared.label}>Validade (dias)</span>
                       <input
-                        className={shared.input}
+                        className={
+                          shared.input +
+                          (fieldErrors.validity_days ? " " + shared.inputInvalid : "")
+                        }
+                        aria-invalid={Boolean(fieldErrors.validity_days)}
+                        aria-describedby={
+                          fieldErrors.validity_days ? "validity-days-error" : undefined
+                        }
                         type="number"
                         min="1"
                         step="1"
@@ -712,6 +743,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         }
                         disabled={isReadOnly || isSaving}
                       />
+                      {fieldErrors.validity_days && (
+                        <span className={shared.errorText} id="validity-days-error" role="alert">
+                          {fieldErrors.validity_days}
+                        </span>
+                      )}
                     </label>
                     <label className={styles.full}>
                       <span className={shared.label}>Observações</span>
