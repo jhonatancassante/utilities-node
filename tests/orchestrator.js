@@ -60,7 +60,8 @@ async function runPendingMigrations() {
 async function createUser(userObject = {}) {
   return await user.create({
     username:
-      userObject.username || faker.internet.username().replace(/[_.-]/g, ""),
+      userObject.username ||
+      `usuario_${faker.string.uuid().replaceAll("-", "").slice(0, 8)}`,
     email: userObject.email || `${faker.string.uuid()}@example.com`,
     password: userObject.password || "Senha_Padrao_V@l1d@_1234",
   });

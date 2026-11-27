@@ -24,7 +24,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           name: "Nome de Teste",
           username: "unicoevalido",
-          email: "unicoevalido@jhonatancassante.com.br",
+          email: "unico_e-valido@jhonatancassante.com.br",
           password: validPassword,
         }),
       });
@@ -47,6 +47,9 @@ describe("POST /api/v1/users", () => {
 
       const userInDatabase = await user.findOneByUsername("unicoevalido");
       expect(userInDatabase.name).toBe("Nome de Teste");
+      expect(userInDatabase.email).toBe(
+        "unico_e-valido@jhonatancassante.com.br",
+      );
       const correctPasswordMatch = await password.compare(
         validPassword,
         userInDatabase.password,

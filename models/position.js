@@ -114,6 +114,44 @@ async function deletePosition(id) {
   return results.rows[0];
 }
 
+async function deleteMany(ids) {
+  if (
+    !Array.isArray(ids) ||
+    ids.length === 0 ||
+    ids.length > 500 ||
+    ids.some((id) => typeof id !== "string" || !id.trim()) ||
+    new Set(ids).size !== ids.length
+  ) {
+    throw new ValidationError({
+      message: "A exclusão em lote deve conter entre 1 e 500 IDs únicos.",
+      action: "Revise a seleção de cargos e tente novamente.",
+    });
+  }
+
+  return database.transaction(async (client) => {
+    const results = await client.query({
+      text: `
+        UPDATE positions
+        SET deleted_at = timezone('utc', now()),
+            updated_at = timezone('utc', now())
+        WHERE id = ANY($1::uuid[]) AND deleted_at IS NULL
+        RETURNING *
+      ;`,
+      values: [ids],
+    });
+
+    if (results.rowCount !== ids.length) {
+      throw new NotFoundError({
+        message:
+          "Um ou mais cargos selecionados não foram encontrados ou já foram excluídos.",
+        action: "Atualize a listagem e confira os cargos selecionados.",
+      });
+    }
+
+    return results.rows;
+  });
+}
+
 function validateInput(inputValues, { requiredFields = [] } = {}) {
   const isPlainObject =
     inputValues !== null &&
@@ -198,6 +236,7 @@ const position = {
   findOneById,
   update,
   delete: deletePosition,
+  deleteMany,
 };
 
 export default position;
