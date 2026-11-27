@@ -18,6 +18,9 @@ async function create(userInputValues) {
   validateEmailFormat(userInputValues.email);
   validatePasswordFormat(userInputValues.password);
   userInputValues.username = userInputValues.username.trim();
+  userInputValues.name = normalizeName(
+    userInputValues.name ?? userInputValues.username,
+  );
   userInputValues.email = userInputValues.email.trim();
   await validateUniqueUsername(userInputValues.username);
   await validateUniqueEmail(userInputValues.email);
@@ -32,15 +35,17 @@ async function create(userInputValues) {
     const results = await database.query({
       text: `
         INSERT INTO
-          users (id, username, email, password, features, profile_photo_url, profile_photo_public_id)
+          users (id, username, name, position, email, password, features, profile_photo_url, profile_photo_public_id)
         VALUES
-          (COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7)
+          (COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING
           *
         ;`,
       values: [
         userInputValues.id ?? null,
         userInputValues.username,
+        userInputValues.name,
+        "Não informado",
         userInputValues.email,
         userInputValues.password,
         userInputValues.features,
@@ -169,13 +174,13 @@ async function findOneByEmail(email) {
   }
 }
 
-const UPDATABLE_FIELDS = ["username", "email", "password"];
+const UPDATABLE_FIELDS = ["name", "username", "email", "password"];
 
 async function search(searchTerm) {
   if (typeof searchTerm !== "string" || searchTerm.trim().length < 2) {
     throw new ValidationError({
       message: "Informe ao menos dois caracteres para pesquisar um usuário.",
-      action: "Pesquise pelo nome de usuário ou pelo e-mail.",
+      action: "Pesquise pelo nome, nome de usuário ou e-mail.",
     });
   }
 
@@ -185,6 +190,7 @@ async function search(searchTerm) {
       SELECT
         id,
         username,
+        name,
         email,
         features,
         banned_at,
@@ -196,6 +202,7 @@ async function search(searchTerm) {
         users
       WHERE
         username ILIKE $1
+        OR name ILIKE $1
         OR email ILIKE $1
       ORDER BY
         username
@@ -211,12 +218,22 @@ async function search(searchTerm) {
 async function update(
   username,
   userInputValues,
-  { allowFeatures = false, actorUserId } = {},
+  { allowFeatures = false, allowPosition = false, actorUserId } = {},
 ) {
   const currentUser = await findOneByUsername(username);
   const allowedInputValues = pickUpdatableFields(userInputValues, {
     allowFeatures,
+    allowPosition,
   });
+  if ("position" in allowedInputValues) {
+    allowedInputValues.position = await validatePositionName(
+      allowedInputValues.position,
+    );
+  }
+
+  if ("name" in allowedInputValues) {
+    allowedInputValues.name = normalizeName(allowedInputValues.name);
+  }
 
   if ("username" in allowedInputValues) {
     validateUsernameFormat(allowedInputValues.username);
@@ -379,36 +396,54 @@ async function update(
             });
         }
       }
-      const featuresUpdate = allowFeatures ? "features = $5," : "";
       const values = [
         userId,
         userWithNewValues.username,
         userWithNewValues.email,
         userWithNewValues.password,
+        userWithNewValues.name,
       ];
-      if (allowFeatures) values.push(userWithNewValues.features);
+      const additionalUpdates = [];
+      if (Object.hasOwn(allowedInputValues, "position")) {
+        values.push(userWithNewValues.position);
+        additionalUpdates.push("position = $" + values.length);
+      }
+      if (allowFeatures) {
+        values.push(userWithNewValues.features);
+        additionalUpdates.push("features = $" + values.length);
+      }
       const result = await client.query({
-        text: `UPDATE users SET username = $2, email = $3, password = $4, ${featuresUpdate} updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
+        text: `UPDATE users SET username = $2, email = $3, password = $4, name = $5${additionalUpdates.length ? `, ${additionalUpdates.join(", ")}` : ""}, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
         values,
       });
       return result.rows[0];
     };
     if (allowFeatures && Object.hasOwn(allowedInputValues, "features"))
       return database.transaction(updateUser);
+    const values = [
+      userId,
+      userWithNewValues.username,
+      userWithNewValues.email,
+      userWithNewValues.password,
+      userWithNewValues.name,
+    ];
+    const additionalUpdates = [];
+    if (Object.hasOwn(allowedInputValues, "position")) {
+      values.push(userWithNewValues.position);
+      additionalUpdates.push("position = $" + values.length);
+    }
     const result = await database.query({
-      text: "UPDATE users SET username = $2, email = $3, password = $4, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;",
-      values: [
-        userId,
-        userWithNewValues.username,
-        userWithNewValues.email,
-        userWithNewValues.password,
-      ],
+      text: `UPDATE users SET username = $2, email = $3, password = $4, name = $5${additionalUpdates.length ? `, ${additionalUpdates.join(", ")}` : ""}, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
+      values,
     });
     return result.rows[0];
   }
 }
 
-function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
+function pickUpdatableFields(
+  userInputValues,
+  { allowFeatures = false, allowPosition = false } = {},
+) {
   const isPlainObject =
     userInputValues !== null &&
     typeof userInputValues === "object" &&
@@ -421,9 +456,11 @@ function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
     });
   }
 
-  const updatableFields = allowFeatures
-    ? [...UPDATABLE_FIELDS, "features"]
-    : UPDATABLE_FIELDS;
+  const updatableFields = [
+    ...UPDATABLE_FIELDS,
+    ...(allowPosition ? ["position"] : []),
+    ...(allowFeatures ? ["features"] : []),
+  ];
   const unknownFields = Object.keys(userInputValues).filter(
     (field) => !updatableFields.includes(field),
   );
@@ -436,9 +473,14 @@ function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
 
     throw new ValidationError({
       message: `${message}.`,
-      action: allowFeatures
-        ? "Envie apenas username, email, password e features."
-        : "Envie apenas username, email e password.",
+      action: (() => {
+        const fields = [
+          ...UPDATABLE_FIELDS,
+          ...(allowPosition ? ["position"] : []),
+          ...(allowFeatures ? ["features"] : []),
+        ];
+        return `Envie apenas ${fields.slice(0, -1).join(", ")} e ${fields.at(-1)}.`;
+      })(),
     });
   }
 
@@ -782,6 +824,44 @@ async function validateUniqueUsername(username) {
       action: "Utilize outro nome de usuário para realizar esta operação.",
     });
   }
+}
+
+async function validatePositionName(positionName) {
+  if (typeof positionName !== "string" || !positionName.trim()) {
+    throw new ValidationError({
+      message: "O cargo deve ser informado como texto.",
+      action: "Selecione um cargo cadastrado no sistema.",
+    });
+  }
+  const normalizedPosition = positionName.trim();
+  const results = await database.query({
+    text: `SELECT name FROM positions WHERE LOWER(name) = LOWER($1) AND deleted_at IS NULL LIMIT 1;`,
+    values: [normalizedPosition],
+  });
+  if (results.rowCount === 0) {
+    throw new ValidationError({
+      message: "O cargo informado não existe ou está inativo.",
+      action: "Selecione um cargo ativo na lista de cargos cadastrados.",
+    });
+  }
+  return results.rows[0].name;
+}
+
+function normalizeName(name) {
+  if (typeof name !== "string") {
+    throw new ValidationError({
+      message: "O nome deve ser informado como texto.",
+      action: "Informe um nome com até 150 caracteres.",
+    });
+  }
+  const normalizedName = name.trim();
+  if (!normalizedName || normalizedName.length > 150) {
+    throw new ValidationError({
+      message: "O nome deve ter entre 1 e 150 caracteres.",
+      action: "Informe um nome válido com até 150 caracteres.",
+    });
+  }
+  return normalizedName;
 }
 
 function validateUsernameFormat(username) {

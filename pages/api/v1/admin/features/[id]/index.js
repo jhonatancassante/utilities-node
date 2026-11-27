@@ -4,16 +4,8 @@ import authorization from "@/models/authorization.js";
 
 export default controller.createController(
   {
-    PATCH: [
-      controller.canRequest("update:feature"),
-      controller.canRequest("read:feature"),
-      patchHandler,
-    ],
-    DELETE: [
-      controller.canRequest("delete:feature"),
-      controller.canRequest("read:feature"),
-      deleteHandler,
-    ],
+    PATCH: [controller.canRequest("update:feature"), patchHandler],
+    DELETE: [controller.canRequest("delete:feature"), deleteHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );

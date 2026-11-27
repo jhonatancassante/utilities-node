@@ -73,6 +73,14 @@ const toolsList = [
     icon: "fa-envelope-open-text",
     status: TOOL_STATUS.available,
   },
+  {
+    slug: "certificates",
+    title: "Certidão de Valor Venal",
+    description: "Consulte e emita certidões de valor venal.",
+    icon: "fa-file-alt",
+    status: TOOL_STATUS.available,
+    requiredFeature: "read:certificate",
+  },
 ];
 
 export const TOOLS_BASE_PATH = "/tools";

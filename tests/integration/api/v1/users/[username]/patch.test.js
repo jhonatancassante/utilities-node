@@ -23,6 +23,7 @@ describe("PATCH /api/v1/users/[username]", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            name: "Nome atualizado pelo titular",
             username: "newUniqueUsername",
           }),
         },
@@ -226,6 +227,7 @@ describe("PATCH /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: "newUniqueUsername",
+        name: createdUser.name,
         features: ["create:session", "read:session", "update:user"],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
@@ -263,6 +265,7 @@ describe("PATCH /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: createdUser.username,
+        name: createdUser.username,
         features: ["create:session", "read:session", "update:user"],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
@@ -306,6 +309,7 @@ describe("PATCH /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: createdUser.username,
+        name: createdUser.name,
         features: ["create:session", "read:session", "update:user"],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
@@ -391,7 +395,7 @@ describe("PATCH /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         name: "ValidationError",
         message: "Os campos a seguir não podem ser alterados: id.",
-        action: "Envie apenas username, email e password.",
+        action: "Envie apenas name, username, email e password.",
         status_code: 400,
       });
 
@@ -422,6 +426,7 @@ describe("PATCH /api/v1/users/[username]", () => {
             id: "00000000-0000-4000-8000-000000000000",
             features: ["update:user:others", "read:migration"],
             created_at: "2000-01-01T00:00:00.000Z",
+            position: "Administrador",
           }),
         },
       );
@@ -429,7 +434,7 @@ describe("PATCH /api/v1/users/[username]", () => {
 
       const responseBody = await response.json();
       expect(responseBody.message).toBe(
-        "Os campos a seguir não podem ser alterados: id, features, created_at.",
+        "Os campos a seguir não podem ser alterados: id, features, created_at, position.",
       );
 
       const userInDatabase = await user.findOneById(createdUser.id);
@@ -507,6 +512,7 @@ describe("PATCH /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         id: user2.id,
         username: "newUniqueUsernameToUser2",
+        name: user2.username,
         features: user2.features,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,

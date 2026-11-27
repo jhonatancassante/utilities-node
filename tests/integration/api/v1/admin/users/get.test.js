@@ -149,7 +149,7 @@ describe("GET /api/v1/admin/users", () => {
       expect(await response.json()).toEqual({
         name: "ValidationError",
         message: "Informe ao menos dois caracteres para pesquisar um usuário.",
-        action: "Pesquise pelo nome de usuário ou pelo e-mail.",
+        action: "Pesquise pelo nome, nome de usuário ou e-mail.",
         status_code: 400,
       });
     });

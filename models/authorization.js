@@ -5,11 +5,7 @@ function can(user, feature, resource) {
   validateUser(user);
   validateFeature(feature);
 
-  let authorized = false;
-
-  if (user.features.includes(feature)) {
-    authorized = true;
-  }
+  let authorized = user.features.includes(feature);
 
   if (feature === "update:user" && resource) {
     authorized = false;
@@ -17,6 +13,13 @@ function can(user, feature, resource) {
     if (user.id === resource.id || can(user, "update:user:others")) {
       authorized = true;
     }
+  }
+
+  if (feature === "update:certificate" && resource) {
+    authorized =
+      user.features.includes("update:certificate:others") ||
+      (user.features.includes("update:certificate") &&
+        user.id === resource.user_id);
   }
 
   return authorized;
@@ -46,6 +49,10 @@ function filterOutput(user, feature, resource) {
     return {
       id: resource.id,
       username: resource.username,
+      name: resource.name,
+      ...(resource.position && resource.position !== "Não informado"
+        ? { position: resource.position }
+        : {}),
       features: resource.features,
       created_at: resource.created_at,
       updated_at: resource.updated_at,
@@ -59,6 +66,10 @@ function filterOutput(user, feature, resource) {
     const filterUser = (userObject) => ({
       id: userObject.id,
       username: userObject.username,
+      name: userObject.name,
+      ...(userObject.position && userObject.position !== "Não informado"
+        ? { position: userObject.position }
+        : {}),
       email: userObject.email,
       features: userObject.features,
       privileged_features: userObject.privileged_features ?? [],
@@ -81,6 +92,10 @@ function filterOutput(user, feature, resource) {
       return {
         id: resource.id,
         username: resource.username,
+        name: resource.name,
+        ...(resource.position && resource.position !== "Não informado"
+          ? { position: resource.position }
+          : {}),
         email: resource.email,
         features: resource.features,
         privileged_features: resource.privileged_features ?? [],
@@ -127,11 +142,7 @@ function filterOutput(user, feature, resource) {
   if (feature === "read:audit") {
     const filterEvent = (event) => {
       if ("name" in event && "run_on" in event) {
-        return {
-          id: event.id,
-          name: event.name,
-          run_on: event.run_on,
-        };
+        return { id: event.id, name: event.name, run_on: event.run_on };
       }
 
       return {
@@ -172,6 +183,143 @@ function filterOutput(user, feature, resource) {
     return Array.isArray(resource)
       ? resource.map(filterFeature)
       : filterFeature(resource);
+  }
+
+  if (feature === "read:assessed_value") {
+    const filterAssessedValue = (item) => ({
+      id: item.id,
+      year: item.year,
+      decree: item.decree,
+      sector_1: item.sector_1,
+      sector_2: item.sector_2,
+      sector_3: item.sector_3,
+      sector_4: item.sector_4,
+      sector_5: item.sector_5,
+      sector_6: item.sector_6,
+      sector_7: item.sector_7,
+      sector_8: item.sector_8,
+      sector_9: item.sector_9,
+      sector_9a: item.sector_9a,
+      sector_10: item.sector_10,
+      sector_11: item.sector_11,
+      sector_11a: item.sector_11a,
+      sector_11b: item.sector_11b,
+      sector_12: item.sector_12,
+      sector_13: item.sector_13,
+      sector_14: item.sector_14,
+      sector_15: item.sector_15,
+      sector_16: item.sector_16,
+      sector_17: item.sector_17,
+      residential_precarious: item.residential_precarious,
+      residential_simple: item.residential_simple,
+      residential_regular: item.residential_regular,
+      residential_medium: item.residential_medium,
+      residential_good: item.residential_good,
+      residential_sophisticated: item.residential_sophisticated,
+      commercial_precarious: item.commercial_precarious,
+      commercial_simple: item.commercial_simple,
+      commercial_regular: item.commercial_regular,
+      commercial_medium: item.commercial_medium,
+      commercial_good: item.commercial_good,
+      commercial_sophisticated: item.commercial_sophisticated,
+      industrial_precarious: item.industrial_precarious,
+      industrial_simple: item.industrial_simple,
+      industrial_regular: item.industrial_regular,
+      industrial_medium: item.industrial_medium,
+      industrial_good: item.industrial_good,
+      industrial_sophisticated: item.industrial_sophisticated,
+      cleaning: item.cleaning,
+      garbage: item.garbage,
+      rural: item.rural,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    });
+    return Array.isArray(resource)
+      ? resource.map(filterAssessedValue)
+      : filterAssessedValue(resource);
+  }
+
+  if (feature === "read:real_estate_property") {
+    const filterProperty = (item) => ({
+      id: item.id,
+      year: item.year,
+      physical_property_id: item.physical_property_id,
+      physical_registration: item.physical_registration,
+      ctm: item.ctm,
+      ctm_count: item.ctm_count,
+      grouping: item.grouping,
+      property_block: item.property_block,
+      property_lots: item.property_lots,
+      land_area: item.land_area,
+      built_area: item.built_area,
+      property_neighborhood: item.property_neighborhood,
+      owner_name: item.owner_name,
+      promissory_buyer: item.promissory_buyer,
+      land_sector: item.land_sector,
+      property_street: item.property_street,
+      property_number: item.property_number,
+      property_complement: item.property_complement,
+      construction_type: item.construction_type,
+      ideal_fraction: item.ideal_fraction,
+      points: item.points,
+      annual: item.annual,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    });
+    return Array.isArray(resource)
+      ? resource.map(filterProperty)
+      : filterProperty(resource);
+  }
+
+  if (feature === "read:certificate") {
+    const filterCertificate = (item) => ({
+      id: item.id,
+      user_id: item.user_id,
+      issuer_name: item.issuer_name,
+      issuer_position: item.issuer_position,
+      protocol_number: item.protocol_number,
+      protocol_year: item.protocol_year,
+      applicant_name: item.applicant_name,
+      year: item.year,
+      purpose: item.purpose,
+      physical_property_id: item.physical_property_id,
+      physical_registration: item.physical_registration,
+      owner_name: item.owner_name,
+      owner_rg: item.owner_rg,
+      promissory_buyer: item.promissory_buyer,
+      property_street: item.property_street,
+      property_number: item.property_number,
+      property_neighborhood: item.property_neighborhood,
+      property_block: item.property_block,
+      property_lots: item.property_lots,
+      property_complement: item.property_complement,
+      land_area: item.land_area,
+      built_area: item.built_area,
+      land_value: item.land_value,
+      building_value: item.building_value,
+      total_value: item.total_value,
+      observations: item.observations,
+      validity_days: item.validity_days,
+      is_updated: item.is_updated,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    });
+    return Array.isArray(resource)
+      ? resource.map(filterCertificate)
+      : filterCertificate(resource);
+  }
+
+  if (feature === "read:position") {
+    const filterPosition = (item) => ({
+      id: item.id,
+      name: item.name,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    });
+
+    return Array.isArray(resource)
+      ? resource.map(filterPosition)
+      : filterPosition(resource);
   }
 
   if (feature === "read:status") {

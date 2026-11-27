@@ -294,7 +294,7 @@ function AdminUsersPage() {
                   className={shared.input}
                   id="user-search"
                   type="search"
-                  placeholder="Nome de usuário ou e-mail"
+                  placeholder="Nome, nome de usuário ou e-mail"
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                   disabled={isSearching}
@@ -426,6 +426,8 @@ function UserEditor({
   const isEditingSelf = user.id === currentUserId;
   const [form, setForm] = useState({
     username: user.username,
+    name: user.name ?? "",
+    position: user.position ?? "",
     email: user.email,
     password: "",
     passwordConfirmation: "",
@@ -449,9 +451,36 @@ function UserEditor({
   });
   const [feedback, setFeedback] = useState(null);
   const [features, setFeatures] = useState([]);
+  const [positions, setPositions] = useState([]);
+  const [isLoadingPositions, setIsLoadingPositions] =
+    useState(canManageUserData);
   const [isLoadingFeatures, setIsLoadingFeatures] = useState(
     canManageUserFeatures,
   );
+
+  useEffect(() => {
+    if (!canManageUserData) return undefined;
+    let isMounted = true;
+    requestAPI("/api/v1/admin/users/positions")
+      .then((availablePositions) => {
+        if (isMounted) setPositions(availablePositions);
+      })
+      .catch((requestError) => {
+        if (!isMounted) return;
+        setFeedback({
+          type: "error",
+          name: requestError.statusCode ? requestError.name : undefined,
+          message: requestError.message,
+          action: requestError.action,
+        });
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingPositions(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [canManageUserData]);
 
   useEffect(() => {
     if (!canManageUserFeatures) return undefined;
@@ -519,6 +548,8 @@ function UserEditor({
   function handleCancel() {
     setForm({
       username: user.username,
+      name: user.name ?? "",
+      position: user.position ?? "",
       email: user.email,
       password: "",
       passwordConfirmation: "",
@@ -696,6 +727,9 @@ function UserEditor({
     event.preventDefault();
 
     const validationError =
+      (!form.name.trim() || form.name.trim().length > 150
+        ? { message: "Informe um nome com até 150 caracteres." }
+        : null) ||
       validateUsername(form.username.trim()) ||
       validateEmail(form.email.trim()) ||
       (form.password ? validatePassword(form.password) : null) ||
@@ -713,6 +747,9 @@ function UserEditor({
     }
 
     const payload = {};
+    if (form.name.trim() !== user.name) payload.name = form.name.trim();
+    if (form.position !== (user.position ?? ""))
+      payload.position = form.position;
     if (form.username.trim() !== user.username) {
       payload.username = form.username.trim();
     }
@@ -867,6 +904,47 @@ function UserEditor({
         )}
         {canManageUserData && (
           <div className={styles.formGrid}>
+            <div className={styles.field}>
+              <label className={shared.label} htmlFor="edit-name">
+                Nome
+              </label>
+              <input
+                className={shared.input}
+                id="edit-name"
+                value={form.name}
+                maxLength={150}
+                onChange={(event) => updateField("name", event.target.value)}
+                disabled={isSaving}
+              />
+            </div>
+            <div className={styles.field}>
+              <label className={shared.label} htmlFor="edit-position">
+                Cargo
+              </label>
+              <select
+                className={shared.input}
+                id="edit-position"
+                value={form.position}
+                onChange={(event) =>
+                  updateField("position", event.target.value)
+                }
+                disabled={isSaving || isLoadingPositions}
+              >
+                <option value="">Selecione um cargo</option>
+                {form.position &&
+                  !positions.some((item) => item.name === form.position) && (
+                    <option value={form.position} disabled>
+                      {form.position} (não cadastrado)
+                    </option>
+                  )}
+                {positions.map((item) => (
+                  <option key={item.name} value={item.name}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+              {isLoadingPositions && <small>Carregando cargos...</small>}
+            </div>
             <div className={styles.field}>
               <label className={shared.label} htmlFor="edit-username">
                 Nome de usuário

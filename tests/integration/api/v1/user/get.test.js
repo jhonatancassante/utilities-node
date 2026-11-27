@@ -84,6 +84,7 @@ describe("GET /api/v1/user", () => {
       expect(responseBody).toEqual({
         id: activatedUser.id,
         username: "UsuarioComSessaoValida",
+        name: activatedUser.name,
         email: activatedUser.email,
         features: ["create:session", "read:session", "update:user"],
         privileged_features: [],
@@ -209,6 +210,7 @@ describe("GET /api/v1/user", () => {
       expect(responseBody).toEqual({
         id: activatedUser.id,
         username: activatedUser.username,
+        name: activatedUser.name,
         email: activatedUser.email,
         features: ["create:session", "read:session", "update:user"],
         privileged_features: [],

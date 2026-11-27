@@ -5,21 +5,9 @@ import { ValidationError } from "@/infra/errors.js";
 
 export default controller.createController(
   {
-    GET: [
-      controller.canRequest("update:user:status"),
-      controller.canRequest("read:user:others"),
-      getHandler,
-    ],
-    POST: [
-      controller.canRequest("update:user:status"),
-      controller.canRequest("read:user:others"),
-      postHandler,
-    ],
-    DELETE: [
-      controller.canRequest("update:user:status"),
-      controller.canRequest("read:user:others"),
-      deleteHandler,
-    ],
+    GET: [controller.canRequest("read:user:others"), getHandler],
+    POST: [controller.canRequest("update:user:status"), postHandler],
+    DELETE: [controller.canRequest("update:user:status"), deleteHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );

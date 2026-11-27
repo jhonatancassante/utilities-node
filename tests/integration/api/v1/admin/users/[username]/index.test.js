@@ -1,6 +1,7 @@
 import orchestrator from "tests/orchestrator.js";
 import user from "@/models/user.js";
 import feature from "@/models/feature.js";
+import position from "@/models/position.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -127,6 +128,38 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
   });
 
   describe("Permissões específicas", () => {
+    test("update:user:others permite atribuir cargo cadastrado e rejeita cargo excluído", async () => {
+      const { sessionObject } = await createGeneralEditorSession();
+      const targetUser = await orchestrator.createUser();
+      const job = await position.create({ name: "Analista Administrativo" });
+      const headers = {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      };
+      const response = await fetch(adminUserUrl(targetUser.username), {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ position: job.name }),
+      });
+      expect(response.status).toBe(200);
+      expect((await response.json()).position).toBe(job.name);
+      expect((await user.findOneById(targetUser.id)).position).toBe(job.name);
+
+      const deleted = await position.create({ name: "Cargo desativado" });
+      await position.delete(deleted.id);
+      const invalidResponse = await fetch(adminUserUrl(targetUser.username), {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ position: deleted.name }),
+      });
+      expect(invalidResponse.status).toBe(400);
+      expect(await invalidResponse.json()).toMatchObject({
+        name: "ValidationError",
+        message: "O cargo informado não existe ou está inativo.",
+      });
+      expect((await user.findOneById(targetUser.id)).position).toBe(job.name);
+    });
+
     test("update:user:others permite alterar dados gerais, mas não features", async () => {
       const { sessionObject } = await createGeneralEditorSession();
       const targetUser = await orchestrator.createUser();
@@ -216,6 +249,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
           Cookie: `session_id=${sessionObject.token}`,
         },
         body: JSON.stringify({
+          name: "Nome Atualizado",
           username: "adminUpdatedUsername",
           email: "admin-updated@example.com",
           password: "Senha-Atualizada-Segura-123!!",
@@ -225,6 +259,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       expect(response.status).toBe(200);
       const responseBody = await response.json();
       expect(responseBody.username).toBe("adminUpdatedUsername");
+      expect(responseBody.name).toBe("Nome Atualizado");
       expect(responseBody.email).toBe("admin-updated@example.com");
       expect(responseBody.features).toEqual([
         "update:user:others",
@@ -234,6 +269,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
 
       const updatedUser = await user.findOneById(targetUser.id);
       expect(updatedUser.username).toBe("adminUpdatedUsername");
+      expect(updatedUser.name).toBe("Nome Atualizado");
       expect(updatedUser.email).toBe("admin-updated@example.com");
     });
 

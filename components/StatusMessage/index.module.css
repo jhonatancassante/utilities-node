@@ -201,3 +201,46 @@
     width: calc(100vw - 24px);
   }
 }
+
+.warningTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.warningTitle > i {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(217, 154, 25, 0.14);
+  color: #b47b08;
+  font-size: 17px;
+}
+
+.warningDialog {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  text-align: left;
+}
+
+.warningDialog p {
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.warningDialog small {
+  color: var(--text-secondary);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.errorActions {
+  gap: 10px;
+}

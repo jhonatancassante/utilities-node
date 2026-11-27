@@ -17,6 +17,7 @@ import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 const INITIAL_FORM = {
+  name: "",
   username: "",
   email: "",
   password: "",
@@ -24,6 +25,7 @@ const INITIAL_FORM = {
 };
 
 const INITIAL_TOUCHED = {
+  name: false,
   username: false,
   email: false,
   password: false,
@@ -32,6 +34,10 @@ const INITIAL_TOUCHED = {
 
 function getFieldErrors(form) {
   return {
+    name:
+      !form.name.trim() || form.name.trim().length > 150
+        ? "Informe um nome com até 150 caracteres."
+        : "",
     username: validateUsername(form.username.trim())?.message ?? "",
     email: validateEmail(form.email.trim())?.message ?? "",
     password: validatePassword(form.password)?.message ?? "",
@@ -77,6 +83,7 @@ function RegistrationPage() {
     event.preventDefault();
 
     setTouched({
+      name: true,
       username: true,
       email: true,
       password: true,
@@ -84,6 +91,7 @@ function RegistrationPage() {
     });
 
     const validationError =
+      (fieldErrors.name ? { message: fieldErrors.name } : null) ||
       validateUsername(form.username.trim()) ||
       validateEmail(form.email.trim()) ||
       validatePassword(form.password) ||
@@ -109,6 +117,7 @@ function RegistrationPage() {
       await requestAPI("/api/v1/users", {
         method: "POST",
         body: JSON.stringify({
+          name: form.name.trim(),
           username: form.username.trim(),
           email: form.email.trim(),
           password: form.password,
@@ -175,6 +184,35 @@ function RegistrationPage() {
                     onChange={setProfilePhoto}
                     disabled={isSubmitting}
                   />
+
+                  <div className={styles.field}>
+                    <label className={shared.label} htmlFor="name">
+                      Nome
+                    </label>
+                    <input
+                      className={`${shared.input} ${touched.name && fieldErrors.name ? styles.invalidInput : ""}`}
+                      id="name"
+                      name="name"
+                      type="text"
+                      autoComplete="name"
+                      placeholder="Seu nome completo"
+                      maxLength={150}
+                      value={form.name}
+                      onChange={handleChange}
+                      onBlur={() => handleBlur("name")}
+                      aria-invalid={Boolean(touched.name && fieldErrors.name)}
+                      aria-describedby={
+                        touched.name && fieldErrors.name
+                          ? "name-error"
+                          : "name-hint"
+                      }
+                      disabled={isSubmitting}
+                    />
+                    {renderFieldError("name")}
+                    <small className={styles.fieldHint} id="name-hint">
+                      Informe seu nome, com até 150 caracteres.
+                    </small>
+                  </div>
 
                   <div className={styles.field}>
                     <label className={shared.label} htmlFor="username">

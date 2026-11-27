@@ -70,12 +70,26 @@ function ToastNotification({ item, onDismiss }) {
   );
 }
 
-function StatusMessage({ type = "info", children, action, name, resetKey }) {
+function StatusMessage({
+  type = "info",
+  children,
+  action,
+  name,
+  resetKey,
+  onConfirm,
+  onCancel,
+  confirmLabel = "Confirmar",
+  cancelLabel = "Cancelar",
+}) {
   const messageKey = resetKey ?? children;
   const [dismissedKey, setDismissedKey] = useState(null);
   const [toastState, setToastState] = useState({ items: [], nextId: 0 });
   const [lastToastKey, setLastToastKey] = useState(null);
-  const isToast = !name && !["inline-error", "critical"].includes(type);
+  const isToast =
+    !name &&
+    !["inline-error", "critical", "warning-modal", "confirmation"].includes(
+      type,
+    );
 
   if (isToast && children && messageKey !== lastToastKey) {
     setLastToastKey(messageKey);
@@ -105,29 +119,62 @@ function StatusMessage({ type = "info", children, action, name, resetKey }) {
     }));
   }, []);
 
-  if (name || type === "critical") {
+  if (
+    name ||
+    type === "critical" ||
+    type === "warning-modal" ||
+    type === "confirmation"
+  ) {
     if (!children || dismissedKey === messageKey) return null;
+
+    const isWarning = ["warning-modal", "confirmation"].includes(type);
+    const closeDialog = () => setDismissedKey(messageKey);
 
     return (
       <Modal
         title={
-          <span className={styles.errorTitle}>
-            <i className="fas fa-exclamation-circle" aria-hidden="true"></i>
-            <span>{name || "Não foi possível concluir"}</span>
+          <span className={isWarning ? styles.warningTitle : styles.errorTitle}>
+            <i
+              className={
+                "fas " +
+                (isWarning
+                  ? "fa-exclamation-triangle"
+                  : "fa-exclamation-circle")
+              }
+              aria-hidden="true"
+            ></i>
+            <span>
+              {isWarning ? "Atenção" : name || "Não foi possível concluir"}
+            </span>
           </span>
         }
-        onClose={() => setDismissedKey(messageKey)}
+        onClose={type === "confirmation" ? onCancel : closeDialog}
         closeOnBackdrop={false}
+        closeOnEscape={false}
         showCloseButton={false}
       >
-        <div className={styles.errorDialog} role="alert">
+        <div
+          className={isWarning ? styles.warningDialog : styles.errorDialog}
+          role="alert"
+        >
           <p>{children}</p>
           {action && <small>{action}</small>}
         </div>
         <div className={styles.errorActions}>
-          <Button type="button" onClick={() => setDismissedKey(messageKey)}>
-            OK
-          </Button>
+          {type === "confirmation" ? (
+            <>
+              <Button type="button" variant="outline" onClick={onCancel}>
+                {cancelLabel}
+              </Button>
+              <Button type="button" onClick={onConfirm}>
+                {confirmLabel}
+              </Button>
+            </>
+          ) : (
+            <Button type="button" onClick={closeDialog}>
+              OK
+            </Button>
+          )}
         </div>
       </Modal>
     );

@@ -68,6 +68,7 @@ function ProfileForm({ user, onUpdated }) {
   );
   const [form, setForm] = useState({
     username: user.username,
+    name: user.name ?? "",
     email: user.email,
     password: "",
     passwordConfirmation: "",
@@ -86,6 +87,10 @@ function ProfileForm({ user, onUpdated }) {
   const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
 
   const errors = {
+    name:
+      !form.name.trim() || form.name.trim().length > 150
+        ? "Informe um nome com até 150 caracteres."
+        : "",
     username: validateUsername(form.username.trim())?.message ?? "",
     email: validateEmail(form.email.trim())?.message ?? "",
     password: form.password
@@ -116,6 +121,7 @@ function ProfileForm({ user, onUpdated }) {
 
     setForm({
       username: user.username,
+      name: user.name ?? "",
       email: user.email,
       password: "",
       passwordConfirmation: "",
@@ -129,6 +135,7 @@ function ProfileForm({ user, onUpdated }) {
   function handleCancel() {
     setForm({
       username: user.username,
+      name: user.name ?? "",
       email: user.email,
       password: "",
       passwordConfirmation: "",
@@ -193,6 +200,7 @@ function ProfileForm({ user, onUpdated }) {
     event.preventDefault();
 
     setTouched({
+      name: true,
       username: true,
       email: true,
       password: true,
@@ -200,6 +208,7 @@ function ProfileForm({ user, onUpdated }) {
     });
 
     const validationError =
+      (errors.name ? { message: errors.name } : null) ||
       validateUsername(form.username.trim()) ||
       validateEmail(form.email.trim()) ||
       (form.password ? validatePassword(form.password) : null) ||
@@ -218,6 +227,7 @@ function ProfileForm({ user, onUpdated }) {
 
     const payload = {};
 
+    if (form.name.trim() !== user.name) payload.name = form.name.trim();
     if (form.username.trim() !== user.username) {
       payload.username = form.username.trim();
     }
@@ -247,6 +257,7 @@ function ProfileForm({ user, onUpdated }) {
       const updatedUser = {
         ...user,
         username: payload.username ?? user.username,
+        name: payload.name ?? user.name,
         email: payload.email ?? user.email,
         profile_photo_url:
           savedUser.profile_photo_url ?? user.profile_photo_url,
@@ -255,6 +266,7 @@ function ProfileForm({ user, onUpdated }) {
       onUpdated(updatedUser);
       setForm({
         username: updatedUser.username,
+        name: updatedUser.name,
         email: updatedUser.email,
         password: "",
         passwordConfirmation: "",
@@ -402,7 +414,7 @@ function ProfileForm({ user, onUpdated }) {
           </div>
         </div>
       )}
-      <span className={shared.badge}>MINHA CONTA</span>
+      <span className={shared.badge}>{user.position || "Não informado"}</span>
       <h1>Meu perfil</h1>
       <p className={styles.description}>
         {isEditing
@@ -411,6 +423,26 @@ function ProfileForm({ user, onUpdated }) {
       </p>
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
+        <div className={styles.field}>
+          <label className={shared.label} htmlFor="name">
+            Nome
+          </label>
+          <input
+            className={`${shared.input} ${isEditing && touched.name && errors.name ? styles.invalidInput : ""}`}
+            id="name"
+            name="name"
+            type="text"
+            autoComplete="name"
+            maxLength={150}
+            value={form.name}
+            onChange={handleChange}
+            onBlur={() => handleBlur("name")}
+            aria-invalid={Boolean(isEditing && touched.name && errors.name)}
+            disabled={!isEditing || isSubmitting}
+          />
+          {renderError("name")}
+        </div>
+
         <div className={styles.field}>
           <label className={shared.label} htmlFor="username">
             Nome de usuário

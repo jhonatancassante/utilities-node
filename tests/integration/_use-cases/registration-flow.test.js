@@ -36,6 +36,7 @@ describe("POST /api/v1/users", () => {
       expect(createUserRespondseBody).toEqual({
         id: createUserRespondseBody.id,
         username: "registrationFlow",
+        name: "registrationFlow",
         features: ["read:activation_token"],
         created_at: createUserRespondseBody.created_at,
         updated_at: createUserRespondseBody.updated_at,

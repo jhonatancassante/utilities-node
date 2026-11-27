@@ -188,38 +188,44 @@ function Header() {
                 id="tools-menu"
                 className={`${styles.dropdown} ${isToolsOpen ? styles.dropdownOpen : ""}`}
               >
-                {tools.map((tool) => (
-                  <li key={tool.slug}>
-                    {tool.isAvailable ? (
-                      <Link
-                        href={tool.href}
-                        className={styles.toolItem}
-                        aria-current={
-                          router.asPath === tool.href ? "page" : undefined
-                        }
-                        onClick={closeMenus}
-                      >
-                        <i
-                          className={`fas ${tool.icon}`}
-                          aria-hidden="true"
-                        ></i>
-                        <span>{tool.title}</span>
-                      </Link>
-                    ) : (
-                      <span
-                        className={`${styles.toolItem} ${styles.toolItemSoon}`}
-                        aria-disabled="true"
-                      >
-                        <i
-                          className={`fas ${tool.icon}`}
-                          aria-hidden="true"
-                        ></i>
-                        <span>{tool.title}</span>
-                        <small className={styles.soonTag}>Em breve</small>
-                      </span>
-                    )}
-                  </li>
-                ))}
+                {tools
+                  .filter(
+                    (tool) =>
+                      !tool.requiredFeature ||
+                      user?.features?.includes(tool.requiredFeature),
+                  )
+                  .map((tool) => (
+                    <li key={tool.slug}>
+                      {tool.isAvailable ? (
+                        <Link
+                          href={tool.href}
+                          className={styles.toolItem}
+                          aria-current={
+                            router.asPath === tool.href ? "page" : undefined
+                          }
+                          onClick={closeMenus}
+                        >
+                          <i
+                            className={`fas ${tool.icon}`}
+                            aria-hidden="true"
+                          ></i>
+                          <span>{tool.title}</span>
+                        </Link>
+                      ) : (
+                        <span
+                          className={`${styles.toolItem} ${styles.toolItemSoon}`}
+                          aria-disabled="true"
+                        >
+                          <i
+                            className={`fas ${tool.icon}`}
+                            aria-hidden="true"
+                          ></i>
+                          <span>{tool.title}</span>
+                          <small className={styles.soonTag}>Em breve</small>
+                        </span>
+                      )}
+                    </li>
+                  ))}
               </ul>
             </li>
 
