@@ -30,6 +30,7 @@ function PositionsPage() {
   const [records, setRecords] = useState([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [search, setSearch] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
@@ -57,6 +58,7 @@ function PositionsPage() {
     try {
       const data = await requestAPI("/api/v1/admin/positions");
       setRecords(data);
+      setSelectedIds([]);
     } catch (requestError) {
       setFeedback({
         type: "error",
@@ -92,10 +94,35 @@ function PositionsPage() {
     currentPage * pageSize,
   );
 
-  async function handleDelete(record) {
+  const allVisibleSelected =
+    visibleRecords.length > 0 &&
+    visibleRecords.every((record) => selectedIds.includes(record.id));
+
+  function toggleSelection(id) {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
+    );
+  }
+
+  function togglePageSelection(checked) {
+    const visibleIds = visibleRecords.map((record) => record.id);
+    setSelectedIds((current) =>
+      checked
+        ? Array.from(new Set([...current, ...visibleIds]))
+        : current.filter((id) => !visibleIds.includes(id)),
+    );
+  }
+
+  async function handleDeleteSelected() {
     if (
+      !canDelete ||
+      !selectedIds.length ||
       !window.confirm(
-        'Deseja excluir o cargo "' + record.name + '"? Esta ação é lógica.',
+        "Deseja excluir " +
+          selectedIds.length +
+          " cargo(s) selecionado(s)? A exclusão será lógica.",
       )
     ) {
       return;
@@ -104,14 +131,15 @@ function PositionsPage() {
     setIsDeleting(true);
     setFeedback(null);
     try {
-      await requestAPI(
-        "/api/v1/admin/positions/" + encodeURIComponent(record.id),
-        { method: "DELETE" },
-      );
+      await requestAPI("/api/v1/admin/positions/bulk", {
+        method: "DELETE",
+        body: JSON.stringify({ ids: selectedIds }),
+      });
       await loadRecords();
       setFeedback({
         type: "success",
-        message: "Cargo excluído com sucesso.",
+        message:
+          selectedIds.length + " cargo(s) excluído(s) com sucesso.",
       });
     } catch (requestError) {
       setFeedback({
@@ -231,6 +259,19 @@ function PositionsPage() {
                   <h2>Cargos cadastrados</h2>
                   <span>{filteredRecords.length} cargo(s)</span>
                 </div>
+                {canDelete && selectedIds.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="danger"
+                    icon="fa-trash"
+                    onClick={handleDeleteSelected}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting
+                      ? "Excluindo..."
+                      : "Excluir selecionados (" + selectedIds.length + ")"}
+                  </Button>
+                )}
               </div>
 
               {isLoadingRecords ? (
@@ -257,32 +298,27 @@ function PositionsPage() {
                     onSort={handleSort}
                     sortAnnouncement={sortAnnouncement}
                     caption="Cargos cadastrados"
+                    selectable={canDelete}
+                    selectedIds={selectedIds}
+                    allVisibleSelected={allVisibleSelected}
+                    onToggleRecord={toggleSelection}
+                    onTogglePage={togglePageSelection}
+                    getSelectionLabel={(record) =>
+                      "Selecionar cargo " + record.name
+                    }
                     renderActions={(record, actionClassName) => (
-                      <div className={styles.actions}>
-                        <Link
-                          className={actionClassName}
-                          href={"/admin/positions/" + record.id}
-                        >
-                          <i
-                            className={
-                              "fas " + (canUpdate ? "fa-edit" : "fa-eye")
-                            }
-                            aria-hidden="true"
-                          ></i>
-                          {canUpdate ? "Editar" : "Visualizar"}
-                        </Link>
-                        {canDelete && (
-                          <Button
-                            type="button"
-                            variant="danger"
-                            disabled={isDeleting}
-                            onClick={() => handleDelete(record)}
-                          >
-                            <i className="fas fa-trash" aria-hidden="true"></i>
-                            Excluir
-                          </Button>
-                        )}
-                      </div>
+                      <Link
+                        className={actionClassName}
+                        href={"/admin/positions/" + record.id}
+                      >
+                        <i
+                          className={
+                            "fas " + (canUpdate ? "fa-edit" : "fa-eye")
+                          }
+                          aria-hidden="true"
+                        ></i>{" "}
+                        {canUpdate ? "Editar" : "Visualizar"}
+                      </Link>
                     )}
                   />
                   <AdminPagination

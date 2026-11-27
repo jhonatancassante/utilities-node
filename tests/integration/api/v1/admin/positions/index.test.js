@@ -131,3 +131,71 @@ describe("POST /api/v1/admin/positions", () => {
     });
   });
 });
+
+
+describe("DELETE /api/v1/admin/positions/bulk", () => {
+  test("Rejeitando usuário sem a feature correspondente", async () => {
+    const sessionObject = await createSessionWithFeatures(["read:position"]);
+    const first = await position.create({ name: uniquePositionName() });
+    const second = await position.create({ name: uniquePositionName() });
+
+    const response = await fetch(endpoint() + "/bulk", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      },
+      body: JSON.stringify({ ids: [first.id, second.id] }),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  test("Excluindo logicamente vários cargos com a feature correspondente", async () => {
+    const sessionObject = await createSessionWithFeatures(["delete:position"]);
+    const first = await position.create({ name: uniquePositionName() });
+    const second = await position.create({ name: uniquePositionName() });
+
+    const response = await fetch(endpoint() + "/bulk", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      },
+      body: JSON.stringify({ ids: [first.id, second.id] }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: first.id, name: first.name }),
+        expect.objectContaining({ id: second.id, name: second.name }),
+      ]),
+    );
+
+    await expect(position.findOneById(first.id)).rejects.toThrow(
+      "O cargo informado não foi encontrado.",
+    );
+    await expect(position.findOneById(second.id)).rejects.toThrow(
+      "O cargo informado não foi encontrado.",
+    );
+  });
+
+  test("Rejeitando seleção vazia", async () => {
+    const sessionObject = await createSessionWithFeatures(["delete:position"]);
+    const response = await fetch(endpoint() + "/bulk", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      },
+      body: JSON.stringify({ ids: [] }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      name: "ValidationError",
+      message: "A exclusão em lote deve conter entre 1 e 500 IDs únicos.",
+    });
+  });
+});
