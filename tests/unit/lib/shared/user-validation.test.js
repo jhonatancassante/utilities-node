@@ -28,8 +28,7 @@ describe("lib/shared/user-validation.js", () => {
       "nome_sobrenome@example.com",
       "nome-sobrenome@example.com",
       "nome_sobrenome-teste@meu-dominio.com.br",
-    ])("Aceita o e-mail %s",
-      (email) => {
+    ])("Aceita o e-mail %s", (email) => {
         expect(validateEmail(email)).toBeNull();
       },
     );
