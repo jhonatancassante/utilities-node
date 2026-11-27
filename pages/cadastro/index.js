@@ -34,9 +34,10 @@ const INITIAL_TOUCHED = {
 
 function getFieldErrors(form) {
   return {
-    name: !form.name.trim() || form.name.trim().length > 150
-      ? "Informe um nome com até 150 caracteres."
-      : "",
+    name:
+      !form.name.trim() || form.name.trim().length > 150
+        ? "Informe um nome com até 150 caracteres."
+        : "",
     username: validateUsername(form.username.trim())?.message ?? "",
     email: validateEmail(form.email.trim())?.message ?? "",
     password: validatePassword(form.password)?.message ?? "",
@@ -200,7 +201,11 @@ function RegistrationPage() {
                       onChange={handleChange}
                       onBlur={() => handleBlur("name")}
                       aria-invalid={Boolean(touched.name && fieldErrors.name)}
-                      aria-describedby={touched.name && fieldErrors.name ? "name-error" : "name-hint"}
+                      aria-describedby={
+                        touched.name && fieldErrors.name
+                          ? "name-error"
+                          : "name-hint"
+                      }
                       disabled={isSubmitting}
                     />
                     {renderFieldError("name")}

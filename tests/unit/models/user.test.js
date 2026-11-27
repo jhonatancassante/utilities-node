@@ -125,7 +125,9 @@ describe("models/user.js", () => {
       expect(error.message).toBe(
         "Os campos a seguir não podem ser alterados: id.",
       );
-      expect(error.action).toBe("Envie apenas name, username, email e password.");
+      expect(error.action).toBe(
+        "Envie apenas name, username, email e password.",
+      );
       expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
     });
 

@@ -132,9 +132,14 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       const { sessionObject } = await createGeneralEditorSession();
       const targetUser = await orchestrator.createUser();
       const job = await position.create({ name: "Analista Administrativo" });
-      const headers = { "Content-Type": "application/json", Cookie: `session_id=${sessionObject.token}` };
+      const headers = {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      };
       const response = await fetch(adminUserUrl(targetUser.username), {
-        method: "PATCH", headers, body: JSON.stringify({ position: job.name }),
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ position: job.name }),
       });
       expect(response.status).toBe(200);
       expect((await response.json()).position).toBe(job.name);
@@ -143,7 +148,9 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       const deleted = await position.create({ name: "Cargo desativado" });
       await position.delete(deleted.id);
       const invalidResponse = await fetch(adminUserUrl(targetUser.username), {
-        method: "PATCH", headers, body: JSON.stringify({ position: deleted.name }),
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ position: deleted.name }),
       });
       expect(invalidResponse.status).toBe(400);
       expect(await invalidResponse.json()).toMatchObject({

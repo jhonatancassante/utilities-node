@@ -50,7 +50,9 @@ function filterOutput(user, feature, resource) {
       id: resource.id,
       username: resource.username,
       name: resource.name,
-      ...(resource.position && resource.position !== "Não informado" ? { position: resource.position } : {}),
+      ...(resource.position && resource.position !== "Não informado"
+        ? { position: resource.position }
+        : {}),
       features: resource.features,
       created_at: resource.created_at,
       updated_at: resource.updated_at,
@@ -65,7 +67,9 @@ function filterOutput(user, feature, resource) {
       id: userObject.id,
       username: userObject.username,
       name: userObject.name,
-      ...(userObject.position && userObject.position !== "Não informado" ? { position: userObject.position } : {}),
+      ...(userObject.position && userObject.position !== "Não informado"
+        ? { position: userObject.position }
+        : {}),
       email: userObject.email,
       features: userObject.features,
       privileged_features: userObject.privileged_features ?? [],
@@ -89,7 +93,9 @@ function filterOutput(user, feature, resource) {
         id: resource.id,
         username: resource.username,
         name: resource.name,
-        ...(resource.position && resource.position !== "Não informado" ? { position: resource.position } : {}),
+        ...(resource.position && resource.position !== "Não informado"
+          ? { position: resource.position }
+          : {}),
         email: resource.email,
         features: resource.features,
         privileged_features: resource.privileged_features ?? [],

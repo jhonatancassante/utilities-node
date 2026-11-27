@@ -37,11 +37,7 @@ function PositionEditor({ recordId }) {
   }, [error, isLoading, requiredFeature, router, user]);
 
   useEffect(() => {
-    if (
-      !recordId ||
-      !user ||
-      !user.features.includes("read:position")
-    ) {
+    if (!recordId || !user || !user.features.includes("read:position")) {
       return undefined;
     }
 
@@ -152,10 +148,7 @@ function PositionEditor({ recordId }) {
     );
   }
 
-  if (
-    !user ||
-    !user.features.includes(requiredFeature)
-  ) {
+  if (!user || !user.features.includes(requiredFeature)) {
     return null;
   }
 

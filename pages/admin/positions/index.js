@@ -21,9 +21,7 @@ import styles from "./index.module.css";
 function formatDate(value) {
   if (!value) return "—";
   const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? "—"
-    : date.toLocaleString("pt-BR");
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("pt-BR");
 }
 
 function PositionsPage() {
@@ -194,7 +192,9 @@ function PositionsPage() {
             {feedback && (
               <div className={styles.feedback}>
                 <StatusMessage
-                  type={feedback.type === "success" ? "success" : "inline-error"}
+                  type={
+                    feedback.type === "success" ? "success" : "inline-error"
+                  }
                   name={feedback.name}
                   action={feedback.action}
                 >

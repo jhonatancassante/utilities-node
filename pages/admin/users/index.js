@@ -452,7 +452,8 @@ function UserEditor({
   const [feedback, setFeedback] = useState(null);
   const [features, setFeatures] = useState([]);
   const [positions, setPositions] = useState([]);
-  const [isLoadingPositions, setIsLoadingPositions] = useState(canManageUserData);
+  const [isLoadingPositions, setIsLoadingPositions] =
+    useState(canManageUserData);
   const [isLoadingFeatures, setIsLoadingFeatures] = useState(
     canManageUserFeatures,
   );
@@ -461,13 +462,24 @@ function UserEditor({
     if (!canManageUserData) return undefined;
     let isMounted = true;
     requestAPI("/api/v1/admin/users/positions")
-      .then((availablePositions) => { if (isMounted) setPositions(availablePositions); })
+      .then((availablePositions) => {
+        if (isMounted) setPositions(availablePositions);
+      })
       .catch((requestError) => {
         if (!isMounted) return;
-        setFeedback({ type: "error", name: requestError.statusCode ? requestError.name : undefined, message: requestError.message, action: requestError.action });
+        setFeedback({
+          type: "error",
+          name: requestError.statusCode ? requestError.name : undefined,
+          message: requestError.message,
+          action: requestError.action,
+        });
       })
-      .finally(() => { if (isMounted) setIsLoadingPositions(false); });
-    return () => { isMounted = false; };
+      .finally(() => {
+        if (isMounted) setIsLoadingPositions(false);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [canManageUserData]);
 
   useEffect(() => {
@@ -736,7 +748,8 @@ function UserEditor({
 
     const payload = {};
     if (form.name.trim() !== user.name) payload.name = form.name.trim();
-    if (form.position !== (user.position ?? "")) payload.position = form.position;
+    if (form.position !== (user.position ?? ""))
+      payload.position = form.position;
     if (form.username.trim() !== user.username) {
       payload.username = form.username.trim();
     }
@@ -905,19 +918,30 @@ function UserEditor({
               />
             </div>
             <div className={styles.field}>
-              <label className={shared.label} htmlFor="edit-position">Cargo</label>
+              <label className={shared.label} htmlFor="edit-position">
+                Cargo
+              </label>
               <select
                 className={shared.input}
                 id="edit-position"
                 value={form.position}
-                onChange={(event) => updateField("position", event.target.value)}
+                onChange={(event) =>
+                  updateField("position", event.target.value)
+                }
                 disabled={isSaving || isLoadingPositions}
               >
                 <option value="">Selecione um cargo</option>
-                {form.position && !positions.some((item) => item.name === form.position) && (
-                  <option value={form.position} disabled>{form.position} (não cadastrado)</option>
-                )}
-                {positions.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
+                {form.position &&
+                  !positions.some((item) => item.name === form.position) && (
+                    <option value={form.position} disabled>
+                      {form.position} (não cadastrado)
+                    </option>
+                  )}
+                {positions.map((item) => (
+                  <option key={item.name} value={item.name}>
+                    {item.name}
+                  </option>
+                ))}
               </select>
               {isLoadingPositions && <small>Carregando cargos...</small>}
             </div>

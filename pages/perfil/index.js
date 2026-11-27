@@ -87,9 +87,10 @@ function ProfileForm({ user, onUpdated }) {
   const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
 
   const errors = {
-    name: !form.name.trim() || form.name.trim().length > 150
-      ? "Informe um nome com até 150 caracteres."
-      : "",
+    name:
+      !form.name.trim() || form.name.trim().length > 150
+        ? "Informe um nome com até 150 caracteres."
+        : "",
     username: validateUsername(form.username.trim())?.message ?? "",
     email: validateEmail(form.email.trim())?.message ?? "",
     password: form.password

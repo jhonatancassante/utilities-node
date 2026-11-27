@@ -18,7 +18,9 @@ async function create(userInputValues) {
   validateEmailFormat(userInputValues.email);
   validatePasswordFormat(userInputValues.password);
   userInputValues.username = userInputValues.username.trim();
-  userInputValues.name = normalizeName(userInputValues.name ?? userInputValues.username);
+  userInputValues.name = normalizeName(
+    userInputValues.name ?? userInputValues.username,
+  );
   userInputValues.email = userInputValues.email.trim();
   await validateUniqueUsername(userInputValues.username);
   await validateUniqueEmail(userInputValues.email);
@@ -224,7 +226,9 @@ async function update(
     allowPosition,
   });
   if ("position" in allowedInputValues) {
-    allowedInputValues.position = await validatePositionName(allowedInputValues.position);
+    allowedInputValues.position = await validatePositionName(
+      allowedInputValues.position,
+    );
   }
 
   if ("name" in allowedInputValues) {
@@ -436,7 +440,10 @@ async function update(
   }
 }
 
-function pickUpdatableFields(userInputValues, { allowFeatures = false, allowPosition = false } = {}) {
+function pickUpdatableFields(
+  userInputValues,
+  { allowFeatures = false, allowPosition = false } = {},
+) {
   const isPlainObject =
     userInputValues !== null &&
     typeof userInputValues === "object" &&
