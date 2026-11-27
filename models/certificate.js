@@ -166,15 +166,16 @@ async function create(inputValues, userId) {
     text: `INSERT INTO certificates (${columns.join(", ")}) VALUES (${placeholders.join(", ")}) RETURNING *;`,
     values,
   });
-  return results.rows[0];
+  return findOneById(results.rows[0].id);
 }
 
 async function findAll() {
   const results = await database.query({
     text: `
-      SELECT *
+      SELECT certificates.*, users.name AS issuer_name, users.position AS issuer_position
       FROM certificates
-      WHERE deleted_at IS NULL
+      LEFT JOIN users ON users.id = certificates.user_id
+      WHERE certificates.deleted_at IS NULL
       ORDER BY year DESC, protocol_year DESC NULLS LAST, protocol_number DESC NULLS LAST, created_at DESC
     ;`,
   });
@@ -183,7 +184,13 @@ async function findAll() {
 
 async function findOneById(id) {
   const results = await database.query({
-    text: "SELECT * FROM certificates WHERE id = $1 AND deleted_at IS NULL LIMIT 1;",
+    text: `
+      SELECT certificates.*, users.name AS issuer_name, users.position AS issuer_position
+      FROM certificates
+      LEFT JOIN users ON users.id = certificates.user_id
+      WHERE certificates.id = $1 AND certificates.deleted_at IS NULL
+      LIMIT 1
+    ;`,
     values: [id],
   });
   if (!results.rowCount) {

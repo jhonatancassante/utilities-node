@@ -7,6 +7,7 @@ import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
+import { downloadCertificatePdf } from "@/lib/client/generate-certificate-pdf.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -38,6 +39,8 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   const [isLoadingRecord, setIsLoadingRecord] = useState(isEditing);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [savedRecord, setSavedRecord] = useState(null);
   const [feedback, setFeedback] = useState(null);
 
   const canRead = user?.features?.includes("read:certificate");
@@ -146,7 +149,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
 
   async function handleSave(event) {
     event.preventDefault();
-    if (isReadOnly) return;
+    if (isReadOnly || savedRecord) return;
     if (!calculation) {
       setFeedback({
         type: "error",
@@ -173,7 +176,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
         observations: form.observations.trim() || null,
         validity_days: Number(form.validity_days),
       };
-      await requestAPI(
+      const savedCertificate = await requestAPI(
         isEditing
           ? "/api/v1/certificates/" + encodeURIComponent(recordId)
           : "/api/v1/certificates",
@@ -193,6 +196,20 @@ function CertificateEditor({ recordId, viewOnly = false }) {
           ),
         },
       );
+      if (!isEditing) {
+        setSavedRecord(savedCertificate);
+        try {
+          await downloadCertificatePdf([savedCertificate]);
+        } catch (pdfError) {
+          setFeedback({
+            type: "error",
+            name: pdfError.name,
+            message: "A certidão foi gravada com sucesso, mas não foi possível gerar o PDF automaticamente.",
+            action: "Use o botão Baixar PDF para tentar novamente ou acesse a listagem de certidões.",
+          });
+          return;
+        }
+      }
       router.push("/tools/certificates");
     } catch (requestError) {
       setFeedback({
@@ -203,6 +220,34 @@ function CertificateEditor({ recordId, viewOnly = false }) {
       });
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleDownloadSavedPdf() {
+    if (!savedRecord || isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    setFeedback(null);
+    try {
+      await downloadCertificatePdf([savedRecord]);
+      router.push("/tools/certificates");
+    } catch (pdfError) {
+      setFeedback({ type: "error", name: pdfError.name, message: pdfError.message || "Não foi possível gerar o PDF da certidão.", action: "Confira sua conexão e tente novamente." });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  }
+
+  async function handlePrint() {
+    if (!record || isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    setFeedback(null);
+    try {
+      await downloadCertificatePdf([record]);
+      setFeedback({ type: "success", message: "PDF da certidão gerado e baixado com sucesso." });
+    } catch (pdfError) {
+      setFeedback({ type: "error", name: pdfError.name, message: pdfError.message || "Não foi possível gerar o PDF da certidão.", action: "Confira sua conexão e tente novamente." });
+    } finally {
+      setIsGeneratingPdf(false);
     }
   }
 
@@ -573,18 +618,18 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <Button
                       type="button"
                       icon="fa-print"
-                      onClick={() =>
-                        setFeedback({
-                          type: "success",
-                          message:
-                            "A ação de impressão foi executada para 1 certidão(ões). A impressão ainda será implementada.",
-                        })
-                      }
+                      onClick={handlePrint}
+                      disabled={isGeneratingPdf}
                     >
-                      Imprimir
+                      {isGeneratingPdf ? "Gerando PDF..." : "Baixar PDF"}
                     </Button>
                   )}
-                  {!isReadOnly && (
+                  {savedRecord && (
+                    <Button type="button" icon="fa-download" onClick={handleDownloadSavedPdf} disabled={isGeneratingPdf}>
+                      {isGeneratingPdf ? "Gerando PDF..." : "Baixar PDF"}
+                    </Button>
+                  )}
+                  {!isReadOnly && !savedRecord && (
                     <Button
                       type="submit"
                       icon="fa-save"

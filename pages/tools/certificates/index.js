@@ -10,6 +10,7 @@ import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
+import { downloadCertificatePdf } from "@/lib/client/generate-certificate-pdf.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -30,6 +31,7 @@ function CertificatesPage() {
   const [feedback, setFeedback] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [dialog, setDialog] = useState(null);
 
   const canRead = user?.features?.includes("read:certificate");
@@ -181,15 +183,29 @@ function CertificatesPage() {
     }
   }
 
-  function handlePrint() {
-    if (!selectedIds.length) return;
-    setFeedback({
-      type: "success",
-      message:
-        "A ação de impressão foi executada para " +
-        selectedIds.length +
-        " certidão(ões). A impressão ainda será implementada.",
-    });
+  async function handlePrint() {
+    if (!selectedIds.length || isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    setFeedback(null);
+    try {
+      const selectedRecords = records.filter((record) => selectedIds.includes(record.id));
+      await downloadCertificatePdf(selectedRecords);
+      setFeedback({
+        type: "success",
+        message: selectedRecords.length === 1
+          ? "PDF da certidão gerado e baixado com sucesso."
+          : "PDF com " + selectedRecords.length + " certidões gerado e baixado com sucesso.",
+      });
+    } catch (requestError) {
+      setFeedback({
+        type: "error",
+        name: requestError.name,
+        message: requestError.message || "Não foi possível gerar o PDF das certidões.",
+        action: "Tente novamente. Se o problema persistir, atualize a página e tente novamente.",
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   }
 
   if (isLoading || (!user && !error)) {
@@ -392,8 +408,9 @@ function CertificatesPage() {
                       variant="outline"
                       icon="fa-print"
                       onClick={handlePrint}
+                      disabled={isGeneratingPdf}
                     >
-                      Imprimir ({selectedIds.length})
+                      {isGeneratingPdf ? "Gerando PDF..." : "Baixar PDF (" + selectedIds.length + ")"}
                     </Button>
                   )}
                 </div>
