@@ -267,6 +267,8 @@ describe("GET e POST /api/v1/certificates", () => {
     expect(body).not.toHaveProperty("is_updated");
     expect(body).not.toHaveProperty("deleted_at");
     expect(body).toHaveProperty("user_id");
+    expect(body.issuer_name).toEqual(expect.any(String));
+    expect(body.issuer_position).toEqual(expect.any(String));
   });
 
   test.each([
