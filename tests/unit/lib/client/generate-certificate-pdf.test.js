@@ -2,10 +2,12 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 
 import {
   buildCertificatePdf,
+  createCertificateFileName,
   wrapText,
 } from "@/lib/client/generate-certificate-pdf.js";
 
 const baseRecord = {
+  id: "5021305c-85a3-4371-b1af-5c430097d7f2",
   created_at: "2026-11-25T15:00:00Z",
   validity_days: 30,
   year: 2026,
@@ -37,6 +39,26 @@ async function loadPages(bytes) {
 }
 
 describe("lib/client/generate-certificate-pdf.js", () => {
+  describe("createCertificateFileName()", () => {
+    test("Gera o nome individual com timestamp no horário de São Paulo", () => {
+      expect(
+        createCertificateFileName(
+          [baseRecord],
+          new Date("2026-11-27T14:34:26.000Z"),
+        ),
+      ).toBe("cvv-5-2026-20261127113426.pdf");
+    });
+
+    test("Identifica arquivos com várias certidões como lote", () => {
+      expect(
+        createCertificateFileName(
+          [baseRecord, baseRecord],
+          new Date("2026-11-27T14:34:26.000Z"),
+        ),
+      ).toBe("cvv-lote-20261127113426.pdf");
+    });
+  });
+
   describe("wrapText()", () => {
     let font;
 
