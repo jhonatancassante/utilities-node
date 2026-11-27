@@ -22,6 +22,7 @@ describe("POST /api/v1/users", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          name: "Nome de Teste",
           username: "unicoevalido",
           email: "unicoevalido@jhonatancassante.com.br",
           password: validPassword,
@@ -34,7 +35,7 @@ describe("POST /api/v1/users", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: "unicoevalido",
-        name: "unicoevalido",
+        name: "Nome de Teste",
         features: ["read:activation_token"],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
@@ -45,6 +46,7 @@ describe("POST /api/v1/users", () => {
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
 
       const userInDatabase = await user.findOneByUsername("unicoevalido");
+      expect(userInDatabase.name).toBe("Nome de Teste");
       const correctPasswordMatch = await password.compare(
         validPassword,
         userInDatabase.password,

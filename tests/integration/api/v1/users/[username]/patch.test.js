@@ -23,6 +23,7 @@ describe("PATCH /api/v1/users/[username]", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            name: "Nome atualizado pelo titular",
             username: "newUniqueUsername",
           }),
         },
@@ -226,7 +227,7 @@ describe("PATCH /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: "newUniqueUsername",
-        name: createdUser.username,
+        name: "Nome atualizado pelo titular",
         features: ["create:session", "read:session", "update:user"],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
