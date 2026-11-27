@@ -12,6 +12,7 @@ import user from "@/models/user.js";
 const existingUser = {
   id: "11111111-1111-4111-8111-111111111111",
   username: "UsuarioAtual",
+  name: "Nome Atual",
   email: "atual@example.com",
   password: "hash-atual",
   features: ["create:session", "read:session", "update:user"],
@@ -102,6 +103,7 @@ describe("models/user.js", () => {
         existingUser.username,
         "atual@example.com",
         existingUser.password,
+        existingUser.name,
       ]);
       expect(updateQuery.text).not.toContain("features");
     });
@@ -123,7 +125,7 @@ describe("models/user.js", () => {
       expect(error.message).toBe(
         "Os campos a seguir não podem ser alterados: id.",
       );
-      expect(error.action).toBe("Envie apenas username, email e password.");
+      expect(error.action).toBe("Envie apenas name, username, email e password.");
       expect(getCallsContaining(querySpy, "UPDATE")).toEqual([]);
     });
 
@@ -192,6 +194,7 @@ describe("models/user.js", () => {
         existingUser.username,
         existingUser.email,
         existingUser.password,
+        existingUser.name,
       ]);
     });
 
@@ -215,12 +218,13 @@ describe("models/user.js", () => {
       await user.update("UsuarioAtual", { features }, { allowFeatures: true });
 
       const [updateQuery] = getCallsContaining(querySpy, "UPDATE users SET");
-      expect(updateQuery.text).toContain("features = $5");
+      expect(updateQuery.text).toContain("features = $6");
       expect(updateQuery.values).toEqual([
         existingUser.id,
         existingUser.username,
         existingUser.email,
         existingUser.password,
+        existingUser.name,
         features,
       ]);
     });

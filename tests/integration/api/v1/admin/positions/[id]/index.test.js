@@ -1,6 +1,11 @@
+import { randomUUID } from "node:crypto";
 import orchestrator from "tests/orchestrator.js";
 import database from "@/infra/database.js";
 import position from "@/models/position.js";
+
+function uniquePositionName() {
+  return `Cargo ${randomUUID()}`;
+}
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -23,7 +28,7 @@ function endpoint(id) {
 describe("GET /api/v1/admin/positions/[id]", () => {
   test("Rejeitando usuário sem a feature correspondente", async () => {
     const sessionObject = await createSessionWithFeatures([]);
-    const record = await position.create({ name: "Escriturário" });
+    const record = await position.create({ name: uniquePositionName() });
     const response = await fetch(endpoint(record.id), {
       headers: { Cookie: `session_id=${sessionObject.token}` },
     });
@@ -38,7 +43,7 @@ describe("GET /api/v1/admin/positions/[id]", () => {
     });
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body).toMatchObject({ id: record.id, name: "Escriturário" });
+    expect(body).toMatchObject({ id: record.id, name: record.name });
     expect(body).not.toHaveProperty("deleted_at");
   });
 
@@ -130,7 +135,7 @@ describe("DELETE /api/v1/admin/positions/[id]", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       id: record.id,
-      name: "Escriturário",
+      name: record.name,
     });
     await expect(position.findOneById(record.id)).rejects.toThrow(
       "O cargo informado não foi encontrado.",

@@ -1,6 +1,10 @@
+import { randomUUID } from "node:crypto";
 import orchestrator from "tests/orchestrator.js";
-import database from "@/infra/database.js";
 import position from "@/models/position.js";
+
+function uniquePositionName() {
+  return `Cargo ${randomUUID()}`;
+}
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
