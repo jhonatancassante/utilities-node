@@ -159,7 +159,8 @@ async function create(inputValues, userId) {
   });
   if (!issuerResult.rowCount) {
     throw new NotFoundError({
-      message: "O usuário responsável pela emissão da certidão não foi encontrado.",
+      message:
+        "O usuário responsável pela emissão da certidão não foi encontrado.",
       action: "Verifique a conta utilizada para emitir a certidão.",
     });
   }

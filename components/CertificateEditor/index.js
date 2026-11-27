@@ -205,8 +205,10 @@ function CertificateEditor({ recordId, viewOnly = false }) {
           setFeedback({
             type: "error",
             name: pdfError.name,
-            message: "A certidão foi gravada com sucesso, mas não foi possível gerar o PDF automaticamente.",
-            action: "Use o botão Baixar PDF para tentar novamente ou acesse a listagem de certidões.",
+            message:
+              "A certidão foi gravada com sucesso, mas não foi possível gerar o PDF automaticamente.",
+            action:
+              "Use o botão Baixar PDF para tentar novamente ou acesse a listagem de certidões.",
           });
           return;
         } finally {
@@ -234,7 +236,13 @@ function CertificateEditor({ recordId, viewOnly = false }) {
       await downloadCertificatePdf([savedRecord]);
       router.push("/tools/certificates");
     } catch (pdfError) {
-      setFeedback({ type: "error", name: pdfError.name, message: pdfError.message || "Não foi possível gerar o PDF da certidão.", action: "Confira sua conexão e tente novamente." });
+      setFeedback({
+        type: "error",
+        name: pdfError.name,
+        message:
+          pdfError.message || "Não foi possível gerar o PDF da certidão.",
+        action: "Confira sua conexão e tente novamente.",
+      });
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -246,9 +254,18 @@ function CertificateEditor({ recordId, viewOnly = false }) {
     setFeedback(null);
     try {
       await downloadCertificatePdf([record]);
-      setFeedback({ type: "success", message: "PDF da certidão gerado e baixado com sucesso." });
+      setFeedback({
+        type: "success",
+        message: "PDF da certidão gerado e baixado com sucesso.",
+      });
     } catch (pdfError) {
-      setFeedback({ type: "error", name: pdfError.name, message: pdfError.message || "Não foi possível gerar o PDF da certidão.", action: "Confira sua conexão e tente novamente." });
+      setFeedback({
+        type: "error",
+        name: pdfError.name,
+        message:
+          pdfError.message || "Não foi possível gerar o PDF da certidão.",
+        action: "Confira sua conexão e tente novamente.",
+      });
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -628,7 +645,12 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     </Button>
                   )}
                   {savedRecord && (
-                    <Button type="button" icon="fa-download" onClick={handleDownloadSavedPdf} disabled={isGeneratingPdf}>
+                    <Button
+                      type="button"
+                      icon="fa-download"
+                      onClick={handleDownloadSavedPdf}
+                      disabled={isGeneratingPdf}
+                    >
                       {isGeneratingPdf ? "Gerando PDF..." : "Baixar PDF"}
                     </Button>
                   )}

@@ -1,4 +1,5 @@
 import {
+  amountToCertificateWords,
   amountToPortugueseWords,
   getCertificateDiscountPercentage,
   numberToPortugueseWords,
@@ -12,7 +13,10 @@ describe("formatação de certidões", () => {
     [100, "cem"],
     [101, "cento e um"],
     [1000, "mil"],
-    [1452047, "um milhão, quatrocentos e cinquenta e dois mil e quarenta e sete"],
+    [
+      1452047,
+      "um milhão, quatrocentos e cinquenta e dois mil e quarenta e sete",
+    ],
   ])("converte %i para extenso", (value, expected) => {
     expect(numberToPortugueseWords(value)).toBe(expected);
   });
@@ -22,6 +26,32 @@ describe("formatação de certidões", () => {
       "Um milhão, quatrocentos e cinquenta e dois mil e quarenta e sete reais e sessenta e cinco centavos",
     );
   });
+
+  test.each([
+    [0, "Zero Reais"],
+    [1, "Um Real"],
+    [0.01, "Zero Reais e Um Centavo"],
+    [
+      73882.38,
+      "Setenta Três Mil Oitocentos Oitenta Dois Reais e Trinta Oito Centavos",
+    ],
+    [100, "Cem Reais"],
+    [1000, "Mil Reais"],
+    [2000000, "Dois Milhões Reais"],
+    [
+      1452047.65,
+      "Um Milhão Quatrocentos Cinquenta Dois Mil Quarenta Sete Reais e Sessenta Cinco Centavos",
+    ],
+    [
+      726023.83,
+      "Setecentos Vinte Seis Mil Vinte Três Reais e Oitenta Três Centavos",
+    ],
+  ])(
+    "escreve o valor %s por extenso no padrão da certidão",
+    (value, expected) => {
+      expect(amountToCertificateWords(value)).toBe(expected);
+    },
+  );
 
   test.each([
     [{ owner_rg: "123", land_area: 500 }, 50],

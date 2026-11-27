@@ -188,20 +188,27 @@ function CertificatesPage() {
     setIsGeneratingPdf(true);
     setFeedback(null);
     try {
-      const selectedRecords = records.filter((record) => selectedIds.includes(record.id));
+      const selectedRecords = records.filter((record) =>
+        selectedIds.includes(record.id),
+      );
       await downloadCertificatePdf(selectedRecords);
       setFeedback({
         type: "success",
-        message: selectedRecords.length === 1
-          ? "PDF da certidão gerado e baixado com sucesso."
-          : "PDF com " + selectedRecords.length + " certidões gerado e baixado com sucesso.",
+        message:
+          selectedRecords.length === 1
+            ? "PDF da certidão gerado e baixado com sucesso."
+            : "PDF com " +
+              selectedRecords.length +
+              " certidões gerado e baixado com sucesso.",
       });
     } catch (requestError) {
       setFeedback({
         type: "error",
         name: requestError.name,
-        message: requestError.message || "Não foi possível gerar o PDF das certidões.",
-        action: "Tente novamente. Se o problema persistir, atualize a página e tente novamente.",
+        message:
+          requestError.message || "Não foi possível gerar o PDF das certidões.",
+        action:
+          "Tente novamente. Se o problema persistir, atualize a página e tente novamente.",
       });
     } finally {
       setIsGeneratingPdf(false);
@@ -410,7 +417,9 @@ function CertificatesPage() {
                       onClick={handlePrint}
                       disabled={isGeneratingPdf}
                     >
-                      {isGeneratingPdf ? "Gerando PDF..." : "Baixar PDF (" + selectedIds.length + ")"}
+                      {isGeneratingPdf
+                        ? "Gerando PDF..."
+                        : "Baixar PDF (" + selectedIds.length + ")"}
                     </Button>
                   )}
                 </div>
