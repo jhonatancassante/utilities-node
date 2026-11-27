@@ -125,21 +125,38 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   }
 
   function validateFields(fieldNames) {
-    const messages = {
+    const nextErrors = {};
+    const requiredMessages = {
       applicant_name: "Informe o nome do requerente.",
       purpose: "Informe a finalidade da certidão.",
       physical_property_id: "Informe o código físico do imóvel.",
       year: "Informe o exercício da certidão.",
     };
-    const nextErrors = {};
 
     for (const fieldName of fieldNames) {
-      if (!String(form[fieldName] ?? "").trim()) {
-        nextErrors[fieldName] = messages[fieldName];
+      const rawValue = String(form[fieldName] ?? "").trim();
+      if (!rawValue) {
+        if (requiredMessages[fieldName]) {
+          nextErrors[fieldName] = requiredMessages[fieldName];
+        }
+        continue;
+      }
+
+      const value = Number(rawValue);
+      if (fieldName === "physical_property_id" && (!Number.isInteger(value) || value < 1)) {
+        nextErrors[fieldName] = "Informe um código físico válido.";
+      } else if (fieldName === "year" && (!Number.isInteger(value) || value < 1 || value > 9999)) {
+        nextErrors[fieldName] = "Informe um exercício entre 1 e 9999.";
+      } else if (fieldName === "protocol_number" && (!Number.isInteger(value) || value < 1)) {
+        nextErrors[fieldName] = "Informe um número de protocolo válido.";
+      } else if (fieldName === "protocol_year" && (!Number.isInteger(value) || value < 1900 || value > 9999)) {
+        nextErrors[fieldName] = "Informe um ano de protocolo entre 1900 e 9999.";
+      } else if (fieldName === "validity_days" && (!Number.isInteger(value) || value < 1)) {
+        nextErrors[fieldName] = "Informe uma validade de pelo menos 1 dia.";
       }
     }
 
-    setFieldErrors((current) => ({ ...current, ...nextErrors }));
+    setFieldErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
 
@@ -179,9 +196,18 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   async function handleSave(event) {
     event.preventDefault();
     if (isReadOnly || savedRecord) return;
+    setFeedback(null);
     const requiredFields = isEditing
-      ? ["applicant_name", "purpose"]
-      : ["applicant_name", "purpose", "physical_property_id", "year"];
+      ? ["applicant_name", "purpose", "protocol_number", "protocol_year", "validity_days"]
+      : [
+          "applicant_name",
+          "purpose",
+          "physical_property_id",
+          "year",
+          "protocol_number",
+          "protocol_year",
+          "validity_days",
+        ];
     if (!validateFields(requiredFields)) return;
     if (!calculation) {
       setToastMessage("Faça o cálculo e confira os valores antes de gravar.");
