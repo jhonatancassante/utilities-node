@@ -49,6 +49,7 @@ function filterOutput(user, feature, resource) {
     return {
       id: resource.id,
       username: resource.username,
+      name: resource.name,
       features: resource.features,
       created_at: resource.created_at,
       updated_at: resource.updated_at,
@@ -62,6 +63,7 @@ function filterOutput(user, feature, resource) {
     const filterUser = (userObject) => ({
       id: userObject.id,
       username: userObject.username,
+      name: userObject.name,
       email: userObject.email,
       features: userObject.features,
       privileged_features: userObject.privileged_features ?? [],
@@ -84,6 +86,7 @@ function filterOutput(user, feature, resource) {
       return {
         id: resource.id,
         username: resource.username,
+        name: resource.name,
         email: resource.email,
         features: resource.features,
         privileged_features: resource.privileged_features ?? [],

@@ -18,6 +18,7 @@ async function create(userInputValues) {
   validateEmailFormat(userInputValues.email);
   validatePasswordFormat(userInputValues.password);
   userInputValues.username = userInputValues.username.trim();
+  userInputValues.name = normalizeName(userInputValues.name ?? userInputValues.username);
   userInputValues.email = userInputValues.email.trim();
   await validateUniqueUsername(userInputValues.username);
   await validateUniqueEmail(userInputValues.email);
@@ -41,7 +42,7 @@ async function create(userInputValues) {
       values: [
         userInputValues.id ?? null,
         userInputValues.username,
-        userInputValues.username,
+        userInputValues.name,
         "Não informado",
         userInputValues.email,
         userInputValues.password,
@@ -171,7 +172,7 @@ async function findOneByEmail(email) {
   }
 }
 
-const UPDATABLE_FIELDS = ["username", "email", "password"];
+const UPDATABLE_FIELDS = ["name", "username", "email", "password"];
 
 async function search(searchTerm) {
   if (typeof searchTerm !== "string" || searchTerm.trim().length < 2) {
@@ -187,6 +188,7 @@ async function search(searchTerm) {
       SELECT
         id,
         username,
+        name,
         email,
         features,
         banned_at,
@@ -198,6 +200,7 @@ async function search(searchTerm) {
         users
       WHERE
         username ILIKE $1
+        OR name ILIKE $1
         OR email ILIKE $1
       ORDER BY
         username
@@ -219,6 +222,10 @@ async function update(
   const allowedInputValues = pickUpdatableFields(userInputValues, {
     allowFeatures,
   });
+
+  if ("name" in allowedInputValues) {
+    allowedInputValues.name = normalizeName(allowedInputValues.name);
+  }
 
   if ("username" in allowedInputValues) {
     validateUsernameFormat(allowedInputValues.username);
@@ -381,16 +388,17 @@ async function update(
             });
         }
       }
-      const featuresUpdate = allowFeatures ? "features = $5," : "";
+      const featuresUpdate = allowFeatures ? "features = $6," : "";
       const values = [
         userId,
         userWithNewValues.username,
         userWithNewValues.email,
         userWithNewValues.password,
+        userWithNewValues.name,
       ];
       if (allowFeatures) values.push(userWithNewValues.features);
       const result = await client.query({
-        text: `UPDATE users SET username = $2, email = $3, password = $4, ${featuresUpdate} updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
+        text: `UPDATE users SET username = $2, email = $3, password = $4, name = $5, ${featuresUpdate} updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
         values,
       });
       return result.rows[0];
@@ -398,12 +406,13 @@ async function update(
     if (allowFeatures && Object.hasOwn(allowedInputValues, "features"))
       return database.transaction(updateUser);
     const result = await database.query({
-      text: "UPDATE users SET username = $2, email = $3, password = $4, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;",
+      text: "UPDATE users SET username = $2, email = $3, password = $4, name = $5, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;",
       values: [
         userId,
         userWithNewValues.username,
         userWithNewValues.email,
         userWithNewValues.password,
+        userWithNewValues.name,
       ],
     });
     return result.rows[0];
@@ -784,6 +793,23 @@ async function validateUniqueUsername(username) {
       action: "Utilize outro nome de usuário para realizar esta operação.",
     });
   }
+}
+
+function normalizeName(name) {
+  if (typeof name !== "string") {
+    throw new ValidationError({
+      message: "O nome deve ser informado como texto.",
+      action: "Informe um nome com até 150 caracteres.",
+    });
+  }
+  const normalizedName = name.trim();
+  if (!normalizedName || normalizedName.length > 150) {
+    throw new ValidationError({
+      message: "O nome deve ter entre 1 e 150 caracteres.",
+      action: "Informe um nome válido com até 150 caracteres.",
+    });
+  }
+  return normalizedName;
 }
 
 function validateUsernameFormat(username) {
