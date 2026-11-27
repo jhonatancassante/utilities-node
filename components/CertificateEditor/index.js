@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
@@ -45,6 +45,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   const [fieldErrors, setFieldErrors] = useState({});
   const [toastMessage, setToastMessage] = useState(null);
   const [toastKey, setToastKey] = useState(0);
+  const fieldRefs = useRef({});
 
   const canRead = user?.features?.includes("read:certificate");
   const canCreate = user?.features?.includes("create:certificate");
@@ -111,6 +112,16 @@ function CertificateEditor({ recordId, viewOnly = false }) {
     };
   }, [recordId, user]);
 
+  function focusElement(element) {
+    if (!element) return;
+    element.scrollIntoView({ behavior: "smooth", block: "center" });
+    element.focus({ preventScroll: true });
+  }
+
+  function focusField(fieldName) {
+    focusElement(fieldRefs.current[fieldName]);
+  }
+
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
     setFieldErrors((current) => {
@@ -157,6 +168,8 @@ function CertificateEditor({ recordId, viewOnly = false }) {
     }
 
     setFieldErrors(nextErrors);
+    const firstInvalidField = fieldNames.find((fieldName) => nextErrors[fieldName]);
+    if (firstInvalidField) focusField(firstInvalidField);
     return Object.keys(nextErrors).length === 0;
   }
 
@@ -211,6 +224,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
     if (!validateFields(requiredFields)) return;
     if (!calculation) {
       setToastMessage("Faça o cálculo e confira os valores antes de gravar.");
+      focusElement(document.getElementById("calculate-certificate-button"));
       setToastKey((current) => current + 1);
       return;
     }
@@ -430,6 +444,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <label className={styles.half}>
                       <span className={shared.label}>Nome do requerente *</span>
                       <input
+                        ref={(element) => {
+                          fieldRefs.current.applicant_name = element;
+                        }}
                         className={
                           shared.input +
                           (fieldErrors.applicant_name ? " " + shared.inputInvalid : "")
@@ -455,6 +472,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <label className={styles.half}>
                       <span className={shared.label}>Finalidade *</span>
                       <input
+                        ref={(element) => {
+                          fieldRefs.current.purpose = element;
+                        }}
                         className={
                           shared.input +
                           (fieldErrors.purpose ? " " + shared.inputInvalid : "")
@@ -480,6 +500,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <label className={styles.third}>
                       <span className={shared.label}>Número do protocolo</span>
                       <input
+                        ref={(element) => {
+                          fieldRefs.current.protocol_number = element;
+                        }}
                         className={
                           shared.input +
                           (fieldErrors.protocol_number ? " " + shared.inputInvalid : "")
@@ -506,6 +529,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <label className={styles.third}>
                       <span className={shared.label}>Ano do protocolo</span>
                       <input
+                        ref={(element) => {
+                          fieldRefs.current.protocol_year = element;
+                        }}
                         className={
                           shared.input +
                           (fieldErrors.protocol_year ? " " + shared.inputInvalid : "")
@@ -535,6 +561,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         Código físico do imóvel *
                       </span>
                       <input
+                        ref={(element) => {
+                          fieldRefs.current.physical_property_id = element;
+                        }}
                         className={
                           shared.input +
                           (fieldErrors.physical_property_id ? " " + shared.inputInvalid : "")
@@ -565,6 +594,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <label className={styles.third}>
                       <span className={shared.label}>Exercício *</span>
                       <input
+                        ref={(element) => {
+                          fieldRefs.current.year = element;
+                        }}
                         className={
                           shared.input +
                           (fieldErrors.year ? " " + shared.inputInvalid : "")
@@ -651,8 +683,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                       </span>
                     </label>
                     <Button
+                      id="calculate-certificate-button"
                       type="button"
-                      onClick={handleCalculate}
+                      onClick={handleCalculate
                       disabled={isCalculating || isSaving}
                     >
                       {isCalculating ? "Calculando..." : "Calcular valores"}
@@ -726,6 +759,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <label className={styles.third}>
                       <span className={shared.label}>Validade (dias)</span>
                       <input
+                        ref={(element) => {
+                          fieldRefs.current.validity_days = element;
+                        }}
                         className={
                           shared.input +
                           (fieldErrors.validity_days ? " " + shared.inputInvalid : "")
