@@ -392,34 +392,45 @@ async function update(
             });
         }
       }
-      const featuresUpdate = allowFeatures ? "features = $7," : "";
       const values = [
         userId,
         userWithNewValues.username,
         userWithNewValues.email,
         userWithNewValues.password,
         userWithNewValues.name,
-        userWithNewValues.position,
       ];
-      if (allowFeatures) values.push(userWithNewValues.features);
+      const additionalUpdates = [];
+      if (Object.hasOwn(allowedInputValues, "position")) {
+        values.push(userWithNewValues.position);
+        additionalUpdates.push(`position = ${values.length}`);
+      }
+      if (allowFeatures) {
+        values.push(userWithNewValues.features);
+        additionalUpdates.push(`features = ${values.length}`);
+      }
       const result = await client.query({
-        text: `UPDATE users SET username = $2, email = $3, password = $4, name = $5, position = $6, ${featuresUpdate} updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
+        text: `UPDATE users SET username = $2, email = $3, password = $4, name = $5${additionalUpdates.length ? `, ${additionalUpdates.join(", ")}` : ""}, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
         values,
       });
       return result.rows[0];
     };
     if (allowFeatures && Object.hasOwn(allowedInputValues, "features"))
       return database.transaction(updateUser);
+    const values = [
+      userId,
+      userWithNewValues.username,
+      userWithNewValues.email,
+      userWithNewValues.password,
+      userWithNewValues.name,
+    ];
+    const additionalUpdates = [];
+    if (Object.hasOwn(allowedInputValues, "position")) {
+      values.push(userWithNewValues.position);
+      additionalUpdates.push(`position = ${values.length}`);
+    }
     const result = await database.query({
-      text: "UPDATE users SET username = $2, email = $3, password = $4, name = $5, position = $6, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;",
-      values: [
-        userId,
-        userWithNewValues.username,
-        userWithNewValues.email,
-        userWithNewValues.password,
-        userWithNewValues.name,
-        userWithNewValues.position,
-      ],
+      text: `UPDATE users SET username = $2, email = $3, password = $4, name = $5${additionalUpdates.length ? `, ${additionalUpdates.join(", ")}` : ""}, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
+      values,
     });
     return result.rows[0];
   }
