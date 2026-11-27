@@ -275,7 +275,6 @@ function PositionsPage() {
                           <Button
                             type="button"
                             variant="danger"
-                            size="small"
                             disabled={isDeleting}
                             onClick={() => handleDelete(record)}
                           >

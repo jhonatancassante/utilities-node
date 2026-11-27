@@ -7,10 +7,7 @@ import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
-import {
-  hasAdminAccess,
-  hasAdminSectionAccess,
-} from "@/models/authorization.js";
+import { hasAdminAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -34,11 +31,8 @@ function PositionEditor({ recordId }) {
     ) {
       router.replace("/login");
     }
-    if (!isLoading && user && !hasAdminSectionAccess(user, "positions")) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    }
     if (!isLoading && user && !user.features.includes(requiredFeature)) {
-      router.replace("/admin/positions");
+      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
     }
   }, [error, isLoading, requiredFeature, router, user]);
 
@@ -46,7 +40,6 @@ function PositionEditor({ recordId }) {
     if (
       !recordId ||
       !user ||
-      !hasAdminSectionAccess(user, "positions") ||
       !user.features.includes("read:position")
     ) {
       return undefined;
@@ -161,7 +154,6 @@ function PositionEditor({ recordId }) {
 
   if (
     !user ||
-    !hasAdminSectionAccess(user, "positions") ||
     !user.features.includes(requiredFeature)
   ) {
     return null;
