@@ -216,6 +216,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
           Cookie: `session_id=${sessionObject.token}`,
         },
         body: JSON.stringify({
+          name: "Nome Atualizado",
           username: "adminUpdatedUsername",
           email: "admin-updated@example.com",
           password: "Senha-Atualizada-Segura-123!!",
@@ -225,6 +226,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       expect(response.status).toBe(200);
       const responseBody = await response.json();
       expect(responseBody.username).toBe("adminUpdatedUsername");
+      expect(responseBody.name).toBe("Nome Atualizado");
       expect(responseBody.email).toBe("admin-updated@example.com");
       expect(responseBody.features).toEqual([
         "update:user:others",
@@ -234,6 +236,7 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
 
       const updatedUser = await user.findOneById(targetUser.id);
       expect(updatedUser.username).toBe("adminUpdatedUsername");
+      expect(updatedUser.name).toBe("Nome Atualizado");
       expect(updatedUser.email).toBe("admin-updated@example.com");
     });
 

@@ -226,6 +226,7 @@ describe("PATCH /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: "newUniqueUsername",
+        name: createdUser.username,
         features: ["create:session", "read:session", "update:user"],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
@@ -263,6 +264,7 @@ describe("PATCH /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: createdUser.username,
+        name: createdUser.username,
         features: ["create:session", "read:session", "update:user"],
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
@@ -391,7 +393,7 @@ describe("PATCH /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         name: "ValidationError",
         message: "Os campos a seguir não podem ser alterados: id.",
-        action: "Envie apenas username, email e password.",
+        action: "Envie apenas name, username, email e password.",
         status_code: 400,
       });
 
@@ -507,6 +509,7 @@ describe("PATCH /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         id: user2.id,
         username: "newUniqueUsernameToUser2",
+        name: user2.username,
         features: user2.features,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,

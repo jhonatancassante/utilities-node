@@ -448,8 +448,8 @@ function pickUpdatableFields(userInputValues, { allowFeatures = false } = {}) {
     throw new ValidationError({
       message: `${message}.`,
       action: allowFeatures
-        ? "Envie apenas username, email, password e features."
-        : "Envie apenas username, email e password.",
+        ? "Envie apenas name, username, email, password e features."
+        : "Envie apenas name, username, email e password.",
     });
   }
 
