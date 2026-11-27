@@ -211,6 +211,30 @@ describe("PATCH /api/v1/admin/users/[username]", () => {
       ]);
     });
 
+    test("Permite alterar features de usuário cujo e-mail contém sublinhado", async () => {
+      const { sessionObject } = await createFeatureManagerSession();
+      const targetUser = await orchestrator.createUser({
+        email: "usuario_teste@exemplo.com",
+      });
+
+      const response = await fetch(adminUserUrl(targetUser.username), {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `session_id=${sessionObject.token}`,
+        },
+        body: JSON.stringify({ features: ["read:activation_token"] }),
+      });
+
+      expect(response.status).toBe(200);
+      expect((await response.json()).features).toEqual([
+        "read:activation_token",
+      ]);
+      expect((await user.findOneById(targetUser.id)).features).toEqual([
+        "read:activation_token",
+      ]);
+    });
+
     test("Exige as duas features quando altera dados gerais e features juntos", async () => {
       const { sessionObject } = await createFeatureManagerSession();
       const targetUser = await orchestrator.createUser();
