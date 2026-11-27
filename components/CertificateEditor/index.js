@@ -42,6 +42,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [savedRecord, setSavedRecord] = useState(null);
   const [feedback, setFeedback] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [toastMessage, setToastMessage] = useState(null);
+  const [toastKey, setToastKey] = useState(0);
 
   const canRead = user?.features?.includes("read:certificate");
   const canCreate = user?.features?.includes("create:certificate");
@@ -110,13 +113,39 @@ function CertificateEditor({ recordId, viewOnly = false }) {
 
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => {
+      if (!current[name]) return current;
+      const nextErrors = { ...current };
+      delete nextErrors[name];
+      return nextErrors;
+    });
     if (["physical_property_id", "year", "is_updated"].includes(name)) {
       setCalculation(null);
     }
   }
 
+  function validateFields(fieldNames) {
+    const messages = {
+      applicant_name: "Informe o nome do requerente.",
+      purpose: "Informe a finalidade da certidão.",
+      physical_property_id: "Informe o código físico do imóvel.",
+      year: "Informe o exercício da certidão.",
+    };
+    const nextErrors = {};
+
+    for (const fieldName of fieldNames) {
+      if (!String(form[fieldName] ?? "").trim()) {
+        nextErrors[fieldName] = messages[fieldName];
+      }
+    }
+
+    setFieldErrors((current) => ({ ...current, ...nextErrors }));
+    return Object.keys(nextErrors).length === 0;
+  }
+
   async function handleCalculate(event) {
     event.preventDefault();
+    if (!validateFields(["physical_property_id", "year"])) return;
     setFeedback(null);
     setIsCalculating(true);
     setCalculation(null);
@@ -150,11 +179,13 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   async function handleSave(event) {
     event.preventDefault();
     if (isReadOnly || savedRecord) return;
+    const requiredFields = isEditing
+      ? ["applicant_name", "purpose"]
+      : ["applicant_name", "purpose", "physical_property_id", "year"];
+    if (!validateFields(requiredFields)) return;
     if (!calculation) {
-      setFeedback({
-        type: "error",
-        message: "Faça o cálculo e confira os valores antes de gravar.",
-      });
+      setToastMessage("Faça o cálculo e confira os valores antes de gravar.");
+      setToastKey((current) => current + 1);
       return;
     }
     setIsSaving(true);
@@ -363,7 +394,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                 Não foi possível carregar a certidão.
               </p>
             ) : (
-              <form className={styles.form} onSubmit={handleSave}>
+              <form className={styles.form} onSubmit={handleSave} noValidate>
                 <section className={styles.formSection}>
                   <div className={styles.sectionHeading}>
                     <h2>Identificação da certidão</h2>
@@ -373,7 +404,14 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <label className={styles.half}>
                       <span className={shared.label}>Nome do requerente *</span>
                       <input
-                        className={shared.input}
+                        className={
+                          shared.input +
+                          (fieldErrors.applicant_name ? " " + shared.inputInvalid : "")
+                        }
+                        aria-invalid={Boolean(fieldErrors.applicant_name)}
+                        aria-describedby={
+                          fieldErrors.applicant_name ? "applicant-name-error" : undefined
+                        }
                         value={form.applicant_name}
                         onChange={(event) =>
                           updateField("applicant_name", event.target.value)
@@ -382,11 +420,23 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         required
                         disabled={isReadOnly || isSaving}
                       />
+                      {fieldErrors.applicant_name && (
+                        <span className={shared.errorText} id="applicant-name-error" role="alert">
+                          {fieldErrors.applicant_name}
+                        </span>
+                      )}
                     </label>
                     <label className={styles.half}>
                       <span className={shared.label}>Finalidade *</span>
                       <input
-                        className={shared.input}
+                        className={
+                          shared.input +
+                          (fieldErrors.purpose ? " " + shared.inputInvalid : "")
+                        }
+                        aria-invalid={Boolean(fieldErrors.purpose)}
+                        aria-describedby={
+                          fieldErrors.purpose ? "purpose-error" : undefined
+                        }
                         value={form.purpose}
                         onChange={(event) =>
                           updateField("purpose", event.target.value)
@@ -395,6 +445,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         required
                         disabled={isReadOnly || isSaving}
                       />
+                      {fieldErrors.purpose && (
+                        <span className={shared.errorText} id="purpose-error" role="alert">
+                          {fieldErrors.purpose}
+                        </span>
+                      )}
                     </label>
                     <label className={styles.third}>
                       <span className={shared.label}>Número do protocolo</span>
@@ -430,7 +485,14 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         Código físico do imóvel *
                       </span>
                       <input
-                        className={shared.input}
+                        className={
+                          shared.input +
+                          (fieldErrors.physical_property_id ? " " + shared.inputInvalid : "")
+                        }
+                        aria-invalid={Boolean(fieldErrors.physical_property_id)}
+                        aria-describedby={
+                          fieldErrors.physical_property_id ? "physical-property-id-error" : undefined
+                        }
                         type="number"
                         min="1"
                         step="1"
@@ -444,11 +506,21 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         required
                         disabled={isReadOnly || isSaving || isEditing}
                       />
+                      {fieldErrors.physical_property_id && (
+                        <span className={shared.errorText} id="physical-property-id-error" role="alert">
+                          {fieldErrors.physical_property_id}
+                        </span>
+                      )}
                     </label>
                     <label className={styles.third}>
                       <span className={shared.label}>Exercício *</span>
                       <input
-                        className={shared.input}
+                        className={
+                          shared.input +
+                          (fieldErrors.year ? " " + shared.inputInvalid : "")
+                        }
+                        aria-invalid={Boolean(fieldErrors.year)}
+                        aria-describedby={fieldErrors.year ? "year-error" : undefined}
                         type="number"
                         min="1"
                         max="9999"
@@ -460,6 +532,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         required
                         disabled={isReadOnly || isSaving || isEditing}
                       />
+                      {fieldErrors.year && (
+                        <span className={shared.errorText} id="year-error" role="alert">
+                          {fieldErrors.year}
+                        </span>
+                      )}
                     </label>
                     <label className={styles.third}>
                       <span className={shared.label}>RG do proprietário</span>
@@ -673,6 +750,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
           </section>
         </main>
       </Layout>
+      {toastMessage && (
+        <StatusMessage key={toastKey} type="error">
+          {toastMessage}
+        </StatusMessage>
+      )}
     </>
   );
 }
