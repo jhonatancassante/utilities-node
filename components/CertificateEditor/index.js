@@ -685,7 +685,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <Button
                       id="calculate-certificate-button"
                       type="button"
-                      onClick={handleCalculate
+                      onClick={handleCalculate}
                       disabled={isCalculating || isSaving}
                     >
                       {isCalculating ? "Calculando..." : "Calcular valores"}
