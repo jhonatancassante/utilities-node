@@ -47,7 +47,9 @@ describe("POST /api/v1/users", () => {
 
       const userInDatabase = await user.findOneByUsername("unicoevalido");
       expect(userInDatabase.name).toBe("Nome de Teste");
-      expect(userInDatabase.email).toBe("unico_e-valido@jhonatancassante.com.br");
+      expect(userInDatabase.email).toBe(
+        "unico_e-valido@jhonatancassante.com.br",
+      );
       const correctPasswordMatch = await password.compare(
         validPassword,
         userInDatabase.password,
