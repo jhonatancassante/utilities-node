@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Button from "@/components/Button";
+import FieldError from "@/components/FieldError";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -95,22 +96,30 @@ function AssessedValueForm({
       ]),
     ),
   }));
-  const [validationError, setValidationError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => {
+      if (!current[name]) return current;
+      const rest = { ...current };
+      delete rest[name];
+      return rest;
+    });
   }
 
   function handleSubmit(event) {
     event.preventDefault();
-    setValidationError("");
+    const errors = {};
+    const payload = {};
     const year = Number(form.year);
-    if (!Number.isInteger(year) || year < 1 || year > 9999) {
-      setValidationError("Informe um ano válido entre 1 e 9999.");
-      return;
-    }
 
-    const payload = { year, decree: form.decree.trim() || null };
+    if (!Number.isInteger(year) || year < 1 || year > 9999) {
+      errors.year = "Informe um ano válido entre 1 e 9999.";
+    }
+    payload.year = year;
+    payload.decree = form.decree.trim() || null;
+
     for (const field of ALL_NUMERIC_FIELDS) {
       const rawValue = form[field.name].trim();
       if (!rawValue) {
@@ -125,27 +134,34 @@ function AssessedValueForm({
         value > 9999999999.99 ||
         Math.round(value * 100) / 100 !== value
       ) {
-        setValidationError(
-          "Revise o valor do campo " +
-            field.label +
-            ". Use números não negativos com até duas casas decimais.",
-        );
-        return;
+        errors[field.name] =
+          "Use números não negativos com até duas casas decimais.";
+        continue;
       }
       payload[field.name] = value;
     }
+
+    setFieldErrors(errors);
+    const firstInvalid = Object.keys(errors)[0];
+    if (firstInvalid) {
+      event.currentTarget.elements[
+        firstInvalid === "year" ? "assessed-year" : "assessed-" + firstInvalid
+      ]?.focus();
+      return;
+    }
+
     onSubmit(payload);
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <form className={styles.form} onSubmit={handleSubmit} noValidate>
       <div className={styles.basicFields}>
         <div className={styles.field}>
           <label className={shared.label} htmlFor="assessed-year">
             Ano de referência *
           </label>
           <input
-            className={shared.input}
+            className={`${shared.input} ${fieldErrors.year ? shared.inputInvalid : ""}`}
             id="assessed-year"
             type="number"
             min="1"
@@ -155,7 +171,12 @@ function AssessedValueForm({
             onChange={(event) => updateField("year", event.target.value)}
             required
             disabled={isSaving || isReadOnly}
+            aria-invalid={Boolean(fieldErrors.year)}
+            aria-describedby={
+              fieldErrors.year ? "assessed-year-error" : undefined
+            }
           />
+          <FieldError id="assessed-year-error">{fieldErrors.year}</FieldError>
         </div>
         <div className={styles.field}>
           <label className={shared.label} htmlFor="assessed-decree">
@@ -186,7 +207,7 @@ function AssessedValueForm({
                   {field.label}
                 </label>
                 <input
-                  className={shared.input}
+                  className={`${shared.input} ${fieldErrors[field.name] ? shared.inputInvalid : ""}`}
                   id={"assessed-" + field.name}
                   type="text"
                   inputMode="decimal"
@@ -196,17 +217,21 @@ function AssessedValueForm({
                   }
                   disabled={isSaving || isReadOnly}
                   placeholder="—"
+                  aria-invalid={Boolean(fieldErrors[field.name])}
+                  aria-describedby={
+                    fieldErrors[field.name]
+                      ? "assessed-" + field.name + "-error"
+                      : undefined
+                  }
                 />
+                <FieldError id={"assessed-" + field.name + "-error"}>
+                  {fieldErrors[field.name]}
+                </FieldError>
               </div>
             ))}
           </div>
         </fieldset>
       ))}
-      {validationError && (
-        <p className={styles.validationError} role="alert">
-          {validationError}
-        </p>
-      )}
       <div className={styles.actions}>
         <Button
           type="button"

@@ -27,13 +27,6 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
-.validationError {
-  padding: 12px 14px;
-  border: 1px solid var(--danger);
-  border-radius: var(--radius-md);
-  color: var(--danger-fg);
-  font-size: 13px;
-}
 .actions {
   display: flex;
   justify-content: flex-end;
