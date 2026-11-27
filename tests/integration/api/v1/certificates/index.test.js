@@ -1,4 +1,5 @@
 import orchestrator from "tests/orchestrator.js";
+import database from "@/infra/database.js";
 import certificate from "@/models/certificate.js";
 import realEstateProperty from "@/models/real-estate-property.js";
 import assessedValue from "@/models/assessed-value.js";
@@ -228,6 +229,10 @@ describe("GET e POST /api/v1/certificates", () => {
       "create:certificate",
       "read:certificate",
     ]);
+    await database.query({
+      text: "UPDATE users SET name = $2, position = $3 WHERE id = $1;",
+      values: [session.userId, "Jhonatan de Teste", "Escriturário"],
+    });
     const property = await createProperty();
     await assessedValue.create({
       year: 2026,
@@ -267,8 +272,8 @@ describe("GET e POST /api/v1/certificates", () => {
     expect(body).not.toHaveProperty("is_updated");
     expect(body).not.toHaveProperty("deleted_at");
     expect(body).toHaveProperty("user_id");
-    expect(body.issuer_name).toEqual(expect.any(String));
-    expect(body.issuer_position).toEqual(expect.any(String));
+    expect(body.issuer_name).toBe("Jhonatan de Teste");
+    expect(body.issuer_position).toBe("Escriturário");
   });
 
   test.each([
