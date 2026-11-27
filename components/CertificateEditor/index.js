@@ -154,21 +154,39 @@ function CertificateEditor({ recordId, viewOnly = false }) {
       }
 
       const value = Number(rawValue);
-      if (fieldName === "physical_property_id" && (!Number.isInteger(value) || value < 1)) {
+      if (
+        fieldName === "physical_property_id" &&
+        (!Number.isInteger(value) || value < 1)
+      ) {
         nextErrors[fieldName] = "Informe um código físico válido.";
-      } else if (fieldName === "year" && (!Number.isInteger(value) || value < 1 || value > 9999)) {
+      } else if (
+        fieldName === "year" &&
+        (!Number.isInteger(value) || value < 1 || value > 9999)
+      ) {
         nextErrors[fieldName] = "Informe um exercício entre 1 e 9999.";
-      } else if (fieldName === "protocol_number" && (!Number.isInteger(value) || value < 1)) {
+      } else if (
+        fieldName === "protocol_number" &&
+        (!Number.isInteger(value) || value < 1)
+      ) {
         nextErrors[fieldName] = "Informe um número de protocolo válido.";
-      } else if (fieldName === "protocol_year" && (!Number.isInteger(value) || value < 1900 || value > 9999)) {
-        nextErrors[fieldName] = "Informe um ano de protocolo entre 1900 e 9999.";
-      } else if (fieldName === "validity_days" && (!Number.isInteger(value) || value < 1)) {
+      } else if (
+        fieldName === "protocol_year" &&
+        (!Number.isInteger(value) || value < 1900 || value > 9999)
+      ) {
+        nextErrors[fieldName] =
+          "Informe um ano de protocolo entre 1900 e 9999.";
+      } else if (
+        fieldName === "validity_days" &&
+        (!Number.isInteger(value) || value < 1)
+      ) {
         nextErrors[fieldName] = "Informe uma validade de pelo menos 1 dia.";
       }
     }
 
     setFieldErrors(nextErrors);
-    const firstInvalidField = fieldNames.find((fieldName) => nextErrors[fieldName]);
+    const firstInvalidField = fieldNames.find(
+      (fieldName) => nextErrors[fieldName],
+    );
     if (firstInvalidField) focusField(firstInvalidField);
     return Object.keys(nextErrors).length === 0;
   }
@@ -211,7 +229,13 @@ function CertificateEditor({ recordId, viewOnly = false }) {
     if (isReadOnly || savedRecord) return;
     setFeedback(null);
     const requiredFields = isEditing
-      ? ["applicant_name", "purpose", "protocol_number", "protocol_year", "validity_days"]
+      ? [
+          "applicant_name",
+          "purpose",
+          "protocol_number",
+          "protocol_year",
+          "validity_days",
+        ]
       : [
           "applicant_name",
           "purpose",
@@ -449,11 +473,15 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         }}
                         className={
                           shared.input +
-                          (fieldErrors.applicant_name ? " " + shared.inputInvalid : "")
+                          (fieldErrors.applicant_name
+                            ? " " + shared.inputInvalid
+                            : "")
                         }
                         aria-invalid={Boolean(fieldErrors.applicant_name)}
                         aria-describedby={
-                          fieldErrors.applicant_name ? "applicant-name-error" : undefined
+                          fieldErrors.applicant_name
+                            ? "applicant-name-error"
+                            : undefined
                         }
                         value={form.applicant_name}
                         onChange={(event) =>
@@ -464,7 +492,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         disabled={isReadOnly || isSaving}
                       />
                       {fieldErrors.applicant_name && (
-                        <span className={shared.errorText} id="applicant-name-error" role="alert">
+                        <span
+                          className={shared.errorText}
+                          id="applicant-name-error"
+                          role="alert"
+                        >
                           {fieldErrors.applicant_name}
                         </span>
                       )}
@@ -492,7 +524,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         disabled={isReadOnly || isSaving}
                       />
                       {fieldErrors.purpose && (
-                        <span className={shared.errorText} id="purpose-error" role="alert">
+                        <span
+                          className={shared.errorText}
+                          id="purpose-error"
+                          role="alert"
+                        >
                           {fieldErrors.purpose}
                         </span>
                       )}
@@ -505,11 +541,15 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         }}
                         className={
                           shared.input +
-                          (fieldErrors.protocol_number ? " " + shared.inputInvalid : "")
+                          (fieldErrors.protocol_number
+                            ? " " + shared.inputInvalid
+                            : "")
                         }
                         aria-invalid={Boolean(fieldErrors.protocol_number)}
                         aria-describedby={
-                          fieldErrors.protocol_number ? "protocol-number-error" : undefined
+                          fieldErrors.protocol_number
+                            ? "protocol-number-error"
+                            : undefined
                         }
                         type="number"
                         min="1"
@@ -521,7 +561,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         disabled={isReadOnly || isSaving}
                       />
                       {fieldErrors.protocol_number && (
-                        <span className={shared.errorText} id="protocol-number-error" role="alert">
+                        <span
+                          className={shared.errorText}
+                          id="protocol-number-error"
+                          role="alert"
+                        >
                           {fieldErrors.protocol_number}
                         </span>
                       )}
@@ -534,11 +578,15 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         }}
                         className={
                           shared.input +
-                          (fieldErrors.protocol_year ? " " + shared.inputInvalid : "")
+                          (fieldErrors.protocol_year
+                            ? " " + shared.inputInvalid
+                            : "")
                         }
                         aria-invalid={Boolean(fieldErrors.protocol_year)}
                         aria-describedby={
-                          fieldErrors.protocol_year ? "protocol-year-error" : undefined
+                          fieldErrors.protocol_year
+                            ? "protocol-year-error"
+                            : undefined
                         }
                         type="number"
                         min="1900"
@@ -551,7 +599,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         disabled={isReadOnly || isSaving}
                       />
                       {fieldErrors.protocol_year && (
-                        <span className={shared.errorText} id="protocol-year-error" role="alert">
+                        <span
+                          className={shared.errorText}
+                          id="protocol-year-error"
+                          role="alert"
+                        >
                           {fieldErrors.protocol_year}
                         </span>
                       )}
@@ -566,11 +618,15 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         }}
                         className={
                           shared.input +
-                          (fieldErrors.physical_property_id ? " " + shared.inputInvalid : "")
+                          (fieldErrors.physical_property_id
+                            ? " " + shared.inputInvalid
+                            : "")
                         }
                         aria-invalid={Boolean(fieldErrors.physical_property_id)}
                         aria-describedby={
-                          fieldErrors.physical_property_id ? "physical-property-id-error" : undefined
+                          fieldErrors.physical_property_id
+                            ? "physical-property-id-error"
+                            : undefined
                         }
                         type="number"
                         min="1"
@@ -586,7 +642,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         disabled={isReadOnly || isSaving || isEditing}
                       />
                       {fieldErrors.physical_property_id && (
-                        <span className={shared.errorText} id="physical-property-id-error" role="alert">
+                        <span
+                          className={shared.errorText}
+                          id="physical-property-id-error"
+                          role="alert"
+                        >
                           {fieldErrors.physical_property_id}
                         </span>
                       )}
@@ -602,7 +662,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                           (fieldErrors.year ? " " + shared.inputInvalid : "")
                         }
                         aria-invalid={Boolean(fieldErrors.year)}
-                        aria-describedby={fieldErrors.year ? "year-error" : undefined}
+                        aria-describedby={
+                          fieldErrors.year ? "year-error" : undefined
+                        }
                         type="number"
                         min="1"
                         max="9999"
@@ -615,7 +677,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         disabled={isReadOnly || isSaving || isEditing}
                       />
                       {fieldErrors.year && (
-                        <span className={shared.errorText} id="year-error" role="alert">
+                        <span
+                          className={shared.errorText}
+                          id="year-error"
+                          role="alert"
+                        >
                           {fieldErrors.year}
                         </span>
                       )}
@@ -764,11 +830,15 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         }}
                         className={
                           shared.input +
-                          (fieldErrors.validity_days ? " " + shared.inputInvalid : "")
+                          (fieldErrors.validity_days
+                            ? " " + shared.inputInvalid
+                            : "")
                         }
                         aria-invalid={Boolean(fieldErrors.validity_days)}
                         aria-describedby={
-                          fieldErrors.validity_days ? "validity-days-error" : undefined
+                          fieldErrors.validity_days
+                            ? "validity-days-error"
+                            : undefined
                         }
                         type="number"
                         min="1"
@@ -780,7 +850,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                         disabled={isReadOnly || isSaving}
                       />
                       {fieldErrors.validity_days && (
-                        <span className={shared.errorText} id="validity-days-error" role="alert">
+                        <span
+                          className={shared.errorText}
+                          id="validity-days-error"
+                          role="alert"
+                        >
                           {fieldErrors.validity_days}
                         </span>
                       )}
@@ -830,11 +904,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     </Button>
                   )}
                   {!isReadOnly && !savedRecord && (
-                    <Button
-                      type="submit"
-                      icon="fa-save"
-                      disabled={isSaving}
-                    >
+                    <Button type="submit" icon="fa-save" disabled={isSaving}>
                       {isSaving
                         ? "Gravando..."
                         : isEditing
