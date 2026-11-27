@@ -37,7 +37,7 @@ describe("GET /api/v1/admin/positions/[id]", () => {
 
   test("Consultando cargo com saída filtrada", async () => {
     const sessionObject = await createSessionWithFeatures(["read:position"]);
-    const record = await position.create({ name: "Escriturário" });
+    const record = await position.create({ name: uniquePositionName() });
     const response = await fetch(endpoint(record.id), {
       headers: { Cookie: `session_id=${sessionObject.token}` },
     });
@@ -62,7 +62,7 @@ describe("GET /api/v1/admin/positions/[id]", () => {
 describe("PATCH /api/v1/admin/positions/[id]", () => {
   test("Rejeitando usuário sem a feature correspondente", async () => {
     const sessionObject = await createSessionWithFeatures(["read:position"]);
-    const record = await position.create({ name: "Escriturário" });
+    const record = await position.create({ name: uniquePositionName() });
     const response = await fetch(endpoint(record.id), {
       method: "PATCH",
       headers: {
@@ -76,7 +76,7 @@ describe("PATCH /api/v1/admin/positions/[id]", () => {
 
   test("Atualizando cargo com apenas a feature de atualização", async () => {
     const sessionObject = await createSessionWithFeatures(["update:position"]);
-    const record = await position.create({ name: "Escriturário" });
+    const record = await position.create({ name: uniquePositionName() });
     const response = await fetch(endpoint(record.id), {
       method: "PATCH",
       headers: {
@@ -95,7 +95,7 @@ describe("PATCH /api/v1/admin/positions/[id]", () => {
 
   test("Rejeitando atualização sem campos", async () => {
     const sessionObject = await createSessionWithFeatures(["update:position"]);
-    const record = await position.create({ name: "Escriturário" });
+    const record = await position.create({ name: uniquePositionName() });
     const response = await fetch(endpoint(record.id), {
       method: "PATCH",
       headers: {
@@ -116,7 +116,7 @@ describe("PATCH /api/v1/admin/positions/[id]", () => {
 describe("DELETE /api/v1/admin/positions/[id]", () => {
   test("Rejeitando usuário sem a feature correspondente", async () => {
     const sessionObject = await createSessionWithFeatures(["read:position"]);
-    const record = await position.create({ name: "Escriturário" });
+    const record = await position.create({ name: uniquePositionName() });
     const response = await fetch(endpoint(record.id), {
       method: "DELETE",
       headers: { Cookie: `session_id=${sessionObject.token}` },
@@ -126,7 +126,7 @@ describe("DELETE /api/v1/admin/positions/[id]", () => {
 
   test("Excluindo logicamente com apenas a feature de exclusão", async () => {
     const sessionObject = await createSessionWithFeatures(["delete:position"]);
-    const record = await position.create({ name: "Escriturário" });
+    const record = await position.create({ name: uniquePositionName() });
     const response = await fetch(endpoint(record.id), {
       method: "DELETE",
       headers: { Cookie: `session_id=${sessionObject.token}` },

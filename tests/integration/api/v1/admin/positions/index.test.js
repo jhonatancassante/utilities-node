@@ -35,8 +35,9 @@ describe("GET /api/v1/admin/positions", () => {
 
   test("Consultando cargos ativos com saída filtrada", async () => {
     const sessionObject = await createSessionWithFeatures(["read:position"]);
-    const created = await position.create({ name: "Escriturário" });
-    const deleted = await position.create({ name: "Cargo excluído" });
+    const activeName = uniquePositionName();
+    const created = await position.create({ name: activeName });
+    const deleted = await position.create({ name: uniquePositionName() });
     await position.delete(deleted.id);
 
     const response = await fetch(endpoint(), {
@@ -48,7 +49,7 @@ describe("GET /api/v1/admin/positions", () => {
     expect(body).toEqual([
       expect.objectContaining({
         id: created.id,
-        name: "Escriturário",
+        name: activeName,
       }),
     ]);
     expect(body[0]).not.toHaveProperty("deleted_at");
@@ -67,7 +68,7 @@ describe("POST /api/v1/admin/positions", () => {
         "Content-Type": "application/json",
         Cookie: `session_id=${sessionObject.token}`,
       },
-      body: JSON.stringify({ name: "Escriturário" }),
+      body: JSON.stringify({ name: uniquePositionName() }),
     });
     expect(response.status).toBe(403);
   });
@@ -80,7 +81,7 @@ describe("POST /api/v1/admin/positions", () => {
         "Content-Type": "application/json",
         Cookie: `session_id=${sessionObject.token}`,
       },
-      body: JSON.stringify({ name: "Fiscal de Tributos" }),
+      body: JSON.stringify({ name: uniquePositionName() }),
     });
 
     expect(response.status).toBe(201);
@@ -92,7 +93,8 @@ describe("POST /api/v1/admin/positions", () => {
 
   test("Rejeitando nome duplicado sem diferenciar maiúsculas", async () => {
     const sessionObject = await createSessionWithFeatures(["create:position"]);
-    await position.create({ name: "Escriturário" });
+    const duplicateName = uniquePositionName();
+    await position.create({ name: duplicateName });
 
     const response = await fetch(endpoint(), {
       method: "POST",
@@ -100,7 +102,7 @@ describe("POST /api/v1/admin/positions", () => {
         "Content-Type": "application/json",
         Cookie: `session_id=${sessionObject.token}`,
       },
-      body: JSON.stringify({ name: "escriturário" }),
+      body: JSON.stringify({ name: duplicateName.toLowerCase() }),
     });
 
     expect(response.status).toBe(400);
