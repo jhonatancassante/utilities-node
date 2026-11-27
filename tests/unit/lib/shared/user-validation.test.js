@@ -22,8 +22,13 @@ describe("lib/shared/user-validation.js", () => {
   });
 
   describe("validateEmail()", () => {
-    test.each(["jhow@example.com", "nome.sobrenome@sub.dominio.com.br"])(
-      "Aceita o e-mail %s",
+    test.each([
+      "jhow@example.com",
+      "nome.sobrenome@sub.dominio.com.br",
+      "nome_sobrenome@example.com",
+      "nome-sobrenome@example.com",
+      "nome_sobrenome-teste@meu-dominio.com.br",
+    ])("Aceita o e-mail %s",
       (email) => {
         expect(validateEmail(email)).toBeNull();
       },
