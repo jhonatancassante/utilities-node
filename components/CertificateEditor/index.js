@@ -658,7 +658,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                     <Button
                       type="submit"
                       icon="fa-save"
-                      disabled={isSaving || (isEditing ? false : !calculation)}
+                      disabled={isSaving}
                     >
                       {isSaving
                         ? "Gravando..."
