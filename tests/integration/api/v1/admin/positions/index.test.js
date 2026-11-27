@@ -75,18 +75,19 @@ describe("POST /api/v1/admin/positions", () => {
 
   test("Cadastrando cargo com apenas a feature de criação", async () => {
     const sessionObject = await createSessionWithFeatures(["create:position"]);
+    const name = uniquePositionName();
     const response = await fetch(endpoint(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Cookie: `session_id=${sessionObject.token}`,
       },
-      body: JSON.stringify({ name: uniquePositionName() }),
+      body: JSON.stringify({ name }),
     });
 
     expect(response.status).toBe(201);
     const body = await response.json();
-    expect(body).toMatchObject({ name: "Fiscal de Tributos" });
+    expect(body).toMatchObject({ name });
     expect(body.id).toBeDefined();
     expect(body).not.toHaveProperty("deleted_at");
   });
