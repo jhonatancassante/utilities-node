@@ -402,11 +402,11 @@ async function update(
       const additionalUpdates = [];
       if (Object.hasOwn(allowedInputValues, "position")) {
         values.push(userWithNewValues.position);
-        additionalUpdates.push(`position = ${values.length}`);
+        additionalUpdates.push("position = $" + values.length);
       }
       if (allowFeatures) {
         values.push(userWithNewValues.features);
-        additionalUpdates.push(`features = ${values.length}`);
+        additionalUpdates.push("features = $" + values.length);
       }
       const result = await client.query({
         text: `UPDATE users SET username = $2, email = $3, password = $4, name = $5${additionalUpdates.length ? `, ${additionalUpdates.join(", ")}` : ""}, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
@@ -426,7 +426,7 @@ async function update(
     const additionalUpdates = [];
     if (Object.hasOwn(allowedInputValues, "position")) {
       values.push(userWithNewValues.position);
-      additionalUpdates.push(`position = ${values.length}`);
+      additionalUpdates.push("position = $" + values.length);
     }
     const result = await database.query({
       text: `UPDATE users SET username = $2, email = $3, password = $4, name = $5${additionalUpdates.length ? `, ${additionalUpdates.join(", ")}` : ""}, updated_at = timezone('utc', now()) WHERE id = $1 RETURNING *;`,
