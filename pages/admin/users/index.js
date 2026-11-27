@@ -731,7 +731,9 @@ function UserEditor({
         ? { message: "Informe um nome com até 150 caracteres." }
         : null) ||
       validateUsername(form.username.trim()) ||
-      validateEmail(form.email.trim()) ||
+      (form.email.trim() !== user.email
+        ? validateEmail(form.email.trim())
+        : null) ||
       (form.password ? validatePassword(form.password) : null) ||
       (!form.password && form.passwordConfirmation
         ? { message: "Informe a nova senha antes de confirmá-la." }
