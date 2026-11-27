@@ -138,8 +138,7 @@ function PositionsPage() {
       await loadRecords();
       setFeedback({
         type: "success",
-        message:
-          selectedIds.length + " cargo(s) excluído(s) com sucesso.",
+        message: selectedIds.length + " cargo(s) excluído(s) com sucesso.",
       });
     } catch (requestError) {
       setFeedback({
