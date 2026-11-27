@@ -294,7 +294,7 @@ function AdminUsersPage() {
                   className={shared.input}
                   id="user-search"
                   type="search"
-                  placeholder="Nome de usuário ou e-mail"
+                  placeholder="Nome, nome de usuário ou e-mail"
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                   disabled={isSearching}

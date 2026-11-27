@@ -178,7 +178,7 @@ async function search(searchTerm) {
   if (typeof searchTerm !== "string" || searchTerm.trim().length < 2) {
     throw new ValidationError({
       message: "Informe ao menos dois caracteres para pesquisar um usuário.",
-      action: "Pesquise pelo nome de usuário ou pelo e-mail.",
+      action: "Pesquise pelo nome, nome de usuário ou e-mail.",
     });
   }
 
