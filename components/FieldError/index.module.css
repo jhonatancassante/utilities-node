@@ -1,0 +1,7 @@
+.fieldError {
+  display: block;
+  margin-top: 6px;
+  color: var(--danger-fg);
+  font-size: 13px;
+  line-height: 1.45;
+}
