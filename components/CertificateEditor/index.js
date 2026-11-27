@@ -162,8 +162,8 @@ function CertificateEditor({ recordId, viewOnly = false }) {
 
   async function handleCalculate(event) {
     event.preventDefault();
-    if (!validateFields(["physical_property_id", "year"])) return;
     setFeedback(null);
+    if (!validateFields(["physical_property_id", "year"])) return;
     setIsCalculating(true);
     setCalculation(null);
     try {
