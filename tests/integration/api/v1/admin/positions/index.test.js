@@ -132,7 +132,6 @@ describe("POST /api/v1/admin/positions", () => {
   });
 });
 
-
 describe("DELETE /api/v1/admin/positions/bulk", () => {
   test("Rejeitando usuário sem a feature correspondente", async () => {
     const sessionObject = await createSessionWithFeatures(["read:position"]);
