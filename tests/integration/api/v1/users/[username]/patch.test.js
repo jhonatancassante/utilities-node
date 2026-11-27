@@ -425,6 +425,7 @@ describe("PATCH /api/v1/users/[username]", () => {
             id: "00000000-0000-4000-8000-000000000000",
             features: ["update:user:others", "read:migration"],
             created_at: "2000-01-01T00:00:00.000Z",
+            position: "Administrador",
           }),
         },
       );
@@ -432,7 +433,7 @@ describe("PATCH /api/v1/users/[username]", () => {
 
       const responseBody = await response.json();
       expect(responseBody.message).toBe(
-        "Os campos a seguir não podem ser alterados: id, features, created_at.",
+        "Os campos a seguir não podem ser alterados: id, features, created_at, position.",
       );
 
       const userInDatabase = await user.findOneById(createdUser.id);
