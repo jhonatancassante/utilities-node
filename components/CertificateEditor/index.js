@@ -198,6 +198,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
       );
       if (!isEditing) {
         setSavedRecord(savedCertificate);
+        setIsGeneratingPdf(true);
         try {
           await downloadCertificatePdf([savedCertificate]);
         } catch (pdfError) {
@@ -208,6 +209,8 @@ function CertificateEditor({ recordId, viewOnly = false }) {
             action: "Use o botão Baixar PDF para tentar novamente ou acesse a listagem de certidões.",
           });
           return;
+        } finally {
+          setIsGeneratingPdf(false);
         }
       }
       router.push("/tools/certificates");
