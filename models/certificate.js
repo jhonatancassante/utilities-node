@@ -153,29 +153,43 @@ async function create(inputValues, userId) {
     ],
   });
   await validatePhysicalPropertyReference(certificate.physical_property_id);
+  const issuerResult = await database.query({
+    text: "SELECT name, position FROM users WHERE id = $1 LIMIT 1;",
+    values: [userId],
+  });
+  if (!issuerResult.rowCount) {
+    throw new NotFoundError({
+      message: "O usuário responsável pela emissão da certidão não foi encontrado.",
+      action: "Verifique a conta utilizada para emitir a certidão.",
+    });
+  }
+  const issuer = issuerResult.rows[0];
   const columns = [
     "user_id",
+    "issuer_name",
+    "issuer_position",
     ...WRITABLE_FIELDS.filter((field) => Object.hasOwn(certificate, field)),
   ];
   const values = [
     userId,
-    ...columns.slice(1).map((field) => certificate[field]),
+    issuer.name,
+    issuer.position,
+    ...columns.slice(3).map((field) => certificate[field]),
   ];
   const placeholders = columns.map((field, index) => `$${index + 1}`);
   const results = await database.query({
     text: `INSERT INTO certificates (${columns.join(", ")}) VALUES (${placeholders.join(", ")}) RETURNING *;`,
     values,
   });
-  return findOneById(results.rows[0].id);
+  return results.rows[0];
 }
 
 async function findAll() {
   const results = await database.query({
     text: `
-      SELECT certificates.*, users.name AS issuer_name, users.position AS issuer_position
+      SELECT *
       FROM certificates
-      LEFT JOIN users ON users.id = certificates.user_id
-      WHERE certificates.deleted_at IS NULL
+      WHERE deleted_at IS NULL
       ORDER BY year DESC, protocol_year DESC NULLS LAST, protocol_number DESC NULLS LAST, created_at DESC
     ;`,
   });
@@ -185,10 +199,9 @@ async function findAll() {
 async function findOneById(id) {
   const results = await database.query({
     text: `
-      SELECT certificates.*, users.name AS issuer_name, users.position AS issuer_position
+      SELECT *
       FROM certificates
-      LEFT JOIN users ON users.id = certificates.user_id
-      WHERE certificates.id = $1 AND certificates.deleted_at IS NULL
+      WHERE id = $1 AND deleted_at IS NULL
       LIMIT 1
     ;`,
     values: [id],

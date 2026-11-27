@@ -263,6 +263,8 @@ function filterOutput(user, feature, resource) {
     const filterCertificate = (item) => ({
       id: item.id,
       user_id: item.user_id,
+      issuer_name: item.issuer_name,
+      issuer_position: item.issuer_position,
       protocol_number: item.protocol_number,
       protocol_year: item.protocol_year,
       applicant_name: item.applicant_name,
