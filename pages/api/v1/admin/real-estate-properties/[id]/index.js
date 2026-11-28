@@ -15,37 +15,37 @@ export default controller.createController(
 );
 
 async function getHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToGet = request.context.user;
   const record = await realEstateProperty.findOneById(request.query.id);
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToGet,
     "read:real_estate_property",
     record,
   );
-  return response.status(200).json(output);
+  return response.status(200).json(secureOutputValues);
 }
 
 async function patchHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToUpdate = request.context.user;
   const record = await realEstateProperty.update(
     request.query.id,
     request.body,
   );
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToUpdate,
     "read:real_estate_property",
     record,
   );
-  return response.status(200).json(output);
+  return response.status(200).json(secureOutputValues);
 }
 
 async function deleteHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToDelete = request.context.user;
   const record = await realEstateProperty.delete(request.query.id);
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToDelete,
     "read:real_estate_property",
     record,
   );
-  return response.status(200).json(output);
+  return response.status(200).json(secureOutputValues);
 }
