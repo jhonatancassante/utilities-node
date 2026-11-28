@@ -170,6 +170,15 @@ describe("models/feature.js", () => {
   });
 
   describe(".findOneById()", () => {
+    test("ID que não é UUID lança NotFoundError sem consultar o banco", async () => {
+      const querySpy = mockQueries([["SELECT", []]]);
+
+      await expect(feature.findOneById("inexistente")).rejects.toThrow(
+        NotFoundError,
+      );
+      expect(querySpy).not.toHaveBeenCalled();
+    });
+
     test("Retorna a feature ativa pelo ID", async () => {
       mockQueries([["SELECT", [existingFeature]]]);
 
@@ -181,9 +190,9 @@ describe("models/feature.js", () => {
     test("Com ID inexistente ou feature excluída", async () => {
       const querySpy = mockQueries([["SELECT", []]]);
 
-      await expect(feature.findOneById("inexistente")).rejects.toThrow(
-        NotFoundError,
-      );
+      await expect(
+        feature.findOneById("22222222-2222-4222-8222-222222222222"),
+      ).rejects.toThrow(NotFoundError);
 
       const [selectQuery] = getCallsContaining(querySpy, "SELECT");
       expect(selectQuery.text).toContain("deleted_at IS NULL");

@@ -18,6 +18,5 @@ async function getHandler(request, response) {
     events,
   );
 
-  response.setHeader("Cache-Control", "no-store");
   return response.status(200).json(secureOutputValues);
 }

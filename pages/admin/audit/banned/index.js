@@ -15,7 +15,9 @@ import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 function formatDate(value) {
-  if (!value) return "—";
+  if (!value) {
+    return "—";
+  }
 
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
@@ -24,7 +26,9 @@ function formatDate(value) {
 }
 
 function formatAccountAge(startValue, endValue) {
-  if (!startValue || !endValue) return "—";
+  if (!startValue || !endValue) {
+    return "—";
+  }
 
   const start = new Date(startValue);
   const end = new Date(endValue);
@@ -68,7 +72,9 @@ function formatAccountAge(startValue, endValue) {
     const nextDay = new Date(cursor);
     nextDay.setUTCDate(nextDay.getUTCDate() + 1);
 
-    if (nextDay > end) break;
+    if (nextDay > end) {
+      break;
+    }
 
     cursor = nextDay;
     days += 1;
@@ -132,7 +138,9 @@ export default function AdminBannedAuditPage() {
       try {
         const result = await requestAPI("/api/v1/admin/audit/banned");
 
-        if (active) setEvents(result);
+        if (active) {
+          setEvents(result);
+        }
       } catch (requestError) {
         if (active) {
           setFeedback({
@@ -142,7 +150,9 @@ export default function AdminBannedAuditPage() {
           });
         }
       } finally {
-        if (active) setIsLoadingEvents(false);
+        if (active) {
+          setIsLoadingEvents(false);
+        }
       }
     }
 
@@ -161,7 +171,9 @@ export default function AdminBannedAuditPage() {
         return false;
       }
 
-      if (!term) return true;
+      if (!term) {
+        return true;
+      }
 
       return [
         event.username,
@@ -228,7 +240,9 @@ export default function AdminBannedAuditPage() {
     );
   }
 
-  if (!user?.features?.includes("read:audit")) return null;
+  if (!user?.features?.includes("read:audit")) {
+    return null;
+  }
 
   return (
     <>

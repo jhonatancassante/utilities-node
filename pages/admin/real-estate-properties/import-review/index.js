@@ -47,7 +47,9 @@ function RealEstatePropertyGroupingReviewPage() {
     let active = true;
     getRealEstatePropertyImportDraft()
       .then((draft) => {
-        if (!active) return;
+        if (!active) {
+          return;
+        }
         if (!draft) {
           setLoadError(
             "A prévia da importação não foi encontrada. Volte à página de imóveis e leia o CSV novamente.",
@@ -57,11 +59,14 @@ function RealEstatePropertyGroupingReviewPage() {
         setRecords(draft);
       })
       .catch(() => {
-        if (active)
+        if (active) {
           setLoadError("Não foi possível recuperar os dados do arquivo CSV.");
+        }
       })
       .finally(() => {
-        if (active) setIsLoadingDraft(false);
+        if (active) {
+          setIsLoadingDraft(false);
+        }
       });
     return () => {
       active = false;
@@ -144,8 +149,9 @@ function RealEstatePropertyGroupingReviewPage() {
       </>
     );
   }
-  if (!user || !hasAdminSectionAccess(user, "real-estate-properties"))
+  if (!user || !hasAdminSectionAccess(user, "real-estate-properties")) {
     return null;
+  }
 
   return (
     <>

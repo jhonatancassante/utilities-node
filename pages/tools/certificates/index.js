@@ -17,7 +17,9 @@ import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 function formatDate(value) {
-  if (!value) return "—";
+  if (!value) {
+    return "—";
+  }
   return new Date(value).toLocaleDateString("pt-BR");
 }
 
@@ -112,7 +114,9 @@ function CertificatesPage() {
   const pagination = usePagination(sort.sortedRecords);
 
   function handleDelete(ids) {
-    if (!ids.length || !canDelete) return;
+    if (!ids.length || !canDelete) {
+      return;
+    }
     setDialog({
       ids,
       message:
@@ -123,7 +127,9 @@ function CertificatesPage() {
   }
 
   async function confirmDelete() {
-    if (!dialog || !canDelete) return;
+    if (!dialog || !canDelete) {
+      return;
+    }
     const ids = dialog.ids;
     setDialog(null);
     setIsDeleting(true);
@@ -157,7 +163,9 @@ function CertificatesPage() {
   }
 
   async function handlePrint() {
-    if (!selection.selectedIds.length || isGeneratingPdf) return;
+    if (!selection.selectedIds.length || isGeneratingPdf) {
+      return;
+    }
     setIsGeneratingPdf(true);
     setFeedback(null);
     try {
@@ -224,7 +232,9 @@ function CertificatesPage() {
     );
   }
 
-  if (!user || !canRead) return null;
+  if (!user || !canRead) {
+    return null;
+  }
 
   const columns = [
     { key: "protocol_number", label: "Protocolo" },

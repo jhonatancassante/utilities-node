@@ -329,11 +329,12 @@ async function update(
           text: "SELECT id, features FROM users WHERE id = $1 FOR UPDATE;",
           values: [userId],
         });
-        if (currentResults.rowCount === 0)
+        if (currentResults.rowCount === 0) {
           throw new NotFoundError({
             message: "O usuário não foi encontrado.",
             action: "Atualize a lista e tente novamente.",
           });
+        }
         const currentFeatures = currentResults.rows[0].features;
         if (
           JSON.stringify([...currentFeatures].sort()) !==
@@ -357,12 +358,13 @@ async function update(
           const locked = metadata.rows
             .filter((item) => !item.is_self_removable)
             .map((item) => item.name);
-          if (locked.length)
+          if (locked.length) {
             throw new ValidationError({
               message: `As seguintes features não podem ser removidas deste usuário: ${locked.join(", ")}.`,
               action:
                 "Uma feature não removível pode ser atribuída, mas não pode ser retirada pelo próprio usuário.",
             });
+          }
         }
         const protectedFeatureResults = await client.query({
           text: `
@@ -387,13 +389,14 @@ async function update(
             ;`,
             values: [userId, userWithNewValues.features, protectedFeatures],
           });
-          if (!coverage.rowCount)
+          if (!coverage.rowCount) {
             throw new ConflictError({
               message:
                 "Esta alteração não pode ser realizada porque deixaria o sistema sem um administrador com todas as permissões protegidas.",
               action:
                 "Atribua todas as permissões protegidas a outro usuário antes de tentar novamente.",
             });
+          }
         }
       }
       const values = [
@@ -418,8 +421,9 @@ async function update(
       });
       return result.rows[0];
     };
-    if (allowFeatures && Object.hasOwn(allowedInputValues, "features"))
+    if (allowFeatures && Object.hasOwn(allowedInputValues, "features")) {
       return database.transaction(updateUser);
+    }
     const values = [
       userId,
       userWithNewValues.username,
@@ -523,7 +527,9 @@ async function ensureProtectedAdminCoverage(client, targetUserId) {
     (item) => item.name,
   );
 
-  if (protectedFeatureNames.length === 0) return;
+  if (protectedFeatureNames.length === 0) {
+    return;
+  }
 
   const targetAdmin = await client.query({
     text: `
@@ -536,7 +542,9 @@ async function ensureProtectedAdminCoverage(client, targetUserId) {
     values: [targetUserId, protectedFeatureNames],
   });
 
-  if (targetAdmin.rowCount === 0) return;
+  if (targetAdmin.rowCount === 0) {
+    return;
+  }
 
   const otherAdmin = await client.query({
     text: `
@@ -866,17 +874,23 @@ function normalizeName(name) {
 
 function validateUsernameFormat(username) {
   const error = validateUsername(username);
-  if (error) throw new ValidationError(error);
+  if (error) {
+    throw new ValidationError(error);
+  }
 }
 
 function validateEmailFormat(email) {
   const error = validateEmail(email);
-  if (error) throw new ValidationError(error);
+  if (error) {
+    throw new ValidationError(error);
+  }
 }
 
 function validatePasswordFormat(password) {
   const error = validatePassword(password);
-  if (error) throw new ValidationError(error);
+  if (error) {
+    throw new ValidationError(error);
+  }
 }
 
 async function validateUniqueEmail(email) {

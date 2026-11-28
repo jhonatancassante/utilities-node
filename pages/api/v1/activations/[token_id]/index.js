@@ -10,13 +10,13 @@ export default controller.createController(
 );
 
 async function patchHandler(request, response) {
-  const userTryingToPatch = request.context.user;
+  const userTryingToUpdate = request.context.user;
   const activationTokenId = request.query.token_id;
 
   const usedActivationToken = await activation.activate(activationTokenId);
 
   const secureOutputValues = authorization.filterOutput(
-    userTryingToPatch,
+    userTryingToUpdate,
     "read:activation_token",
     usedActivationToken,
   );

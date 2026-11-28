@@ -15,8 +15,9 @@ beforeAll(async () => {
 async function createSessionWithFeatures(features) {
   const testUser = await orchestrator.createUser();
   await orchestrator.activateUser(testUser);
-  if (features.length > 0)
+  if (features.length > 0) {
     await orchestrator.addFeaturesToUser(testUser, features);
+  }
   return await orchestrator.createSession(testUser);
 }
 
@@ -196,5 +197,20 @@ describe("DELETE /api/v1/admin/positions/bulk", () => {
       name: "ValidationError",
       message: "A exclusão em lote deve conter entre 1 e 500 IDs únicos.",
     });
+  });
+
+  test("Rejeitando ID que não é UUID", async () => {
+    const sessionObject = await createSessionWithFeatures(["delete:position"]);
+    const response = await fetch(endpoint() + "/bulk", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      },
+      body: JSON.stringify({ ids: ["id-que-nao-e-uuid"] }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ name: "ValidationError" });
   });
 });

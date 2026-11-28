@@ -72,11 +72,15 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   }, [canCreate, canRead, error, isEditing, isLoading, router, user]);
 
   useEffect(() => {
-    if (!recordId || !user) return undefined;
+    if (!recordId || !user) {
+      return undefined;
+    }
     let active = true;
     requestAPI("/api/v1/certificates/" + encodeURIComponent(recordId))
       .then((data) => {
-        if (!active) return;
+        if (!active) {
+          return;
+        }
         setRecord(data);
         setForm({
           applicant_name: data.applicant_name ?? "",
@@ -105,7 +109,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
         }
       })
       .finally(() => {
-        if (active) setIsLoadingRecord(false);
+        if (active) {
+          setIsLoadingRecord(false);
+        }
       });
     return () => {
       active = false;
@@ -113,7 +119,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   }, [recordId, user]);
 
   function focusElement(element) {
-    if (!element) return;
+    if (!element) {
+      return;
+    }
     element.scrollIntoView({ behavior: "smooth", block: "center" });
     element.focus({ preventScroll: true });
   }
@@ -125,7 +133,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
     setFieldErrors((current) => {
-      if (!current[name]) return current;
+      if (!current[name]) {
+        return current;
+      }
       const nextErrors = { ...current };
       delete nextErrors[name];
       return nextErrors;
@@ -187,14 +197,18 @@ function CertificateEditor({ recordId, viewOnly = false }) {
     const firstInvalidField = fieldNames.find(
       (fieldName) => nextErrors[fieldName],
     );
-    if (firstInvalidField) focusField(firstInvalidField);
+    if (firstInvalidField) {
+      focusField(firstInvalidField);
+    }
     return Object.keys(nextErrors).length === 0;
   }
 
   async function handleCalculate(event) {
     event.preventDefault();
     setFeedback(null);
-    if (!validateFields(["physical_property_id", "year"])) return;
+    if (!validateFields(["physical_property_id", "year"])) {
+      return;
+    }
     setIsCalculating(true);
     setCalculation(null);
     try {
@@ -226,7 +240,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
 
   async function handleSave(event) {
     event.preventDefault();
-    if (isReadOnly || savedRecord) return;
+    if (isReadOnly || savedRecord) {
+      return;
+    }
     setFeedback(null);
     const requiredFields = isEditing
       ? [
@@ -245,7 +261,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
           "protocol_year",
           "validity_days",
         ];
-    if (!validateFields(requiredFields)) return;
+    if (!validateFields(requiredFields)) {
+      return;
+    }
     if (!calculation) {
       setToastMessage("Faça o cálculo e confira os valores antes de gravar.");
       focusElement(document.getElementById("calculate-certificate-button"));
@@ -324,7 +342,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   }
 
   async function handleDownloadSavedPdf() {
-    if (!savedRecord || isGeneratingPdf) return;
+    if (!savedRecord || isGeneratingPdf) {
+      return;
+    }
     setIsGeneratingPdf(true);
     setFeedback(null);
     try {
@@ -344,7 +364,9 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   }
 
   async function handlePrint() {
-    if (!record || isGeneratingPdf) return;
+    if (!record || isGeneratingPdf) {
+      return;
+    }
     setIsGeneratingPdf(true);
     setFeedback(null);
     try {

@@ -16,6 +16,7 @@ export default controller.createController({
   PATCH: [
     controller.injectAnonymousOrUser,
     controller.canRequest("update:user"),
+    controller.requireJsonObjectBody(),
     patchHandler,
   ],
 });
@@ -36,22 +37,12 @@ async function getHandler(request, response) {
 
 async function patchHandler(request, response) {
   const username = request.query.username;
-  if (
-    !request.body ||
-    typeof request.body !== "object" ||
-    Array.isArray(request.body)
-  ) {
-    throw new ValidationError({
-      message: "O corpo da requisição deve ser um objeto JSON.",
-      action: "Envie um objeto com os campos a serem alterados.",
-    });
-  }
   const { profile_photo, ...userInputValues } = request.body;
 
-  const userTryingToPatch = request.context.user;
+  const userTryingToUpdate = request.context.user;
   const targetUser = await user.findOneByUsername(username);
 
-  if (!authorization.can(userTryingToPatch, "update:user", targetUser)) {
+  if (!authorization.can(userTryingToUpdate, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para executar esta ação.",
       action: 'Verifique se o seu usuário possui a feature "update:user".',
@@ -69,8 +60,9 @@ async function patchHandler(request, response) {
   let updatedUser = targetUser;
 
   try {
-    if (profile_photo)
+    if (profile_photo) {
       uploadedPhoto = await uploadProfilePhoto(profile_photo, targetUser.id);
+    }
     if (Object.keys(userInputValues).length > 0) {
       updatedUser = await user.update(username, userInputValues);
     }
@@ -100,7 +92,7 @@ async function patchHandler(request, response) {
   }
 
   const secureOutputValues = authorization.filterOutput(
-    userTryingToPatch,
+    userTryingToUpdate,
     "read:user",
     updatedUser,
   );

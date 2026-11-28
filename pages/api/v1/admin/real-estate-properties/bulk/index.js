@@ -22,25 +22,25 @@ export default controller.createController(
 );
 
 async function postHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToCreate = request.context.user;
   const records = await realEstateProperty.createMany(request.body?.records, {
     overwriteExisting: request.body?.overwriteExisting === true,
   });
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToCreate,
     "read:real_estate_property",
     records,
   );
-  return response.status(201).json(output);
+  return response.status(201).json(secureOutputValues);
 }
 
 async function deleteHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToDelete = request.context.user;
   const records = await realEstateProperty.deleteMany(request.body?.ids);
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToDelete,
     "read:real_estate_property",
     records,
   );
-  return response.status(200).json(output);
+  return response.status(200).json(secureOutputValues);
 }

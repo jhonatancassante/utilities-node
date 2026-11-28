@@ -1,5 +1,6 @@
 import database from "@/infra/database.js";
 import { NotFoundError, ValidationError } from "@/infra/errors.js";
+import { assertRecordId, softDeleteMany } from "@/lib/server/record-helpers.js";
 
 const UPDATABLE_FIELDS = ["name"];
 
@@ -36,6 +37,11 @@ async function findAll() {
 }
 
 async function findOneById(id) {
+  assertRecordId(id, {
+    message: "O cargo informado não foi encontrado.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const results = await database.query({
     text: `
       SELECT *
@@ -57,6 +63,11 @@ async function findOneById(id) {
 }
 
 async function update(id, inputValues) {
+  assertRecordId(id, {
+    message: "O cargo informado não foi encontrado.",
+    action: "Atualize a lista e tente novamente.",
+  });
+
   const position = validateInput(inputValues);
 
   if (Object.keys(position).length === 0) {
@@ -92,6 +103,11 @@ async function update(id, inputValues) {
 }
 
 async function deletePosition(id) {
+  assertRecordId(id, {
+    message: "O cargo informado não foi encontrado.",
+    action: "Atualize a lista e tente novamente.",
+  });
+
   const results = await database.query({
     text: `
       UPDATE positions
@@ -115,40 +131,11 @@ async function deletePosition(id) {
 }
 
 async function deleteMany(ids) {
-  if (
-    !Array.isArray(ids) ||
-    ids.length === 0 ||
-    ids.length > 500 ||
-    ids.some((id) => typeof id !== "string" || !id.trim()) ||
-    new Set(ids).size !== ids.length
-  ) {
-    throw new ValidationError({
-      message: "A exclusão em lote deve conter entre 1 e 500 IDs únicos.",
-      action: "Revise a seleção de cargos e tente novamente.",
-    });
-  }
-
-  return database.transaction(async (client) => {
-    const results = await client.query({
-      text: `
-        UPDATE positions
-        SET deleted_at = timezone('utc', now()),
-            updated_at = timezone('utc', now())
-        WHERE id = ANY($1::uuid[]) AND deleted_at IS NULL
-        RETURNING *
-      ;`,
-      values: [ids],
-    });
-
-    if (results.rowCount !== ids.length) {
-      throw new NotFoundError({
-        message:
-          "Um ou mais cargos selecionados não foram encontrados ou já foram excluídos.",
-        action: "Atualize a listagem e confira os cargos selecionados.",
-      });
-    }
-
-    return results.rows;
+  return softDeleteMany("positions", ids, {
+    selectionLabel: "cargos",
+    notFoundMessage:
+      "Um ou mais cargos selecionados não foram encontrados ou já foram excluídos.",
+    notFoundAction: "Atualize a listagem e confira os cargos selecionados.",
   });
 }
 

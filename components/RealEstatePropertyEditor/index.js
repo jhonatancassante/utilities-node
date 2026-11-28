@@ -197,13 +197,17 @@ function formatCtm(value) {
     .join(".");
 }
 function decimalDisplay(value) {
-  if (value === null || value === undefined || value === "") return "";
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
   const number = Number(value);
   return Number.isFinite(number) ? number.toFixed(2).replace(".", ",") : "";
 }
 function maskDecimal(value) {
   const digits = digitsOnly(value).slice(0, 12);
-  if (!digits) return "";
+  if (!digits) {
+    return "";
+  }
   const cents = digits.slice(-2).padStart(2, "0");
   const integer = digits.slice(0, -2).replace(/^0+(?=\d)/, "") || "0";
   return integer + "," + cents;
@@ -253,16 +257,19 @@ function RealEstatePropertyEditor({ recordId }) {
       !isLoading &&
       !user &&
       (!error || [401, 403].includes(error.statusCode))
-    )
+    ) {
       router.replace("/login");
+    }
     if (
       !isLoading &&
       user &&
       !hasAdminSectionAccess(user, "real-estate-properties")
-    )
+    ) {
       router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    if (!isLoading && user && !user.features.includes(requiredFeature))
+    }
+    if (!isLoading && user && !user.features.includes(requiredFeature)) {
       router.replace("/admin/real-estate-properties");
+    }
   }, [error, isLoading, requiredFeature, router, user]);
 
   useEffect(() => {
@@ -270,8 +277,9 @@ function RealEstatePropertyEditor({ recordId }) {
       !recordId ||
       !user ||
       !hasAdminSectionAccess(user, "real-estate-properties")
-    )
+    ) {
       return undefined;
+    }
     let active = true;
     requestAPI(
       "/api/v1/admin/real-estate-properties/" + encodeURIComponent(recordId),
@@ -283,16 +291,19 @@ function RealEstatePropertyEditor({ recordId }) {
         }
       })
       .catch((requestError) => {
-        if (active)
+        if (active) {
           setFeedback({
             type: "error",
             name: requestError.name,
             message: requestError.message,
             action: requestError.action,
           });
+        }
       })
       .finally(() => {
-        if (active) setIsLoadingRecord(false);
+        if (active) {
+          setIsLoadingRecord(false);
+        }
       });
     return () => {
       active = false;
@@ -301,12 +312,20 @@ function RealEstatePropertyEditor({ recordId }) {
 
   function updateField(name, value, type) {
     let next = value;
-    if (type === "registration") next = formatRegistration(value);
-    if (type === "ctm") next = formatCtm(value);
-    if (type === "decimal") next = maskDecimal(value);
+    if (type === "registration") {
+      next = formatRegistration(value);
+    }
+    if (type === "ctm") {
+      next = formatCtm(value);
+    }
+    if (type === "decimal") {
+      next = maskDecimal(value);
+    }
     setForm((current) => ({ ...current, [name]: next }));
     setFieldErrors((current) => {
-      if (!current[name]) return current;
+      if (!current[name]) {
+        return current;
+      }
       const rest = { ...current };
       delete rest[name];
       return rest;
@@ -329,7 +348,9 @@ function RealEstatePropertyEditor({ recordId }) {
           errors[field.name] = "Preencha o campo " + field.label + ".";
           continue;
         }
-        if (!raw) continue;
+        if (!raw) {
+          continue;
+        }
 
         if (field.type === "registration") {
           if (![13, 14, 15].includes(digitsOnly(raw).length)) {
@@ -427,7 +448,7 @@ function RealEstatePropertyEditor({ recordId }) {
       </>
     );
   }
-  if (error)
+  if (error) {
     return (
       <>
         <AppHead title={title} />
@@ -446,12 +467,14 @@ function RealEstatePropertyEditor({ recordId }) {
         </Layout>
       </>
     );
+  }
   if (
     !user ||
     !hasAdminSectionAccess(user, "real-estate-properties") ||
     !user.features.includes(requiredFeature)
-  )
+  ) {
     return null;
+  }
 
   const isReadOnly = isEditing && !canUpdate;
   return (

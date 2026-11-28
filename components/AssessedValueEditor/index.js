@@ -31,34 +31,42 @@ function AssessedValueEditor({ recordId }) {
       !isLoading &&
       !user &&
       (!error || [401, 403].includes(error.statusCode))
-    )
+    ) {
       router.replace("/login");
+    }
     if (!isLoading && user && !hasAdminSectionAccess(user, "assessed-values")) {
       router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
     }
-    if (!isLoading && user && !user.features.includes(requiredFeature))
+    if (!isLoading && user && !user.features.includes(requiredFeature)) {
       router.replace("/admin/assessed-values");
+    }
   }, [error, isLoading, requiredFeature, router, user]);
 
   useEffect(() => {
-    if (!recordId || !user || !hasAdminSectionAccess(user, "assessed-values"))
+    if (!recordId || !user || !hasAdminSectionAccess(user, "assessed-values")) {
       return undefined;
+    }
     let active = true;
     requestAPI("/api/v1/admin/assessed-values/" + encodeURIComponent(recordId))
       .then((data) => {
-        if (active) setRecord(data);
+        if (active) {
+          setRecord(data);
+        }
       })
       .catch((requestError) => {
-        if (active)
+        if (active) {
           setFeedback({
             type: "error",
             name: requestError.name,
             message: requestError.message,
             action: requestError.action,
           });
+        }
       })
       .finally(() => {
-        if (active) setIsLoadingRecord(false);
+        if (active) {
+          setIsLoadingRecord(false);
+        }
       });
     return () => {
       active = false;
@@ -132,8 +140,9 @@ function AssessedValueEditor({ recordId }) {
     !user ||
     !hasAdminSectionAccess(user, "assessed-values") ||
     !user.features.includes(requiredFeature)
-  )
+  ) {
     return null;
+  }
 
   return (
     <>

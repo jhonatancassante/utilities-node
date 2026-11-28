@@ -125,7 +125,9 @@ function StatusMessage({
     type === "warning-modal" ||
     type === "confirmation"
   ) {
-    if (!children || dismissedKey === messageKey) return null;
+    if (!children || dismissedKey === messageKey) {
+      return null;
+    }
 
     const isWarning = ["warning-modal", "confirmation"].includes(type);
     const closeDialog = () => setDismissedKey(messageKey);
@@ -189,7 +191,9 @@ function StatusMessage({
     );
   }
 
-  if (toastState.items.length === 0) return null;
+  if (toastState.items.length === 0) {
+    return null;
+  }
 
   return (
     <div className={styles.viewport} aria-live="polite">

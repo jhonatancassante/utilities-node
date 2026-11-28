@@ -6,6 +6,7 @@ import {
   ForbiddenError,
   NotFoundError,
   UnauthorizedError,
+  ValidationError,
 } from "@/infra/errors.js";
 import session from "@/models/session.js";
 import user from "@/models/user.js";
@@ -206,6 +207,42 @@ describe("infra/controller.js", () => {
         ),
       ).toThrow(ForbiddenError);
       expect(next).not.toHaveBeenCalled();
+    });
+  });
+
+  describe(".requireJsonObjectBody()", () => {
+    test("Com objeto no corpo, chama next()", () => {
+      const next = jest.fn();
+
+      controller.requireJsonObjectBody()({ body: { name: "x" } }, {}, next);
+
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    test.each([undefined, null, "texto", 10, ["lista"]])(
+      "Com corpo %p, lança ValidationError com a mensagem padrão",
+      (body) => {
+        const next = jest.fn();
+
+        expect(() =>
+          controller.requireJsonObjectBody()({ body }, {}, next),
+        ).toThrow("O corpo da requisição deve ser um objeto JSON.");
+        expect(next).not.toHaveBeenCalled();
+      },
+    );
+
+    test("Usa a mensagem personalizada quando informada", () => {
+      const middleware = controller.requireJsonObjectBody({
+        message: "Mensagem própria.",
+        action: "Ação própria.",
+      });
+
+      expect(() => middleware({ body: null }, {}, jest.fn())).toThrow(
+        ValidationError,
+      );
+      expect(() => middleware({ body: null }, {}, jest.fn())).toThrow(
+        "Mensagem própria.",
+      );
     });
   });
 });

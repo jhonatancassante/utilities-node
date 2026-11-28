@@ -56,7 +56,9 @@ function Header() {
   }, [router.events]);
 
   useEffect(() => {
-    if (!openMenu && !isToolsExpanded && !isEntertainmentExpanded) return;
+    if (!openMenu && !isToolsExpanded && !isEntertainmentExpanded) {
+      return;
+    }
 
     function handleKeyDown(event) {
       if (event.key === "Escape") {

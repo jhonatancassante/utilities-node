@@ -9,6 +9,5 @@ export default controller.createController(
 async function getHandler(request, response) {
   const cards = await getAdventureCards();
 
-  response.setHeader("Cache-Control", "no-store");
   return response.status(200).json({ cards });
 }

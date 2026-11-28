@@ -10,12 +10,12 @@ export default controller.createController(
 );
 
 async function deleteHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToDelete = request.context.user;
   const records = await position.deleteMany(request.body?.ids);
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToDelete,
     "read:position",
     records,
   );
-  return response.status(200).json(output);
+  return response.status(200).json(secureOutputValues);
 }

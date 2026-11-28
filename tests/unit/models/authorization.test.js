@@ -405,7 +405,21 @@ describe("models/authorization.js", () => {
       });
       expect(result).not.toHaveProperty("token");
     });
+
+    test("`read:position:options` devolve somente o nome dos cargos", () => {
+      const result = authorization.filterOutput(
+        { id: "user-1", features: ["update:user:others"] },
+        "read:position:options",
+        [
+          { id: "p1", name: "Escriturário", created_at: "2026-01-01" },
+          { id: "p2", name: "Fiscal", created_at: "2026-01-02" },
+        ],
+      );
+
+      expect(result).toEqual([{ name: "Escriturário" }, { name: "Fiscal" }]);
+    });
   });
+
   describe(".hasAdminAccess()", () => {
     test("Usuário sem features privilegiadas", () => {
       expect(

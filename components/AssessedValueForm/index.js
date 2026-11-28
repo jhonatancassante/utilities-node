@@ -101,7 +101,9 @@ function AssessedValueForm({
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
     setFieldErrors((current) => {
-      if (!current[name]) return current;
+      if (!current[name]) {
+        return current;
+      }
       const rest = { ...current };
       delete rest[name];
       return rest;

@@ -14,8 +14,12 @@ const DEFAULT_LABEL =
   "Clique ou arraste seus arquivos PDF aqui (permite múltiplos)";
 
 function getDropzoneLabel(files) {
-  if (files.length === 0) return DEFAULT_LABEL;
-  if (files.length === 1) return files[0].name;
+  if (files.length === 0) {
+    return DEFAULT_LABEL;
+  }
+  if (files.length === 1) {
+    return files[0].name;
+  }
   return `${files.length} arquivos PDF selecionados`;
 }
 

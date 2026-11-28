@@ -163,7 +163,9 @@ function RealEstatePropertiesPage() {
         currentChunk.push(record);
         currentChunkBytes += recordBytes + (currentChunk.length > 1 ? 1 : 0);
       }
-      if (currentChunk.length) chunks.push(currentChunk);
+      if (currentChunk.length) {
+        chunks.push(currentChunk);
+      }
 
       const importSession = await requestAPI(
         "/api/v1/admin/real-estate-properties/bulk/imports",
@@ -254,7 +256,9 @@ function RealEstatePropertiesPage() {
     }
   }
   async function handleDelete(ids) {
-    if (!ids.length) return;
+    if (!ids.length) {
+      return;
+    }
     setDialog({
       type: "delete",
       ids,
@@ -264,7 +268,9 @@ function RealEstatePropertiesPage() {
 
   async function confirmDialog() {
     const currentDialog = dialog;
-    if (!currentDialog) return;
+    if (!currentDialog) {
+      return;
+    }
     setDialog(null);
 
     if (currentDialog.type === "bulk-import") {
@@ -303,7 +309,9 @@ function RealEstatePropertiesPage() {
       return;
     }
 
-    if (currentDialog.type !== "delete") return;
+    if (currentDialog.type !== "delete") {
+      return;
+    }
     const ids = currentDialog.ids;
     setIsDeleting(true);
     setFeedback(null);
@@ -370,8 +378,9 @@ function RealEstatePropertiesPage() {
       </>
     );
   }
-  if (!user || !hasAdminSectionAccess(user, "real-estate-properties"))
+  if (!user || !hasAdminSectionAccess(user, "real-estate-properties")) {
     return null;
+  }
 
   return (
     <>

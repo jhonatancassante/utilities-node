@@ -14,7 +14,7 @@ export const config = {
 export default controller.createController(
   {
     GET: [controller.canRequest("read:user:others"), getHandler],
-    PATCH: [authorizePatch, patchHandler],
+    PATCH: [authorizePatch, controller.requireJsonObjectBody(), patchHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
 );
@@ -40,9 +40,12 @@ function authorizePatch(request, response, next) {
   );
   const requiredFeatures = [];
 
-  if (hasFeatures) requiredFeatures.push("update:user:features");
-  if (!hasFeatures || hasOtherFields)
+  if (hasFeatures) {
+    requiredFeatures.push("update:user:features");
+  }
+  if (!hasFeatures || hasOtherFields) {
     requiredFeatures.push("update:user:others");
+  }
 
   for (const requiredFeature of requiredFeatures) {
     if (!authorization.can(request.context.user, requiredFeature)) {
@@ -58,16 +61,6 @@ function authorizePatch(request, response, next) {
 
 async function patchHandler(request, response) {
   const userTryingToUpdate = request.context.user;
-  if (
-    !request.body ||
-    typeof request.body !== "object" ||
-    Array.isArray(request.body)
-  ) {
-    throw new ValidationError({
-      message: "O corpo da requisição deve ser um objeto JSON.",
-      action: "Envie um objeto com os campos a serem alterados.",
-    });
-  }
   const { profile_photo, ...userInputValues } = request.body;
   if (profile_photo !== undefined && typeof profile_photo !== "string") {
     throw new ValidationError({
@@ -81,8 +74,9 @@ async function patchHandler(request, response) {
   let updatedUser = targetUser;
 
   try {
-    if (profile_photo)
+    if (profile_photo) {
       uploadedPhoto = await uploadProfilePhoto(profile_photo, targetUser.id);
+    }
     if (Object.keys(userInputValues).length > 0) {
       updatedUser = await user.update(request.query.username, userInputValues, {
         allowFeatures: true,

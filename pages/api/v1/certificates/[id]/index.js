@@ -4,13 +4,16 @@ import authorization from "@/models/authorization.js";
 import { ForbiddenError } from "@/infra/errors.js";
 
 function canUpdateCertificate(request, response, next) {
-  const currentUser = request.context.user;
-  const canUpdateOwn = currentUser.features.includes("update:certificate");
-  const canUpdateOthers = currentUser.features.includes(
+  const userTryingToUpdate = request.context.user;
+  const canUpdateOwn =
+    userTryingToUpdate.features.includes("update:certificate");
+  const canUpdateOthers = userTryingToUpdate.features.includes(
     "update:certificate:others",
   );
 
-  if (canUpdateOwn || canUpdateOthers) return next();
+  if (canUpdateOwn || canUpdateOthers) {
+    return next();
+  }
 
   throw new ForbiddenError({
     message: "Você não possui permissão para alterar certidões.",
@@ -29,20 +32,22 @@ export default controller.createController(
 );
 
 async function getHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToGet = request.context.user;
   const record = await certificate.findOneById(request.query.id);
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToGet,
     "read:certificate",
     record,
   );
-  return response.status(200).json(output);
+  return response.status(200).json(secureOutputValues);
 }
 
 async function patchHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToUpdate = request.context.user;
   const existingRecord = await certificate.findOneById(request.query.id);
-  if (!authorization.can(currentUser, "update:certificate", existingRecord)) {
+  if (
+    !authorization.can(userTryingToUpdate, "update:certificate", existingRecord)
+  ) {
     throw new ForbiddenError({
       message: "Você não possui permissão para alterar esta certidão.",
       action:
@@ -50,21 +55,21 @@ async function patchHandler(request, response) {
     });
   }
   const record = await certificate.update(request.query.id, request.body);
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToUpdate,
     "read:certificate",
     record,
   );
-  return response.status(200).json(output);
+  return response.status(200).json(secureOutputValues);
 }
 
 async function deleteHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToDelete = request.context.user;
   const record = await certificate.delete(request.query.id);
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToDelete,
     "read:certificate",
     record,
   );
-  return response.status(200).json(output);
+  return response.status(200).json(secureOutputValues);
 }

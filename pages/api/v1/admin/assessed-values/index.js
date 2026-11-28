@@ -11,23 +11,23 @@ export default controller.createController(
 );
 
 async function getHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToGet = request.context.user;
   const records = await assessedValue.findAll();
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToGet,
     "read:assessed_value",
     records,
   );
-  return response.status(200).json(output);
+  return response.status(200).json(secureOutputValues);
 }
 
 async function postHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToCreate = request.context.user;
   const record = await assessedValue.create(request.body);
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToCreate,
     "read:assessed_value",
     record,
   );
-  return response.status(201).json(output);
+  return response.status(201).json(secureOutputValues);
 }

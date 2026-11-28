@@ -4,6 +4,7 @@ import email from "@/infra/email.js";
 import database from "@/infra/database.js";
 import webserver from "@/infra/webserver.js";
 import { NotFoundError, ForbiddenError } from "@/infra/errors.js";
+import { assertRecordId } from "@/lib/server/record-helpers.js";
 import user from "@/models/user.js";
 import authorization from "@/models/authorization.js";
 
@@ -34,6 +35,12 @@ async function create(userId) {
 }
 
 async function findOneValidById(id) {
+  assertRecordId(id, {
+    message:
+      "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
+    action: "Faça um novo cadastro.",
+  });
+
   const foundedToken = await runSelectQuery(id);
   return foundedToken;
 

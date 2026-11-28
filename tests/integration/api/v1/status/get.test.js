@@ -26,6 +26,14 @@ describe("GET /api/v1/status", () => {
     });
   });
 
+  describe("Respostas da API", () => {
+    test("Nunca são armazenadas em cache", async () => {
+      const response = await fetch(`${orchestrator.API_URL}/status`);
+
+      expect(response.headers.get("Cache-Control")).toBe("no-store");
+    });
+  });
+
   describe("Usuário padrão", () => {
     test("Obtendo o status atual do sistema", async () => {
       const createdUser = await orchestrator.createUser();

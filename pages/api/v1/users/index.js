@@ -21,7 +21,7 @@ export default controller.createController(
 );
 
 async function postHandler(request, response) {
-  const userTryingToGet = request.context.user;
+  const userTryingToCreate = request.context.user;
   const { profile_photo, ...userInputValues } = request.body ?? {};
   delete userInputValues.id;
   delete userInputValues.profile_photo_url;
@@ -42,7 +42,9 @@ async function postHandler(request, response) {
 
     newUser = await user.create(userInputValues);
   } catch (error) {
-    if (uploadedPhoto) await deleteProfilePhoto(uploadedPhoto.publicId);
+    if (uploadedPhoto) {
+      await deleteProfilePhoto(uploadedPhoto.publicId);
+    }
     throw error;
   }
 
@@ -50,7 +52,7 @@ async function postHandler(request, response) {
   await activation.sendEmailToUser(newUser, activationToken);
 
   const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
+    userTryingToCreate,
     "read:user",
     newUser,
   );

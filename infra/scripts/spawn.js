@@ -36,7 +36,9 @@ async function cleanServices() {
     let resolved = false;
 
     const finish = () => {
-      if (resolved) return;
+      if (resolved) {
+        return;
+      }
       resolved = true;
       clearTimeout(timeout);
       return resolve();
@@ -51,8 +53,11 @@ async function cleanServices() {
     }, 60000);
 
     stop.on("exit", (code) => {
-      if (code === 0) console.log("✅ Serviços finalizados com sucesso!");
-      else console.error(`⚠️ Serviços encerraram com código ${code}`);
+      if (code === 0) {
+        console.log("✅ Serviços finalizados com sucesso!");
+      } else {
+        console.error(`⚠️ Serviços encerraram com código ${code}`);
+      }
 
       finish();
     });
@@ -66,11 +71,17 @@ function runScript(script, options = {}) {
   const proc = spawnCmd(npmBin(), ["run", script]);
 
   async function handleCleanup() {
-    if (cleanupCalled) return;
+    if (cleanupCalled) {
+      return;
+    }
     cleanupCalled = true;
 
-    if (cleanup) await cleanServices();
-    if (afterExit) afterExit();
+    if (cleanup) {
+      await cleanServices();
+    }
+    if (afterExit) {
+      afterExit();
+    }
   }
 
   process.on("SIGINT", () => {

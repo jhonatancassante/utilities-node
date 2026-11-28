@@ -50,7 +50,9 @@ function AdminUsersPage() {
   }, [error, isLoading, router, user]);
 
   useEffect(() => {
-    if (feedback?.type !== "success") return undefined;
+    if (feedback?.type !== "success") {
+      return undefined;
+    }
 
     const timeoutId = setTimeout(() => {
       setFeedback((currentFeedback) =>
@@ -139,10 +141,14 @@ function AdminUsersPage() {
 
     requestAPI(`/api/v1/admin/users/${encodeURIComponent(username)}`)
       .then((foundUser) => {
-        if (active) setSelectedUser(foundUser);
+        if (active) {
+          setSelectedUser(foundUser);
+        }
       })
       .catch((requestError) => {
-        if (!active) return;
+        if (!active) {
+          return;
+        }
 
         setFeedback({
           type: "error",
@@ -461,14 +467,20 @@ function UserEditor({
   );
 
   useEffect(() => {
-    if (!canManageUserData) return undefined;
+    if (!canManageUserData) {
+      return undefined;
+    }
     let isMounted = true;
     requestAPI("/api/v1/admin/users/positions")
       .then((availablePositions) => {
-        if (isMounted) setPositions(availablePositions);
+        if (isMounted) {
+          setPositions(availablePositions);
+        }
       })
       .catch((requestError) => {
-        if (!isMounted) return;
+        if (!isMounted) {
+          return;
+        }
         setFeedback({
           type: "error",
           name: requestError.statusCode ? requestError.name : undefined,
@@ -477,7 +489,9 @@ function UserEditor({
         });
       })
       .finally(() => {
-        if (isMounted) setIsLoadingPositions(false);
+        if (isMounted) {
+          setIsLoadingPositions(false);
+        }
       });
     return () => {
       isMounted = false;
@@ -485,16 +499,22 @@ function UserEditor({
   }, [canManageUserData]);
 
   useEffect(() => {
-    if (!canManageUserFeatures) return undefined;
+    if (!canManageUserFeatures) {
+      return undefined;
+    }
 
     let isMounted = true;
 
-    requestAPI("/api/v1/admin/users/features")
+    requestAPI("/api/v1/admin/features")
       .then((availableFeatures) => {
-        if (isMounted) setFeatures(availableFeatures);
+        if (isMounted) {
+          setFeatures(availableFeatures);
+        }
       })
       .catch((requestError) => {
-        if (!isMounted) return;
+        if (!isMounted) {
+          return;
+        }
         setFeedback({
           type: "error",
           name: requestError.statusCode ? requestError.name : undefined,
@@ -503,7 +523,9 @@ function UserEditor({
         });
       })
       .finally(() => {
-        if (isMounted) setIsLoadingFeatures(false);
+        if (isMounted) {
+          setIsLoadingFeatures(false);
+        }
       });
 
     return () => {
@@ -539,11 +561,14 @@ function UserEditor({
       if (
         !current[name] &&
         !(name === "password" && current.passwordConfirmation)
-      )
+      ) {
         return current;
+      }
       const rest = { ...current };
       delete rest[name];
-      if (name === "password") delete rest.passwordConfirmation;
+      if (name === "password") {
+        delete rest.passwordConfirmation;
+      }
       return rest;
     });
   }
@@ -576,8 +601,9 @@ function UserEditor({
   }
 
   async function handleToggleBan() {
-    if (!canManageUserStatus || isEditingSelf || isUpdatingBan || isSaving)
+    if (!canManageUserStatus || isEditingSelf || isUpdatingBan || isSaving) {
       return;
+    }
 
     const isBanned = Boolean(user.banned_at);
     setIsUpdatingBan(true);
@@ -603,7 +629,9 @@ function UserEditor({
   }
 
   async function handleOpenTimeoutModal() {
-    if (!canManageUserStatus || isEditingSelf || isUpdatingTimeout) return;
+    if (!canManageUserStatus || isEditingSelf || isUpdatingTimeout) {
+      return;
+    }
 
     setIsUpdatingTimeout(true);
     setFeedback(null);
@@ -640,8 +668,9 @@ function UserEditor({
       isEditingSelf ||
       isUpdatingTimeout ||
       user.banned_at
-    )
+    ) {
       return;
+    }
 
     let expiresAt;
     if (timeoutMode === "date") {
@@ -710,7 +739,9 @@ function UserEditor({
   }
 
   async function handleRemoveTimeout() {
-    if (!canManageUserStatus || isEditingSelf || isUpdatingTimeout) return;
+    if (!canManageUserStatus || isEditingSelf || isUpdatingTimeout) {
+      return;
+    }
 
     setIsUpdatingTimeout(true);
     setFeedback(null);
@@ -744,12 +775,16 @@ function UserEditor({
       errors.name = "Informe um nome com até 150 caracteres.";
     }
     const usernameError = validateUsername(form.username.trim());
-    if (usernameError) errors.username = usernameError.message;
+    if (usernameError) {
+      errors.username = usernameError.message;
+    }
     const emailError =
       form.email.trim() !== user.email
         ? validateEmail(form.email.trim())
         : null;
-    if (emailError) errors.email = emailError.message;
+    if (emailError) {
+      errors.email = emailError.message;
+    }
     const passwordError = form.password
       ? validatePassword(form.password)
       : null;
@@ -785,16 +820,21 @@ function UserEditor({
     }
 
     const payload = {};
-    if (form.name.trim() !== user.name) payload.name = form.name.trim();
-    if (form.position !== (user.position ?? ""))
+    if (form.name.trim() !== user.name) {
+      payload.name = form.name.trim();
+    }
+    if (form.position !== (user.position ?? "")) {
       payload.position = form.position;
+    }
     if (form.username.trim() !== user.username) {
       payload.username = form.username.trim();
     }
     if (form.email.trim() !== user.email) {
       payload.email = form.email.trim();
     }
-    if (form.password) payload.password = form.password;
+    if (form.password) {
+      payload.password = form.password;
+    }
 
     if (canManageUserFeatures) {
       const currentFeatures = [...user.features].sort();
@@ -1181,7 +1221,9 @@ function UserEditor({
                 const groupFeatures = filteredFeatures.filter(
                   (feature) => feature.group_name === group,
                 );
-                if (groupFeatures.length === 0) return null;
+                if (groupFeatures.length === 0) {
+                  return null;
+                }
 
                 return (
                   <div className={styles.featureGroup} key={group}>
@@ -1332,7 +1374,9 @@ function UserEditor({
         <Modal
           title="Gerenciar suspensão"
           onClose={() => {
-            if (!isUpdatingTimeout) setIsTimeoutModalOpen(false);
+            if (!isUpdatingTimeout) {
+              setIsTimeoutModalOpen(false);
+            }
           }}
           closeOnBackdrop={!isUpdatingTimeout}
           closeOnEscape={!isUpdatingTimeout}

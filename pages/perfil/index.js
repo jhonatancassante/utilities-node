@@ -22,7 +22,9 @@ function ProfilePage() {
   const { user, error, isLoading, setUser } = useUser();
 
   useEffect(() => {
-    if (!isLoading && !user && !error) router.replace("/login");
+    if (!isLoading && !user && !error) {
+      router.replace("/login");
+    }
   }, [error, isLoading, router, user]);
 
   return (
@@ -148,7 +150,9 @@ function ProfileForm({ user, onUpdated }) {
   }
 
   async function handleSavePhoto() {
-    if (!profilePhoto || isSavingPhoto) return;
+    if (!profilePhoto || isSavingPhoto) {
+      return;
+    }
 
     setIsSavingPhoto(true);
     setPhotoFeedback(null);
@@ -180,14 +184,18 @@ function ProfileForm({ user, onUpdated }) {
   }
 
   function handleClosePhotoEditor() {
-    if (isSavingPhoto) return;
+    if (isSavingPhoto) {
+      return;
+    }
     setProfilePhoto("");
     setPhotoFeedback(null);
     setIsPhotoEditorOpen(false);
   }
 
   function renderError(name) {
-    if (!isEditing || !touched[name] || !errors[name]) return null;
+    if (!isEditing || !touched[name] || !errors[name]) {
+      return null;
+    }
 
     return (
       <small className={styles.fieldError} id={`${name}-error`} role="alert">
@@ -227,7 +235,9 @@ function ProfileForm({ user, onUpdated }) {
 
     const payload = {};
 
-    if (form.name.trim() !== user.name) payload.name = form.name.trim();
+    if (form.name.trim() !== user.name) {
+      payload.name = form.name.trim();
+    }
     if (form.username.trim() !== user.username) {
       payload.username = form.username.trim();
     }
@@ -327,7 +337,9 @@ function ProfileForm({ user, onUpdated }) {
           className={styles.photoEditorOverlay}
           role="presentation"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) handleClosePhotoEditor();
+            if (event.target === event.currentTarget) {
+              handleClosePhotoEditor();
+            }
           }}
         >
           <section
@@ -385,8 +397,9 @@ function ProfileForm({ user, onUpdated }) {
           className={styles.photoPreviewOverlay}
           role="presentation"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget)
+            if (event.target === event.currentTarget) {
               setIsPhotoPreviewOpen(false);
+            }
           }}
         >
           <div

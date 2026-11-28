@@ -35,7 +35,9 @@ function findColumnStarts(headerLine) {
   const starts = [];
 
   for (let index = 0; index < headerLine.length; index += 1) {
-    if (headerLine[index] === " ") continue;
+    if (headerLine[index] === " ") {
+      continue;
+    }
 
     const atStart = index === 0 || headerLine[index - 1] === " ";
     const afterGap =
@@ -43,11 +45,15 @@ function findColumnStarts(headerLine) {
       (headerLine[index - 1] === " " &&
         (index === 1 || headerLine[index - 2] === " "));
 
-    if (atStart && afterGap) starts.push(index);
+    if (atStart && afterGap) {
+      starts.push(index);
+    }
   }
 
   // A primeira coluna começa no início da linha, inclusive quando há recuo.
-  if (starts.length) starts[0] = 0;
+  if (starts.length) {
+    starts[0] = 0;
+  }
 
   return starts;
 }
@@ -116,7 +122,9 @@ export function parseFixedWidth(text) {
   for (let index = headerIndex + 1; index < lines.length; index += 1) {
     const line = lines[index];
 
-    if (!line.trim()) continue;
+    if (!line.trim()) {
+      continue;
+    }
 
     let isMisaligned = false;
 
@@ -133,7 +141,9 @@ export function parseFixedWidth(text) {
         .trim();
     });
 
-    if (isMisaligned) misaligned += 1;
+    if (isMisaligned) {
+      misaligned += 1;
+    }
     rows.push(row);
   }
 

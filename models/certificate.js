@@ -1,5 +1,6 @@
 import database from "@/infra/database.js";
 import { NotFoundError, ValidationError } from "@/infra/errors.js";
+import { assertRecordId, softDeleteMany } from "@/lib/server/record-helpers.js";
 
 const FIELD_RULES = {
   protocol_number: { type: "integer", nullable: true },
@@ -71,7 +72,9 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
 
   const certificate = {};
   for (const [field, rule] of Object.entries(FIELD_RULES)) {
-    if (!Object.hasOwn(inputValues, field)) continue;
+    if (!Object.hasOwn(inputValues, field)) {
+      continue;
+    }
     const value = inputValues[field];
 
     if (value === null || value === "") {
@@ -198,6 +201,11 @@ async function findAll() {
 }
 
 async function findOneById(id) {
+  assertRecordId(id, {
+    message: "A certidão informada não foi encontrada.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const results = await database.query({
     text: `
       SELECT *
@@ -217,6 +225,11 @@ async function findOneById(id) {
 }
 
 async function update(id, inputValues) {
+  assertRecordId(id, {
+    message: "A certidão informada não foi encontrada.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const certificate = validateInput(inputValues);
   const fields = WRITABLE_FIELDS.filter((field) =>
     Object.hasOwn(certificate, field),
@@ -244,13 +257,18 @@ async function update(id, inputValues) {
   if (!results.rowCount) {
     throw new NotFoundError({
       message: "A certidão informada não foi encontrada.",
-      action: "Verifique o ID e tente novamente.",
+      action: "Atualize a lista e tente novamente.",
     });
   }
   return results.rows[0];
 }
 
 async function deleteCertificate(id) {
+  assertRecordId(id, {
+    message: "A certidão informada não foi encontrada.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const results = await database.query({
     text: `
       UPDATE certificates
@@ -263,49 +281,22 @@ async function deleteCertificate(id) {
   if (!results.rowCount) {
     throw new NotFoundError({
       message: "A certidão informada não foi encontrada.",
-      action: "Verifique o ID e tente novamente.",
+      action: "Atualize a lista e tente novamente.",
     });
   }
   return results.rows[0];
 }
 
 async function deleteMany(ids) {
-  if (
-    !Array.isArray(ids) ||
-    ids.length === 0 ||
-    ids.length > 500 ||
-    ids.some((id) => typeof id !== "string" || !id.trim()) ||
-    new Set(ids).size !== ids.length
-  ) {
-    throw new ValidationError({
-      message: "A exclusão em lote deve conter entre 1 e 500 IDs únicos.",
-      action: "Revise a seleção de certidões e tente novamente.",
-    });
-  }
-
-  return database.transaction(async (client) => {
-    const results = await client.query({
-      text: `
-        UPDATE certificates
-        SET deleted_at = timezone('utc', now()),
-            updated_at = timezone('utc', now())
-        WHERE id = ANY($1::uuid[]) AND deleted_at IS NULL
-        RETURNING *
-      ;`,
-      values: [ids],
-    });
-    if (results.rowCount !== ids.length) {
-      throw new NotFoundError({
-        message:
-          "Uma ou mais certidões selecionadas não foram encontradas ou já foram excluídas.",
-        action: "Atualize a listagem e confira os registros selecionados.",
-      });
-    }
-    return results.rows;
+  return softDeleteMany("certificates", ids, {
+    selectionLabel: "certidões",
+    notFoundMessage:
+      "Uma ou mais certidões selecionadas não foram encontradas ou já foram excluídas.",
+    notFoundAction: "Atualize a listagem e confira os registros selecionados.",
   });
 }
 
-const certificateModel = {
+const certificate = {
   create,
   findAll,
   findOneById,
@@ -313,4 +304,4 @@ const certificateModel = {
   delete: deleteCertificate,
   deleteMany,
 };
-export default certificateModel;
+export default certificate;

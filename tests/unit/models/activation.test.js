@@ -36,13 +36,23 @@ describe("models/activation.js", () => {
 
   describe(".findOneValidById()", () => {
     test("Ignora tokens expirados ou já usados", async () => {
-      const querySpy = mockQuery([{ id: "t1" }]);
+      const tokenId = "11111111-1111-4111-8111-111111111111";
+      const querySpy = mockQuery([{ id: tokenId }]);
 
-      await activation.findOneValidById("t1");
+      await activation.findOneValidById(tokenId);
 
       const [query] = querySpy.mock.calls[0];
       expect(query.text).toContain("expires_at > NOW()");
       expect(query.text).toContain("used_at IS NULL");
+    });
+
+    test("Token que não é UUID lança NotFoundError sem consultar o banco", async () => {
+      const querySpy = mockQuery([]);
+
+      await expect(activation.findOneValidById("t1")).rejects.toThrow(
+        NotFoundError,
+      );
+      expect(querySpy).not.toHaveBeenCalled();
     });
 
     test("Sem resultado lança NotFoundError", async () => {

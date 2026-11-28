@@ -4,6 +4,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/infra/errors.js";
+import { assertRecordId, softDeleteMany } from "@/lib/server/record-helpers.js";
 
 const FIELD_RULES = {
   year: { type: "integer", min: 1, max: 9999 },
@@ -39,7 +40,9 @@ const INSERT_BATCH_SIZE = 500;
 
 function formatCtm(value) {
   const digits = value.replace(/\D/g, "");
-  if (digits.length !== 11) return value;
+  if (digits.length !== 11) {
+    return value;
+  }
   return (
     digits.slice(0, 2) + "." + digits.slice(2, 7) + "." + digits.slice(7, 11)
   );
@@ -79,7 +82,9 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
 
   const property = {};
   for (const [field, rule] of Object.entries(FIELD_RULES)) {
-    if (!Object.hasOwn(inputValues, field)) continue;
+    if (!Object.hasOwn(inputValues, field)) {
+      continue;
+    }
     const value = inputValues[field];
 
     if (value === null || value === "") {
@@ -234,7 +239,9 @@ async function create(inputValues) {
         .map(([field]) => field),
     }),
   );
-  if (!Object.hasOwn(property, "annual")) property.annual = false;
+  if (!Object.hasOwn(property, "annual")) {
+    property.annual = false;
+  }
 
   return database.transaction(async (client) => {
     await client.query(
@@ -301,6 +308,11 @@ async function findAll() {
 }
 
 async function findOneById(id) {
+  assertRecordId(id, {
+    message: "O imóvel informado não foi encontrado.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const results = await database.query({
     text: `
       SELECT *
@@ -320,6 +332,11 @@ async function findOneById(id) {
 }
 
 async function update(id, inputValues) {
+  assertRecordId(id, {
+    message: "O imóvel informado não foi encontrado.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const property = validateInput(inputValues);
   if (
     property.ideal_fraction === null &&
@@ -361,13 +378,18 @@ async function update(id, inputValues) {
   if (!results.rowCount) {
     throw new NotFoundError({
       message: "O imóvel informado não foi encontrado.",
-      action: "Verifique o ID e tente novamente.",
+      action: "Atualize a lista e tente novamente.",
     });
   }
   return results.rows[0];
 }
 
 async function deleteProperty(id, client = database) {
+  assertRecordId(id, {
+    message: "O imóvel informado não foi encontrado.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const results = await client.query({
     text: `
       UPDATE real_estate_properties
@@ -381,45 +403,18 @@ async function deleteProperty(id, client = database) {
   if (!results.rowCount) {
     throw new NotFoundError({
       message: "O imóvel informado não foi encontrado.",
-      action: "Verifique o ID e tente novamente.",
+      action: "Atualize a lista e tente novamente.",
     });
   }
   return results.rows[0];
 }
 
 async function deleteMany(ids) {
-  if (
-    !Array.isArray(ids) ||
-    ids.length === 0 ||
-    ids.length > 500 ||
-    ids.some((id) => typeof id !== "string" || !id.trim()) ||
-    new Set(ids).size !== ids.length
-  ) {
-    throw new ValidationError({
-      message: "A exclusão em lote deve conter entre 1 e 500 IDs únicos.",
-      action: "Revise a seleção de imóveis e tente novamente.",
-    });
-  }
-
-  return database.transaction(async (client) => {
-    const results = await client.query({
-      text: `
-        UPDATE real_estate_properties
-        SET deleted_at = timezone('utc', now()),
-            updated_at = timezone('utc', now())
-        WHERE id = ANY($1::uuid[]) AND deleted_at IS NULL
-        RETURNING *
-      ;`,
-      values: [ids],
-    });
-    if (results.rowCount !== ids.length) {
-      throw new NotFoundError({
-        message:
-          "Um ou mais imóveis selecionados não foram encontrados ou já foram excluídos.",
-        action: "Atualize a listagem e confira os registros selecionados.",
-      });
-    }
-    return results.rows;
+  return softDeleteMany("real_estate_properties", ids, {
+    selectionLabel: "imóveis",
+    notFoundMessage:
+      "Um ou mais imóveis selecionados não foram encontrados ou já foram excluídos.",
+    notFoundAction: "Atualize a listagem e confira os registros selecionados.",
   });
 }
 
@@ -445,7 +440,9 @@ function prepareBulkRecords(inputValues) {
         ],
       }),
     );
-    if (!Object.hasOwn(property, "annual")) property.annual = false;
+    if (!Object.hasOwn(property, "annual")) {
+      property.annual = false;
+    }
     return property;
   });
   const annual = properties[0].annual;
@@ -551,6 +548,11 @@ async function createImport({ userId, totalRecords, totalChunks }) {
 }
 
 async function addImportChunk({ importId, userId, chunkIndex, records }) {
+  assertRecordId(importId, {
+    message: "A sessão de importação não foi encontrada ou expirou.",
+    action: "Inicie uma nova importação do arquivo.",
+  });
+
   if (
     !Array.isArray(records) ||
     records.length === 0 ||
@@ -568,32 +570,36 @@ async function addImportChunk({ importId, userId, chunkIndex, records }) {
       text: "SELECT id, total_chunks, status FROM real_estate_property_imports WHERE id = $1 AND user_id = $2 AND expires_at > now() FOR UPDATE;",
       values: [importId, userId],
     });
-    if (!importResult.rowCount)
+    if (!importResult.rowCount) {
       throw new NotFoundError({
         message: "A sessão de importação não foi encontrada ou expirou.",
         action: "Inicie uma nova importação do arquivo.",
       });
+    }
     const importSession = importResult.rows[0];
-    if (importSession.status !== "receiving")
+    if (importSession.status !== "receiving") {
       throw new ConflictError({
         message: "A importação não está mais recebendo lotes.",
         action: "Finalize ou cancele a sessão atual.",
       });
-    if (chunkIndex >= importSession.total_chunks)
+    }
+    if (chunkIndex >= importSession.total_chunks) {
       throw new ValidationError({
         message: "O número do lote está fora da sequência esperada.",
         action: "Reenvie o lote usando o índice informado pela importação.",
       });
+    }
     const existing = await client.query({
       text: "SELECT records = $3::jsonb AS matches FROM real_estate_property_import_chunks WHERE import_id = $1 AND chunk_index = $2;",
       values: [importId, chunkIndex, JSON.stringify(records)],
     });
     if (existing.rowCount) {
-      if (!existing.rows[0].matches)
+      if (!existing.rows[0].matches) {
         throw new ConflictError({
           message: "O lote já foi recebido com conteúdo diferente.",
           action: "Não altere os dados de uma importação em andamento.",
         });
+      }
       return { received: true, duplicate: true };
     }
     await client.query({
@@ -605,22 +611,29 @@ async function addImportChunk({ importId, userId, chunkIndex, records }) {
 }
 
 async function finalizeImport({ importId, userId, overwriteExisting = false }) {
+  assertRecordId(importId, {
+    message: "A sessão de importação não foi encontrada ou expirou.",
+    action: "Inicie uma nova importação do arquivo.",
+  });
+
   return database.transaction(async (client) => {
     const importResult = await client.query({
       text: "SELECT id, total_records, total_chunks, status FROM real_estate_property_imports WHERE id = $1 AND user_id = $2 AND expires_at > now() FOR UPDATE;",
       values: [importId, userId],
     });
-    if (!importResult.rowCount)
+    if (!importResult.rowCount) {
       throw new NotFoundError({
         message: "A sessão de importação não foi encontrada ou expirou.",
         action: "Inicie uma nova importação do arquivo.",
       });
+    }
     const importSession = importResult.rows[0];
-    if (importSession.status !== "receiving")
+    if (importSession.status !== "receiving") {
       throw new ConflictError({
         message: "A importação já está sendo finalizada.",
         action: "Aguarde a conclusão da operação.",
       });
+    }
     const chunksResult = await client.query({
       text: "SELECT chunk_index, records, record_count FROM real_estate_property_import_chunks WHERE import_id = $1 ORDER BY chunk_index;",
       values: [importId],
@@ -656,15 +669,21 @@ async function finalizeImport({ importId, userId, overwriteExisting = false }) {
 }
 
 async function cancelImport({ importId, userId }) {
+  assertRecordId(importId, {
+    message: "A sessão de importação não foi encontrada ou expirou.",
+    action: "Inicie uma nova importação do arquivo.",
+  });
+
   const result = await database.query({
     text: "DELETE FROM real_estate_property_imports WHERE id = $1 AND user_id = $2 RETURNING id;",
     values: [importId, userId],
   });
-  if (!result.rowCount)
+  if (!result.rowCount) {
     throw new NotFoundError({
       message: "A sessão de importação não foi encontrada.",
       action: "Atualize a página e tente novamente.",
     });
+  }
   return { cancelled: true };
 }
 

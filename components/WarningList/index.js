@@ -4,7 +4,9 @@
 import styles from "./index.module.css";
 
 function WarningList({ title, items }) {
-  if (!items || items.length === 0) return null;
+  if (!items || items.length === 0) {
+    return null;
+  }
 
   return (
     <div className={styles.warning} role="status">

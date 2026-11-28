@@ -14,11 +14,15 @@ import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 function formatDate(value) {
-  if (!value) return "—";
+  if (!value) {
+    return "—";
+  }
 
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
 
   return new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
@@ -61,7 +65,9 @@ export default function AdminMigrationAuditPage() {
       try {
         const result = await requestAPI("/api/v1/admin/audit/migrations");
 
-        if (active) setMigrations(result);
+        if (active) {
+          setMigrations(result);
+        }
       } catch (requestError) {
         if (active) {
           setFeedback({
@@ -71,7 +77,9 @@ export default function AdminMigrationAuditPage() {
           });
         }
       } finally {
-        if (active) setIsLoadingMigrations(false);
+        if (active) {
+          setIsLoadingMigrations(false);
+        }
       }
     }
 
@@ -116,7 +124,9 @@ export default function AdminMigrationAuditPage() {
     );
   }
 
-  if (!user?.features?.includes("read:audit")) return null;
+  if (!user?.features?.includes("read:audit")) {
+    return null;
+  }
 
   return (
     <>

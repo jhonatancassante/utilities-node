@@ -1,4 +1,5 @@
 import controller from "@/infra/controller.js";
+import authorization from "@/models/authorization.js";
 import position from "@/models/position.js";
 
 export default controller.createController(
@@ -7,6 +8,14 @@ export default controller.createController(
 );
 
 async function getHandler(request, response) {
+  const userTryingToGet = request.context.user;
   const positions = await position.findAll();
-  return response.status(200).json(positions.map(({ name }) => ({ name })));
+
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToGet,
+    "read:position:options",
+    positions,
+  );
+
+  return response.status(200).json(secureOutputValues);
 }

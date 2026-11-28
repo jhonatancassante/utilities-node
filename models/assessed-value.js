@@ -1,5 +1,6 @@
 import database from "@/infra/database.js";
 import { NotFoundError, ValidationError } from "@/infra/errors.js";
+import { assertRecordId, softDeleteMany } from "@/lib/server/record-helpers.js";
 
 const NUMERIC_FIELDS = [
   "sector_1",
@@ -77,6 +78,11 @@ async function findAll() {
 }
 
 async function findOneById(id) {
+  assertRecordId(id, {
+    message: "O registro de valores venais informado não foi encontrado.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const results = await database.query({
     text: `
       SELECT *
@@ -86,24 +92,31 @@ async function findOneById(id) {
     ;`,
     values: [id],
   });
-  if (results.rowCount === 0)
+  if (results.rowCount === 0) {
     throw new NotFoundError({
       message: "O registro de valores venais informado não foi encontrado.",
       action: "Verifique o ID e tente novamente.",
     });
+  }
   return results.rows[0];
 }
 
 async function update(id, inputValues) {
+  assertRecordId(id, {
+    message: "O registro de valores venais informado não foi encontrado.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const assessedValue = validateInput(inputValues);
   const fields = UPDATABLE_FIELDS.filter((field) =>
     Object.hasOwn(assessedValue, field),
   );
-  if (fields.length === 0)
+  if (fields.length === 0) {
     throw new ValidationError({
       message: "Nenhum dado foi informado para atualização.",
       action: "Informe ao menos um campo que deseja alterar.",
     });
+  }
   const values = fields.map((field) => assessedValue[field]);
   const setClauses = fields.map((field, index) => `${field} = $${index + 2}`);
   const results = await database.query({
@@ -115,15 +128,21 @@ async function update(id, inputValues) {
     ;`,
     values: [id, ...values],
   });
-  if (results.rowCount === 0)
+  if (results.rowCount === 0) {
     throw new NotFoundError({
       message: "O registro de valores venais informado não foi encontrado.",
-      action: "Verifique o ID e tente novamente.",
+      action: "Atualize a lista e tente novamente.",
     });
+  }
   return results.rows[0];
 }
 
 async function deleteAssessedValue(id) {
+  assertRecordId(id, {
+    message: "O registro de valores venais informado não foi encontrado.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const results = await database.query({
     text: `
       UPDATE assessed_values
@@ -134,11 +153,12 @@ async function deleteAssessedValue(id) {
     ;`,
     values: [id],
   });
-  if (results.rowCount === 0)
+  if (results.rowCount === 0) {
     throw new NotFoundError({
       message: "O registro de valores venais informado não foi encontrado.",
-      action: "Verifique o ID e tente novamente.",
+      action: "Atualize a lista e tente novamente.",
     });
+  }
   return results.rows[0];
 }
 
@@ -147,35 +167,39 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
     inputValues !== null &&
     typeof inputValues === "object" &&
     !Array.isArray(inputValues);
-  if (!isPlainObject)
+  if (!isPlainObject) {
     throw new ValidationError({
       message: "Os dados dos valores venais devem ser enviados em um objeto.",
       action: "Envie um objeto com os campos do registro.",
     });
+  }
   const unknownFields = Object.keys(inputValues).filter(
     (field) => !UPDATABLE_FIELDS.includes(field),
   );
-  if (unknownFields.length > 0)
+  if (unknownFields.length > 0) {
     throw new ValidationError({
       message: `Os campos a seguir não podem ser alterados: ${unknownFields.join(", ")}.`,
       action: `Envie apenas os campos: ${UPDATABLE_FIELDS.join(", ")}.`,
     });
+  }
   const missingFields = requiredFields.filter(
     (field) => !Object.hasOwn(inputValues, field),
   );
-  if (missingFields.length > 0)
+  if (missingFields.length > 0) {
     throw new ValidationError({
       message: `Os campos obrigatórios não foram informados: ${missingFields.join(", ")}.`,
       action: "Informe o ano de referência dos valores venais.",
     });
+  }
   const assessedValue = {};
   if (Object.hasOwn(inputValues, "year")) {
     const { year } = inputValues;
-    if (!Number.isInteger(year) || year < 1 || year > 9999)
+    if (!Number.isInteger(year) || year < 1 || year > 9999) {
       throw new ValidationError({
         message: "O campo year deve ser um número inteiro entre 1 e 9999.",
         action: "Informe um ano válido.",
       });
+    }
     assessedValue.year = year;
   }
   if (Object.hasOwn(inputValues, "decree")) {
@@ -183,17 +207,20 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
     if (
       decree !== null &&
       (typeof decree !== "string" || decree.trim().length > 12)
-    )
+    ) {
       throw new ValidationError({
         message:
           "O campo decree deve ser um texto de até 12 caracteres ou nulo.",
         action: "Revise o número do decreto informado.",
       });
+    }
     assessedValue.decree =
       typeof decree === "string" ? decree.trim() || null : decree;
   }
   for (const field of NUMERIC_FIELDS) {
-    if (!Object.hasOwn(inputValues, field)) continue;
+    if (!Object.hasOwn(inputValues, field)) {
+      continue;
+    }
     const value = inputValues[field];
     if (
       value !== null &&
@@ -268,14 +295,24 @@ async function findOneByYear(year) {
   return results.rows[0];
 }
 
-const assessedValueModel = {
+async function deleteMany(ids) {
+  return softDeleteMany("assessed_values", ids, {
+    selectionLabel: "registros de valores venais",
+    notFoundMessage:
+      "Um ou mais registros selecionados não foram encontrados ou já foram excluídos.",
+    notFoundAction: "Atualize a listagem e confira os registros selecionados.",
+  });
+}
+
+const assessedValue = {
   create,
   findOneByYear,
   findAll,
   findOneById,
   update,
   delete: deleteAssessedValue,
+  deleteMany,
   createMany,
 };
 
-export default assessedValueModel;
+export default assessedValue;

@@ -125,7 +125,9 @@ function RealEstatePropertyModal({
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
     setFieldErrors((current) => {
-      if (!current[name]) return current;
+      if (!current[name]) {
+        return current;
+      }
       const rest = { ...current };
       delete rest[name];
       return rest;
@@ -142,7 +144,9 @@ function RealEstatePropertyModal({
         payload[field.name] = null;
         continue;
       }
-      if (!value && !field.required) continue;
+      if (!value && !field.required) {
+        continue;
+      }
       if (!value && field.required) {
         errors[field.name] = "Preencha o campo " + field.label + ".";
         continue;

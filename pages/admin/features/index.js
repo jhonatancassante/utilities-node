@@ -83,10 +83,14 @@ function AdminFeaturesPage() {
       setIsLoadingFeatures(true);
       try {
         const loadedFeatures = await requestAPI("/api/v1/admin/features");
-        if (!active) return;
+        if (!active) {
+          return;
+        }
         setFeatures(loadedFeatures);
       } catch (requestError) {
-        if (!active) return;
+        if (!active) {
+          return;
+        }
         setFeedback((current) => ({
           id: (current?.id ?? 0) + 1,
           type: "error",
@@ -109,7 +113,9 @@ function AdminFeaturesPage() {
   }, [hasFeaturesAccess]);
 
   useEffect(() => {
-    if (feedback?.type !== "success") return undefined;
+    if (feedback?.type !== "success") {
+      return undefined;
+    }
 
     const timeoutId = setTimeout(() => {
       setFeedback((currentFeedback) =>
@@ -123,9 +129,15 @@ function AdminFeaturesPage() {
   const groupedFeatures = useMemo(() => {
     const term = searchTerm.trim().toLocaleLowerCase("pt-BR");
     const filteredFeatures = features.filter((feature) => {
-      if (privilegedOnly && !feature.is_privileged) return false;
-      if (protectedOnly && !feature.is_protected) return false;
-      if (!term) return true;
+      if (privilegedOnly && !feature.is_privileged) {
+        return false;
+      }
+      if (protectedOnly && !feature.is_protected) {
+        return false;
+      }
+      if (!term) {
+        return true;
+      }
 
       return [
         feature.name,
@@ -192,7 +204,9 @@ function AdminFeaturesPage() {
 
   async function confirmDeleteFeature() {
     const feature = deleteCandidate;
-    if (!feature) return;
+    if (!feature) {
+      return;
+    }
     setDeleteCandidate(null);
     setFeedback(null);
     try {
@@ -271,7 +285,9 @@ function AdminFeaturesPage() {
     );
   }
 
-  if (!user || !hasAdminSectionAccess(user, "features")) return null;
+  if (!user || !hasAdminSectionAccess(user, "features")) {
+    return null;
+  }
 
   return (
     <>

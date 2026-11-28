@@ -17,7 +17,9 @@ beforeAll(async () => {
 async function createSessionWithFeatures(features) {
   const testUser = await orchestrator.createUser();
   await orchestrator.activateUser(testUser);
-  if (features.length) await orchestrator.addFeaturesToUser(testUser, features);
+  if (features.length) {
+    await orchestrator.addFeaturesToUser(testUser, features);
+  }
   const session = await orchestrator.createSession(testUser);
   session.userId = testUser.id;
   return session;
@@ -416,7 +418,9 @@ describe("GET e POST /api/v1/certificates", () => {
         property_street:
           suffix === "01" ? "Rua do cadastro principal" : `Rua ${suffix}`,
       });
-      if (suffix === "03") requestedProperty = property;
+      if (suffix === "03") {
+        requestedProperty = property;
+      }
     }
 
     await assessedValue.create({

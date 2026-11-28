@@ -10,12 +10,12 @@ export default controller.createController(
 );
 
 async function deleteHandler(request, response) {
-  const currentUser = request.context.user;
+  const userTryingToDelete = request.context.user;
   const records = await certificate.deleteMany(request.body?.ids);
-  const output = authorization.filterOutput(
-    currentUser,
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToDelete,
     "read:certificate",
     records,
   );
-  return response.status(200).json(output);
+  return response.status(200).json(secureOutputValues);
 }

@@ -59,7 +59,9 @@ export function parseCsv(content, delimiter = "auto") {
  * @returns {string}
  */
 export function createJson(data, fields) {
-  if (!data.length || !fields.length) return "";
+  if (!data.length || !fields.length) {
+    return "";
+  }
 
   const filteredData = data.map((row) => {
     const filteredRow = {};

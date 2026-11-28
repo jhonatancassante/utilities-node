@@ -85,6 +85,31 @@ describe("GET /api/v1/admin/features", () => {
       expect(Date.parse(responseBody[0].created_at)).not.toBeNaN();
       expect(Date.parse(responseBody[0].updated_at)).not.toBeNaN();
     });
+
+    test("Consultando features cadastradas dinamicamente", async () => {
+      const { sessionObject } = await createPrivilegedSession();
+      const dynamicFeature = await feature.create({
+        name: "read:dynamicreports",
+        label: "Consultar relatórios dinâmicos",
+        group_name: "Relatórios",
+        description: "Permite consultar relatórios criados dinamicamente.",
+        is_privileged: true,
+      });
+
+      const response = await fetch(featuresUrl(), {
+        headers: { Cookie: `session_id=${sessionObject.token}` },
+      });
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toContainEqual(
+        expect.objectContaining({
+          name: dynamicFeature.name,
+          label: dynamicFeature.label,
+          group_name: dynamicFeature.group_name,
+          is_privileged: true,
+        }),
+      );
+    });
   });
 });
 

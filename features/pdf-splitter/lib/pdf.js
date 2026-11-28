@@ -58,7 +58,9 @@ export function addPdfFiles(current, incoming) {
 
   const knownNames = new Set(current.map((file) => file.name));
   const added = pdfs.filter((file) => {
-    if (knownNames.has(file.name)) return false;
+    if (knownNames.has(file.name)) {
+      return false;
+    }
     knownNames.add(file.name);
     return true;
   });
@@ -172,10 +174,14 @@ export async function splitPdfFiles(files, { pageInit, pageCount }, now) {
   // Em sequência (e não em paralelo) para limitar o uso de memória com PDFs grandes.
   for (const file of files) {
     const result = await extractPages(file, pageInit, pageCount);
-    if (!result.ok) return result;
+    if (!result.ok) {
+      return result;
+    }
 
     const warning = describeShortfall(file, result, pageInit, pageCount);
-    if (warning) warnings.push(warning);
+    if (warning) {
+      warnings.push(warning);
+    }
 
     if (result.status === "extracted") {
       outputs.push({

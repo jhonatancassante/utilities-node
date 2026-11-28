@@ -322,6 +322,10 @@ function filterOutput(user, feature, resource) {
       : filterPosition(resource);
   }
 
+  if (feature === "read:position:options") {
+    return resource.map((item) => ({ name: item.name }));
+  }
+
   if (feature === "read:status") {
     const output = {
       updated_at: resource.updated_at,
