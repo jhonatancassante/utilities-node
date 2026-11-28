@@ -1,5 +1,6 @@
 import database from "@/infra/database.js";
 import { NotFoundError, ValidationError } from "@/infra/errors.js";
+import { assertRecordId, softDeleteMany } from "@/lib/server/record-helpers.js";
 
 const NUMERIC_FIELDS = [
   "sector_1",
@@ -77,6 +78,11 @@ async function findAll() {
 }
 
 async function findOneById(id) {
+  assertRecordId(id, {
+    message: "O registro de valores venais informado não foi encontrado.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const results = await database.query({
     text: `
       SELECT *
@@ -95,6 +101,11 @@ async function findOneById(id) {
 }
 
 async function update(id, inputValues) {
+  assertRecordId(id, {
+    message: "O registro de valores venais informado não foi encontrado.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const assessedValue = validateInput(inputValues);
   const fields = UPDATABLE_FIELDS.filter((field) =>
     Object.hasOwn(assessedValue, field),
@@ -118,12 +129,17 @@ async function update(id, inputValues) {
   if (results.rowCount === 0)
     throw new NotFoundError({
       message: "O registro de valores venais informado não foi encontrado.",
-      action: "Verifique o ID e tente novamente.",
+      action: "Atualize a lista e tente novamente.",
     });
   return results.rows[0];
 }
 
 async function deleteAssessedValue(id) {
+  assertRecordId(id, {
+    message: "O registro de valores venais informado não foi encontrado.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const results = await database.query({
     text: `
       UPDATE assessed_values
@@ -137,7 +153,7 @@ async function deleteAssessedValue(id) {
   if (results.rowCount === 0)
     throw new NotFoundError({
       message: "O registro de valores venais informado não foi encontrado.",
-      action: "Verifique o ID e tente novamente.",
+      action: "Atualize a lista e tente novamente.",
     });
   return results.rows[0];
 }
@@ -268,6 +284,15 @@ async function findOneByYear(year) {
   return results.rows[0];
 }
 
+async function deleteMany(ids) {
+  return softDeleteMany("assessed_values", ids, {
+    selectionLabel: "registros de valores venais",
+    notFoundMessage:
+      "Um ou mais registros selecionados não foram encontrados ou já foram excluídos.",
+    notFoundAction: "Atualize a listagem e confira os registros selecionados.",
+  });
+}
+
 const assessedValueModel = {
   create,
   findOneByYear,
@@ -275,6 +300,7 @@ const assessedValueModel = {
   findOneById,
   update,
   delete: deleteAssessedValue,
+  deleteMany,
   createMany,
 };
 

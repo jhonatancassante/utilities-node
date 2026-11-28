@@ -1,5 +1,6 @@
 import database from "@/infra/database.js";
 import { NotFoundError, ValidationError } from "@/infra/errors.js";
+import { assertRecordId } from "@/lib/server/record-helpers.js";
 
 const UPDATABLE_FIELDS = [
   "name",
@@ -50,6 +51,11 @@ async function create(featureInputValues) {
 }
 
 async function findOneById(id) {
+  assertRecordId(id, {
+    message: "A feature com o ID informado não foi encontrada.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const results = await database.query({
     text: `
       SELECT
@@ -119,6 +125,11 @@ async function findAll() {
 }
 
 async function update(id, featureInputValues) {
+  assertRecordId(id, {
+    message: "A feature com o ID informado não foi encontrada.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   const feature = validateFeatureInput(featureInputValues, {
     requiredFields: [],
   });
@@ -210,6 +221,11 @@ async function update(id, featureInputValues) {
 }
 
 async function deleteFeature(id) {
+  assertRecordId(id, {
+    message: "A feature com o ID informado não foi encontrada.",
+    action: "Verifique o ID e tente novamente.",
+  });
+
   return await database.transaction(async (client) => {
     const currentResults = await client.query({
       text: `

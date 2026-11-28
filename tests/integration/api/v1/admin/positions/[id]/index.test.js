@@ -149,3 +149,28 @@ describe("DELETE /api/v1/admin/positions/[id]", () => {
     expect(result.rows[0].deleted_at).not.toBeNull();
   });
 });
+
+describe("ID malformado em /api/v1/admin/positions/[id]", () => {
+  test.each([
+    ["GET", "read:position"],
+    ["PATCH", "update:position"],
+    ["DELETE", "delete:position"],
+  ])("%s responde 404 em vez de erro interno", async (method, feature) => {
+    const sessionObject = await createSessionWithFeatures([feature]);
+    const response = await fetch(endpoint("id-que-nao-e-uuid"), {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      },
+      body:
+        method === "PATCH" ? JSON.stringify({ name: "Novo nome" }) : undefined,
+    });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toMatchObject({
+      name: "NotFoundError",
+      message: "O cargo informado não foi encontrado.",
+    });
+  });
+});
