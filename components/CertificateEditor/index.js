@@ -41,7 +41,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
     applicant_name: "",
     purpose: "",
     protocol_number: "",
-    protocol_year: String(new Date().getFullYear()),
+    protocol_year: "",
     physical_property_id: "",
     year: String(new Date().getFullYear()),
     is_updated: true,
