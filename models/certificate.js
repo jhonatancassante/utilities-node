@@ -72,7 +72,9 @@ function validateInput(inputValues, { requiredFields = [] } = {}) {
 
   const certificate = {};
   for (const [field, rule] of Object.entries(FIELD_RULES)) {
-    if (!Object.hasOwn(inputValues, field)) continue;
+    if (!Object.hasOwn(inputValues, field)) {
+      continue;
+    }
     const value = inputValues[field];
 
     if (value === null || value === "") {
@@ -294,7 +296,7 @@ async function deleteMany(ids) {
   });
 }
 
-const certificateModel = {
+const certificate = {
   create,
   findAll,
   findOneById,
@@ -302,4 +304,4 @@ const certificateModel = {
   delete: deleteCertificate,
   deleteMany,
 };
-export default certificateModel;
+export default certificate;
