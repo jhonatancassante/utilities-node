@@ -218,8 +218,8 @@ function AdminUsersPage() {
               <span className={shared.badge}>ADMINISTRAÇÃO</span>
               <h1>Gerenciar usuários</h1>
               <p className={styles.description}>
-                Pesquise por nome de usuário ou e-mail para consultar e alterar
-                os dados e as permissões de uma conta.
+                Pesquise por nome, nome de usuário ou e-mail para consultar e
+                alterar os dados e as permissões de uma conta.
               </p>
             </header>
 

@@ -1,4 +1,5 @@
 import orchestrator from "tests/orchestrator.js";
+import user from "@/models/user.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -103,6 +104,34 @@ describe("GET /api/v1/admin/users", () => {
       expect(responseBody).toHaveLength(1);
       expect(responseBody[0].id).toBe(targetUser.id);
       expect(responseBody[0].email).toBe(targetUser.email);
+    });
+
+    test("Pesquisa usuários pelo nome", async () => {
+      const privilegedUser = await orchestrator.createUser();
+      await orchestrator.addFeaturesToUser(privilegedUser, [
+        "update:user:others",
+        "read:user:others",
+      ]);
+      const sessionObject = await orchestrator.createSession(privilegedUser);
+      const createdUser = await orchestrator.createUser({
+        username: "adminSearchName",
+      });
+      const targetUser = await user.update(createdUser.username, {
+        name: "Zefirina Quaresmeira",
+      });
+
+      const response = await fetch(
+        `${orchestrator.API_URL}/admin/users?search=quaresmeira`,
+        {
+          headers: { Cookie: `session_id=${sessionObject.token}` },
+        },
+      );
+
+      expect(response.status).toBe(200);
+      const responseBody = await response.json();
+
+      expect(responseBody).toHaveLength(1);
+      expect(responseBody[0].id).toBe(targetUser.id);
     });
 
     test("Inclui a própria conta nos resultados", async () => {
