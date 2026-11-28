@@ -1,42 +1,33 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import FieldError from "@/components/FieldError";
 import StatusMessage from "@/components/StatusMessage";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, { featureCheck } from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
 import requestAPI from "@/lib/client/api.js";
-import { hasAdminAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 function PositionEditor({ recordId }) {
   const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const isEditing = Boolean(recordId);
+  const requiredFeature = isEditing ? "read:position" : "create:position";
+  const access = useAccessGate({
+    checks: [featureCheck(requiredFeature)],
+  });
+  const { user } = access;
   const [record, setRecord] = useState(null);
   const [name, setName] = useState("");
   const [isLoadingRecord, setIsLoadingRecord] = useState(Boolean(recordId));
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [nameError, setNameError] = useState("");
-  const isEditing = Boolean(recordId);
-  const requiredFeature = isEditing ? "read:position" : "create:position";
   const canUpdate = user?.features?.includes("update:position");
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-    if (!isLoading && user && !user.features.includes(requiredFeature)) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    }
-  }, [error, isLoading, requiredFeature, router, user]);
 
   useEffect(() => {
     if (!recordId || !user || !user.features.includes("read:position")) {
@@ -53,12 +44,7 @@ function PositionEditor({ recordId }) {
       })
       .catch((requestError) => {
         if (active) {
-          setFeedback({
-            type: "error",
-            name: requestError.name,
-            message: requestError.message,
-            action: requestError.action,
-          });
+          setFeedback(feedbackFromError(requestError));
         }
       })
       .finally(() => {
@@ -99,12 +85,7 @@ function PositionEditor({ recordId }) {
       );
       router.push("/admin/positions");
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsSaving(false);
     }
@@ -116,44 +97,15 @@ function PositionEditor({ recordId }) {
       : "Consultar cargo"
     : "Cadastrar cargo";
 
-  if (isLoading || (!user && !error) || (isEditing && isLoadingRecord)) {
+  if (access.state !== "allowed" || (isEditing && isLoadingRecord)) {
     return (
-      <>
-        <AppHead title={title} />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <p>Carregando dados...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
+      <AccessFallback
+        title={title}
+        access={access}
+        isBusy={isEditing && isLoadingRecord}
+        loadingMessage="Carregando dados..."
+      />
     );
-  }
-
-  if (error) {
-    return (
-      <>
-        <AppHead title={title} />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <StatusMessage
-                type="critical"
-                name={error.name}
-                action={error.action}
-              >
-                {error.message}
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (!user || !user.features.includes(requiredFeature)) {
-    return null;
   }
 
   return (

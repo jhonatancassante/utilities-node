@@ -1,46 +1,38 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import AssessedValueForm from "@/components/AssessedValueForm";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, {
+  adminSectionCheck,
+  featureCheck,
+} from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
 import requestAPI from "@/lib/client/api.js";
-import {
-  hasAdminAccess,
-  hasAdminSectionAccess,
-} from "@/models/authorization.js";
+import { hasAdminSectionAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 function AssessedValueEditor({ recordId }) {
   const router = useRouter();
-  const { user, error, isLoading } = useUser();
-  const [record, setRecord] = useState(null);
-  const [isLoadingRecord, setIsLoadingRecord] = useState(Boolean(recordId));
-  const [isSaving, setIsSaving] = useState(false);
-  const [feedback, setFeedback] = useState(null);
   const isEditing = Boolean(recordId);
   const requiredFeature = isEditing
     ? "read:assessed_value"
     : "create:assessed_value";
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-    if (!isLoading && user && !hasAdminSectionAccess(user, "assessed-values")) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    }
-    if (!isLoading && user && !user.features.includes(requiredFeature)) {
-      router.replace("/admin/assessed-values");
-    }
-  }, [error, isLoading, requiredFeature, router, user]);
+  const access = useAccessGate({
+    checks: [
+      adminSectionCheck("assessed-values"),
+      featureCheck(requiredFeature, "/admin/assessed-values"),
+    ],
+  });
+  const { user } = access;
+  const [record, setRecord] = useState(null);
+  const [isLoadingRecord, setIsLoadingRecord] = useState(Boolean(recordId));
+  const [isSaving, setIsSaving] = useState(false);
+  const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
     if (!recordId || !user || !hasAdminSectionAccess(user, "assessed-values")) {
@@ -55,12 +47,7 @@ function AssessedValueEditor({ recordId }) {
       })
       .catch((requestError) => {
         if (active) {
-          setFeedback({
-            type: "error",
-            name: requestError.name,
-            message: requestError.message,
-            action: requestError.action,
-          });
+          setFeedback(feedbackFromError(requestError));
         }
       })
       .finally(() => {
@@ -85,12 +72,7 @@ function AssessedValueEditor({ recordId }) {
       );
       router.push("/admin/assessed-values");
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsSaving(false);
     }
@@ -102,46 +84,15 @@ function AssessedValueEditor({ recordId }) {
       ? "Editar valores venais"
       : "Consultar valores venais"
     : "Cadastrar valores venais";
-  if (isLoading || (!user && !error) || (isEditing && isLoadingRecord)) {
+  if (access.state !== "allowed" || (isEditing && isLoadingRecord)) {
     return (
-      <>
-        <AppHead title={title} />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <p>Carregando dados...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
+      <AccessFallback
+        title={title}
+        access={access}
+        isBusy={isEditing && isLoadingRecord}
+        loadingMessage="Carregando dados..."
+      />
     );
-  }
-  if (error) {
-    return (
-      <>
-        <AppHead title={title} />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <StatusMessage
-                type="critical"
-                name={error.name}
-                action={error.action}
-              >
-                {error.message}
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-  if (
-    !user ||
-    !hasAdminSectionAccess(user, "assessed-values") ||
-    !user.features.includes(requiredFeature)
-  ) {
-    return null;
   }
 
   return (

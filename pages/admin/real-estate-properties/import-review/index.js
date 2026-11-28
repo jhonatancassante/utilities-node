@@ -1,16 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import AdminBackButton from "@/components/AdminBackButton";
 import DataTable from "@/components/DataTable";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
-import useUser from "@/hooks/use-user.js";
-import {
-  hasAdminAccess,
-  hasAdminSectionAccess,
-} from "@/models/authorization.js";
+import useAccessGate, { adminSectionCheck } from "@/hooks/use-access-gate.js";
 import getGroupingIssues from "@/lib/client/real-estate-property-grouping.js";
 import { getNextSortState, sortRecords } from "@/lib/client/sort-records.js";
 import {
@@ -22,7 +19,9 @@ import styles from "./index.module.css";
 
 function RealEstatePropertyGroupingReviewPage() {
   const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const access = useAccessGate({
+    checks: [adminSectionCheck("real-estate-properties")],
+  });
   const [records, setRecords] = useState([]);
   const [isLoadingDraft, setIsLoadingDraft] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -73,23 +72,6 @@ function RealEstatePropertyGroupingReviewPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-    if (
-      !isLoading &&
-      user &&
-      !hasAdminSectionAccess(user, "real-estate-properties")
-    ) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    }
-  }, [error, isLoading, router, user]);
-
   const groups = useMemo(() => getGroupingIssues(records), [records]);
 
   function updateGrouping(physicalPropertyId, grouping) {
@@ -115,42 +97,8 @@ function RealEstatePropertyGroupingReviewPage() {
     }
   }
 
-  if (isLoading || (!user && !error)) {
-    return (
-      <>
-        <AppHead title="Revisar englobamento" />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <p>Carregando permissões...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-  if (error) {
-    return (
-      <>
-        <AppHead title="Revisar englobamento" />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <StatusMessage
-                type="critical"
-                name={error.name}
-                action={error.action}
-              >
-                {error.message}
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-  if (!user || !hasAdminSectionAccess(user, "real-estate-properties")) {
-    return null;
+  if (access.state !== "allowed") {
+    return <AccessFallback title="Revisar englobamento" access={access} />;
   }
 
   return (

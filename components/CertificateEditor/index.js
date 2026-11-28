@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, { featureCheck } from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
+import { formatDate } from "@/lib/client/format.js";
 import requestAPI from "@/lib/client/api.js";
 import { downloadCertificatePdf } from "@/lib/client/generate-certificate-pdf.js";
 import shared from "@/styles/shared.module.css";
@@ -20,7 +23,18 @@ function formatCurrency(value) {
 
 function CertificateEditor({ recordId, viewOnly = false }) {
   const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const access = useAccessGate({
+    checks: [
+      featureCheck("read:certificate", "/tools"),
+      {
+        allowed: (currentUser) =>
+          Boolean(recordId) ||
+          currentUser.features?.includes("create:certificate"),
+        redirectTo: "/tools/certificates",
+      },
+    ],
+  });
+  const { user } = access;
   const isEditing = Boolean(recordId);
   const [record, setRecord] = useState(null);
   const [form, setForm] = useState({
@@ -47,29 +61,11 @@ function CertificateEditor({ recordId, viewOnly = false }) {
   const [toastKey, setToastKey] = useState(0);
   const fieldRefs = useRef({});
 
-  const canRead = user?.features?.includes("read:certificate");
-  const canCreate = user?.features?.includes("create:certificate");
   const canUpdateOwn = user?.features?.includes("update:certificate");
   const canUpdateOthers = user?.features?.includes("update:certificate:others");
   const canEdit =
     canUpdateOthers || (canUpdateOwn && record?.user_id === user?.id);
   const isReadOnly = viewOnly || (isEditing && !canEdit);
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-    if (!isLoading && user && !canRead) {
-      router.replace("/tools");
-    }
-    if (!isLoading && user && canRead && !isEditing && !canCreate) {
-      router.replace("/tools/certificates");
-    }
-  }, [canCreate, canRead, error, isEditing, isLoading, router, user]);
 
   useEffect(() => {
     if (!recordId || !user) {
@@ -100,12 +96,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
       })
       .catch((requestError) => {
         if (active) {
-          setFeedback({
-            type: "error",
-            name: requestError.name,
-            message: requestError.message,
-            action: requestError.action,
-          });
+          setFeedback(feedbackFromError(requestError));
         }
       })
       .finally(() => {
@@ -227,12 +218,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
         message: "Cálculo concluído. Confira os dados antes de gravar.",
       });
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsCalculating(false);
     }
@@ -330,12 +316,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
       }
       router.push("/tools/certificates");
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsSaving(false);
     }
@@ -394,44 +375,15 @@ function CertificateEditor({ recordId, viewOnly = false }) {
       : "Editar Certidão de Valor Venal"
     : "Emitir Certidão de Valor Venal";
 
-  if (isLoading || (!user && !error) || (isEditing && isLoadingRecord)) {
+  if (access.state !== "allowed" || (isEditing && isLoadingRecord)) {
     return (
-      <>
-        <AppHead title={title} />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <p>Carregando dados...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
+      <AccessFallback
+        title={title}
+        access={access}
+        isBusy={isEditing && isLoadingRecord}
+        loadingMessage="Carregando dados..."
+      />
     );
-  }
-
-  if (error) {
-    return (
-      <>
-        <AppHead title={title} />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <StatusMessage
-                type="critical"
-                name={error.name}
-                action={error.action}
-              >
-                {error.message}
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (!user || !canRead || (!isEditing && !canCreate)) {
-    return null;
   }
 
   return (
@@ -737,13 +689,7 @@ function CertificateEditor({ recordId, viewOnly = false }) {
                       </div>
                       <div className={styles.summaryItem}>
                         <span>Data de emissão</span>
-                        <strong>
-                          {record.created_at
-                            ? new Date(record.created_at).toLocaleDateString(
-                                "pt-BR",
-                              )
-                            : "—"}
-                        </strong>
+                        <strong>{formatDate(record.created_at)}</strong>
                       </div>
                     </div>
                   </section>

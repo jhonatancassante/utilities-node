@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 
 import AdminBackButton from "@/components/AdminBackButton";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import Modal from "@/components/Modal";
 import StatusMessage from "@/components/StatusMessage";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, { adminSectionCheck } from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
 import requestAPI from "@/lib/client/api.js";
-import {
-  hasAdminAccess,
-  hasAdminSectionAccess,
-} from "@/models/authorization.js";
+import { hasAdminSectionAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 function AdminMigrationsPage() {
-  const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const access = useAccessGate({
+    checks: [adminSectionCheck("migrations")],
+  });
+  const { user, isLoading } = access;
   const [pendingMigrations, setPendingMigrations] = useState([]);
   const [isLoadingMigrations, setIsLoadingMigrations] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
@@ -29,20 +29,6 @@ function AdminMigrationsPage() {
   const hasMigrationAccess =
     !isLoading && Boolean(user) && hasAdminSectionAccess(user, "migrations");
   const canExecute = user?.features?.includes("create:migration") ?? false;
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-
-    if (!isLoading && user && !hasAdminSectionAccess(user, "migrations")) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    }
-  }, [error, isLoading, router, user]);
 
   async function loadPendingMigrations({ showFeedback = true } = {}) {
     setIsLoadingMigrations(true);
@@ -55,12 +41,7 @@ function AdminMigrationsPage() {
     } catch (requestError) {
       setHasLoadError(true);
       if (showFeedback) {
-        setFeedback({
-          type: "error",
-          name: requestError.statusCode ? requestError.name : undefined,
-          message: requestError.message,
-          action: requestError.action,
-        });
+        setFeedback(feedbackFromError(requestError));
       }
 
       return { success: false, error: requestError };
@@ -91,12 +72,7 @@ function AdminMigrationsPage() {
         }
 
         setHasLoadError(true);
-        setFeedback({
-          type: "error",
-          name: requestError.statusCode ? requestError.name : undefined,
-          message: requestError.message,
-          action: requestError.action,
-        });
+        setFeedback(feedbackFromError(requestError));
       } finally {
         if (active) {
           setIsLoadingMigrations(false);
@@ -203,50 +179,8 @@ function AdminMigrationsPage() {
     }
   }
 
-  if (isLoading || (!user && !error)) {
-    return (
-      <>
-        <AppHead title="Gerenciar migrations" />
-        <Layout>
-          <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section
-              className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
-            >
-              <p>Carregando permissões...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <AppHead title="Gerenciar migrations" />
-        <Layout>
-          <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section
-              className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
-            >
-              <StatusMessage
-                type="critical"
-                name={error.statusCode ? error.name : undefined}
-                action={error.action}
-              >
-                {error.statusCode
-                  ? error.message
-                  : "Não foi possível verificar suas permissões."}
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (!user || !hasAdminSectionAccess(user, "migrations")) {
-    return null;
+  if (access.state !== "allowed") {
+    return <AccessFallback title="Gerenciar migrations" access={access} />;
   }
 
   return (
