@@ -11,7 +11,9 @@ function canUpdateCertificate(request, response, next) {
     "update:certificate:others",
   );
 
-  if (canUpdateOwn || canUpdateOthers) return next();
+  if (canUpdateOwn || canUpdateOthers) {
+    return next();
+  }
 
   throw new ForbiddenError({
     message: "Você não possui permissão para alterar certidões.",

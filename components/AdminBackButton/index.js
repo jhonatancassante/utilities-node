@@ -11,7 +11,9 @@ function AdminBackButton({
   useEffect(() => {
     function updatePosition() {
       const button = document.querySelector("[data-admin-back-button]");
-      if (!button) return;
+      if (!button) {
+        return;
+      }
 
       const stickyTop = Number.parseFloat(window.getComputedStyle(button).top);
       setIsStuck(button.getBoundingClientRect().top <= stickyTop + 1);

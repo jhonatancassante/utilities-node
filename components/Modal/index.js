@@ -11,10 +11,14 @@ function Modal({
   showCloseButton = true,
 }) {
   useEffect(() => {
-    if (!closeOnEscape) return undefined;
+    if (!closeOnEscape) {
+      return undefined;
+    }
 
     function handleKeyDown(event) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        onClose();
+      }
     }
 
     document.addEventListener("keydown", handleKeyDown);

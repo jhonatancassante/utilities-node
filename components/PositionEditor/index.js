@@ -62,7 +62,9 @@ function PositionEditor({ recordId }) {
         }
       })
       .finally(() => {
-        if (active) setIsLoadingRecord(false);
+        if (active) {
+          setIsLoadingRecord(false);
+        }
       });
 
     return () => {

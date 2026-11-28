@@ -10,7 +10,9 @@ import {
 
 async function createPdfFile(name, totalPages) {
   const doc = await PDFDocument.create();
-  for (let i = 0; i < totalPages; i++) doc.addPage();
+  for (let i = 0; i < totalPages; i++) {
+    doc.addPage();
+  }
   const bytes = await doc.save();
 
   return {

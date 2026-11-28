@@ -31,7 +31,9 @@ export function addPdfFiles(current, incoming) {
   const knownFiles = new Set(current.map(getFileKey));
   const added = pdfs.filter((file) => {
     const key = getFileKey(file);
-    if (knownFiles.has(key)) return false;
+    if (knownFiles.has(key)) {
+      return false;
+    }
     knownFiles.add(key);
     return true;
   });

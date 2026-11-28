@@ -49,7 +49,9 @@ export function buildScryfallQuery(slot, language, excludedOracleIds = []) {
 }
 
 export function getCardImageUris(card) {
-  if (card.image_uris) return card.image_uris;
+  if (card.image_uris) {
+    return card.image_uris;
+  }
 
   const firstFace = card.card_faces?.find((face) => face.image_uris);
   return firstFace?.image_uris || null;
@@ -117,7 +119,9 @@ async function getRandomCardForSlot(slot, excludedOracleIds) {
     const card = await requestRandomCard(portugueseQuery);
     return normalizeScryfallCard(card, slot);
   } catch (error) {
-    if (error.status !== 404) throw error;
+    if (error.status !== 404) {
+      throw error;
+    }
   }
 
   await waitForNextRequest();
@@ -131,12 +135,16 @@ export async function getAdventureCards() {
   const excludedOracleIds = [];
 
   for (const slot of ADVENTURE_SLOTS) {
-    if (cards.length > 0) await waitForNextRequest();
+    if (cards.length > 0) {
+      await waitForNextRequest();
+    }
 
     const card = await getRandomCardForSlot(slot, excludedOracleIds);
     cards.push(card);
 
-    if (card.oracleId) excludedOracleIds.push(card.oracleId);
+    if (card.oracleId) {
+      excludedOracleIds.push(card.oracleId);
+    }
   }
 
   return cards;

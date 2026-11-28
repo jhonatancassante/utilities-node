@@ -23,16 +23,22 @@ const ROUTE_LABELS = Object.freeze({
 });
 
 function getRouteLabel(path, segment) {
-  if (ROUTE_LABELS[path]) return ROUTE_LABELS[path];
+  if (ROUTE_LABELS[path]) {
+    return ROUTE_LABELS[path];
+  }
 
   if (path.startsWith("/tools/")) {
     const tool = getToolBySlug(segment);
-    if (tool) return tool.title;
+    if (tool) {
+      return tool.title;
+    }
   }
 
   if (path.startsWith("/entertainment/")) {
     const app = getEntertainmentAppBySlug(segment);
-    if (app) return app.title;
+    if (app) {
+      return app.title;
+    }
   }
 
   return decodeURIComponent(segment)
@@ -49,7 +55,9 @@ function Breadcrumb() {
   const items = useMemo(() => {
     const pathname = router.asPath.split(/[?#]/)[0];
     const segments = pathname.split("/").filter(Boolean);
-    if (segments.length === 0) return [];
+    if (segments.length === 0) {
+      return [];
+    }
 
     return [
       { href: "/", label: "Início" },
@@ -77,7 +85,9 @@ function Breadcrumb() {
   }, [router.events]);
 
   useEffect(() => {
-    if (!isMenuOpen) return undefined;
+    if (!isMenuOpen) {
+      return undefined;
+    }
 
     function handlePointerDown(event) {
       if (!menuRef.current?.contains(event.target)) {
@@ -86,7 +96,9 @@ function Breadcrumb() {
     }
 
     function handleKeyDown(event) {
-      if (event.key === "Escape") setIsMenuOpen(false);
+      if (event.key === "Escape") {
+        setIsMenuOpen(false);
+      }
     }
 
     document.addEventListener("pointerdown", handlePointerDown);
@@ -98,7 +110,9 @@ function Breadcrumb() {
     };
   }, [isMenuOpen]);
 
-  if (items.length < 2) return null;
+  if (items.length < 2) {
+    return null;
+  }
 
   return (
     <nav className={styles.breadcrumb} aria-label="Navegação estrutural">

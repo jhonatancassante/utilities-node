@@ -36,8 +36,9 @@ function getConstructionCategory(constructionType) {
     constructionType === null ||
     constructionType === undefined ||
     constructionType === 0
-  )
+  ) {
     return null;
+  }
   const category = CONSTRUCTION_TYPES[constructionType];
   if (!category) {
     throw new ValidationError({
@@ -60,24 +61,46 @@ function getPropertyClassification(points, year, category) {
   }
 
   if (year <= 2015) {
-    if (points <= 35) return "precarious";
-    if (points <= 45) return "simple";
-    if (points <= 65) return "regular";
-    if (points <= 95) return "medium";
-    if (points <= 140) return "good";
+    if (points <= 35) {
+      return "precarious";
+    }
+    if (points <= 45) {
+      return "simple";
+    }
+    if (points <= 65) {
+      return "regular";
+    }
+    if (points <= 95) {
+      return "medium";
+    }
+    if (points <= 140) {
+      return "good";
+    }
     return "sophisticated";
   }
 
   if (category === "residential") {
-    if (points <= 35) return "precarious";
-    if (points <= 45) return "simple";
-    if (points <= 95) return "medium";
-    if (points <= 140) return "good";
+    if (points <= 35) {
+      return "precarious";
+    }
+    if (points <= 45) {
+      return "simple";
+    }
+    if (points <= 95) {
+      return "medium";
+    }
+    if (points <= 140) {
+      return "good";
+    }
     return "sophisticated";
   }
 
-  if (points <= 45) return "simple";
-  if (points <= 95) return "medium";
+  if (points <= 45) {
+    return "simple";
+  }
+  if (points <= 95) {
+    return "medium";
+  }
   return "good";
 }
 

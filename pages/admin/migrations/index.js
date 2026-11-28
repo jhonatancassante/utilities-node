@@ -70,7 +70,9 @@ function AdminMigrationsPage() {
   }
 
   useEffect(() => {
-    if (!hasMigrationAccess) return undefined;
+    if (!hasMigrationAccess) {
+      return undefined;
+    }
 
     let active = true;
 
@@ -84,7 +86,9 @@ function AdminMigrationsPage() {
           setHasLoadError(false);
         }
       } catch (requestError) {
-        if (!active) return;
+        if (!active) {
+          return;
+        }
 
         setHasLoadError(true);
         setFeedback({
@@ -94,7 +98,9 @@ function AdminMigrationsPage() {
           action: requestError.action,
         });
       } finally {
-        if (active) setIsLoadingMigrations(false);
+        if (active) {
+          setIsLoadingMigrations(false);
+        }
       }
     }
 
@@ -239,7 +245,9 @@ function AdminMigrationsPage() {
     );
   }
 
-  if (!user || !hasAdminSectionAccess(user, "migrations")) return null;
+  if (!user || !hasAdminSectionAccess(user, "migrations")) {
+    return null;
+  }
 
   return (
     <>

@@ -55,7 +55,9 @@ async function transaction(callback) {
   } catch (error) {
     await client?.query("ROLLBACK").catch(() => {});
 
-    if (error?.statusCode) throw error;
+    if (error?.statusCode) {
+      throw error;
+    }
 
     throw new ServiceError({
       message: "Erro na conexão com o banco de dados ou na transação.",

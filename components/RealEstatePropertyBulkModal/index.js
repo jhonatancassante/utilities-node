@@ -80,33 +80,50 @@ function parseCsv(source, delimiter) {
       if (quoted && source[index + 1] === '"') {
         cell += '"';
         index += 1;
-      } else quoted = !quoted;
+      } else {
+        quoted = !quoted;
+      }
     } else if (character === delimiter && !quoted) {
       row.push(cell);
       cell = "";
     } else if ((character === "\n" || character === "\r") && !quoted) {
-      if (character === "\r" && source[index + 1] === "\n") index += 1;
+      if (character === "\r" && source[index + 1] === "\n") {
+        index += 1;
+      }
       row.push(cell);
-      if (row.some((value) => value.trim())) rows.push(row);
+      if (row.some((value) => value.trim())) {
+        rows.push(row);
+      }
       row = [];
       cell = "";
-    } else cell += character;
+    } else {
+      cell += character;
+    }
   }
-  if (quoted) throw new Error("O arquivo contém aspas não fechadas.");
+  if (quoted) {
+    throw new Error("O arquivo contém aspas não fechadas.");
+  }
   row.push(cell);
-  if (row.some((value) => value.trim())) rows.push(row);
+  if (row.some((value) => value.trim())) {
+    rows.push(row);
+  }
   return rows;
 }
 
 function parseValue(field, raw, rowNumber) {
   const value = raw.trim();
   if (!value) {
-    if (REQUIRED_FIELDS.includes(field))
+    if (REQUIRED_FIELDS.includes(field)) {
       throw new Error(
         "Linha " + rowNumber + ": o campo " + field + " é obrigatório.",
       );
-    if (NULLABLE_FIELDS.includes(field)) return null;
-    if (field === "built_area") return 0;
+    }
+    if (NULLABLE_FIELDS.includes(field)) {
+      return null;
+    }
+    if (field === "built_area") {
+      return 0;
+    }
     return undefined;
   }
   if (INTEGER_FIELDS.includes(field) || NUMBER_FIELDS.includes(field)) {
@@ -150,17 +167,20 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
     let active = true;
     getRealEstatePropertyImportDraft()
       .then((draft) => {
-        if (!active || !draft) return;
+        if (!active || !draft) {
+          return;
+        }
         setRecords(draft);
         setYear(String(draft[0]?.year ?? new Date().getFullYear()));
         setIsUpdated(!draft[0]?.annual);
         setGroupingIssues(getGroupingIssues(draft));
       })
       .catch(() => {
-        if (active)
+        if (active) {
           setError(
             "Não foi possível recuperar a prévia salva neste navegador.",
           );
+        }
       });
     return () => {
       active = false;
@@ -261,7 +281,9 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
         const record = { year: Number(year), annual: !isUpdated };
         for (const [, field] of CSV_FIELDS) {
           const value = parseValue(field, row[indexes[field]], index + 2);
-          if (value !== undefined) record[field] = value;
+          if (value !== undefined) {
+            record[field] = value;
+          }
         }
         return record;
       });
@@ -334,7 +356,9 @@ function RealEstatePropertyBulkModal({ onSubmit, isSaving }) {
           accept=".csv,text/csv"
           onFiles={(files) => {
             const selectedFile = files[0];
-            if (!selectedFile) return;
+            if (!selectedFile) {
+              return;
+            }
             if (!selectedFile.name.toLowerCase().endsWith(".csv")) {
               setFile(null);
               setRecords(null);

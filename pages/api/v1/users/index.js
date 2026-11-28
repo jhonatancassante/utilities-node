@@ -42,7 +42,9 @@ async function postHandler(request, response) {
 
     newUser = await user.create(userInputValues);
   } catch (error) {
-    if (uploadedPhoto) await deleteProfilePhoto(uploadedPhoto.publicId);
+    if (uploadedPhoto) {
+      await deleteProfilePhoto(uploadedPhoto.publicId);
+    }
     throw error;
   }
 

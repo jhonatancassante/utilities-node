@@ -40,9 +40,12 @@ function authorizePatch(request, response, next) {
   );
   const requiredFeatures = [];
 
-  if (hasFeatures) requiredFeatures.push("update:user:features");
-  if (!hasFeatures || hasOtherFields)
+  if (hasFeatures) {
+    requiredFeatures.push("update:user:features");
+  }
+  if (!hasFeatures || hasOtherFields) {
     requiredFeatures.push("update:user:others");
+  }
 
   for (const requiredFeature of requiredFeatures) {
     if (!authorization.can(request.context.user, requiredFeature)) {
@@ -71,8 +74,9 @@ async function patchHandler(request, response) {
   let updatedUser = targetUser;
 
   try {
-    if (profile_photo)
+    if (profile_photo) {
       uploadedPhoto = await uploadProfilePhoto(profile_photo, targetUser.id);
+    }
     if (Object.keys(userInputValues).length > 0) {
       updatedUser = await user.update(request.query.username, userInputValues, {
         allowFeatures: true,

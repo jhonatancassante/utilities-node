@@ -41,7 +41,9 @@ function JsonToCsv() {
     : "Selecione ao menos uma coluna para gerar o CSV.";
 
   useEffect(() => {
-    if (!isCopied) return undefined;
+    if (!isCopied) {
+      return undefined;
+    }
 
     const timeoutId = window.setTimeout(() => setIsCopied(false), 2000);
     return () => window.clearTimeout(timeoutId);
@@ -122,7 +124,9 @@ function JsonToCsv() {
   }
 
   async function handleCopy() {
-    if (!generatedCsv) return;
+    if (!generatedCsv) {
+      return;
+    }
 
     try {
       await navigator.clipboard.writeText(generatedCsv);
@@ -136,7 +140,9 @@ function JsonToCsv() {
   }
 
   function handleDownload() {
-    if (!generatedCsv) return;
+    if (!generatedCsv) {
+      return;
+    }
 
     let blob;
 

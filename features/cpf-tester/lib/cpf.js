@@ -12,7 +12,9 @@ export function formatCpf(value) {
 }
 
 export function calculateVerifiers(base) {
-  if (!/^\d{9}$/.test(base)) return "";
+  if (!/^\d{9}$/.test(base)) {
+    return "";
+  }
 
   let sum = 0;
   for (let index = 0; index < 9; index++) {
@@ -20,7 +22,9 @@ export function calculateVerifiers(base) {
   }
 
   let firstDigit = 11 - (sum % 11);
-  if (firstDigit >= 10) firstDigit = 0;
+  if (firstDigit >= 10) {
+    firstDigit = 0;
+  }
 
   const baseWithFirstDigit = base + firstDigit;
   sum = 0;
@@ -29,20 +33,28 @@ export function calculateVerifiers(base) {
   }
 
   let secondDigit = 11 - (sum % 11);
-  if (secondDigit >= 10) secondDigit = 0;
+  if (secondDigit >= 10) {
+    secondDigit = 0;
+  }
 
   return String(firstDigit) + String(secondDigit);
 }
 
 export function isValidCpf(value) {
-  if (!/^\d{11}$/.test(value)) return false;
-  if (/^(\d)\1{10}$/.test(value)) return false;
+  if (!/^\d{11}$/.test(value)) {
+    return false;
+  }
+  if (/^(\d)\1{10}$/.test(value)) {
+    return false;
+  }
 
   return value.slice(9) === calculateVerifiers(value.slice(0, 9));
 }
 
 export function generateCpfVariations(originalCpf) {
-  if (!/^\d{11}$/.test(originalCpf)) return [];
+  if (!/^\d{11}$/.test(originalCpf)) {
+    return [];
+  }
 
   const results = [];
   const uniqueCpfs = new Set();

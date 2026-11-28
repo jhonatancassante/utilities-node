@@ -59,7 +59,9 @@ function QrCodeGenerator() {
   }
 
   async function handleDownload() {
-    if (!cardRef.current) return;
+    if (!cardRef.current) {
+      return;
+    }
 
     setIsDownloading(true);
     try {

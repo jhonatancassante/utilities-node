@@ -40,7 +40,7 @@ async function loadLogoAsPng(blob) {
   const canvas=document.createElement("canvas");
   canvas.width=image.naturalWidth; canvas.height=image.naturalHeight;
   const context=canvas.getContext("2d");
-  if(!context) throw new Error("Não foi possível preparar o logo.");
+  if(!context) {throw new Error("Não foi possível preparar o logo.");}
   context.drawImage(image,0,0);
   const base64=canvas.toDataURL("image/png").split(",")[1];
   return Uint8Array.from(atob(base64),character=>character.charCodeAt(0));
@@ -61,8 +61,8 @@ function AddressFields({ value, setValue, prefix, ufs, cities, onUfChange, onCep
         inputMode={field === "cep" || field === "numero" ? "numeric" : undefined}
         onChange={(event) => {
           let next = event.target.value;
-          if (field === "cep") next = next.replace(/\D/g, "").slice(0, 8).replace(/^(\d{5})(\d)/, "$1-$2");
-          if (field === "numero") next = next.replace(/\D/g, "").slice(0, 8);
+          if (field === "cep") {next = next.replace(/\D/g, "").slice(0, 8).replace(/^(\d{5})(\d)/, "$1-$2");}
+          if (field === "numero") {next = next.replace(/\D/g, "").slice(0, 8);}
           update(field, next);
         }}
         pattern={field === "cep" ? "[0-9]{5}-[0-9]{3}" : undefined}
@@ -117,27 +117,27 @@ export default function ArGenerator() {
   useEffect(() => {
     let active = true;
     fetch(`${IBGE}?orderBy=nome`)
-      .then((response) => { if (!response.ok) throw new Error(); return response.json(); })
-      .then((data) => { if (active) setUfs(data); })
-      .catch(() => { if (active) setStatus({ type: "error", message: "Não foi possível carregar as UFs do IBGE." }); });
+      .then((response) => { if (!response.ok) {throw new Error();} return response.json(); })
+      .then((data) => { if (active) {setUfs(data);} })
+      .catch(() => { if (active) {setStatus({ type: "error", message: "Não foi possível carregar as UFs do IBGE." });} });
     fetch("/logo_correios.gif")
-      .then((response) => { if (!response.ok) throw new Error("Logo indisponível."); return response.blob(); })
+      .then((response) => { if (!response.ok) {throw new Error("Logo indisponível.");} return response.blob(); })
       .then(loadLogoAsPng)
-      .then((bytes) => { if (active) setLogoBytes(bytes); })
+      .then((bytes) => { if (active) {setLogoBytes(bytes);} })
       .catch(() => {});
     fetch(`${IBGE}/SP/municipios?orderBy=nome`)
       .then((response) => response.ok ? response.json() : [])
-      .then((data) => { if (active) setSenderCities(data); })
+      .then((data) => { if (active) {setSenderCities(data);} })
       .catch(() => {});
     return () => { active = false; };
   }, []);
 
   async function fetchCities(uf, setter) {
     setter([]);
-    if (!uf) return;
+    if (!uf) {return;}
     try {
       const response = await fetch(`${IBGE}/${uf}/municipios?orderBy=nome`);
-      if (!response.ok) throw new Error();
+      if (!response.ok) {throw new Error();}
       setter(await response.json());
     } catch {
       setStatus({ type: "error", message: "Não foi possível carregar as cidades dessa UF." });
@@ -156,10 +156,10 @@ export default function ArGenerator() {
     const setter = kind === "recipient" ? setRecipient : setSender;
     const citySetter = kind === "recipient" ? setRecipientCities : setSenderCities;
     const cep = data.cep.replace(/\D/g, "");
-    if (cep.length !== 8) return;
+    if (cep.length !== 8) {return;}
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      if (!response.ok) throw new Error();
+      if (!response.ok) {throw new Error();}
       const result = await response.json();
       if (result.erro) {
         setStatus({ type: "error", message: "CEP não encontrado na base do ViaCEP." });
@@ -173,7 +173,7 @@ export default function ArGenerator() {
         uf: result.uf || current.uf,
         cidade: result.localidade || current.cidade,
       }));
-      if (result.uf) await fetchCities(result.uf, citySetter);
+      if (result.uf) {await fetchCities(result.uf, citySetter);}
       setStatus({ type: "info", message: "" });
     } catch {
       setStatus({ type: "error", message: "Não foi possível consultar o CEP. Tente novamente." });
@@ -217,7 +217,7 @@ export default function ArGenerator() {
   }
 
   async function printPdf() {
-    if (!records.length || busy) return;
+    if (!records.length || busy) {return;}
     setBusy(true);
     setStatus({ type: "info", message: "Gerando ARs e etiquetas no navegador..." });
     try {
@@ -270,7 +270,7 @@ export default function ArGenerator() {
       </form>
       <div className={styles.actions}>
         <Button type="button" icon="fa-plus" onClick={() => {
-          if (tab !== "recipient") setTab("recipient");
+          if (tab !== "recipient") {setTab("recipient");}
           window.requestAnimationFrame(() => document.getElementById("recipient-form")?.requestSubmit());
         }}>Incluir destinatário</Button>
       </div>

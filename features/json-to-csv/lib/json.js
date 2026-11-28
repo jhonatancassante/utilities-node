@@ -64,8 +64,12 @@ export function collectOrderedFields(rows) {
  * @returns {string}
  */
 export function cellToText(value) {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "object") return JSON.stringify(value);
+  if (value === null || value === undefined) {
+    return "";
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
   return String(value);
 }
 
@@ -78,7 +82,9 @@ export function cellToText(value) {
  * @returns {string}
  */
 export function createCsv(rows, fields, delimiter = ";") {
-  if (!rows.length || !fields.length) return "";
+  if (!rows.length || !fields.length) {
+    return "";
+  }
 
   const rowsAsText = rows.map((row) =>
     Object.fromEntries(fields.map((field) => [field, cellToText(row[field])])),

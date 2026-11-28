@@ -12,7 +12,7 @@ const yTop = (value) => mm(pageH - value);
 
 // prettier-ignore
 function text(page, value, x, y, size, font, color = rgb(0, 0, 0)) {
-  if (!value) return;
+  if (!value) {return;}
   page.drawText(String(value), {
     x: mm(x),
     y: yTop(y),
@@ -30,7 +30,7 @@ function line(page, x1, y1, x2, y2, width = 0.35, dashArray) {
     thickness: mm(width),
     color: rgb(0, 0, 0),
   };
-  if (dashArray) options.dashArray = dashArray.map(mm);
+  if (dashArray) {options.dashArray = dashArray.map(mm);}
   page.drawLine(options);
 }
 
@@ -57,7 +57,7 @@ function wrapText(value, font, size, maxWidth) {
       current = candidate;
     }
   });
-  if (current) lines.push(current);
+  if (current) {lines.push(current);}
   return lines;
 }
 
@@ -88,7 +88,7 @@ function rect(page, x, y, w, h, width = 0.35) {
 function fit(page, value, x, y, maxWidth, size, font) {
   let current = size;
   const label = String(value ?? "");
-  while (current > 4.5 && font.widthOfTextAtSize(label, current) > mm(maxWidth)) current -= 0.25;
+  while (current > 4.5 && font.widthOfTextAtSize(label, current) > mm(maxWidth)) {current -= 0.25;}
   text(page, label, x, y, current, font);
 }
 
@@ -104,8 +104,8 @@ function drawAR(page, x, y, data, fonts, logo) {
   line(page, right, y, right, y + 52);
   line(page, right, y + 59, right, y + 94);
   line(page, x + 8, y + 8, x + 140, y + 8);
-  if (logo) page.drawImage(logo, { x: mm(x + 9.5), y: yTop(y + 6.7), width: mm(28), height: mm(5.5) });
-  else text(page, "Correios", x + 10, y + 5.5, 9, bold);
+  if (logo) {page.drawImage(logo, { x: mm(x + 9.5), y: yTop(y + 6.7), width: mm(28), height: mm(5.5) });}
+  else {text(page, "Correios", x + 10, y + 5.5, 9, bold);}
   text(page, "AVISO DE RECEBIMENTO", x + 41, y + 5, 9, bold);
   text(page, "AR", x + 85, y + 6, 15, bold);
   text(page, "DATA DE POSTAGEM", right + 0.7, y + 2.5, 6, bold);
@@ -190,7 +190,7 @@ const CODE128_PATTERNS = [
 // prettier-ignore
 export function encodeCode128B(value) {
  const input=String(value??"");
- if(!input||[...input].some(c=>c.charCodeAt(0)<32||c.charCodeAt(0)>126)) return [];
+ if(!input||[...input].some(c=>c.charCodeAt(0)<32||c.charCodeAt(0)>126)) {return [];}
  const data=[...input].map(c=>c.charCodeAt(0)-32);
  const checksum=data.reduce((sum,code,index)=>sum+code*(index+1),104)%103;
  return [104,...data,checksum,106];
@@ -201,7 +201,7 @@ export function encodeCode128B(value) {
 // prettier-ignore
 export function encodeCode128C(value) {
   const input = String(value ?? "");
-  if (!/^\d{2,}$/.test(input) || input.length % 2 !== 0) return [];
+  if (!/^\d{2,}$/.test(input) || input.length % 2 !== 0) {return [];}
 
   const data = input.match(/\d{2}/g).map(Number);
   const checksum = data.reduce(
@@ -214,14 +214,14 @@ export function encodeCode128C(value) {
 // prettier-ignore
 function drawCode128(page,value,x,y,width,height) {
  const symbols=encodeCode128C(value);
- if(!symbols.length) return;
+ if(!symbols.length) {return;}
  const patterns=symbols.map(symbol=>CODE128_PATTERNS[symbol]);
  const moduleCount=patterns.reduce((sum,pattern)=>sum+[...pattern].reduce((total,run)=>total+Number(run),0),0);
  const moduleWidth=width/moduleCount;
  let cursor=0;
  patterns.forEach(pattern=>[...pattern].forEach((run,index)=>{
   const barWidth=Number(run)*moduleWidth;
-  if(index%2===0) page.drawRectangle({x:mm(x+cursor),y:yTop(y+height),width:mm(barWidth),height:mm(height),color:rgb(0,0,0)});
+  if(index%2===0) {page.drawRectangle({x:mm(x+cursor),y:yTop(y+height),width:mm(barWidth),height:mm(height),color:rgb(0,0,0)});}
   cursor+=barWidth;
  }));
 }
@@ -232,8 +232,8 @@ function drawLabel(page, x, y, data, title, fonts, logo) {
   rect(page, x, y, 96, 45);
   page.drawRectangle({ x: mm(x), y: yTop(y + 5.5), width: mm(35), height: mm(5.5), color: rgb(0, 0, 0) });
   text(page, title, x + (title === "DESTINATÁRIO" ? 5.5 : 7.5), y + 4, 9, bold, rgb(1, 1, 1));
-  if (logo) page.drawImage(logo, { x: mm(x + 80), y: yTop(y + 4.2), width: mm(14), height: mm(3) });
-  else text(page, "Correios", x + 83, y + 4, 7, bold);
+  if (logo) {page.drawImage(logo, { x: mm(x + 80), y: yTop(y + 4.2), width: mm(14), height: mm(3) });}
+  else {text(page, "Correios", x + 83, y + 4, 7, bold);}
   fit(page, data.nome, x + 2, y + 8, 90, 6.5, regular);
   text(page, `${data.endereco}, ${data.numero}`, x + 2, y + 11, 6.5, regular);
   if (data.complemento) {
@@ -272,7 +272,7 @@ export async function generateArPdf(records, includeSenderLabels, logoBytes, now
   for (let index = 0; index < records.length; index += 2) {
     const page = pdf.addPage([mm(pageW), mm(pageH)]);
     drawAR(page, 35, 25, records[index], fonts, logo);
-    if (records[index + 1]) drawAR(page, 35, 155, records[index + 1], fonts, logo);
+    if (records[index + 1]) {drawAR(page, 35, 155, records[index + 1], fonts, logo);}
   }
   const labels = records.flatMap((record) => [
     { data: record, title: "DESTINATÁRIO" },

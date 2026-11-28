@@ -21,7 +21,9 @@ import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 function formatDate(value) {
-  if (!value) return "—";
+  if (!value) {
+    return "—";
+  }
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("pt-BR");
 }
@@ -81,7 +83,9 @@ function PositionsPage() {
 
   const filteredRecords = useMemo(() => {
     const term = search.trim().toLocaleLowerCase("pt-BR");
-    if (!term) return records;
+    if (!term) {
+      return records;
+    }
     return records.filter((record) =>
       record.name.toLocaleLowerCase("pt-BR").includes(term),
     );
@@ -91,7 +95,9 @@ function PositionsPage() {
   const pagination = usePagination(sort.sortedRecords);
 
   function handleDeleteSelected() {
-    if (!canDelete || !selection.selectedIds.length) return;
+    if (!canDelete || !selection.selectedIds.length) {
+      return;
+    }
 
     setDeleteDialog({
       ids: selection.selectedIds,
@@ -166,7 +172,9 @@ function PositionsPage() {
     );
   }
 
-  if (!user || !hasAdminSectionAccess(user, "positions")) return null;
+  if (!user || !hasAdminSectionAccess(user, "positions")) {
+    return null;
+  }
 
   return (
     <>

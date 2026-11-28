@@ -56,4 +56,8 @@ export default defineConfig([
     },
   },
   prettier,
+  {
+    files: ["**/*.{js,mjs,cjs,jsx}"],
+    rules: { curly: ["error", "all"] },
+  },
 ]);

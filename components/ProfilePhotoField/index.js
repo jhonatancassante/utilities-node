@@ -39,13 +39,17 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
 
   useEffect(
     () => () => {
-      if (cropSource) URL.revokeObjectURL(cropSource);
+      if (cropSource) {
+        URL.revokeObjectURL(cropSource);
+      }
     },
     [cropSource],
   );
 
   useEffect(() => {
-    if (!cropSource || !cropViewportRef.current) return;
+    if (!cropSource || !cropViewportRef.current) {
+      return;
+    }
     setViewportSize(cropViewportRef.current.getBoundingClientRect().width);
   }, [cropSource]);
 
@@ -59,7 +63,9 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
 
   function handleFileChange(event) {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     setError("");
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
@@ -116,8 +122,9 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
   }
 
   function handlePointerMove(event) {
-    if (!dragRef.current || dragRef.current.pointerId !== event.pointerId)
+    if (!dragRef.current || dragRef.current.pointerId !== event.pointerId) {
       return;
+    }
     setOffset({
       x: dragRef.current.offsetX + event.clientX - dragRef.current.startX,
       y: dragRef.current.offsetY + event.clientY - dragRef.current.startY,
@@ -129,7 +136,9 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
   }
 
   function handleCrop() {
-    if (!cropSource || !imageSize) return;
+    if (!cropSource || !imageSize) {
+      return;
+    }
 
     const image = new Image();
     image.onload = () => {
@@ -209,7 +218,9 @@ function ProfilePhotoField({ value, initialUrl, onChange, disabled = false }) {
           className={styles.cropOverlay}
           role="presentation"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) closeCropper();
+            if (event.target === event.currentTarget) {
+              closeCropper();
+            }
           }}
         >
           <section

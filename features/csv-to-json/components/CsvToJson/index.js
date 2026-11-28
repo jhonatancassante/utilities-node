@@ -68,7 +68,9 @@ function CsvToJson() {
       : "");
 
   useEffect(() => {
-    if (!isCopied) return undefined;
+    if (!isCopied) {
+      return undefined;
+    }
 
     const timeoutId = window.setTimeout(() => setIsCopied(false), 2000);
     return () => window.clearTimeout(timeoutId);
@@ -91,7 +93,9 @@ function CsvToJson() {
   }
 
   function loadFile(file, selectedEncoding) {
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     const reader = new FileReader();
 
@@ -157,7 +161,9 @@ function CsvToJson() {
   }
 
   async function handleCopy() {
-    if (!generatedJson) return;
+    if (!generatedJson) {
+      return;
+    }
 
     try {
       await navigator.clipboard.writeText(generatedJson);
@@ -171,7 +177,9 @@ function CsvToJson() {
   }
 
   function handleDownload() {
-    if (!generatedJson) return;
+    if (!generatedJson) {
+      return;
+    }
 
     const blob = new Blob([generatedJson], {
       type: "application/json;charset=utf-8",

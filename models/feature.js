@@ -330,7 +330,9 @@ function validateFeatureInput(
   const feature = {};
 
   for (const field of ["name", "label", "group_name", "description"]) {
-    if (!Object.hasOwn(featureInputValues, field)) continue;
+    if (!Object.hasOwn(featureInputValues, field)) {
+      continue;
+    }
 
     const value = featureInputValues[field];
     const maxLength = field === "description" ? null : 50;
@@ -369,7 +371,9 @@ function validateFeatureInput(
   }
 
   for (const field of ["is_self_removable", "is_privileged", "is_protected"]) {
-    if (!Object.hasOwn(featureInputValues, field)) continue;
+    if (!Object.hasOwn(featureInputValues, field)) {
+      continue;
+    }
 
     if (typeof featureInputValues[field] !== "boolean") {
       throw new ValidationError({

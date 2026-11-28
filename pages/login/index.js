@@ -21,7 +21,9 @@ function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && currentUser) router.replace("/perfil");
+    if (!isLoading && currentUser) {
+      router.replace("/perfil");
+    }
   }, [currentUser, isLoading, router]);
 
   async function handleSubmit(event) {

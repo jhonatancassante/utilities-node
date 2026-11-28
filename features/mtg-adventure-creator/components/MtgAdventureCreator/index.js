@@ -108,10 +108,14 @@ function MtgAdventureCreator() {
   }
 
   useEffect(() => {
-    if (!selectedCard) return undefined;
+    if (!selectedCard) {
+      return undefined;
+    }
 
     function handleKeyDown(event) {
-      if (event.key === "Escape") setSelectedCard(null);
+      if (event.key === "Escape") {
+        setSelectedCard(null);
+      }
     }
 
     window.addEventListener("keydown", handleKeyDown);
@@ -216,7 +220,9 @@ function MtgAdventureCreator() {
           <ol className={styles.cardGrid}>
             {ADVENTURE_SLOTS.map((slot, index) => {
               const card = cards.find((item) => item.slotId === slot.id);
-              if (!card) return null;
+              if (!card) {
+                return null;
+              }
 
               return (
                 <AdventureCard

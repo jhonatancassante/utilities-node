@@ -128,7 +128,9 @@ const TABLE_COLUMNS = [
 ];
 
 function formatTableValue(value) {
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") {
+    return "—";
+  }
   const number = Number(value);
   return Number.isFinite(number)
     ? number.toLocaleString("pt-BR", {
@@ -149,47 +151,66 @@ function parseDelimitedText(source, delimiter) {
       if (quoted && source[index + 1] === '"') {
         cell += '"';
         index += 1;
-      } else quoted = !quoted;
+      } else {
+        quoted = !quoted;
+      }
     } else if (character === delimiter && !quoted) {
       row.push(cell);
       cell = "";
     } else if ((character === "\n" || character === "\r") && !quoted) {
-      if (character === "\r" && source[index + 1] === "\n") index += 1;
+      if (character === "\r" && source[index + 1] === "\n") {
+        index += 1;
+      }
       row.push(cell);
-      if (row.some((value) => value.trim() !== "")) rows.push(row);
+      if (row.some((value) => value.trim() !== "")) {
+        rows.push(row);
+      }
       row = [];
       cell = "";
-    } else cell += character;
+    } else {
+      cell += character;
+    }
   }
-  if (quoted) throw new Error("O arquivo contém aspas não fechadas.");
+  if (quoted) {
+    throw new Error("O arquivo contém aspas não fechadas.");
+  }
   row.push(cell);
-  if (row.some((value) => value.trim() !== "")) rows.push(row);
+  if (row.some((value) => value.trim() !== "")) {
+    rows.push(row);
+  }
   return rows;
 }
 
 function parseCsvValue(field, rawValue, rowNumber) {
   const value = rawValue.trim();
-  if (!value) return null;
-  if (field === "decree") return value;
+  if (!value) {
+    return null;
+  }
+  if (field === "decree") {
+    return value;
+  }
   const normalized = value.includes(",")
     ? value.replace(/\./g, "").replace(",", ".")
     : value;
   const parsed = Number(normalized);
-  if (!Number.isFinite(parsed) || parsed < 0)
+  if (!Number.isFinite(parsed) || parsed < 0) {
     throw new Error(
       "Linha " + rowNumber + ": valor inválido na coluna " + field + ".",
     );
+  }
   if (field === "year") {
-    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 9999)
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 9999) {
       throw new Error(
         "Linha " + rowNumber + ": o ano deve ser um inteiro entre 1 e 9999.",
       );
+    }
     return parsed;
   }
-  if (parsed > 9999999999.99 || Math.round(parsed * 100) / 100 !== parsed)
+  if (parsed > 9999999999.99 || Math.round(parsed * 100) / 100 !== parsed) {
     throw new Error(
       "Linha " + rowNumber + ": " + field + " aceita até duas casas decimais.",
     );
+  }
   return parsed;
 }
 
@@ -218,10 +239,12 @@ function AssessedValuesPage() {
       !isLoading &&
       !user &&
       (!error || [401, 403].includes(error.statusCode))
-    )
+    ) {
       router.replace("/login");
-    if (!isLoading && user && !hasAdminSectionAccess(user, "assessed-values"))
+    }
+    if (!isLoading && user && !hasAdminSectionAccess(user, "assessed-values")) {
       router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
+    }
   }, [error, isLoading, router, user]);
 
   const loadRecords = useCallback(async () => {
@@ -250,7 +273,9 @@ function AssessedValuesPage() {
 
   const filteredRecords = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return records;
+    if (!term) {
+      return records;
+    }
     return records.filter(
       (record) =>
         String(record.year).includes(term) ||
@@ -268,7 +293,9 @@ function AssessedValuesPage() {
   const previewSort = useSortableData(previewSample);
 
   function handleDeleteSelected() {
-    if (!selection.selectedIds.length) return;
+    if (!selection.selectedIds.length) {
+      return;
+    }
 
     setDeleteDialog({
       ids: selection.selectedIds,
@@ -332,50 +359,58 @@ function AssessedValuesPage() {
           String(reader.result || "").replace(/^\uFEFF/, ""),
           delimiter,
         );
-        if (rows.length < 2)
+        if (rows.length < 2) {
           throw new Error(
             "O arquivo precisa conter cabeçalho e ao menos um registro.",
           );
+        }
         const headers = rows[0].map((header) => header.trim().toLowerCase());
         const missing = CSV_FIELDS.filter((field) => !headers.includes(field));
         const duplicates = headers.filter(
           (header, index) => headers.indexOf(header) !== index,
         );
-        if (missing.length)
+        if (missing.length) {
           throw new Error("Colunas ausentes: " + missing.join(", ") + ".");
-        if (duplicates.length)
+        }
+        if (duplicates.length) {
           throw new Error(
             "O cabeçalho contém colunas duplicadas: " +
               Array.from(new Set(duplicates)).join(", ") +
               ".",
           );
-        if (rows.length - 1 > 500)
+        }
+        if (rows.length - 1 > 500) {
           throw new Error("O limite por importação é de 500 registros.");
+        }
         const indexes = Object.fromEntries(
           CSV_FIELDS.map((field) => [field, headers.indexOf(field)]),
         );
         const parsedRecords = rows.slice(1).map((row, index) => {
-          if (row.length !== headers.length)
+          if (row.length !== headers.length) {
             throw new Error(
               "Linha " +
                 (index + 2) +
                 ": quantidade de colunas diferente do cabeçalho.",
             );
+          }
           const record = {};
-          for (const field of CSV_FIELDS)
+          for (const field of CSV_FIELDS) {
             record[field] = parseCsvValue(
               field,
               row[indexes[field]],
               index + 2,
             );
-          if (record.year === null)
+          }
+          if (record.year === null) {
             throw new Error("Linha " + (index + 2) + ": o ano é obrigatório.");
-          if (record.decree && record.decree.length > 12)
+          }
+          if (record.decree && record.decree.length > 12) {
             throw new Error(
               "Linha " +
                 (index + 2) +
                 ": o decreto deve ter até 12 caracteres.",
             );
+          }
           return record;
         });
         setPreview({ records: parsedRecords, fileName: csvFile.name });
@@ -399,7 +434,9 @@ function AssessedValuesPage() {
   }
 
   async function handleImport() {
-    if (!preview || !preview.records.length) return;
+    if (!preview || !preview.records.length) {
+      return;
+    }
     setIsImporting(true);
     setFeedback(null);
     try {
@@ -427,7 +464,7 @@ function AssessedValuesPage() {
     }
   }
 
-  if (isLoading || (!user && !error))
+  if (isLoading || (!user && !error)) {
     return (
       <>
         <AppHead title="Valores venais" />
@@ -440,7 +477,8 @@ function AssessedValuesPage() {
         </Layout>
       </>
     );
-  if (error)
+  }
+  if (error) {
     return (
       <>
         <AppHead title="Valores venais" />
@@ -459,7 +497,10 @@ function AssessedValuesPage() {
         </Layout>
       </>
     );
-  if (!user || !hasAdminSectionAccess(user, "assessed-values")) return null;
+  }
+  if (!user || !hasAdminSectionAccess(user, "assessed-values")) {
+    return null;
+  }
 
   return (
     <>
@@ -519,7 +560,9 @@ function AssessedValuesPage() {
                       accept=".csv,text/csv"
                       onFiles={(files) => {
                         const file = files[0];
-                        if (!file) return;
+                        if (!file) {
+                          return;
+                        }
                         if (!file.name.toLowerCase().endsWith(".csv")) {
                           setFeedback({
                             type: "error",

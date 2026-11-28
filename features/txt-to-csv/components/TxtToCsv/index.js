@@ -50,7 +50,9 @@ function TxtToCsv() {
   const [fileError, setFileError] = useState("");
 
   const generatedCsv = useMemo(() => {
-    if (!parsed) return "";
+    if (!parsed) {
+      return "";
+    }
 
     return toCsv(parsed.headers, parsed.rows, {
       separator: separator === "tab" ? "\t" : separator,
@@ -64,7 +66,9 @@ function TxtToCsv() {
   async function handleFiles(files) {
     const file = files[0];
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     if (
       !file.name.toLowerCase().endsWith(".txt") &&
@@ -97,7 +101,9 @@ function TxtToCsv() {
   }
 
   function handleDownload() {
-    if (!parsed || !generatedCsv) return;
+    if (!parsed || !generatedCsv) {
+      return;
+    }
 
     const content = (includeBom ? "\uFEFF" : "") + generatedCsv;
     const blob = new Blob([content], {

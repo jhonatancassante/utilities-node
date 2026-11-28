@@ -15,8 +15,9 @@ beforeAll(async () => {
 async function createSessionWithFeatures(features) {
   const testUser = await orchestrator.createUser();
   await orchestrator.activateUser(testUser);
-  if (features.length > 0)
+  if (features.length > 0) {
     await orchestrator.addFeaturesToUser(testUser, features);
+  }
   return await orchestrator.createSession(testUser);
 }
 
