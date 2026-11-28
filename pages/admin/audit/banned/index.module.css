@@ -68,37 +68,6 @@
   font-size: 12px;
 }
 
-.tableWrap {
-  overflow-x: auto;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-  text-align: left;
-}
-
-.table th,
-.table td {
-  padding: 13px 12px;
-  border-bottom: 1px solid var(--border-color);
-  vertical-align: middle;
-}
-
-.table th {
-  background: var(--bg-elevated);
-  color: var(--text-secondary);
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.table td {
-  color: var(--text-primary);
-}
-
 .userLink {
   color: var(--accent);
   text-decoration: none;
@@ -106,23 +75,6 @@
 
 .userLink:hover {
   text-decoration: underline;
-}
-
-.table td:first-child {
-  min-width: 180px;
-}
-
-.table td small,
-.table td code {
-  display: block;
-  margin-top: 4px;
-  color: var(--text-secondary);
-  font-size: 10px;
-  overflow-wrap: anywhere;
-}
-
-.table td code {
-  color: var(--text-faint);
 }
 
 .banBadge,
@@ -149,12 +101,6 @@
 .activeBadge {
   background: rgba(25, 135, 84, 0.14);
   color: #198754;
-}
-
-.empty {
-  padding: 24px;
-  color: var(--text-faint);
-  text-align: center;
 }
 
 .footnote {

@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
-import AdminDataTable from "@/components/AdminDataTable";
+import DataTable from "@/components/DataTable";
 import useSortableData from "@/hooks/use-sortable-data.js";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
@@ -82,12 +82,7 @@ export default function AdminMigrationAuditPage() {
     };
   }, [isLoading, user]);
 
-  const {
-    sortedRecords: sortedMigrations,
-    sortState,
-    handleSort,
-    sortAnnouncement,
-  } = useSortableData(migrations);
+  const sort = useSortableData(migrations);
 
   if (isLoading || (!user && !error)) {
     return (
@@ -173,39 +168,31 @@ export default function AdminMigrationAuditPage() {
               </StatusMessage>
             )}
 
-            {isLoadingMigrations ? (
-              <p className={styles.empty}>Consultando o histórico...</p>
-            ) : feedback ? (
-              <p className={styles.empty}>
-                Não foi possível carregar os registros de migrations.
-              </p>
-            ) : migrations.length === 0 ? (
-              <p className={styles.empty}>
-                Ainda não há migrations registradas neste banco de dados.
-              </p>
-            ) : (
-              <AdminDataTable
-                records={sortedMigrations}
-                columns={[
-                  { key: "id", label: "ID" },
-                  {
-                    key: "name",
-                    label: "Migration",
-                    render: (migration) => <strong>{migration.name}</strong>,
-                  },
-                  {
-                    key: "run_on",
-                    label: "Executada em",
-                    render: (migration) => formatDate(migration.run_on),
-                  },
-                ]}
-                showActions={false}
-                sortState={sortState}
-                onSort={handleSort}
-                sortAnnouncement={sortAnnouncement}
-                caption="Migrations executadas"
-              />
-            )}
+            <DataTable
+              records={sort.sortedRecords}
+              loading={isLoadingMigrations}
+              loadingMessage="Consultando o histórico..."
+              emptyMessage={
+                feedback
+                  ? "Não foi possível carregar os registros de migrations."
+                  : "Ainda não há migrations registradas neste banco de dados."
+              }
+              columns={[
+                { key: "id", label: "ID" },
+                {
+                  key: "name",
+                  label: "Migration",
+                  render: (migration) => <strong>{migration.name}</strong>,
+                },
+                {
+                  key: "run_on",
+                  label: "Executada em",
+                  render: (migration) => formatDate(migration.run_on),
+                },
+              ]}
+              sort={sort}
+              caption="Migrations executadas"
+            />
 
             <p className={styles.footnote}>
               Os registros são lidos diretamente da tabela pgmigrations. A

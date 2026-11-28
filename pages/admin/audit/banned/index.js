@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
-import AdminDataTable from "@/components/AdminDataTable";
+import DataTable from "@/components/DataTable";
 import useSortableData from "@/hooks/use-sortable-data.js";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
@@ -186,12 +186,7 @@ export default function AdminBannedAuditPage() {
       })),
     [filteredEvents],
   );
-  const {
-    sortedRecords: sortedEvents,
-    sortState,
-    handleSort,
-    sortAnnouncement,
-  } = useSortableData(sortableEvents);
+  const sort = useSortableData(sortableEvents);
 
   const banCount = events.filter((event) => event.action === "ban").length;
   const unbanCount = events.filter((event) => event.action === "unban").length;
@@ -316,108 +311,102 @@ export default function AdminBannedAuditPage() {
               </StatusMessage>
             )}
 
-            {isLoadingEvents ? (
-              <p className={styles.empty}>Carregando registros...</p>
-            ) : filteredEvents.length === 0 ? (
-              <p className={styles.empty}>
-                {events.length
+            <DataTable
+              records={sort.sortedRecords}
+              loading={isLoadingEvents}
+              loadingMessage="Carregando registros..."
+              emptyMessage={
+                events.length
                   ? "Nenhum registro corresponde aos filtros."
-                  : "Ainda não há registros de banimento ou desbanimento."}
-              </p>
-            ) : (
-              <AdminDataTable
-                records={sortedEvents}
-                columns={[
-                  {
-                    key: "username",
-                    label: "Conta",
-                    render: (event) => (
-                      <>
-                        {event.user_id ? (
-                          <Link
-                            href={`/admin/users?username=${encodeURIComponent(event.username)}`}
-                            className={styles.userLink}
-                          >
-                            <strong>{event.username}</strong>
-                          </Link>
-                        ) : (
+                  : "Ainda não há registros de banimento ou desbanimento."
+              }
+              columns={[
+                {
+                  key: "username",
+                  label: "Conta",
+                  render: (event) => (
+                    <>
+                      {event.user_id ? (
+                        <Link
+                          href={`/admin/users?username=${encodeURIComponent(event.username)}`}
+                          className={styles.userLink}
+                        >
                           <strong>{event.username}</strong>
-                        )}
-                        <small>{event.email}</small>
-                        <code>{event.user_id ?? "Conta removida"}</code>
-                      </>
-                    ),
-                  },
-                  {
-                    key: "account_created_at",
-                    label: "Criação da conta",
-                    render: (event) => formatDate(event.account_created_at),
-                  },
-                  {
-                    key: "action",
-                    label: "Ação",
-                    render: (event) => (
-                      <span
-                        className={
-                          event.action === "ban"
-                            ? styles.banBadge
-                            : styles.unbanBadge
-                        }
-                      >
-                        {event.action === "ban" ? "Banimento" : "Desbanimento"}
-                      </span>
-                    ),
-                  },
-                  {
-                    key: "created_at",
-                    label: "Data da ação",
-                    render: (event) => formatDate(event.created_at),
-                  },
-                  {
-                    key: "account_age_sort",
-                    label: "Idade da conta na ação",
-                    render: (event) =>
-                      formatAccountAge(
-                        event.account_created_at,
-                        event.created_at,
-                      ),
-                  },
-                  {
-                    key: "actor_username",
-                    label: "Responsável",
-                    render: (event) =>
-                      event.actor_username ? (
-                        <>
-                          <strong>{event.actor_username}</strong>
-                          <small>{event.actor_email}</small>
-                        </>
+                        </Link>
                       ) : (
-                        "Não identificado (registro anterior)"
-                      ),
-                  },
-                  {
-                    key: "is_currently_banned",
-                    label: "Status atual",
-                    render: (event) => (
-                      <span
-                        className={
-                          event.is_currently_banned
-                            ? styles.banBadge
-                            : styles.activeBadge
-                        }
-                      >
-                        {event.is_currently_banned ? "Banida" : "Não banida"}
-                      </span>
+                        <strong>{event.username}</strong>
+                      )}
+                      <small>{event.email}</small>
+                      <code>{event.user_id ?? "Conta removida"}</code>
+                    </>
+                  ),
+                },
+                {
+                  key: "account_created_at",
+                  label: "Criação da conta",
+                  render: (event) => formatDate(event.account_created_at),
+                },
+                {
+                  key: "action",
+                  label: "Ação",
+                  render: (event) => (
+                    <span
+                      className={
+                        event.action === "ban"
+                          ? styles.banBadge
+                          : styles.unbanBadge
+                      }
+                    >
+                      {event.action === "ban" ? "Banimento" : "Desbanimento"}
+                    </span>
+                  ),
+                },
+                {
+                  key: "created_at",
+                  label: "Data da ação",
+                  render: (event) => formatDate(event.created_at),
+                },
+                {
+                  key: "account_age_sort",
+                  label: "Idade da conta na ação",
+                  render: (event) =>
+                    formatAccountAge(
+                      event.account_created_at,
+                      event.created_at,
                     ),
-                  },
-                ]}
-                showActions={false}
-                sortState={sortState}
-                onSort={handleSort}
-                sortAnnouncement={sortAnnouncement}
-                caption="Auditoria de contas banidas"
-              />
-            )}
+                },
+                {
+                  key: "actor_username",
+                  label: "Responsável",
+                  render: (event) =>
+                    event.actor_username ? (
+                      <>
+                        <strong>{event.actor_username}</strong>
+                        <small>{event.actor_email}</small>
+                      </>
+                    ) : (
+                      "Não identificado (registro anterior)"
+                    ),
+                },
+                {
+                  key: "is_currently_banned",
+                  label: "Status atual",
+                  render: (event) => (
+                    <span
+                      className={
+                        event.is_currently_banned
+                          ? styles.banBadge
+                          : styles.activeBadge
+                      }
+                    >
+                      {event.is_currently_banned ? "Banida" : "Não banida"}
+                    </span>
+                  ),
+                },
+              ]}
+              sort={sort}
+              caption="Auditoria de contas banidas"
+            />
 
             <p className={styles.footnote}>
               A idade da conta é calculada até a data de cada ação. Os registros

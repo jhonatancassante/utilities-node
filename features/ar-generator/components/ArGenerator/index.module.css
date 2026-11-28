@@ -118,31 +118,6 @@
   font-size: 18px;
 }
 
-.tableScroll {
-  overflow-x: auto;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-}
-
-.tableScroll table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.tableScroll th,
-.tableScroll td {
-  padding: 9px 10px;
-  border-bottom: 1px solid var(--border-color);
-  text-align: left;
-}
-
-.tableScroll th {
-  background: var(--box-bg);
-  color: var(--text-secondary);
-}
-
 .deleteButton {
   border: 0;
   background: transparent;

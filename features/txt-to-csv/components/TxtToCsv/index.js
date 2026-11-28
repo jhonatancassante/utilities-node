@@ -1,4 +1,5 @@
 // features/txt-to-csv/components/TxtToCsv/index.js
+import DataTable from "@/components/DataTable";
 import { useMemo, useState } from "react";
 import Button from "@/components/Button";
 import FileDropzone from "@/components/FileDropzone";
@@ -194,28 +195,20 @@ function TxtToCsv() {
             </StatusMessage>
           )}
 
-          <div className={styles.tableWrap}>
-            <table className={styles.previewTable}>
-              <thead>
-                <tr>
-                  {parsed.headers.map((header, index) => (
-                    <th key={`header-${index}`}>{header}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {parsed.rows.slice(0, PREVIEW_ROWS).map((row, rowIndex) => (
-                  <tr key={`row-${rowIndex}`}>
-                    {row.map((cell, cellIndex) => (
-                      <td key={`cell-${rowIndex}-${cellIndex}`}>
-                        {formatValue(cell, { dateOnly, decimalDot })}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            records={parsed.rows.slice(0, PREVIEW_ROWS)}
+            caption="Prévia das primeiras linhas do arquivo convertido"
+            getRowKey={(_, index) => index}
+            monospace
+            maxHeight="420px"
+            columns={parsed.headers.map((header, index) => ({
+              key: String(index),
+              label: header,
+              sortable: false,
+              render: (row) =>
+                formatValue(row[index], { dateOnly, decimalDot }),
+            }))}
+          />
 
           <p className={styles.settingHint}>Prévia das primeiras 15 linhas.</p>
 

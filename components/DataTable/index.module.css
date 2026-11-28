@@ -151,3 +151,15 @@
 .tableWrapper:not(.hasActions) tbody tr:hover td:last-child {
   background: var(--accent-soft);
 }
+
+.state {
+  padding: 26px;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.monospace table {
+  font-family: var(--font-mono);
+}

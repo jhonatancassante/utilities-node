@@ -3,12 +3,14 @@ import { useRouter } from "next/router";
 import AppHead from "@/components/AppHead";
 import AdminBackButton from "@/components/AdminBackButton";
 import Button from "@/components/Button";
-import AdminDataTable from "@/components/AdminDataTable";
+import DataTable from "@/components/DataTable";
+import usePagination from "@/hooks/use-pagination.js";
+import useRowSelection from "@/hooks/use-row-selection.js";
 import useSortableData from "@/hooks/use-sortable-data.js";
-import AdminPagination from "@/components/AdminPagination";
 import Layout from "@/components/Layout";
 import RealEstatePropertyBulkModal from "@/components/RealEstatePropertyBulkModal";
 import StatusMessage from "@/components/StatusMessage";
+import TableSection from "@/components/TableSection";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
 import {
@@ -47,14 +49,13 @@ function RealEstatePropertiesPage() {
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedIds, setSelectedIds] = useState([]);
+  const selection = useRowSelection();
+  const clearSelection = selection.clear;
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState(
     String(new Date().getFullYear()),
   );
   const [updatedFilter, setUpdatedFilter] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [feedback, setFeedback] = useState(null);
   const [dialog, setDialog] = useState(null);
   const canCreate = user?.features?.includes("create:real_estate_property");
@@ -66,7 +67,7 @@ function RealEstatePropertiesPage() {
     try {
       const data = await requestAPI("/api/v1/admin/real-estate-properties");
       setRecords(data);
-      setSelectedIds([]);
+      clearSelection();
     } catch (requestError) {
       setFeedback({
         type: "error",
@@ -77,7 +78,7 @@ function RealEstatePropertiesPage() {
     } finally {
       setIsLoadingRecords(false);
     }
-  }, []);
+  }, [clearSelection]);
 
   useEffect(() => {
     if (user && hasAdminSectionAccess(user, "real-estate-properties")) {
@@ -129,34 +130,8 @@ function RealEstatePropertiesPage() {
       return matchesYear && matchesUpdated && matchesSearch;
     });
   }, [records, search, yearFilter, updatedFilter]);
-  const { sortedRecords, sortState, handleSort, sortAnnouncement } =
-    useSortableData(filteredRecords);
-  const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
-  const currentPage = Math.min(page, pageCount);
-  const visibleRecords = sortedRecords.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
-  const allVisibleSelected =
-    visibleRecords.length > 0 &&
-    visibleRecords.every((record) => selectedIds.includes(record.id));
-
-  function toggleSelection(id) {
-    setSelectedIds((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
-  }
-
-  function togglePageSelection(checked) {
-    const visibleIds = visibleRecords.map((record) => record.id);
-    setSelectedIds((current) =>
-      checked
-        ? Array.from(new Set([...current, ...visibleIds]))
-        : current.filter((id) => !visibleIds.includes(id)),
-    );
-  }
+  const sort = useSortableData(filteredRecords);
+  const pagination = usePagination(sort.sortedRecords);
 
   async function handleBulkImport(records, onProgress) {
     setIsSaving(true);
@@ -454,7 +429,7 @@ function RealEstatePropertiesPage() {
                     value={search}
                     onChange={(event) => {
                       setSearch(event.target.value);
-                      setPage(1);
+                      pagination.resetPage();
                     }}
                     placeholder="ID, inscrição física ou CTM..."
                   />
@@ -466,7 +441,7 @@ function RealEstatePropertiesPage() {
                     value={yearFilter}
                     onChange={(event) => {
                       setYearFilter(event.target.value);
-                      setPage(1);
+                      pagination.resetPage();
                     }}
                   >
                     {!availableYears.includes(Number(yearFilter)) && (
@@ -488,7 +463,7 @@ function RealEstatePropertiesPage() {
                       checked={updatedFilter}
                       onChange={(event) => {
                         setUpdatedFilter(event.target.checked);
-                        setPage(1);
+                        pagination.resetPage();
                       }}
                     />
                     <span aria-hidden="true"></span>
@@ -510,82 +485,52 @@ function RealEstatePropertiesPage() {
                 </div>
               )}
             </div>
-            <section className={styles.results}>
-              <div className={styles.resultsHeading}>
-                <div>
-                  <h2>Imóveis cadastrados</h2>
-                  <span>{filteredRecords.length} registro(s)</span>
-                </div>
-                {canDelete && selectedIds.length > 0 && (
+            <TableSection
+              title="Imóveis cadastrados"
+              countLabel={filteredRecords.length + " registro(s)"}
+              actions={
+                canDelete &&
+                selection.selectedIds.length > 0 && (
                   <Button
                     type="button"
                     variant="danger"
                     icon="fa-trash"
-                    onClick={() => handleDelete(selectedIds)}
+                    onClick={() => handleDelete(selection.selectedIds)}
                     disabled={isDeleting}
                   >
                     {isDeleting
                       ? "Excluindo..."
-                      : "Excluir selecionados (" + selectedIds.length + ")"}
+                      : "Excluir selecionados (" +
+                        selection.selectedIds.length +
+                        ")"}
                   </Button>
-                )}
-              </div>
-              {isLoadingRecords ? (
-                <p className={styles.empty}>Carregando imóveis...</p>
-              ) : filteredRecords.length === 0 ? (
-                <p className={styles.empty}>Nenhum imóvel encontrado.</p>
-              ) : (
-                <>
-                  <AdminDataTable
-                    records={visibleRecords}
-                    columns={TABLE_FIELDS.map(([key, label]) => ({
-                      key,
-                      label,
-                    }))}
-                    sortState={sortState}
-                    onSort={handleSort}
-                    sortAnnouncement={sortAnnouncement}
-                    caption="Cadastros de imóveis"
-                    selectable={canDelete}
-                    selectedIds={selectedIds}
-                    allVisibleSelected={allVisibleSelected}
-                    onToggleRecord={toggleSelection}
-                    onTogglePage={togglePageSelection}
-                    getSelectionLabel={(record) =>
-                      "Selecionar imóvel " + record.physical_registration
+                )
+              }
+            >
+              <DataTable
+                records={pagination.visibleRecords}
+                loading={isLoadingRecords}
+                loadingMessage="Carregando imóveis..."
+                emptyMessage="Nenhum imóvel encontrado."
+                columns={TABLE_FIELDS.map(([key, label]) => ({ key, label }))}
+                sort={sort}
+                pagination={pagination}
+                caption="Cadastros de imóveis"
+                selection={canDelete ? selection : null}
+                getSelectionLabel={(record) =>
+                  "Selecionar imóvel " + record.physical_registration
+                }
+                renderActions={(record) => (
+                  <DataTable.RowAction
+                    href={
+                      "/admin/real-estate-properties/" +
+                      encodeURIComponent(record.id)
                     }
-                    renderActions={(record, actionClassName) => (
-                      <button
-                        type="button"
-                        className={actionClassName}
-                        onClick={() =>
-                          router.push(
-                            "/admin/real-estate-properties/" +
-                              encodeURIComponent(record.id),
-                          )
-                        }
-                      >
-                        <i
-                          className={
-                            "fas " + (canUpdate ? "fa-edit" : "fa-eye")
-                          }
-                          aria-hidden="true"
-                        ></i>{" "}
-                        {canUpdate ? "Editar" : "Visualizar"}
-                      </button>
-                    )}
+                    editable={canUpdate}
                   />
-                  <AdminPagination
-                    page={page}
-                    setPage={setPage}
-                    pageSize={pageSize}
-                    setPageSize={setPageSize}
-                    pageCount={pageCount}
-                    currentPage={currentPage}
-                  />
-                </>
-              )}
-            </section>
+                )}
+              />
+            </TableSection>
           </section>
         </main>
       </Layout>

@@ -47,31 +47,6 @@
   font-weight: 700;
   text-decoration: none;
 }
-.results {
-  margin-top: 28px;
-}
-.resultsHeading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-.resultsHeading h2 {
-  margin: 0 0 5px;
-  color: var(--text-primary);
-  font-size: 18px;
-}
-.resultsHeading span {
-  color: var(--text-faint);
-  font-size: 12px;
-}
-.empty {
-  padding: 26px;
-  border: 1px dashed var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  text-align: center;
-}
 @media (max-width: 760px) {
   .toolbar {
     align-items: stretch;
