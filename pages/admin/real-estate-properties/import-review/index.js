@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import AppHead from "@/components/AppHead";
 import AdminBackButton from "@/components/AdminBackButton";
-import AdminDataTable from "@/components/AdminDataTable";
+import DataTable from "@/components/DataTable";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
@@ -215,7 +215,7 @@ function RealEstatePropertyGroupingReviewPage() {
                         <li key={issue}>{issue}</li>
                       ))}
                     </ul>
-                    <AdminDataTable
+                    <DataTable
                       records={sortRecords(group.properties, sortState)}
                       columns={[
                         { key: "physical_property_id", label: "ID físico" },
@@ -250,13 +250,13 @@ function RealEstatePropertyGroupingReviewPage() {
                           ),
                         },
                       ]}
-                      showActions={false}
                       getRowKey={(record) => record.physical_property_id}
-                      sortState={sortState}
-                      onSort={handleSort}
-                      sortAnnouncement={
-                        group.ctm === groups[0]?.ctm ? sortAnnouncement : ""
-                      }
+                      sort={{
+                        sortState,
+                        handleSort,
+                        sortAnnouncement:
+                          group.ctm === groups[0]?.ctm ? sortAnnouncement : "",
+                      }}
                       caption={"Cadastros do CTM " + group.ctm}
                     />
                   </section>

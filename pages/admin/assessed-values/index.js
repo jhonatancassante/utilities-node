@@ -4,12 +4,14 @@ import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
-import AdminDataTable from "@/components/AdminDataTable";
+import DataTable from "@/components/DataTable";
+import usePagination from "@/hooks/use-pagination.js";
+import useRowSelection from "@/hooks/use-row-selection.js";
 import useSortableData from "@/hooks/use-sortable-data.js";
-import AdminPagination from "@/components/AdminPagination";
 import FileDropzone from "@/components/FileDropzone";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
+import TableSection from "@/components/TableSection";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
 import {
@@ -198,9 +200,8 @@ function AssessedValuesPage() {
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [pageSize, setPageSize] = useState(10);
-  const [page, setPage] = useState(1);
+  const selection = useRowSelection();
+  const clearSelection = selection.clear;
   const [search, setSearch] = useState("");
   const [feedback, setFeedback] = useState(null);
   const [csvFile, setCsvFile] = useState(null);
@@ -228,7 +229,7 @@ function AssessedValuesPage() {
     try {
       const data = await requestAPI("/api/v1/admin/assessed-values");
       setRecords(data);
-      setSelectedIds([]);
+      clearSelection();
     } catch (requestError) {
       setFeedback({
         type: "error",
@@ -239,7 +240,7 @@ function AssessedValuesPage() {
     } finally {
       setIsLoadingRecords(false);
     }
-  }, []);
+  }, [clearSelection]);
 
   useEffect(() => {
     if (user && hasAdminSectionAccess(user, "assessed-values")) {
@@ -258,48 +259,23 @@ function AssessedValuesPage() {
           .includes(term),
     );
   }, [records, search]);
-  const { sortedRecords, sortState, handleSort, sortAnnouncement } =
-    useSortableData(filteredRecords);
+  const sort = useSortableData(filteredRecords);
+  const pagination = usePagination(sort.sortedRecords);
   const previewSample = useMemo(
     () => preview?.records.slice(0, 5) ?? [],
     [preview],
   );
-  const {
-    sortedRecords: sortedPreviewRecords,
-    sortState: previewSortState,
-    handleSort: handlePreviewSort,
-    sortAnnouncement: previewSortAnnouncement,
-  } = useSortableData(previewSample);
-  const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
-  const currentPage = Math.min(page, pageCount);
-  const visibleRecords = sortedRecords.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
-
-  function toggleSelection(id) {
-    setSelectedIds((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
-  }
-  function togglePageSelection(checked) {
-    const visibleIds = visibleRecords.map((record) => record.id);
-    setSelectedIds((current) =>
-      checked
-        ? Array.from(new Set([...current, ...visibleIds]))
-        : current.filter((id) => !visibleIds.includes(id)),
-    );
-  }
+  const previewSort = useSortableData(previewSample);
 
   function handleDeleteSelected() {
-    if (!selectedIds.length) return;
+    if (!selection.selectedIds.length) return;
 
     setDeleteDialog({
-      ids: selectedIds,
+      ids: selection.selectedIds,
       message:
-        "Deseja excluir " + selectedIds.length + " registro(s) selecionado(s)?",
+        "Deseja excluir " +
+        selection.selectedIds.length +
+        " registro(s) selecionado(s)?",
     });
   }
 
@@ -309,7 +285,7 @@ function AssessedValuesPage() {
     setIsDeleting(true);
     setFeedback(null);
     const results = await Promise.allSettled(
-      selectedIds.map((id) =>
+      selection.selectedIds.map((id) =>
         requestAPI("/api/v1/admin/assessed-values/" + encodeURIComponent(id), {
           method: "DELETE",
         }),
@@ -487,10 +463,6 @@ function AssessedValuesPage() {
     );
   if (!user || !hasAdminSectionAccess(user, "assessed-values")) return null;
 
-  const allVisibleSelected =
-    visibleRecords.length > 0 &&
-    visibleRecords.every((record) => selectedIds.includes(record.id));
-
   return (
     <>
       <AppHead
@@ -649,8 +621,8 @@ function AssessedValuesPage() {
                       Os dados abaixo são uma amostra. Todos os registros foram
                       validados antes da importação.
                     </p>
-                    <AdminDataTable
-                      records={sortedPreviewRecords}
+                    <DataTable
+                      records={previewSort.sortedRecords}
                       columns={COLUMNS.map((column) => ({
                         key: column.name,
                         label: column.label,
@@ -661,11 +633,8 @@ function AssessedValuesPage() {
                               ? record.decree || "—"
                               : formatTableValue(record[column.name]),
                       }))}
-                      showActions={false}
                       getRowKey={(record, index) => record.id ?? index}
-                      sortState={previewSortState}
-                      onSort={handlePreviewSort}
-                      sortAnnouncement={previewSortAnnouncement}
+                      sort={previewSort}
                       caption="Prévia dos valores venais do arquivo CSV"
                     />
                     {preview.records.length > 5 && (
@@ -689,7 +658,7 @@ function AssessedValuesPage() {
                   value={search}
                   onChange={(event) => {
                     setSearch(event.target.value);
-                    setPage(1);
+                    pagination.resetPage();
                   }}
                   placeholder="Ex.: 2026 ou 123/2026"
                 />
@@ -704,13 +673,12 @@ function AssessedValuesPage() {
                 </Link>
               )}
             </div>
-            <section className={styles.results}>
-              <div className={styles.resultsHeading}>
-                <div>
-                  <h2>Registros cadastrados</h2>
-                  <span>{filteredRecords.length} registro(s)</span>
-                </div>
-                {canDelete && selectedIds.length > 0 && (
+            <TableSection
+              title="Registros cadastrados"
+              countLabel={filteredRecords.length + " registro(s)"}
+              actions={
+                canDelete &&
+                selection.selectedIds.length > 0 && (
                   <Button
                     type="button"
                     variant="danger"
@@ -720,68 +688,43 @@ function AssessedValuesPage() {
                   >
                     {isDeleting
                       ? "Excluindo..."
-                      : "Excluir selecionados (" + selectedIds.length + ")"}
+                      : "Excluir selecionados (" +
+                        selection.selectedIds.length +
+                        ")"}
                   </Button>
+                )
+              }
+            >
+              <DataTable
+                records={pagination.visibleRecords}
+                loading={isLoadingRecords}
+                loadingMessage="Carregando registros..."
+                emptyMessage="Nenhum registro encontrado."
+                columns={TABLE_COLUMNS.map((column) => ({
+                  key: column.name,
+                  label: column.label,
+                  render: (record) =>
+                    column.name === "year" ? (
+                      <strong>{record.year}</strong>
+                    ) : column.name === "decree" ? (
+                      record.decree || "—"
+                    ) : (
+                      formatTableValue(record[column.name])
+                    ),
+                }))}
+                sort={sort}
+                pagination={pagination}
+                caption="Valores venais cadastrados"
+                selection={canDelete ? selection : null}
+                getSelectionLabel={(record) => "Selecionar ano " + record.year}
+                renderActions={(record) => (
+                  <DataTable.RowAction
+                    href={"/admin/assessed-values/" + record.id}
+                    editable={canUpdate}
+                  />
                 )}
-              </div>
-              {isLoadingRecords ? (
-                <p className={styles.empty}>Carregando registros...</p>
-              ) : filteredRecords.length === 0 ? (
-                <p className={styles.empty}>Nenhum registro encontrado.</p>
-              ) : (
-                <>
-                  <AdminDataTable
-                    records={visibleRecords}
-                    columns={TABLE_COLUMNS.map((column) => ({
-                      key: column.name,
-                      label: column.label,
-                      render: (record) =>
-                        column.name === "year" ? (
-                          <strong>{record.year}</strong>
-                        ) : column.name === "decree" ? (
-                          record.decree || "—"
-                        ) : (
-                          formatTableValue(record[column.name])
-                        ),
-                    }))}
-                    sortState={sortState}
-                    onSort={handleSort}
-                    sortAnnouncement={sortAnnouncement}
-                    caption="Valores venais cadastrados"
-                    selectable={canDelete}
-                    selectedIds={selectedIds}
-                    allVisibleSelected={allVisibleSelected}
-                    onToggleRecord={toggleSelection}
-                    onTogglePage={togglePageSelection}
-                    getSelectionLabel={(record) =>
-                      "Selecionar ano " + record.year
-                    }
-                    renderActions={(record, actionClassName) => (
-                      <Link
-                        className={actionClassName}
-                        href={"/admin/assessed-values/" + record.id}
-                      >
-                        <i
-                          className={
-                            "fas " + (canUpdate ? "fa-edit" : "fa-eye")
-                          }
-                          aria-hidden="true"
-                        ></i>{" "}
-                        {canUpdate ? "Editar" : "Visualizar"}
-                      </Link>
-                    )}
-                  />
-                  <AdminPagination
-                    page={page}
-                    setPage={setPage}
-                    pageSize={pageSize}
-                    setPageSize={setPageSize}
-                    pageCount={pageCount}
-                    currentPage={currentPage}
-                  />
-                </>
-              )}
-            </section>
+              />
+            </TableSection>
           </section>
         </main>
       </Layout>

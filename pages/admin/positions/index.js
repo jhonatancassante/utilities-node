@@ -2,12 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
-import AdminDataTable from "@/components/AdminDataTable";
-import AdminPagination from "@/components/AdminPagination";
+import DataTable from "@/components/DataTable";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
+import TableSection from "@/components/TableSection";
+import usePagination from "@/hooks/use-pagination.js";
+import useRowSelection from "@/hooks/use-row-selection.js";
 import useSortableData from "@/hooks/use-sortable-data.js";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
@@ -30,11 +32,10 @@ function PositionsPage() {
   const [records, setRecords] = useState([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const selection = useRowSelection();
+  const clearSelection = selection.clear;
   const [deleteDialog, setDeleteDialog] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]);
   const [search, setSearch] = useState("");
-  const [pageSize, setPageSize] = useState(10);
-  const [page, setPage] = useState(1);
   const [feedback, setFeedback] = useState(null);
 
   const canCreate = user?.features?.includes("create:position");
@@ -59,7 +60,7 @@ function PositionsPage() {
     try {
       const data = await requestAPI("/api/v1/admin/positions");
       setRecords(data);
-      setSelectedIds([]);
+      clearSelection();
     } catch (requestError) {
       setFeedback({
         type: "error",
@@ -70,7 +71,7 @@ function PositionsPage() {
     } finally {
       setIsLoadingRecords(false);
     }
-  }, []);
+  }, [clearSelection]);
 
   useEffect(() => {
     if (user && hasAdminSectionAccess(user, "positions")) {
@@ -86,44 +87,17 @@ function PositionsPage() {
     );
   }, [records, search]);
 
-  const { sortedRecords, sortState, handleSort, sortAnnouncement } =
-    useSortableData(filteredRecords);
-  const pageCount = Math.max(1, Math.ceil(sortedRecords.length / pageSize));
-  const currentPage = Math.min(page, pageCount);
-  const visibleRecords = sortedRecords.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
-
-  const allVisibleSelected =
-    visibleRecords.length > 0 &&
-    visibleRecords.every((record) => selectedIds.includes(record.id));
-
-  function toggleSelection(id) {
-    setSelectedIds((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
-  }
-
-  function togglePageSelection(checked) {
-    const visibleIds = visibleRecords.map((record) => record.id);
-    setSelectedIds((current) =>
-      checked
-        ? Array.from(new Set([...current, ...visibleIds]))
-        : current.filter((id) => !visibleIds.includes(id)),
-    );
-  }
+  const sort = useSortableData(filteredRecords);
+  const pagination = usePagination(sort.sortedRecords);
 
   function handleDeleteSelected() {
-    if (!canDelete || !selectedIds.length) return;
+    if (!canDelete || !selection.selectedIds.length) return;
 
     setDeleteDialog({
-      ids: selectedIds,
+      ids: selection.selectedIds,
       message:
         "Deseja excluir " +
-        selectedIds.length +
+        selection.selectedIds.length +
         " cargo(s) selecionado(s)? A exclusão será lógica.",
     });
   }
@@ -136,12 +110,13 @@ function PositionsPage() {
     try {
       await requestAPI("/api/v1/admin/positions/bulk", {
         method: "DELETE",
-        body: JSON.stringify({ ids: selectedIds }),
+        body: JSON.stringify({ ids: selection.selectedIds }),
       });
       await loadRecords();
       setFeedback({
         type: "success",
-        message: selectedIds.length + " cargo(s) excluído(s) com sucesso.",
+        message:
+          selection.selectedIds.length + " cargo(s) excluído(s) com sucesso.",
       });
     } catch (requestError) {
       setFeedback({
@@ -242,7 +217,7 @@ function PositionsPage() {
                   value={search}
                   onChange={(event) => {
                     setSearch(event.target.value);
-                    setPage(1);
+                    pagination.resetPage();
                   }}
                   placeholder="Digite o nome do cargo"
                 />
@@ -255,13 +230,12 @@ function PositionsPage() {
               )}
             </div>
 
-            <section className={styles.results}>
-              <div className={styles.resultsHeading}>
-                <div>
-                  <h2>Cargos cadastrados</h2>
-                  <span>{filteredRecords.length} cargo(s)</span>
-                </div>
-                {canDelete && selectedIds.length > 0 && (
+            <TableSection
+              title="Cargos cadastrados"
+              countLabel={filteredRecords.length + " cargo(s)"}
+              actions={
+                canDelete &&
+                selection.selectedIds.length > 0 && (
                   <Button
                     type="button"
                     variant="danger"
@@ -271,68 +245,45 @@ function PositionsPage() {
                   >
                     {isDeleting
                       ? "Excluindo..."
-                      : "Excluir selecionados (" + selectedIds.length + ")"}
+                      : "Excluir selecionados (" +
+                        selection.selectedIds.length +
+                        ")"}
                   </Button>
+                )
+              }
+            >
+              <DataTable
+                records={pagination.visibleRecords}
+                loading={isLoadingRecords}
+                loadingMessage="Carregando cargos..."
+                emptyMessage="Nenhum cargo encontrado."
+                columns={[
+                  {
+                    key: "name",
+                    label: "Cargo",
+                    render: (record) => <strong>{record.name}</strong>,
+                  },
+                  {
+                    key: "updated_at",
+                    label: "Última atualização",
+                    render: (record) => formatDate(record.updated_at),
+                  },
+                ]}
+                sort={sort}
+                pagination={pagination}
+                caption="Cargos cadastrados"
+                selection={canDelete ? selection : null}
+                getSelectionLabel={(record) =>
+                  "Selecionar cargo " + record.name
+                }
+                renderActions={(record) => (
+                  <DataTable.RowAction
+                    href={"/admin/positions/" + record.id}
+                    editable={canUpdate}
+                  />
                 )}
-              </div>
-
-              {isLoadingRecords ? (
-                <p className={styles.empty}>Carregando cargos...</p>
-              ) : filteredRecords.length === 0 ? (
-                <p className={styles.empty}>Nenhum cargo encontrado.</p>
-              ) : (
-                <>
-                  <AdminDataTable
-                    records={visibleRecords}
-                    columns={[
-                      {
-                        key: "name",
-                        label: "Cargo",
-                        render: (record) => <strong>{record.name}</strong>,
-                      },
-                      {
-                        key: "updated_at",
-                        label: "Última atualização",
-                        render: (record) => formatDate(record.updated_at),
-                      },
-                    ]}
-                    sortState={sortState}
-                    onSort={handleSort}
-                    sortAnnouncement={sortAnnouncement}
-                    caption="Cargos cadastrados"
-                    selectable={canDelete}
-                    selectedIds={selectedIds}
-                    allVisibleSelected={allVisibleSelected}
-                    onToggleRecord={toggleSelection}
-                    onTogglePage={togglePageSelection}
-                    getSelectionLabel={(record) =>
-                      "Selecionar cargo " + record.name
-                    }
-                    renderActions={(record, actionClassName) => (
-                      <Link
-                        className={actionClassName}
-                        href={"/admin/positions/" + record.id}
-                      >
-                        <i
-                          className={
-                            "fas " + (canUpdate ? "fa-edit" : "fa-eye")
-                          }
-                          aria-hidden="true"
-                        ></i>{" "}
-                        {canUpdate ? "Editar" : "Visualizar"}
-                      </Link>
-                    )}
-                  />
-                  <AdminPagination
-                    setPage={setPage}
-                    pageSize={pageSize}
-                    setPageSize={setPageSize}
-                    pageCount={pageCount}
-                    currentPage={currentPage}
-                  />
-                </>
-              )}
-            </section>
+              />
+            </TableSection>
           </section>
         </main>
       </Layout>

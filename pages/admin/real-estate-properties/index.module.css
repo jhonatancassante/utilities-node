@@ -66,36 +66,9 @@
 .linkButton:hover {
   filter: brightness(1.08);
 }
-.results {
-  margin-top: 24px;
-}
-.resultsHeading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-.resultsHeading h2 {
-  margin: 0 0 5px;
-  color: var(--text-primary);
-  font-size: 18px;
-}
-.resultsHeading span {
-  color: var(--text-faint);
-  font-size: 12px;
-}
-.empty {
-  padding: 26px;
-  border: 1px dashed var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  text-align: center;
-}
 @media (max-width: 760px) {
   .toolbar,
-  .toolbarFilters,
-  .resultsHeading {
+  .toolbarFilters {
     align-items: stretch;
     flex-direction: column;
   }

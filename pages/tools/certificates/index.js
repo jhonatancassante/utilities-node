@@ -2,12 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
-import AdminDataTable from "@/components/AdminDataTable";
+import DataTable from "@/components/DataTable";
+import usePagination from "@/hooks/use-pagination.js";
+import useRowSelection from "@/hooks/use-row-selection.js";
 import useSortableData from "@/hooks/use-sortable-data.js";
-import AdminPagination from "@/components/AdminPagination";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
+import TableSection from "@/components/TableSection";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
 import { downloadCertificatePdf } from "@/lib/client/generate-certificate-pdf.js";
@@ -26,10 +28,9 @@ function CertificatesPage() {
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("all");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [feedback, setFeedback] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]);
+  const selection = useRowSelection();
+  const clearSelection = selection.clear;
   const [isDeleting, setIsDeleting] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [dialog, setDialog] = useState(null);
@@ -44,7 +45,7 @@ function CertificatesPage() {
     setIsLoadingRecords(true);
     try {
       setRecords(await requestAPI("/api/v1/certificates"));
-      setSelectedIds([]);
+      clearSelection();
     } catch (requestError) {
       setFeedback({
         type: "error",
@@ -55,7 +56,7 @@ function CertificatesPage() {
     } finally {
       setIsLoadingRecords(false);
     }
-  }, []);
+  }, [clearSelection]);
 
   useEffect(() => {
     if (
@@ -107,36 +108,8 @@ function CertificatesPage() {
     });
   }, [records, search, yearFilter]);
 
-  const { sortedRecords, sortState, handleSort, sortAnnouncement } =
-    useSortableData(filteredRecords);
-
-  const pageCount = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
-  const currentPage = Math.min(page, pageCount);
-  const visibleRecords = sortedRecords.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
-
-  const allVisibleSelected =
-    visibleRecords.length > 0 &&
-    visibleRecords.every((record) => selectedIds.includes(record.id));
-
-  function toggleSelection(id) {
-    setSelectedIds((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
-  }
-
-  function togglePageSelection(checked) {
-    const visibleIds = visibleRecords.map((record) => record.id);
-    setSelectedIds((current) =>
-      checked
-        ? Array.from(new Set([...current, ...visibleIds]))
-        : current.filter((id) => !visibleIds.includes(id)),
-    );
-  }
+  const sort = useSortableData(filteredRecords);
+  const pagination = usePagination(sort.sortedRecords);
 
   function handleDelete(ids) {
     if (!ids.length || !canDelete) return;
@@ -184,12 +157,12 @@ function CertificatesPage() {
   }
 
   async function handlePrint() {
-    if (!selectedIds.length || isGeneratingPdf) return;
+    if (!selection.selectedIds.length || isGeneratingPdf) return;
     setIsGeneratingPdf(true);
     setFeedback(null);
     try {
       const selectedRecords = records.filter((record) =>
-        selectedIds.includes(record.id),
+        selection.selectedIds.includes(record.id),
       );
       await downloadCertificatePdf(selectedRecords);
       setFeedback({
@@ -355,7 +328,7 @@ function CertificatesPage() {
                   value={search}
                   onChange={(event) => {
                     setSearch(event.target.value);
-                    setPage(1);
+                    pagination.resetPage();
                   }}
                   placeholder="Protocolo, requerente, imóvel ou inscrição..."
                 />
@@ -367,7 +340,7 @@ function CertificatesPage() {
                   value={yearFilter}
                   onChange={(event) => {
                     setYearFilter(event.target.value);
-                    setPage(1);
+                    pagination.resetPage();
                   }}
                 >
                   <option value="all">Todos</option>
@@ -389,27 +362,27 @@ function CertificatesPage() {
                 </button>
               )}
             </div>
-            <section className={styles.results}>
-              <div className={styles.resultsHeading}>
-                <div>
-                  <h2>Certidões emitidas</h2>
-                  <span>{filteredRecords.length} certidão(ões)</span>
-                </div>
-                <div className={styles.selectionActions}>
-                  {canDelete && selectedIds.length > 0 && (
+            <TableSection
+              title="Certidões emitidas"
+              countLabel={filteredRecords.length + " certidão(ões)"}
+              actions={
+                <>
+                  {canDelete && selection.selectedIds.length > 0 && (
                     <Button
                       type="button"
                       variant="danger"
                       icon="fa-trash"
-                      onClick={() => handleDelete(selectedIds)}
+                      onClick={() => handleDelete(selection.selectedIds)}
                       disabled={isDeleting}
                     >
                       {isDeleting
                         ? "Excluindo..."
-                        : "Excluir selecionadas (" + selectedIds.length + ")"}
+                        : "Excluir selecionadas (" +
+                          selection.selectedIds.length +
+                          ")"}
                     </Button>
                   )}
-                  {selectedIds.length > 0 && (
+                  {selection.selectedIds.length > 0 && (
                     <Button
                       type="button"
                       variant="outline"
@@ -419,80 +392,52 @@ function CertificatesPage() {
                     >
                       {isGeneratingPdf
                         ? "Gerando PDF..."
-                        : "Baixar PDF (" + selectedIds.length + ")"}
+                        : "Baixar PDF (" + selection.selectedIds.length + ")"}
                     </Button>
                   )}
-                </div>
-              </div>
-              {isLoadingRecords ? (
-                <p className={styles.empty}>Carregando certidões...</p>
-              ) : filteredRecords.length === 0 ? (
-                <p className={styles.empty}>Nenhuma certidão encontrada.</p>
-              ) : (
-                <>
-                  <AdminDataTable
-                    records={visibleRecords}
-                    columns={columns}
-                    sortState={sortState}
-                    onSort={handleSort}
-                    sortAnnouncement={sortAnnouncement}
-                    caption="Certidões emitidas"
-                    selectable
-                    selectedIds={selectedIds}
-                    allVisibleSelected={allVisibleSelected}
-                    onToggleRecord={toggleSelection}
-                    onTogglePage={togglePageSelection}
-                    getSelectionLabel={(record) =>
-                      "Selecionar certidão " +
-                      (record.protocol_number
-                        ? record.protocol_number + "/" + record.protocol_year
-                        : record.id)
-                    }
-                    onRowClick={(record) =>
-                      router.push(
-                        "/tools/certificates/" +
-                          encodeURIComponent(record.id) +
-                          "?mode=view",
-                      )
-                    }
-                    renderActions={(record, actionClassName) => {
-                      const canEdit =
-                        canUpdateOthers ||
-                        (canUpdateOwn && record.user_id === user.id);
-                      return (
-                        <button
-                          type="button"
-                          className={actionClassName}
-                          onClick={() =>
-                            router.push(
-                              "/tools/certificates/" +
-                                encodeURIComponent(record.id) +
-                                (canEdit ? "" : "?mode=view"),
-                            )
-                          }
-                        >
-                          <i
-                            className={
-                              "fas " + (canEdit ? "fa-edit" : "fa-eye")
-                            }
-                            aria-hidden="true"
-                          ></i>{" "}
-                          {canEdit ? "Editar" : "Visualizar"}
-                        </button>
-                      );
-                    }}
-                  />
-                  <AdminPagination
-                    page={page}
-                    setPage={setPage}
-                    pageSize={pageSize}
-                    setPageSize={setPageSize}
-                    pageCount={pageCount}
-                    currentPage={currentPage}
-                  />
                 </>
-              )}
-            </section>
+              }
+            >
+              <DataTable
+                records={pagination.visibleRecords}
+                loading={isLoadingRecords}
+                loadingMessage="Carregando certidões..."
+                emptyMessage="Nenhuma certidão encontrada."
+                columns={columns}
+                sort={sort}
+                pagination={pagination}
+                caption="Certidões emitidas"
+                selection={selection}
+                getSelectionLabel={(record) =>
+                  "Selecionar certidão " +
+                  (record.protocol_number
+                    ? record.protocol_number + "/" + record.protocol_year
+                    : record.id)
+                }
+                onRowClick={(record) =>
+                  router.push(
+                    "/tools/certificates/" +
+                      encodeURIComponent(record.id) +
+                      "?mode=view",
+                  )
+                }
+                renderActions={(record) => {
+                  const canEdit =
+                    canUpdateOthers ||
+                    (canUpdateOwn && record.user_id === user.id);
+                  return (
+                    <DataTable.RowAction
+                      href={
+                        "/tools/certificates/" +
+                        encodeURIComponent(record.id) +
+                        (canEdit ? "" : "?mode=view")
+                      }
+                      editable={canEdit}
+                    />
+                  );
+                }}
+              />
+            </TableSection>
           </section>
         </main>
       </Layout>
