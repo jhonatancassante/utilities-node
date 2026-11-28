@@ -3,13 +3,16 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 
 import AdminBackButton from "@/components/AdminBackButton";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import FieldError from "@/components/FieldError";
 import Modal from "@/components/Modal";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, { adminSectionCheck } from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
+import { formatDateTime } from "@/lib/client/format.js";
 import requestAPI from "@/lib/client/api.js";
 import {
   validateEmail,
@@ -25,29 +28,15 @@ import styles from "./index.module.css";
 
 function AdminUsersPage() {
   const router = useRouter();
-  const { user, error, isLoading, setUser } = useUser();
+  const access = useAccessGate({
+    checks: [adminSectionCheck("users")],
+  });
+  const { user, setUser } = access;
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [feedback, setFeedback] = useState(null);
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-    if (!isLoading && user && !hasAdminSectionAccess(user, "users")) {
-      if (hasAdminAccess(user)) {
-        router.replace("/admin");
-      } else {
-        router.replace("/perfil");
-      }
-    }
-  }, [error, isLoading, router, user]);
 
   useEffect(() => {
     if (feedback?.type !== "success") {
@@ -94,10 +83,7 @@ function AdminUsersPage() {
     } catch (requestError) {
       setFeedback((current) => ({
         id: (current?.id ?? 0) + 1,
-        type: "error",
-        name: requestError.statusCode ? requestError.name : undefined,
-        message: requestError.message,
-        action: requestError.action,
+        ...feedbackFromError(requestError),
       }));
     } finally {
       setIsSearching(false);
@@ -115,10 +101,7 @@ function AdminUsersPage() {
     } catch (requestError) {
       setFeedback((current) => ({
         id: (current?.id ?? 0) + 1,
-        type: "error",
-        name: requestError.statusCode ? requestError.name : undefined,
-        message: requestError.message,
-        action: requestError.action,
+        ...feedbackFromError(requestError),
       }));
     }
   }
@@ -150,12 +133,7 @@ function AdminUsersPage() {
           return;
         }
 
-        setFeedback({
-          type: "error",
-          name: requestError.statusCode ? requestError.name : undefined,
-          message: requestError.message,
-          action: requestError.action,
-        });
+        setFeedback(feedbackFromError(requestError));
       });
 
     return () => {
@@ -210,61 +188,14 @@ function AdminUsersPage() {
         message: "Alterações salvas e lista de usuários atualizada.",
       });
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.statusCode ? requestError.name : undefined,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsSearching(false);
     }
   }
 
-  if (isLoading || (!user && !error)) {
-    return (
-      <>
-        <AppHead title="Gerenciar usuários" />
-        <Layout>
-          <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section
-              className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
-            >
-              <p>Carregando permissões...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <AppHead title="Gerenciar usuários" />
-        <Layout>
-          <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section
-              className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
-            >
-              <StatusMessage
-                type="critical"
-                name={error.statusCode ? error.name : undefined}
-                action={error.action}
-              >
-                {error.statusCode
-                  ? error.message
-                  : "Não foi possível verificar suas permissões."}
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (!user || !hasAdminSectionAccess(user, "users")) {
-    return null;
+  if (access.state !== "allowed") {
+    return <AccessFallback title="Gerenciar usuários" access={access} />;
   }
 
   return (
@@ -287,8 +218,8 @@ function AdminUsersPage() {
               <span className={shared.badge}>ADMINISTRAÇÃO</span>
               <h1>Gerenciar usuários</h1>
               <p className={styles.description}>
-                Pesquise por nome de usuário ou e-mail para consultar e alterar
-                os dados e as permissões de uma conta.
+                Pesquise por nome, nome de usuário ou e-mail para consultar e
+                alterar os dados e as permissões de uma conta.
               </p>
             </header>
 
@@ -481,12 +412,7 @@ function UserEditor({
         if (!isMounted) {
           return;
         }
-        setFeedback({
-          type: "error",
-          name: requestError.statusCode ? requestError.name : undefined,
-          message: requestError.message,
-          action: requestError.action,
-        });
+        setFeedback(feedbackFromError(requestError));
       })
       .finally(() => {
         if (isMounted) {
@@ -515,12 +441,7 @@ function UserEditor({
         if (!isMounted) {
           return;
         }
-        setFeedback({
-          type: "error",
-          name: requestError.statusCode ? requestError.name : undefined,
-          message: requestError.message,
-          action: requestError.action,
-        });
+        setFeedback(feedbackFromError(requestError));
       })
       .finally(() => {
         if (isMounted) {
@@ -618,10 +539,7 @@ function UserEditor({
     } catch (requestError) {
       setFeedback((current) => ({
         id: (current?.id ?? 0) + 1,
-        type: "error",
-        name: requestError.statusCode ? requestError.name : undefined,
-        message: requestError.message,
-        action: requestError.action,
+        ...feedbackFromError(requestError),
       }));
     } finally {
       setIsUpdatingBan(false);
@@ -651,10 +569,7 @@ function UserEditor({
     } catch (requestError) {
       setFeedback((currentFeedback) => ({
         id: (currentFeedback?.id ?? 0) + 1,
-        type: "error",
-        name: requestError.statusCode ? requestError.name : undefined,
-        message: requestError.message,
-        action: requestError.action,
+        ...feedbackFromError(requestError),
       }));
     } finally {
       setIsUpdatingTimeout(false);
@@ -727,12 +642,7 @@ function UserEditor({
         "Suspensão aplicada com sucesso. As sessões anteriores foram encerradas.",
       );
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.statusCode ? requestError.name : undefined,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsUpdatingTimeout(false);
     }
@@ -756,12 +666,7 @@ function UserEditor({
         "Suspensão removida. O usuário poderá entrar novamente, mas precisará fazer login.",
       );
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.statusCode ? requestError.name : undefined,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsUpdatingTimeout(false);
     }
@@ -864,10 +769,7 @@ function UserEditor({
     } catch (requestError) {
       setFeedback((current) => ({
         id: (current?.id ?? 0) + 1,
-        type: "error",
-        name: requestError.statusCode ? requestError.name : undefined,
-        message: requestError.message,
-        action: requestError.action,
+        ...feedbackFromError(requestError),
       }));
     } finally {
       setIsSaving(false);
@@ -961,14 +863,7 @@ function UserEditor({
                       );
                       await onUpdated(updatedUser);
                     } catch (requestError) {
-                      setFeedback({
-                        type: "error",
-                        name: requestError.statusCode
-                          ? requestError.name
-                          : undefined,
-                        message: requestError.message,
-                        action: requestError.action,
-                      });
+                      setFeedback(feedbackFromError(requestError));
                     } finally {
                       setIsSaving(false);
                     }
@@ -1385,8 +1280,7 @@ function UserEditor({
             <div className={styles.timeoutCurrent}>
               <strong>Suspensão ativa</strong>
               <span>
-                Acesso suspenso até{" "}
-                {new Date(user.timeout_until).toLocaleString("pt-BR")}
+                Acesso suspenso até {formatDateTime(user.timeout_until)}
               </span>
             </div>
           )}

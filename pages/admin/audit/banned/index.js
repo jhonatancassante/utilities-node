@@ -1,29 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
 
 import AdminBackButton from "@/components/AdminBackButton";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import DataTable from "@/components/DataTable";
 import useSortableData from "@/hooks/use-sortable-data.js";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, { featureCheck } from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
+import { formatDateTime } from "@/lib/client/format.js";
 import requestAPI from "@/lib/client/api.js";
-import { hasAdminAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
-
-function formatDate(value) {
-  if (!value) {
-    return "—";
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "medium",
-  }).format(new Date(value));
-}
 
 function formatAccountAge(startValue, endValue) {
   if (!startValue || !endValue) {
@@ -103,27 +93,15 @@ function formatAccountAge(startValue, endValue) {
 }
 
 export default function AdminBannedAuditPage() {
-  const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const access = useAccessGate({
+    checks: [featureCheck("read:audit")],
+  });
+  const { user, isLoading } = access;
   const [events, setEvents] = useState([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-
-    if (!isLoading && user && !user.features?.includes("read:audit")) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    }
-  }, [error, isLoading, router, user]);
 
   useEffect(() => {
     if (isLoading || !user?.features?.includes("read:audit")) {
@@ -144,9 +122,7 @@ export default function AdminBannedAuditPage() {
       } catch (requestError) {
         if (active) {
           setFeedback({
-            name: requestError.statusCode ? requestError.name : undefined,
-            message: requestError.message,
-            action: requestError.action,
+            ...feedbackFromError(requestError),
           });
         }
       } finally {
@@ -208,40 +184,10 @@ export default function AdminBannedAuditPage() {
       .map((event) => event.user_id),
   ).size;
 
-  if (isLoading || (!user && !error)) {
+  if (access.state !== "allowed") {
     return (
-      <>
-        <AppHead title="Auditoria de contas banidas" />
-        <Layout>
-          <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section className={`${shared.card} ${styles.card}`}>
-              <p>Carregando permissões...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
+      <AccessFallback title="Auditoria de contas banidas" access={access} />
     );
-  }
-
-  if (error) {
-    return (
-      <>
-        <AppHead title="Auditoria de contas banidas" />
-        <Layout>
-          <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section className={`${shared.card} ${styles.card}`}>
-              <StatusMessage type="critical">
-                Não foi possível verificar suas permissões.
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (!user?.features?.includes("read:audit")) {
-    return null;
   }
 
   return (
@@ -358,7 +304,7 @@ export default function AdminBannedAuditPage() {
                 {
                   key: "account_created_at",
                   label: "Criação da conta",
-                  render: (event) => formatDate(event.account_created_at),
+                  render: (event) => formatDateTime(event.account_created_at),
                 },
                 {
                   key: "action",
@@ -378,7 +324,7 @@ export default function AdminBannedAuditPage() {
                 {
                   key: "created_at",
                   label: "Data da ação",
-                  render: (event) => formatDate(event.created_at),
+                  render: (event) => formatDateTime(event.created_at),
                 },
                 {
                   key: "account_age_sort",

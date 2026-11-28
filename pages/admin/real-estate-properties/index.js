@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import AdminBackButton from "@/components/AdminBackButton";
 import Button from "@/components/Button";
@@ -11,12 +12,10 @@ import Layout from "@/components/Layout";
 import RealEstatePropertyBulkModal from "@/components/RealEstatePropertyBulkModal";
 import StatusMessage from "@/components/StatusMessage";
 import TableSection from "@/components/TableSection";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, { adminSectionCheck } from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
 import requestAPI from "@/lib/client/api.js";
-import {
-  hasAdminAccess,
-  hasAdminSectionAccess,
-} from "@/models/authorization.js";
+import { hasAdminSectionAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -44,7 +43,10 @@ const TABLE_FIELDS = [
 
 function RealEstatePropertiesPage() {
   const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const access = useAccessGate({
+    checks: [adminSectionCheck("real-estate-properties")],
+  });
+  const { user } = access;
   const [records, setRecords] = useState([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -69,12 +71,7 @@ function RealEstatePropertiesPage() {
       setRecords(data);
       clearSelection();
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsLoadingRecords(false);
     }
@@ -85,23 +82,6 @@ function RealEstatePropertiesPage() {
       Promise.resolve().then(loadRecords);
     }
   }, [loadRecords, user]);
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-    if (
-      !isLoading &&
-      user &&
-      !hasAdminSectionAccess(user, "real-estate-properties")
-    ) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    }
-  }, [error, isLoading, router, user]);
 
   const availableYears = useMemo(
     () =>
@@ -244,12 +224,7 @@ function RealEstatePropertiesPage() {
           // A sessão expira automaticamente se a limpeza não puder ser concluída.
         }
       }
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
       return false;
     } finally {
       setIsSaving(false);
@@ -298,12 +273,7 @@ function RealEstatePropertiesPage() {
         } catch {
           // A sessão expira automaticamente se a limpeza não puder ser concluída.
         }
-        setFeedback({
-          type: "error",
-          name: requestError.name,
-          message: requestError.message,
-          action: requestError.action,
-        });
+        setFeedback(feedbackFromError(requestError));
         currentDialog.resolve(false);
       }
       return;
@@ -333,53 +303,14 @@ function RealEstatePropertiesPage() {
         message: ids.length + " imóvel(is) excluído(s) com sucesso.",
       });
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsDeleting(false);
     }
   }
 
-  if (isLoading || (!user && !error)) {
-    return (
-      <>
-        <AppHead title="Imóveis" />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <p>Carregando permissões...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-  if (error) {
-    return (
-      <>
-        <AppHead title="Imóveis" />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <StatusMessage
-                type="critical"
-                name={error.name}
-                action={error.action}
-              >
-                {error.message}
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-  if (!user || !hasAdminSectionAccess(user, "real-estate-properties")) {
-    return null;
+  if (access.state !== "allowed") {
+    return <AccessFallback title="Imóveis" access={access} />;
   }
 
   return (

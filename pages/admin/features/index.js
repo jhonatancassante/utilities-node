@@ -1,24 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router";
 
 import AdminBackButton from "@/components/AdminBackButton";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import Modal from "@/components/Modal";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, { adminSectionCheck } from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
 import requestAPI from "@/lib/client/api.js";
-import {
-  hasAdminAccess,
-  hasAdminSectionAccess,
-} from "@/models/authorization.js";
+import { hasAdminSectionAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
 function AdminFeaturesPage() {
-  const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const access = useAccessGate({
+    checks: [adminSectionCheck("features")],
+  });
+  const { user, isLoading } = access;
   const [features, setFeatures] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [privilegedOnly, setPrivilegedOnly] = useState(false);
@@ -36,20 +36,6 @@ function AdminFeaturesPage() {
   const hasFeaturesAccess =
     !isLoading && Boolean(user) && hasAdminSectionAccess(user, "features");
 
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-
-    if (!isLoading && user && !hasAdminSectionAccess(user, "features")) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    }
-  }, [error, isLoading, router, user]);
-
   const loadFeatures = useCallback(async ({ showFeedback = true } = {}) => {
     setIsLoadingFeatures(true);
     try {
@@ -60,10 +46,7 @@ function AdminFeaturesPage() {
       if (showFeedback) {
         setFeedback((current) => ({
           id: (current?.id ?? 0) + 1,
-          type: "error",
-          name: requestError.statusCode ? requestError.name : undefined,
-          message: requestError.message,
-          action: requestError.action,
+          ...feedbackFromError(requestError),
         }));
       }
       return false;
@@ -93,10 +76,7 @@ function AdminFeaturesPage() {
         }
         setFeedback((current) => ({
           id: (current?.id ?? 0) + 1,
-          type: "error",
-          name: requestError.statusCode ? requestError.name : undefined,
-          message: requestError.message,
-          action: requestError.action,
+          ...feedbackFromError(requestError),
         }));
       } finally {
         if (active) {
@@ -222,12 +202,7 @@ function AdminFeaturesPage() {
           : "A feature foi excluída, mas não foi possível atualizar a listagem.",
       });
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.statusCode ? requestError.name : undefined,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     }
   }
 
@@ -243,50 +218,8 @@ function AdminFeaturesPage() {
     setFeedback(null);
   }
 
-  if (isLoading || (!user && !error)) {
-    return (
-      <>
-        <AppHead title="Gerenciar features" />
-        <Layout>
-          <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section
-              className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
-            >
-              <p>Carregando permissões...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <AppHead title="Gerenciar features" />
-        <Layout>
-          <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section
-              className={`${shared.card} ${shared.cardUltraWide} ${styles.card}`}
-            >
-              <StatusMessage
-                type="critical"
-                name={error.statusCode ? error.name : undefined}
-                action={error.action}
-              >
-                {error.statusCode
-                  ? error.message
-                  : "Não foi possível verificar suas permissões."}
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (!user || !hasAdminSectionAccess(user, "features")) {
-    return null;
+  if (access.state !== "allowed") {
+    return <AccessFallback title="Gerenciar features" access={access} />;
   }
 
   return (
@@ -632,9 +565,7 @@ function FeatureForm({ feature, onSubmit, onCancel, isSaving, title }) {
 
     if (requestError) {
       setFormError({
-        name: requestError.statusCode ? requestError.name : undefined,
-        message: requestError.message,
-        action: requestError.action,
+        ...feedbackFromError(requestError),
       });
     }
   }

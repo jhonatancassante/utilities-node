@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import DataTable from "@/components/DataTable";
@@ -12,12 +12,10 @@ import FileDropzone from "@/components/FileDropzone";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import TableSection from "@/components/TableSection";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, { adminSectionCheck } from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
 import requestAPI from "@/lib/client/api.js";
-import {
-  hasAdminAccess,
-  hasAdminSectionAccess,
-} from "@/models/authorization.js";
+import { hasAdminSectionAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
@@ -215,8 +213,10 @@ function parseCsvValue(field, rawValue, rowNumber) {
 }
 
 function AssessedValuesPage() {
-  const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const access = useAccessGate({
+    checks: [adminSectionCheck("assessed-values")],
+  });
+  const { user } = access;
   const [records, setRecords] = useState([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -234,19 +234,6 @@ function AssessedValuesPage() {
   const canUpdate = user?.features?.includes("update:assessed_value");
   const canDelete = user?.features?.includes("delete:assessed_value");
 
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-    if (!isLoading && user && !hasAdminSectionAccess(user, "assessed-values")) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    }
-  }, [error, isLoading, router, user]);
-
   const loadRecords = useCallback(async () => {
     setIsLoadingRecords(true);
     try {
@@ -254,12 +241,7 @@ function AssessedValuesPage() {
       setRecords(data);
       clearSelection();
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsLoadingRecords(false);
     }
@@ -323,12 +305,7 @@ function AssessedValuesPage() {
         message: deletedCount + " registro(s) excluído(s) com sucesso.",
       });
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     }
     setIsDeleting(false);
   }
@@ -453,53 +430,14 @@ function AssessedValuesPage() {
         message: importedCount + " registro(s) importado(s) com sucesso.",
       });
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsImporting(false);
     }
   }
 
-  if (isLoading || (!user && !error)) {
-    return (
-      <>
-        <AppHead title="Valores venais" />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <p>Carregando permissões...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-  if (error) {
-    return (
-      <>
-        <AppHead title="Valores venais" />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <StatusMessage
-                type="critical"
-                name={error.name}
-                action={error.action}
-              >
-                {error.message}
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-  if (!user || !hasAdminSectionAccess(user, "assessed-values")) {
-    return null;
+  if (access.state !== "allowed") {
+    return <AccessFallback title="Valores venais" access={access} />;
   }
 
   return (

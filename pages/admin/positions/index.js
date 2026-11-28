@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
 import DataTable from "@/components/DataTable";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
@@ -11,26 +11,19 @@ import TableSection from "@/components/TableSection";
 import usePagination from "@/hooks/use-pagination.js";
 import useRowSelection from "@/hooks/use-row-selection.js";
 import useSortableData from "@/hooks/use-sortable-data.js";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, { adminSectionCheck } from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
+import { formatDateTime } from "@/lib/client/format.js";
 import requestAPI from "@/lib/client/api.js";
-import {
-  hasAdminAccess,
-  hasAdminSectionAccess,
-} from "@/models/authorization.js";
+import { hasAdminSectionAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
-function formatDate(value) {
-  if (!value) {
-    return "—";
-  }
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("pt-BR");
-}
-
 function PositionsPage() {
-  const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const access = useAccessGate({
+    checks: [adminSectionCheck("positions")],
+  });
+  const { user } = access;
   const [records, setRecords] = useState([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -44,19 +37,6 @@ function PositionsPage() {
   const canUpdate = user?.features?.includes("update:position");
   const canDelete = user?.features?.includes("delete:position");
 
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-    if (!isLoading && user && !hasAdminSectionAccess(user, "positions")) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    }
-  }, [error, isLoading, router, user]);
-
   const loadRecords = useCallback(async () => {
     setIsLoadingRecords(true);
     try {
@@ -64,12 +44,7 @@ function PositionsPage() {
       setRecords(data);
       clearSelection();
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsLoadingRecords(false);
     }
@@ -125,55 +100,14 @@ function PositionsPage() {
           selection.selectedIds.length + " cargo(s) excluído(s) com sucesso.",
       });
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsDeleting(false);
     }
   }
 
-  if (isLoading || (!user && !error)) {
-    return (
-      <>
-        <AppHead title="Cargos" />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <p>Carregando permissões...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <AppHead title="Cargos" />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <StatusMessage
-                type="critical"
-                name={error.name}
-                action={error.action}
-              >
-                {error.message}
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (!user || !hasAdminSectionAccess(user, "positions")) {
-    return null;
+  if (access.state !== "allowed") {
+    return <AccessFallback title="Cargos" access={access} />;
   }
 
   return (
@@ -274,7 +208,7 @@ function PositionsPage() {
                   {
                     key: "updated_at",
                     label: "Última atualização",
-                    render: (record) => formatDate(record.updated_at),
+                    render: (record) => formatDateTime(record.updated_at),
                   },
                 ]}
                 sort={sort}

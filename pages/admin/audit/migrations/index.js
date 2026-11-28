@@ -1,56 +1,27 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 
 import AdminBackButton from "@/components/AdminBackButton";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import DataTable from "@/components/DataTable";
 import useSortableData from "@/hooks/use-sortable-data.js";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, { featureCheck } from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
+import { formatDateTime } from "@/lib/client/format.js";
 import requestAPI from "@/lib/client/api.js";
-import { hasAdminAccess } from "@/models/authorization.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
-function formatDate(value) {
-  if (!value) {
-    return "—";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "medium",
-    timeZone: "America/Sao_Paulo",
-  }).format(date);
-}
-
 export default function AdminMigrationAuditPage() {
-  const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const access = useAccessGate({
+    checks: [featureCheck("read:audit")],
+  });
+  const { user, isLoading } = access;
   const [migrations, setMigrations] = useState([]);
   const [isLoadingMigrations, setIsLoadingMigrations] = useState(false);
   const [feedback, setFeedback] = useState(null);
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-
-    if (!isLoading && user && !user.features?.includes("read:audit")) {
-      router.replace(hasAdminAccess(user) ? "/admin" : "/perfil");
-    }
-  }, [error, isLoading, router, user]);
 
   useEffect(() => {
     if (isLoading || !user?.features?.includes("read:audit")) {
@@ -71,9 +42,7 @@ export default function AdminMigrationAuditPage() {
       } catch (requestError) {
         if (active) {
           setFeedback({
-            name: requestError.statusCode ? requestError.name : undefined,
-            message: requestError.message,
-            action: requestError.action,
+            ...feedbackFromError(requestError),
           });
         }
       } finally {
@@ -92,40 +61,8 @@ export default function AdminMigrationAuditPage() {
 
   const sort = useSortableData(migrations);
 
-  if (isLoading || (!user && !error)) {
-    return (
-      <>
-        <AppHead title="Migrations executadas" />
-        <Layout>
-          <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section className={`${shared.card} ${styles.card}`}>
-              <p>Carregando permissões...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <AppHead title="Migrations executadas" />
-        <Layout>
-          <main className={`${shared.container} ${shared.containerUltraWide}`}>
-            <section className={`${shared.card} ${styles.card}`}>
-              <StatusMessage type="critical">
-                Não foi possível verificar suas permissões.
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (!user?.features?.includes("read:audit")) {
-    return null;
+  if (access.state !== "allowed") {
+    return <AccessFallback title="Migrations executadas" access={access} />;
   }
 
   return (
@@ -197,7 +134,7 @@ export default function AdminMigrationAuditPage() {
                 {
                   key: "run_on",
                   label: "Executada em",
-                  render: (migration) => formatDate(migration.run_on),
+                  render: (migration) => formatDateTime(migration.run_on),
                 },
               ]}
               sort={sort}

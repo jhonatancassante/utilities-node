@@ -85,14 +85,17 @@ const toolsList = [
 
 export const TOOLS_BASE_PATH = "/tools";
 
+// Ordem alfabética pelo título (pt-BR), independente da ordem de declaração.
 export const tools = Object.freeze(
-  toolsList.map((tool) =>
-    Object.freeze({
-      ...tool,
-      href: `${TOOLS_BASE_PATH}/${tool.slug}`,
-      isAvailable: tool.status === TOOL_STATUS.available,
-    }),
-  ),
+  [...toolsList]
+    .sort((a, b) => a.title.localeCompare(b.title, "pt-BR"))
+    .map((tool) =>
+      Object.freeze({
+        ...tool,
+        href: `${TOOLS_BASE_PATH}/${tool.slug}`,
+        isAvailable: tool.status === TOOL_STATUS.available,
+      }),
+    ),
 );
 
 export function getToolBySlug(slug) {

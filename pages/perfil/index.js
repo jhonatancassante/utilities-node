@@ -8,6 +8,7 @@ import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import ProfilePhotoField from "@/components/ProfilePhotoField";
 import useUser from "@/hooks/use-user.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
 import requestAPI from "@/lib/client/api.js";
 import {
   validateUsername,
@@ -174,9 +175,7 @@ function ProfileForm({ user, onUpdated }) {
       setIsPhotoEditorOpen(false);
     } catch (error) {
       setPhotoFeedback({
-        name: error.statusCode ? error.name : undefined,
-        message: error.message,
-        action: error.action,
+        ...feedbackFromError(error),
       });
     } finally {
       setIsSavingPhoto(false);
@@ -286,12 +285,7 @@ function ProfileForm({ user, onUpdated }) {
       setShowPasswordConfirmation(false);
       setIsEditing(false);
     } catch (error) {
-      setFeedback({
-        type: "error",
-        name: error.statusCode ? error.name : undefined,
-        message: error.message,
-        action: error.action,
-      });
+      setFeedback(feedbackFromError(error));
     } finally {
       setIsSubmitting(false);
     }

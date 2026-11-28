@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import AdminBackButton from "@/components/AdminBackButton";
+import AccessFallback from "@/components/AccessFallback";
 import AppHead from "@/components/AppHead";
 import DataTable from "@/components/DataTable";
 import usePagination from "@/hooks/use-pagination.js";
@@ -10,22 +11,20 @@ import Button from "@/components/Button";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
 import TableSection from "@/components/TableSection";
-import useUser from "@/hooks/use-user.js";
+import useAccessGate, { featureCheck } from "@/hooks/use-access-gate.js";
+import { feedbackFromError } from "@/lib/client/feedback.js";
+import { formatDate } from "@/lib/client/format.js";
 import requestAPI from "@/lib/client/api.js";
 import { downloadCertificatePdf } from "@/lib/client/generate-certificate-pdf.js";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
 
-function formatDate(value) {
-  if (!value) {
-    return "—";
-  }
-  return new Date(value).toLocaleDateString("pt-BR");
-}
-
 function CertificatesPage() {
   const router = useRouter();
-  const { user, error, isLoading } = useUser();
+  const access = useAccessGate({
+    checks: [featureCheck("read:certificate", "/tools")],
+  });
+  const { user } = access;
   const [records, setRecords] = useState([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [search, setSearch] = useState("");
@@ -49,29 +48,11 @@ function CertificatesPage() {
       setRecords(await requestAPI("/api/v1/certificates"));
       clearSelection();
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsLoadingRecords(false);
     }
   }, [clearSelection]);
-
-  useEffect(() => {
-    if (
-      !isLoading &&
-      !user &&
-      (!error || [401, 403].includes(error.statusCode))
-    ) {
-      router.replace("/login");
-    }
-    if (!isLoading && user && !canRead) {
-      router.replace("/tools");
-    }
-  }, [canRead, error, isLoading, router, user]);
 
   useEffect(() => {
     if (user && canRead) {
@@ -151,12 +132,7 @@ function CertificatesPage() {
         message: ids.length + " certidão(ões) excluída(s) com sucesso.",
       });
     } catch (requestError) {
-      setFeedback({
-        type: "error",
-        name: requestError.name,
-        message: requestError.message,
-        action: requestError.action,
-      });
+      setFeedback(feedbackFromError(requestError));
     } finally {
       setIsDeleting(false);
     }
@@ -185,7 +161,6 @@ function CertificatesPage() {
     } catch (requestError) {
       setFeedback({
         type: "error",
-        name: requestError.name,
         message:
           requestError.message || "Não foi possível gerar o PDF das certidões.",
         action:
@@ -196,44 +171,8 @@ function CertificatesPage() {
     }
   }
 
-  if (isLoading || (!user && !error)) {
-    return (
-      <>
-        <AppHead title="Certidão de Valor Venal" />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <p>Carregando permissões...</p>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <AppHead title="Certidões" />
-        <Layout>
-          <main className={shared.container}>
-            <section className={shared.card}>
-              <StatusMessage
-                type="critical"
-                name={error.name}
-                action={error.action}
-              >
-                {error.message}
-              </StatusMessage>
-            </section>
-          </main>
-        </Layout>
-      </>
-    );
-  }
-
-  if (!user || !canRead) {
-    return null;
+  if (access.state !== "allowed") {
+    return <AccessFallback title="Certidões" access={access} />;
   }
 
   const columns = [
