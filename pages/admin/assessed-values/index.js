@@ -284,27 +284,25 @@ function AssessedValuesPage() {
 
     setIsDeleting(true);
     setFeedback(null);
-    const results = await Promise.allSettled(
-      selection.selectedIds.map((id) =>
-        requestAPI("/api/v1/admin/assessed-values/" + encodeURIComponent(id), {
-          method: "DELETE",
-        }),
-      ),
-    );
-    const succeeded = results.filter(
-      (result) => result.status === "fulfilled",
-    ).length;
-    const failed = results.length - succeeded;
-    await loadRecords();
-    setFeedback({
-      type: failed ? "error" : "success",
-      message: failed
-        ? succeeded +
-          " registro(s) excluído(s); " +
-          failed +
-          " não puderam ser excluídos."
-        : succeeded + " registro(s) excluído(s) com sucesso.",
-    });
+    try {
+      await requestAPI("/api/v1/admin/assessed-values/bulk", {
+        method: "DELETE",
+        body: JSON.stringify({ ids: selection.selectedIds }),
+      });
+      const deletedCount = selection.selectedIds.length;
+      await loadRecords();
+      setFeedback({
+        type: "success",
+        message: deletedCount + " registro(s) excluído(s) com sucesso.",
+      });
+    } catch (requestError) {
+      setFeedback({
+        type: "error",
+        name: requestError.name,
+        message: requestError.message,
+        action: requestError.action,
+      });
+    }
     setIsDeleting(false);
   }
 

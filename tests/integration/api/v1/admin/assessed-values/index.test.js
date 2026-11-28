@@ -149,3 +149,93 @@ describe("POST /api/v1/admin/assessed-values", () => {
     });
   });
 });
+
+describe("DELETE /api/v1/admin/assessed-values/bulk", () => {
+  function bulkDelete(sessionObject, ids) {
+    return fetch(endpoint() + "/bulk", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `session_id=${sessionObject.token}`,
+      },
+      body: JSON.stringify({ ids }),
+    });
+  }
+
+  test("Rejeitando usuário sem a feature correspondente", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "read:assessed_value",
+    ]);
+    const record = await assessedValue.create({ year: 2031 });
+
+    const response = await bulkDelete(sessionObject, [record.id]);
+
+    expect(response.status).toBe(403);
+  });
+
+  test("Excluindo logicamente vários registros de uma vez", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "delete:assessed_value",
+      "read:assessed_value",
+    ]);
+    const first = await assessedValue.create({ year: 2032 });
+    const second = await assessedValue.create({ year: 2033 });
+
+    const response = await bulkDelete(sessionObject, [first.id, second.id]);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: first.id }),
+        expect.objectContaining({ id: second.id }),
+      ]),
+    );
+    await expect(assessedValue.findOneById(first.id)).rejects.toThrow(
+      "O registro de valores venais informado não foi encontrado.",
+    );
+  });
+
+  test("Não exclui nada quando um dos IDs não existe", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "delete:assessed_value",
+    ]);
+    const record = await assessedValue.create({ year: 2034 });
+
+    const response = await bulkDelete(sessionObject, [
+      record.id,
+      "99999999-9999-4999-8999-999999999999",
+    ]);
+
+    expect(response.status).toBe(404);
+    await expect(assessedValue.findOneById(record.id)).resolves.toMatchObject({
+      id: record.id,
+    });
+  });
+
+  test("Rejeitando seleção vazia ou com ID que não é UUID", async () => {
+    const sessionObject = await createSessionWithFeatures([
+      "delete:assessed_value",
+    ]);
+
+    for (const ids of [[], ["id-que-nao-e-uuid"]]) {
+      const response = await bulkDelete(sessionObject, ids);
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({ name: "ValidationError" });
+    }
+  });
+});
+
+describe("ID malformado em /api/v1/admin/assessed-values/[id]", () => {
+  test.each([
+    ["GET", "read:assessed_value"],
+    ["DELETE", "delete:assessed_value"],
+  ])("%s responde 404 em vez de erro interno", async (method, feature) => {
+    const sessionObject = await createSessionWithFeatures([feature]);
+    const response = await fetch(endpoint() + "/id-que-nao-e-uuid", {
+      method,
+      headers: { Cookie: `session_id=${sessionObject.token}` },
+    });
+
+    expect(response.status).toBe(404);
+  });
+});
