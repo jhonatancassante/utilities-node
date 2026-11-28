@@ -11,8 +11,11 @@ const entertainmentAppsList = [
   },
 ];
 
+// Ordem alfabética pelo título (pt-BR), independente da ordem de declaração.
 export const entertainmentApps = Object.freeze(
-  entertainmentAppsList.map((app) => Object.freeze({ ...app })),
+  [...entertainmentAppsList]
+    .sort((a, b) => a.title.localeCompare(b.title, "pt-BR"))
+    .map((app) => Object.freeze({ ...app })),
 );
 
 export function getEntertainmentAppBySlug(slug) {

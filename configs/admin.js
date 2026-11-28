@@ -1,4 +1,4 @@
-export const adminSections = [
+const adminSectionsList = [
   {
     id: "users",
     title: "Gerenciar usuários",
@@ -67,3 +67,10 @@ export const adminSections = [
     requiredFeature: "read:status:all",
   },
 ];
+
+// Ordem alfabética pelo título (pt-BR), independente da ordem de declaração.
+export const adminSections = Object.freeze(
+  [...adminSectionsList].sort((a, b) =>
+    a.title.localeCompare(b.title, "pt-BR"),
+  ),
+);
