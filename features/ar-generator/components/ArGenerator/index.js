@@ -1,4 +1,5 @@
 // features/ar-generator/components/ArGenerator/index.js
+import DataTable from "@/components/DataTable";
 import { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import HelpToggle from "@/components/HelpToggle";
@@ -276,17 +277,46 @@ export default function ArGenerator() {
       {records.length > 0 && (
         <section className={styles.tableSection}>
           <h2>Destinatários cadastrados ({records.length})</h2>
-          <div className={styles.tableScroll}>
-            <table>
-              <thead><tr><th>Nome</th><th>Endereço</th><th>Bairro</th><th>Cidade/UF</th><th>CEP</th><th>Observação</th><th>Ações</th></tr></thead>
-              <tbody>{records.map((record, index) => (
-                <tr key={`${record.cep}-${index}`}>
-                  <td>{record.nome}</td><td>{record.endereco}, {record.numero}{record.complemento ? ` (${record.complemento})` : ""}</td><td>{record.bairro}</td><td>{record.cidade}/{record.uf}</td><td>{record.cep}</td><td>{record.observacao || "—"}</td>
-                  <td><button type="button" className={styles.deleteButton} aria-label={`Excluir ${record.nome}`} onClick={() => setRecords((current) => current.filter((_, i) => i !== index))}><i className="fas fa-trash-alt" aria-hidden="true"></i></button></td>
-                </tr>
-              ))}</tbody>
-            </table>
-          </div>
+          <DataTable
+            records={records}
+            caption="Destinatários cadastrados"
+            getRowKey={(record, index) => `${record.cep}-${index}`}
+            columns={[
+              { key: "nome", label: "Nome" },
+              {
+                key: "endereco",
+                label: "Endereço",
+                render: (record) =>
+                  `${record.endereco}, ${record.numero}${record.complemento ? ` (${record.complemento})` : ""}`,
+              },
+              { key: "bairro", label: "Bairro" },
+              {
+                key: "cidade",
+                label: "Cidade/UF",
+                render: (record) => `${record.cidade}/${record.uf}`,
+              },
+              { key: "cep", label: "CEP" },
+              {
+                key: "observacao",
+                label: "Observação",
+                render: (record) => record.observacao || "—",
+              },
+            ]}
+            renderActions={(record) => (
+              <button
+                type="button"
+                className={styles.deleteButton}
+                aria-label={`Excluir ${record.nome}`}
+                onClick={() =>
+                  setRecords((current) =>
+                    current.filter((item) => item !== record),
+                  )
+                }
+              >
+                <i className="fas fa-trash-alt" aria-hidden="true"></i>
+              </button>
+            )}
+          />
           <label className={styles.switchRow}>
             <span>Incluir etiqueta com os dados do remetente?</span>
             <input type="checkbox" role="switch" checked={includeSenderLabels} onChange={(event) => setIncludeSenderLabels(event.target.checked)} />
