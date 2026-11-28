@@ -13,7 +13,7 @@ const PAGINATION_BUTTON_STYLE = {
   flexShrink: 0,
 };
 
-function AdminPagination({
+function Pagination({
   setPage,
   pageSize,
   setPageSize,
@@ -120,4 +120,4 @@ function AdminPagination({
   );
 }
 
-export default AdminPagination;
+export default Pagination;
