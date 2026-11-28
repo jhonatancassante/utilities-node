@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
 
+import StatusMessage from "@/components/StatusMessage";
 import ThemeToggle from "@/components/ThemeToggle";
 import headConfigs from "@/configs/head.js";
 import { tools, TOOLS_BASE_PATH } from "@/configs/tools.js";
@@ -27,7 +28,7 @@ function Header() {
   const [openMenu, setOpenMenu] = useState(null);
   const [isToolsExpanded, setIsToolsExpanded] = useState(false);
   const [isEntertainmentExpanded, setIsEntertainmentExpanded] = useState(false);
-  const [logoutError, setLogoutError] = useState("");
+  const [logoutError, setLogoutError] = useState(null);
   const { user, clearUser } = useUser();
 
   const closeMenus = () => {
@@ -84,7 +85,7 @@ function Header() {
 
   function toggleMenu(menu) {
     setOpenMenu((current) => (current === menu ? null : menu));
-    setLogoutError("");
+    setLogoutError(null);
   }
 
   function toggleTools() {
@@ -104,7 +105,7 @@ function Header() {
       closeMenus();
       router.push("/login");
     } catch (error) {
-      setLogoutError(error.message);
+      setLogoutError({ id: Date.now(), message: error.message });
     }
   }
 
@@ -399,11 +400,6 @@ function Header() {
                   <i className="fas fa-sign-out-alt" aria-hidden="true"></i>
                   Sair
                 </button>
-                {logoutError && (
-                  <span className={styles.logoutError} role="alert">
-                    {logoutError}
-                  </span>
-                )}
               </div>
             </div>
           )}
@@ -411,6 +407,11 @@ function Header() {
           {user === null && <ThemeToggle />}
         </div>
       </div>
+      {logoutError && (
+        <StatusMessage type="error" resetKey={logoutError.id}>
+          {logoutError.message}
+        </StatusMessage>
+      )}
     </header>
   );
 }

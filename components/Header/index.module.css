@@ -475,14 +475,6 @@ a.toolItem[aria-current="page"] {
   background: var(--accent-soft);
 }
 
-.logoutError {
-  display: block;
-  padding: 8px 12px;
-  color: var(--danger-fg);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
 @media (max-width: 860px) {
   .loginLink {
     width: 100%;

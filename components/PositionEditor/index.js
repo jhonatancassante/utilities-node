@@ -4,6 +4,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
+import FieldError from "@/components/FieldError";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
@@ -19,6 +20,7 @@ function PositionEditor({ recordId }) {
   const [isLoadingRecord, setIsLoadingRecord] = useState(Boolean(recordId));
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [nameError, setNameError] = useState("");
   const isEditing = Boolean(recordId);
   const requiredFeature = isEditing ? "read:position" : "create:position";
   const canUpdate = user?.features?.includes("update:position");
@@ -72,16 +74,16 @@ function PositionEditor({ recordId }) {
     event.preventDefault();
     const normalizedName = name.trim();
 
+    setFeedback(null);
+
     if (!normalizedName || normalizedName.length > 60) {
-      setFeedback({
-        type: "error",
-        message: "Informe um nome de cargo com até 60 caracteres.",
-      });
+      setNameError("Informe um nome de cargo com até 60 caracteres.");
+      event.currentTarget.elements["position-name"]?.focus();
       return;
     }
 
+    setNameError("");
     setIsSaving(true);
-    setFeedback(null);
 
     try {
       await requestAPI(
@@ -192,22 +194,30 @@ function PositionEditor({ recordId }) {
                 Não foi possível carregar o cargo informado.
               </p>
             ) : (
-              <form className={styles.form} onSubmit={handleSubmit}>
+              <form className={styles.form} onSubmit={handleSubmit} noValidate>
                 <div>
                   <label className={shared.label} htmlFor="position-name">
                     Nome do cargo *
                   </label>
                   <input
-                    className={shared.input}
+                    className={`${shared.input} ${nameError ? shared.inputInvalid : ""}`}
                     id="position-name"
                     type="text"
                     value={name}
                     maxLength={60}
-                    onChange={(event) => setName(event.target.value)}
+                    onChange={(event) => {
+                      setName(event.target.value);
+                      setNameError("");
+                    }}
                     disabled={isSaving || (isEditing && !canUpdate)}
                     required
                     autoComplete="off"
+                    aria-invalid={Boolean(nameError)}
+                    aria-describedby={
+                      nameError ? "position-name-error" : undefined
+                    }
                   />
+                  <FieldError id="position-name-error">{nameError}</FieldError>
                   <span className={styles.counter}>{name.length}/60</span>
                 </div>
                 <div className={styles.actions}>

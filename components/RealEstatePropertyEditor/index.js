@@ -4,6 +4,7 @@ import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
 import Layout from "@/components/Layout";
+import FieldError from "@/components/FieldError";
 import StatusMessage from "@/components/StatusMessage";
 import useUser from "@/hooks/use-user.js";
 import requestAPI from "@/lib/client/api.js";
@@ -240,6 +241,7 @@ function RealEstatePropertyEditor({ recordId }) {
   const [isLoadingRecord, setIsLoadingRecord] = useState(Boolean(recordId));
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const isEditing = Boolean(recordId);
   const requiredFeature = isEditing
     ? "read:real_estate_property"
@@ -303,74 +305,86 @@ function RealEstatePropertyEditor({ recordId }) {
     if (type === "ctm") next = formatCtm(value);
     if (type === "decimal") next = maskDecimal(value);
     setForm((current) => ({ ...current, [name]: next }));
+    setFieldErrors((current) => {
+      if (!current[name]) return current;
+      const rest = { ...current };
+      delete rest[name];
+      return rest;
+    });
   }
 
-  async function handleSubmit(event) {
-    event.preventDefault();
-    setFeedback(null);
-    const registrationDigits = digitsOnly(form.physical_registration);
-    if (![13, 14, 15].includes(registrationDigits.length)) {
-      setFeedback({
-        type: "error",
-        message:
-          "A inscrição física deve seguir um dos formatos 12.12345.1234.12, 12.12345.1234.123 ou 12.12345.1234.1234.",
-      });
-      return;
-    }
-    if (digitsOnly(form.ctm).length !== 11) {
-      setFeedback({
-        type: "error",
-        message: "O CTM deve conter 11 dígitos, no formato 12.12345.1234.",
-      });
-      return;
-    }
+  function validateForm() {
+    const errors = {};
     const payload = {};
+
     for (const section of SECTIONS) {
       for (const field of section.fields) {
         const raw = String(form[field.name] ?? "").trim();
+
         if (!raw && field.nullable) {
           payload[field.name] = null;
           continue;
         }
         if (!raw && field.required) {
-          setFeedback({
-            type: "error",
-            message: "Preencha o campo " + field.label + ".",
-          });
-          return;
+          errors[field.name] = "Preencha o campo " + field.label + ".";
+          continue;
         }
         if (!raw) continue;
-        if (field.type === "registration" || field.type === "ctm")
+
+        if (field.type === "registration") {
+          if (![13, 14, 15].includes(digitsOnly(raw).length)) {
+            errors[field.name] =
+              "A inscrição física deve seguir um dos formatos 12.12345.1234.12, 12.12345.1234.123 ou 12.12345.1234.1234.";
+            continue;
+          }
           payload[field.name] = digitsOnly(raw);
-        else if (field.type === "decimal") {
+        } else if (field.type === "ctm") {
+          if (digitsOnly(raw).length !== 11) {
+            errors[field.name] =
+              "O CTM deve conter 11 dígitos, no formato 12.12345.1234.";
+            continue;
+          }
+          payload[field.name] = digitsOnly(raw);
+        } else if (field.type === "decimal") {
           const number = Number(raw.replace(",", "."));
           if (
             !Number.isFinite(number) ||
             Math.round(number * 100) / 100 !== number
           ) {
-            setFeedback({
-              type: "error",
-              message: "Informe um valor válido no campo " + field.label + ".",
-            });
-            return;
+            errors[field.name] =
+              "Informe um valor válido no campo " + field.label + ".";
+            continue;
           }
           payload[field.name] = number;
         } else if (field.type === "integer") {
           const number = Number(raw);
           if (!Number.isInteger(number) || number < 0) {
-            setFeedback({
-              type: "error",
-              message:
-                "Informe um número inteiro válido no campo " +
-                field.label +
-                ".",
-            });
-            return;
+            errors[field.name] =
+              "Informe um número inteiro válido no campo " + field.label + ".";
+            continue;
           }
           payload[field.name] = number;
-        } else payload[field.name] = raw;
+        } else {
+          payload[field.name] = raw;
+        }
       }
     }
+
+    return { errors, payload };
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setFeedback(null);
+    const { errors, payload } = validateForm();
+    setFieldErrors(errors);
+
+    const firstInvalid = Object.keys(errors)[0];
+    if (firstInvalid) {
+      event.currentTarget.elements[firstInvalid]?.focus();
+      return;
+    }
+
     payload.annual = Boolean(form.annual);
     setIsSaving(true);
     try {
@@ -485,7 +499,7 @@ function RealEstatePropertyEditor({ recordId }) {
                 Não foi possível carregar o imóvel informado.
               </p>
             ) : (
-              <form className={styles.form} onSubmit={handleSubmit}>
+              <form className={styles.form} onSubmit={handleSubmit} noValidate>
                 {SECTIONS.map((section) => (
                   <section className={styles.formSection} key={section.title}>
                     <div className={styles.sectionHeading}>
@@ -503,7 +517,8 @@ function RealEstatePropertyEditor({ recordId }) {
                             {field.required ? " *" : ""}
                           </span>
                           <input
-                            className={shared.input}
+                            className={`${shared.input} ${fieldErrors[field.name] ? shared.inputInvalid : ""}`}
+                            name={field.name}
                             type="text"
                             inputMode={
                               field.type === "decimal"
@@ -525,7 +540,16 @@ function RealEstatePropertyEditor({ recordId }) {
                             }
                             disabled={isSaving || isReadOnly}
                             required={field.required}
+                            aria-invalid={Boolean(fieldErrors[field.name])}
+                            aria-describedby={
+                              fieldErrors[field.name]
+                                ? field.name + "-error"
+                                : undefined
+                            }
                           />
+                          <FieldError id={field.name + "-error"}>
+                            {fieldErrors[field.name]}
+                          </FieldError>
                         </label>
                       ))}
                     </div>

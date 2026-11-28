@@ -197,6 +197,7 @@ function AssessedValuesPage() {
   const [records, setRecords] = useState([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
@@ -292,14 +293,19 @@ function AssessedValuesPage() {
     );
   }
 
-  async function handleDeleteSelected() {
-    if (
-      !selectedIds.length ||
-      !window.confirm(
+  function handleDeleteSelected() {
+    if (!selectedIds.length) return;
+
+    setDeleteDialog({
+      ids: selectedIds,
+      message:
         "Deseja excluir " + selectedIds.length + " registro(s) selecionado(s)?",
-      )
-    )
-      return;
+    });
+  }
+
+  async function deleteSelected() {
+    setDeleteDialog(null);
+
     setIsDeleting(true);
     setFeedback(null);
     const results = await Promise.allSettled(
@@ -779,6 +785,16 @@ function AssessedValuesPage() {
           </section>
         </main>
       </Layout>
+      {deleteDialog && (
+        <StatusMessage
+          type="confirmation"
+          resetKey={"delete-assessed-values-" + deleteDialog.ids.join(",")}
+          onConfirm={deleteSelected}
+          onCancel={() => setDeleteDialog(null)}
+        >
+          {deleteDialog.message}
+        </StatusMessage>
+      )}
     </>
   );
 }

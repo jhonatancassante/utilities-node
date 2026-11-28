@@ -5,6 +5,7 @@ import Image from "next/image";
 import AdminBackButton from "@/components/AdminBackButton";
 import AppHead from "@/components/AppHead";
 import Button from "@/components/Button";
+import FieldError from "@/components/FieldError";
 import Modal from "@/components/Modal";
 import Layout from "@/components/Layout";
 import StatusMessage from "@/components/StatusMessage";
@@ -450,6 +451,7 @@ function UserEditor({
       .slice(0, 16);
   });
   const [feedback, setFeedback] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [features, setFeatures] = useState([]);
   const [positions, setPositions] = useState([]);
   const [isLoadingPositions, setIsLoadingPositions] =
@@ -533,6 +535,17 @@ function UserEditor({
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
     setFeedback(null);
+    setFieldErrors((current) => {
+      if (
+        !current[name] &&
+        !(name === "password" && current.passwordConfirmation)
+      )
+        return current;
+      const rest = { ...current };
+      delete rest[name];
+      if (name === "password") delete rest.passwordConfirmation;
+      return rest;
+    });
   }
 
   function toggleFeature(featureName) {
@@ -726,25 +739,48 @@ function UserEditor({
   async function handleSubmit(event) {
     event.preventDefault();
 
-    const validationError =
-      (!form.name.trim() || form.name.trim().length > 150
-        ? { message: "Informe um nome com até 150 caracteres." }
-        : null) ||
-      validateUsername(form.username.trim()) ||
-      (form.email.trim() !== user.email
+    const errors = {};
+    if (!form.name.trim() || form.name.trim().length > 150) {
+      errors.name = "Informe um nome com até 150 caracteres.";
+    }
+    const usernameError = validateUsername(form.username.trim());
+    if (usernameError) errors.username = usernameError.message;
+    const emailError =
+      form.email.trim() !== user.email
         ? validateEmail(form.email.trim())
-        : null) ||
-      (form.password ? validatePassword(form.password) : null) ||
-      (!form.password && form.passwordConfirmation
-        ? { message: "Informe a nova senha antes de confirmá-la." }
-        : form.password && !form.passwordConfirmation
-          ? { message: "Confirme a nova senha." }
-          : form.password && form.password !== form.passwordConfirmation
-            ? { message: "As senhas informadas não coincidem." }
-            : null);
+        : null;
+    if (emailError) errors.email = emailError.message;
+    const passwordError = form.password
+      ? validatePassword(form.password)
+      : null;
+    if (passwordError) {
+      errors.password = passwordError.message;
+    } else if (!form.password && form.passwordConfirmation) {
+      errors.password = "Informe a nova senha antes de confirmá-la.";
+    } else if (form.password && !form.passwordConfirmation) {
+      errors.passwordConfirmation = "Confirme a nova senha.";
+    } else if (form.password && form.password !== form.passwordConfirmation) {
+      errors.passwordConfirmation = "As senhas informadas não coincidem.";
+    }
 
-    if (validationError) {
-      setFeedback({ type: "error", message: validationError.message });
+    const firstInvalid = [
+      "name",
+      "username",
+      "email",
+      "password",
+      "passwordConfirmation",
+    ].find((field) => errors[field]);
+    setFieldErrors(errors);
+    if (firstInvalid) {
+      setFeedback(null);
+      const ids = {
+        name: "edit-name",
+        username: "edit-username",
+        email: "edit-email",
+        password: "edit-password",
+        passwordConfirmation: "edit-password-confirmation",
+      };
+      document.getElementById(ids[firstInvalid])?.focus();
       return;
     }
 
@@ -911,13 +947,22 @@ function UserEditor({
                 Nome
               </label>
               <input
-                className={shared.input}
+                className={
+                  fieldErrors.name
+                    ? `${shared.input} ${shared.inputInvalid}`
+                    : shared.input
+                }
                 id="edit-name"
+                aria-invalid={Boolean(fieldErrors.name)}
+                aria-describedby={
+                  fieldErrors.name ? "edit-name-error" : undefined
+                }
                 value={form.name}
                 maxLength={150}
                 onChange={(event) => updateField("name", event.target.value)}
                 disabled={isSaving}
               />
+              <FieldError id="edit-name-error">{fieldErrors.name}</FieldError>
             </div>
             <div className={styles.field}>
               <label className={shared.label} htmlFor="edit-position">
@@ -952,27 +997,47 @@ function UserEditor({
                 Nome de usuário
               </label>
               <input
-                className={shared.input}
+                className={
+                  fieldErrors.username
+                    ? `${shared.input} ${shared.inputInvalid}`
+                    : shared.input
+                }
                 id="edit-username"
+                aria-invalid={Boolean(fieldErrors.username)}
+                aria-describedby={
+                  fieldErrors.username ? "edit-username-error" : undefined
+                }
                 value={form.username}
                 onChange={(event) =>
                   updateField("username", event.target.value)
                 }
                 disabled={isSaving}
               />
+              <FieldError id="edit-username-error">
+                {fieldErrors.username}
+              </FieldError>
             </div>
             <div className={styles.field}>
               <label className={shared.label} htmlFor="edit-email">
                 E-mail
               </label>
               <input
-                className={shared.input}
+                className={
+                  fieldErrors.email
+                    ? `${shared.input} ${shared.inputInvalid}`
+                    : shared.input
+                }
                 id="edit-email"
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={
+                  fieldErrors.email ? "edit-email-error" : undefined
+                }
                 type="email"
                 value={form.email}
                 onChange={(event) => updateField("email", event.target.value)}
                 disabled={isSaving}
               />
+              <FieldError id="edit-email-error">{fieldErrors.email}</FieldError>
             </div>
           </div>
         )}
@@ -987,8 +1052,16 @@ function UserEditor({
                   Nova senha
                 </label>
                 <input
-                  className={shared.input}
+                  className={
+                    fieldErrors.password
+                      ? `${shared.input} ${shared.inputInvalid}`
+                      : shared.input
+                  }
                   id="edit-password"
+                  aria-invalid={Boolean(fieldErrors.password)}
+                  aria-describedby={
+                    fieldErrors.password ? "edit-password-error" : undefined
+                  }
                   type="password"
                   autoComplete="new-password"
                   value={form.password}
@@ -997,6 +1070,9 @@ function UserEditor({
                   }
                   disabled={isSaving}
                 />
+                <FieldError id="edit-password-error">
+                  {fieldErrors.password}
+                </FieldError>
               </div>
               <div className={styles.field}>
                 <label
@@ -1006,8 +1082,18 @@ function UserEditor({
                   Confirmar nova senha
                 </label>
                 <input
-                  className={shared.input}
+                  className={
+                    fieldErrors.passwordConfirmation
+                      ? `${shared.input} ${shared.inputInvalid}`
+                      : shared.input
+                  }
                   id="edit-password-confirmation"
+                  aria-invalid={Boolean(fieldErrors.passwordConfirmation)}
+                  aria-describedby={
+                    fieldErrors.passwordConfirmation
+                      ? "edit-password-confirmation-error"
+                      : undefined
+                  }
                   type="password"
                   autoComplete="new-password"
                   value={form.passwordConfirmation}
@@ -1016,6 +1102,9 @@ function UserEditor({
                   }
                   disabled={isSaving}
                 />
+                <FieldError id="edit-password-confirmation-error">
+                  {fieldErrors.passwordConfirmation}
+                </FieldError>
               </div>
             </div>
           </div>

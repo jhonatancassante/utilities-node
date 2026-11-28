@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Button from "@/components/Button";
+import FieldError from "@/components/FieldError";
 import Modal from "@/components/Modal";
 import shared from "@/styles/shared.module.css";
 import styles from "./index.module.css";
@@ -119,15 +120,21 @@ function RealEstatePropertyModal({
   isReadOnly = false,
 }) {
   const [form, setForm] = useState(() => createInitialForm(record));
-  const [validationError, setValidationError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   function updateField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => {
+      if (!current[name]) return current;
+      const rest = { ...current };
+      delete rest[name];
+      return rest;
+    });
   }
 
   function handleSubmit(event) {
     event.preventDefault();
-    setValidationError("");
+    const errors = {};
     const payload = {};
     for (const field of FIELDS) {
       const value = form[field.name].trim();
@@ -137,8 +144,8 @@ function RealEstatePropertyModal({
       }
       if (!value && !field.required) continue;
       if (!value && field.required) {
-        setValidationError("Preencha o campo " + field.label + ".");
-        return;
+        errors[field.name] = "Preencha o campo " + field.label + ".";
+        continue;
       }
       if (field.type === "number") {
         const number = Number(value);
@@ -148,16 +155,23 @@ function RealEstatePropertyModal({
             field.step !== undefined &&
             Math.round(number * 100) / 100 !== number)
         ) {
-          setValidationError(
-            "Informe um número válido no campo " + field.label + ".",
-          );
-          return;
+          errors[field.name] =
+            "Informe um número válido no campo " + field.label + ".";
+          continue;
         }
         payload[field.name] = number;
       } else {
         payload[field.name] = value;
       }
     }
+
+    setFieldErrors(errors);
+    const firstInvalid = Object.keys(errors)[0];
+    if (firstInvalid) {
+      event.currentTarget.elements[firstInvalid]?.focus();
+      return;
+    }
+
     payload.annual = Boolean(form.annual);
     onSubmit(payload);
   }
@@ -170,7 +184,7 @@ function RealEstatePropertyModal({
 
   return (
     <Modal title={title} onClose={onClose} wide>
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className={styles.form} onSubmit={handleSubmit} noValidate>
         <div className={styles.grid}>
           {FIELDS.map((field) => (
             <label className={styles.field} key={field.name}>
@@ -179,7 +193,8 @@ function RealEstatePropertyModal({
                 {field.required ? " *" : ""}
               </span>
               <input
-                className={shared.input}
+                className={`${shared.input} ${fieldErrors[field.name] ? shared.inputInvalid : ""}`}
+                name={field.name}
                 type={field.type || "text"}
                 inputMode={field.type === "number" ? "decimal" : undefined}
                 min={field.type === "number" ? "0" : undefined}
@@ -191,7 +206,14 @@ function RealEstatePropertyModal({
                 }
                 disabled={isSaving || isReadOnly}
                 required={field.required}
+                aria-invalid={Boolean(fieldErrors[field.name])}
+                aria-describedby={
+                  fieldErrors[field.name] ? field.name + "-error" : undefined
+                }
               />
+              <FieldError id={field.name + "-error"}>
+                {fieldErrors[field.name]}
+              </FieldError>
             </label>
           ))}
         </div>
@@ -208,11 +230,6 @@ function RealEstatePropertyModal({
             <span aria-hidden="true"></span>
           </span>
         </label>
-        {validationError && (
-          <p className={styles.validationError} role="alert">
-            {validationError}
-          </p>
-        )}
         <div className={styles.actions}>
           <Button
             type="button"
