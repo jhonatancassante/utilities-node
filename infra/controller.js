@@ -20,6 +20,8 @@ import {
 function createController(handlers, { middlewares = [] } = {}) {
   const router = createRouter();
 
+  router.use(setNoStoreHeader);
+
   if (middlewares.length > 0) {
     middlewares.forEach((middleware, index) => {
       if (typeof middleware !== "function") {
@@ -45,6 +47,11 @@ function createController(handlers, { middlewares = [] } = {}) {
     onNoMatch: createOnNoMatchHandler(allowedMethods),
     onError: onErrorHandler,
   });
+}
+
+function setNoStoreHeader(request, response, next) {
+  response.setHeader("Cache-Control", "no-store");
+  return next();
 }
 
 function createOnNoMatchHandler(allowedMethods) {
@@ -76,6 +83,7 @@ function onErrorHandler(error, request, response) {
   }
 
   const publicErrorObject = new InternalServerError({
+    statusCode: error.statusCode,
     cause: error,
   });
 
@@ -189,6 +197,21 @@ function canRequest(feature) {
   };
 }
 
+function requireJsonObjectBody({
+  message = "O corpo da requisição deve ser um objeto JSON.",
+  action = "Envie um objeto com os campos a serem alterados.",
+} = {}) {
+  return function requireJsonObjectBodyMiddleware(request, response, next) {
+    const body = request.body;
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      throw new ValidationError({ message, action });
+    }
+
+    return next();
+  };
+}
+
 const controller = {
   createController,
   setSessionCookie,
@@ -196,6 +219,7 @@ const controller = {
   injectAnonymousOrUser,
   injectUserOrAnonymousOnInvalidSession,
   canRequest,
+  requireJsonObjectBody,
 };
 
 export default controller;

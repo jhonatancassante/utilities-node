@@ -6,7 +6,14 @@ import { ValidationError } from "@/infra/errors.js";
 export default controller.createController(
   {
     GET: [controller.canRequest("read:user:others"), getHandler],
-    POST: [controller.canRequest("update:user:status"), postHandler],
+    POST: [
+      controller.canRequest("update:user:status"),
+      controller.requireJsonObjectBody({
+        message: "Informe a data e hora de término do timeout.",
+        action: "Envie timeout_until como uma data/hora ISO 8601 futura.",
+      }),
+      postHandler,
+    ],
     DELETE: [controller.canRequest("update:user:status"), deleteHandler],
   },
   { middlewares: [controller.injectAnonymousOrUser] },
@@ -18,12 +25,7 @@ async function getHandler(request, response) {
 }
 
 async function postHandler(request, response) {
-  if (
-    !request.body ||
-    typeof request.body !== "object" ||
-    Array.isArray(request.body) ||
-    typeof request.body.timeout_until !== "string"
-  ) {
+  if (typeof request.body.timeout_until !== "string") {
     throw new ValidationError({
       message: "Informe a data e hora de término do timeout.",
       action: "Envie timeout_until como uma data/hora ISO 8601 futura.",
